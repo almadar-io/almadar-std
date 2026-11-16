@@ -1,20 +1,34 @@
 app std-rasm-grid [
-  version: "0.1.0",
-  description: "std-rasm-grid — the Rasm kit's two-axis layout node. On RASM_PLACE for its own id it stores its rect and places its children in the cells of a declared grid: columns and rows are fixed px or an equal share of what is left, a child names its column, row and optional spans, and RASM_PLACE carries each child's rect. With direction rtl the columns run from the right edge. A child whose cell lies outside the declared tracks is not placed."
+  version: "0.2.0",
+  description: "std-rasm-grid — the Rasm kit's two-axis layout node. On RASM_PLACE for its own id it stores its rect and places its children in the cells of a declared grid: columns and rows are fixed px, an equal share (fill) or a weighted share (fr, weight in main, default 1) of what is left, a child names its column, row and optional spans, and RASM_PLACE carries each child's rect. A child may carry rotate (radians, forwarded in its placed entry), and offsetX and offsetY (px nudges applied after the cell is computed). Children may name overlapping cells: a collage, a headline running over a picture; each leaf's own z decides which paints on top. With direction rtl the columns run from the right edge. The knob rules paints a hairline in every gutter between tracks (look grid/rule/idle) and border paints a frame on the grid's rect (look grid/border/idle); with no such look nothing is painted. A child whose cell lies outside the declared tracks is not placed."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
-type RasmTrack = { size : "fixed" | "fill"!, main : number }
-type RasmGridChild = { id : string!, col : number!, row : number!, colSpan : number, rowSpan : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmTrack = { size : "fixed" | "fill" | "fr"!, main : number }
+type RasmGridShape = { columns : [RasmTrack], rows : [RasmTrack], gap : number, rowGap : number, padding : number, children : [RasmGridChild] }
+type RasmGridChild = { id : string!, col : number!, row : number!, colSpan : number, rowSpan : number, rotate : number, offsetX : number, offsetY : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
 
 orbital RasmGridOrbital {
   entity RasmGridRun [runtime] {
     id : string!
     rect : RasmRect? @description "The rect RASM_PLACE gave this grid, null until placed." = null
+    looks : Map string RasmLook @description "The announced look table." = {}
     dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
     announced : boolean @description "True once the surface announced a direction, which then replaces the config knob." = false
+    colW : [number] @description "The column widths of the last layout in px." = []
+    colAt : [number] @description "Each column's offset from the content edge in px, at the last layout." = []
+    rowH : [number] @description "The row heights of the last layout in px." = []
+    rowAt : [number] @description "Each row's offset from the content edge in px, at the last layout." = []
+    variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
   trait RasmGrid -> RasmGridRun [client] {
@@ -27,14 +41,34 @@ orbital RasmGridOrbital {
         (set @entity.announced true)
         (set @entity.layouts (+ @entity.layouts 1))
         (emit GRID_LAYOUT { n: @entity.layouts })
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit GRID_LAYOUT { n: @entity.layouts })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GRID_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit GRID_LAYOUT { n: @entity.layouts })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
       GRID_LAYOUT -> ready when (!= @entity.rect null)
-        (emit RASM_PLACE { n: ?n, placed: (let ((r @entity.rect) (pad @config.padding) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (cols @config.columns) (rows @config.rows)) (let ((colW (let ((ext (- @r.w (* 2 @pad))) (fixed (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @cols (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.gap (math/max 0 (- (array/len @cols) 1)))) @fills)) 0))) (array/map @cols (fn t (if (= @t.size "fill") @share (default @t.main 0))))))) (rowH (let ((ext (- @r.h (* 2 @pad))) (fixed (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @rows (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.rowGap (math/max 0 (- (array/len @rows) 1)))) @fills)) 0))) (array/map @rows (fn t (if (= @t.size "fill") @share (default @t.main 0)))))))) (let ((colAt (let ((acc (array/reduce @colW { at: 0, xs: [] } (fn a w { at: (+ (+ @a.at @w) @config.gap), xs: (array/append @a.xs @a.at) })))) @acc.xs)) (rowAt (let ((acc (array/reduce @rowH { at: 0, ys: [] } (fn a h { at: (+ (+ @a.at @h) @config.rowGap), ys: (array/append @a.ys @a.at) })))) @acc.ys))) (array/map (array/filter @config.children (fn c (and (and (>= @c.col 0) (>= @c.row 0)) (and (<= (+ @c.col (default @c.colSpan 1)) (array/len @cols)) (<= (+ @c.row (default @c.rowSpan 1)) (array/len @rows)))))) (fn c (let ((c1 (- (+ @c.col (default @c.colSpan 1)) 1)) (r1 (- (+ @c.row (default @c.rowSpan 1)) 1))) (let ((x0 (default (array/nth @colAt @c.col) 0)) (w (- (+ (default (array/nth @colAt @c1) 0) (default (array/nth @colW @c1) 0)) (default (array/nth @colAt @c.col) 0))) (y0 (default (array/nth @rowAt @c.row) 0)) (h (- (+ (default (array/nth @rowAt @r1) 0) (default (array/nth @rowH @r1) 0)) (default (array/nth @rowAt @c.row) 0)))) { id: @c.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @w)) (+ (+ @r.x @pad) @x0)), y: (+ (+ @r.y @pad) @y0), w: @w, h: @h } }))))))) })
+        (set @entity.colW (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (cols (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.columns)) @config.columns))) (let ((ext (- @r.w (* 2 @pad))) (fixed (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (weights (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fill") 1 (if (= @t.size "fr") (default @t.main 1) 0))))))) (let ((share (if (> @weights 0) (math/max 0 (/ (- (- @ext @fixed) (* (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap) (math/max 0 (- (array/len @cols) 1)))) @weights)) 0))) (array/map @cols (fn t (if (= @t.size "fixed") (default @t.main 0) (* @share (if (= @t.size "fr") (default @t.main 1) 1)))))))))
+        (set @entity.rowH (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (rows (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rows)) @config.rows))) (let ((ext (- @r.h (* 2 @pad))) (fixed (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (weights (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fill") 1 (if (= @t.size "fr") (default @t.main 1) 0))))))) (let ((share (if (> @weights 0) (math/max 0 (/ (- (- @ext @fixed) (* (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap) (math/max 0 (- (array/len @rows) 1)))) @weights)) 0))) (array/map @rows (fn t (if (= @t.size "fixed") (default @t.main 0) (* @share (if (= @t.size "fr") (default @t.main 1) 1)))))))))
+        (set @entity.colAt (let ((acc (array/reduce @entity.colW { at: 0, xs: [] } (fn a w { at: (+ (+ @a.at @w) (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap)), xs: (array/append @a.xs @a.at) })))) @acc.xs))
+        (set @entity.rowAt (let ((acc (array/reduce @entity.rowH { at: 0, ys: [] } (fn a h { at: (+ (+ @a.at @h) (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap)), ys: (array/append @a.ys @a.at) })))) @acc.ys))
+        (emit RASM_PLACE { n: ?n, placed: (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (cols (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.columns)) @config.columns)) (rows (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rows)) @config.rows)) (colW @entity.colW) (colAt @entity.colAt) (rowH @entity.rowH) (rowAt @entity.rowAt)) (array/map (array/filter (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.children)) @config.children) (fn c (and (and (>= @c.col 0) (>= @c.row 0)) (and (<= (+ @c.col (default @c.colSpan 1)) (array/len @cols)) (<= (+ @c.row (default @c.rowSpan 1)) (array/len @rows)))))) (fn c (let ((c1 (- (+ @c.col (default @c.colSpan 1)) 1)) (r1 (- (+ @c.row (default @c.rowSpan 1)) 1))) (let ((x0 (default (array/nth @colAt @c.col) 0)) (w (- (+ (default (array/nth @colAt @c1) 0) (default (array/nth @colW @c1) 0)) (default (array/nth @colAt @c.col) 0))) (y0 (default (array/nth @rowAt @c.row) 0)) (h (- (+ (default (array/nth @rowAt @r1) 0) (default (array/nth @rowH @r1) 0)) (default (array/nth @rowAt @c.row) 0))) (dx (default @c.offsetX 0)) (dy (default @c.offsetY 0))) (object/merge { id: @c.id, rect: { x: (+ (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @w)) (+ (+ @r.x @pad) @x0)) @dx), y: (+ (+ (+ @r.y @pad) @y0) @dy), w: @w, h: @h } } (if (= (default @c.rotate 0) 0) {} { rotate: @c.rotate }))))))) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GRID_PAINT { n: @entity.paints })
       GRID_LAYOUT -> ready when (= @entity.rect null)
+      GRID_PAINT -> ready when (and (!= @entity.rect null) (or (!= @config.rules "none") @config.border))
+        (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (rule (object/get @entity.looks "grid/rule/idle" null)) (frame (object/get @entity.looks "grid/border/idle" null)))
+          (let ((top (+ @r.y @pad)) (bottom (- (+ @r.y @r.h) @pad)) (colN (array/len @entity.colW)) (rowN (array/len @entity.rowH)))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (array/concat (array/concat (if (and (!= @rule null) (array/includes ["columns", "both"] @config.rules)) (array/map (array/range (math/max 0 (- @colN 1))) (fn i (let ((pos (+ (+ (default (array/nth @entity.colAt @i) 0) (default (array/nth @entity.colW @i) 0)) (/ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap) 2)))) (let ((x (if @rtl (- (- (+ @r.x @r.w) @pad) @pos) (+ (+ @r.x @pad) @pos)))) { type: draw-shape, shape: "path", id: (str/concat @config.id ":rule:col:" @i), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " @x " " @top " L " @x " " @bottom), fill: "", stroke: @rule.stroke, strokeWidth: (default @rule.strokeWidth 1), hit: false })))) []) (if (and (!= @rule null) (array/includes ["rows", "both"] @config.rules)) (array/map (array/range (math/max 0 (- @rowN 1))) (fn i (let ((y (+ (+ @top (+ (default (array/nth @entity.rowAt @i) 0) (default (array/nth @entity.rowH @i) 0))) (/ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap) 2)))) { type: draw-shape, shape: "path", id: (str/concat @config.id ":rule:row:" @i), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " (+ @r.x @pad) " " @y " L " (- (+ @r.x @r.w) @pad) " " @y), fill: "", stroke: @rule.stroke, strokeWidth: (default @rule.strokeWidth 1), hit: false }))) [])) (if (and @config.border (!= @frame null)) [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":border"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "rgba(0,0,0,0)", stroke: @frame.stroke, strokeWidth: (default @frame.strokeWidth 1), corners: @frame.corners, hit: false }] [])) })))
+      GRID_PAINT -> ready when (not (and (!= @entity.rect null) (or (!= @config.rules "none") @config.border)))
     }
 
     emits {
@@ -43,17 +77,34 @@ orbital RasmGridOrbital {
       }
         @description "Place the children from the stored rect."
         @tier "internal"
+      GRID_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the rules and border from the stored rect, tracks and looks."
+        @tier "internal"
       RASM_PLACE -> external {
         n : number!
         placed : [RasmPlaced]!
       }
-        @description "The children's cell rects."
+        @description "The children's cell rects, each with its rotate when the child set one."
+        @tier "primary"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The gutter hairlines and the frame at the grid's z; emitted only with rules or border on."
         @tier "primary"
     }
 
     listens {
       RASM_DIRECTION { direction : "ltr" | "rtl"! }
         @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain (the announced breakpoint, then each smaller declared one, stopping at desktop) that `variants` holds, none of them keeping the configured shape, which is the desktop composition; the grid lays out again when the variant changes. With any other variantBy it is ignored."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint the rules and border."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this grid's rect when it is placed, then place the children."
     }
@@ -61,15 +112,15 @@ orbital RasmGridOrbital {
     config {
       id : string = "grid"
         @label "Id"
-        @description "The grid's id: its RASM_PLACE key."
+        @description "The grid's id: its RASM_PLACE key and its paint id."
         @tier "presentation"
       columns : [RasmTrack] = []
         @label "Columns"
-        @description "Column tracks in order: fixed uses main px, fill shares the width left after fixed tracks and gaps equally."
+        @description "Column tracks in order: fixed uses main px, fill shares the width left after fixed tracks and gaps equally, fr takes a share weighted by main (default 1): fr 2, fr 1, fr 1 is 2:1:1."
         @tier "presentation"
       rows : [RasmTrack] = []
         @label "Rows"
-        @description "Row tracks in order: fixed uses main px, fill shares the height left after fixed tracks and gaps equally."
+        @description "Row tracks in order: fixed uses main px, fill shares the height left after fixed tracks and gaps equally, fr takes a share weighted by main (default 1)."
         @tier "presentation"
       gap : number = 0
         @label "Column gap"
@@ -87,9 +138,29 @@ orbital RasmGridOrbital {
         @label "Direction"
         @description "ltr starts column 0 at the left edge, rtl at the right edge; a surface RASM_DIRECTION replaces it."
         @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order of the rules and border on the surface."
+        @tier "presentation"
+      rules : "none" | "columns" | "rows" | "both" = "none"
+        @label "Rules"
+        @description "Paint a hairline in the middle of every gutter between columns, rows or both, in the look grid/rule/idle; nothing is painted while the look is absent."
+        @tier "presentation"
+      border : boolean = false
+        @label "Border"
+        @description "Paint a frame on the grid's rect in the look grid/border/idle; nothing is painted while the look is absent."
+        @tier "presentation"
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant (desktop and wide stop at desktop), then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string RasmGridShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the columns, rows, gap, rowGap, padding and children a variant names replace the configured ones while that breakpoint is current; one it leaves out keeps the configured value."
+        @tier "presentation"
       children : [RasmGridChild] = []
         @label "Children"
-        @description "Each child's column and row (zero-based) and optional colSpan and rowSpan (default 1); a child whose cell is outside the tracks is not placed."
+        @description "Each child's column and row (zero-based), optional colSpan and rowSpan (default 1), rotate (radians) and offsetX and offsetY (px, after the cell is computed). Cells may overlap; a child whose cell is outside the tracks is not placed."
         @tier "presentation"
     }
   }

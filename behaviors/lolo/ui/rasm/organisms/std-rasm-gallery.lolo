@@ -27,11 +27,11 @@ uses ParticlesAtom from "std/behaviors/std-rasm-particles"
 uses MirrorAtom from "std/behaviors/std-rasm-mirror"
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
-type RasmShadow = { color : string!, blur : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
 type ReadoutDirections = { none : MessageKey!, left : MessageKey!, right : MessageKey!, up : MessageKey!, down : MessageKey! }
@@ -243,6 +243,9 @@ orbital RasmGallery {
       TweenCol.RASM_PAINT -> RASM_PAINT
       SwipeBox.RASM_PAINT -> RASM_PAINT
       DragCol.RASM_PAINT -> RASM_PAINT
+      ControlsGrid.RASM_PAINT -> RASM_PAINT
+      LGrid.RASM_PAINT -> RASM_PAINT
+      VGrid.RASM_PAINT -> RASM_PAINT
       Bins.RASM_PAINT -> RASM_PAINT
       LifeRow.RASM_PAINT -> RASM_PAINT
       HLife.RASM_PAINT -> RASM_PAINT
@@ -373,6 +376,7 @@ orbital RasmGallery {
       children: [{ id: "title", size: "measure" }, { id: "theme", size: "fixed", main: 66 }, { id: "hcontrols", size: "measure" }, { id: "controls", size: "fixed", main: 226 }, { id: "hlayout", size: "measure" }, { id: "layoutrow", size: "fixed", main: 110 }, { id: "hcontainers", size: "measure" }, { id: "controw", size: "fixed", main: 170 }, { id: "hmotion", size: "measure" }, { id: "motionrow", size: "fixed", main: 250 }, { id: "hlife", size: "measure" }, { id: "liferow", size: "fixed", main: 150 }, { id: "hvariants", size: "measure" }, { id: "vgrid", size: "fixed", main: 226 }, { id: "vrow", size: "fixed", main: 130 }, { id: "hscrollx", size: "measure" }, { id: "xlist", size: "fixed", main: 56 }, { id: "hoverlays", size: "measure" }, { id: "overrow", size: "fixed", main: 46 }, { id: "hlife2", size: "measure" }, { id: "liferow2", size: "fixed", main: 150 }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -391,6 +395,7 @@ orbital RasmGallery {
       children: [{ id: "lstack", size: "fill" }, { id: "lgrid", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -409,6 +414,7 @@ orbital RasmGallery {
       children: [{ id: "s1", size: "measure" }, { id: "s2", size: "measure" }, { id: "s3", size: "measure" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       LayoutRow.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -427,6 +433,7 @@ orbital RasmGallery {
       children: [{ id: "opencol", size: "fill" }, { id: "list", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -445,6 +452,7 @@ orbital RasmGallery {
       children: [{ id: "open", size: "fixed", main: 46 }, { id: "openhint", size: "measure" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       ContRow.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -463,6 +471,7 @@ orbital RasmGallery {
       children: [{ id: "dlgtext", size: "measure" }, { id: "dlgclose", size: "fixed", main: 46 }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       Dialog.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -481,6 +490,7 @@ orbital RasmGallery {
       children: [{ id: "tweencol", size: "fill" }, { id: "swipebox", size: "fill" }, { id: "dragcol", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -499,6 +509,7 @@ orbital RasmGallery {
       children: [{ id: "tweenbtn", size: "fixed", main: 46 }, { id: "readout", size: "fixed", main: 160 }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       MotionRow.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -517,6 +528,7 @@ orbital RasmGallery {
       children: [{ id: "swipe", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       MotionRow.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -535,6 +547,7 @@ orbital RasmGallery {
       children: [{ id: "chip", size: "fixed", main: 44 }, { id: "bins", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       MotionRow.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -553,6 +566,7 @@ orbital RasmGallery {
       children: [{ id: "bina", size: "fill" }, { id: "binb", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       DragCol.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -902,7 +916,7 @@ orbital RasmGallery {
     config {
       id: "theme"
       label: "theme-choice"
-      options: [{ value: "naqsh", label: "theme.naqsh" }, { value: "glass", label: "theme.glass" }, { value: "sand", label: "theme.sand" }, { value: "instrument", label: "theme.instrument" }, { value: "terminal", label: "theme.terminal" }, { value: "paper", label: "theme.paper" }, { value: "taif-day", label: "theme.taif-day" }, { value: "taif-night", label: "theme.taif-night" }, { value: "hearth", label: "theme.hearth" }, { value: "tide", label: "theme.tide" }, { value: "ledger", label: "theme.ledger" }, { value: "majlis", label: "theme.majlis" }, { value: "lamp", label: "theme.lamp" }, { value: "souq", label: "theme.souq" }, { value: "signal", label: "theme.signal" }, { value: "festival", label: "theme.festival" }]
+      options: [{ value: "naqsh", label: "theme.naqsh" }, { value: "glass", label: "theme.glass" }, { value: "sand", label: "theme.sand" }, { value: "instrument", label: "theme.instrument" }, { value: "terminal", label: "theme.terminal" }, { value: "paper", label: "theme.paper" }, { value: "taif-day", label: "theme.taif-day" }, { value: "taif-night", label: "theme.taif-night" }, { value: "hearth", label: "theme.hearth" }, { value: "tide", label: "theme.tide" }, { value: "ledger", label: "theme.ledger" }, { value: "majlis", label: "theme.majlis" }, { value: "lamp", label: "theme.lamp" }, { value: "souq", label: "theme.souq" }, { value: "signal", label: "theme.signal" }, { value: "festival", label: "theme.festival" }, { value: "aqua", label: "style.aqua" }, { value: "arabesque", label: "style.arabesque" }, { value: "art-deco", label: "style.art-deco" }, { value: "art-nouveau", label: "style.art-nouveau" }, { value: "atelier", label: "style.atelier" }, { value: "bauhaus", label: "style.bauhaus" }, { value: "bloomberg-dense", label: "style.bloomberg-dense" }, { value: "blueprint", label: "style.blueprint" }, { value: "clay", label: "style.clay" }, { value: "comic", label: "style.comic" }, { value: "constructivist", label: "style.constructivist" }, { value: "corporate", label: "style.corporate" }, { value: "cyberpunk", label: "style.cyberpunk" }, { value: "frutiger-aero", label: "style.frutiger-aero" }, { value: "gazette", label: "style.gazette" }, { value: "glass", label: "style.glass" }, { value: "gothic", label: "style.gothic" }, { value: "ink-wash", label: "style.ink-wash" }, { value: "kawaii", label: "style.kawaii" }, { value: "kiosk", label: "style.kiosk" }, { value: "linear-clean", label: "style.linear-clean" }, { value: "luxury", label: "style.luxury" }, { value: "mac-classic", label: "style.mac-classic" }, { value: "material", label: "style.material" }, { value: "memphis", label: "style.memphis" }, { value: "mid-century", label: "style.mid-century" }, { value: "minimalist", label: "style.minimalist" }, { value: "mudcloth", label: "style.mudcloth" }, { value: "neon", label: "style.neon" }, { value: "neumorphic", label: "style.neumorphic" }, { value: "newsprint", label: "style.newsprint" }, { value: "notion-editorial", label: "style.notion-editorial" }, { value: "pixel", label: "style.pixel" }, { value: "prism", label: "style.prism" }, { value: "retro", label: "style.retro" }, { value: "risograph", label: "style.risograph" }, { value: "scandi", label: "style.scandi" }, { value: "sketch", label: "style.sketch" }, { value: "solarpunk", label: "style.solarpunk" }, { value: "steampunk", label: "style.steampunk" }, { value: "swiss", label: "style.swiss" }, { value: "terminal", label: "style.terminal" }, { value: "ukiyo-e", label: "style.ukiyo-e" }, { value: "vaporwave", label: "style.vaporwave" }, { value: "victorian", label: "style.victorian" }, { value: "wabi-sabi", label: "style.wabi-sabi" }, { value: "win95", label: "style.win95" }, { value: "wireframe", label: "style.wireframe" }, { value: "zine", label: "style.zine" }]
       value: "naqsh"
       changed: RASM_THEME_CHOSEN
       order: 1
@@ -1309,6 +1323,7 @@ orbital RasmGallery {
       staggerMs: 40
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Surface.RASM_BOOT -> RASM_BOOT
       Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
     }
@@ -1360,6 +1375,7 @@ orbital RasmGallery {
       children: [{ id: "lifebtn", size: "fixed", main: 180 }, { id: "sparks", size: "fill" }, { id: "reflection", size: "fixed", main: 220 }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -1743,6 +1759,7 @@ orbital RasmGallery {
       children: [{ id: "vmulti", size: "fill" }, { id: "hstack", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -1802,6 +1819,7 @@ orbital RasmGallery {
       children: [{ id: "hs1", size: "fill" }, { id: "hs2", size: "fill" }, { id: "hs3", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       VRow.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -2025,6 +2043,7 @@ orbital RasmGallery {
       children: [{ id: "openend", size: "fill" }, { id: "openstart", size: "fill" }, { id: "openpop", size: "fill" }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -2214,6 +2233,7 @@ orbital RasmGallery {
       children: [{ id: "stream", size: "fill" }, { id: "plainmirror", size: "fixed", main: 220 }]
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED

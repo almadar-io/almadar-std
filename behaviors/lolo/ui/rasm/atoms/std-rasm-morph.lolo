@@ -4,11 +4,11 @@ app std-rasm-morph [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
-type RasmShadow = { color : string!, blur : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
@@ -48,7 +48,7 @@ orbital RasmMorphOrbital {
       MORPH_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.stops) 0) (array/every @config.stops (fn s (object/has @entity.anchors @s.anchor))))
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (l (default (object/get @entity.looks (str/concat "morph/" @config.intent "/idle") null) {})) (at (array/map @config.stops (fn s (let ((a (default (object/get @entity.anchors @s.anchor null) { x: 0, y: 0, w: 0, h: 0 }))) (math/max 0 (- @a.y (* @entity.viewH @config.focus))))))))
           (let ((from (default (array/nth @at 0) 0)) (to (default (array/nth @at (- (array/len @at) 1)) 0)) (side (math/min (* @r.w @config.span) (* @entity.viewH @config.maxView))))
-            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: "path", position: { x: (+ @r.x (/ (- @r.w @side) 2)), y: (+ @r.y (* @entity.viewH @config.top)), z: @config.z }, d: (let ((first (default (array/nth @config.stops 0) { anchor: "", d: "" }))) @first.d), scale: (/ @side (math/max 1 @config.box)), fill: @l.fill, stroke: @l.stroke, strokeWidth: @l.strokeWidth, material: @l.material, hit: false, animation: { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: (array/map (array/range (array/len @config.stops)) (fn i (let ((st (default (array/nth @config.stops @i) { anchor: "", d: "" }))) { at: (if (> @to @from) (/ (- (default (array/nth @at @i) 0) @from) (- @to @from)) @i), d: @st.d }))) } }] })))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: (let ((none : [node] [])) (if (<= @side 0) @none [{ type: draw-shape, id: @config.id, shape: "path", position: { x: (+ @r.x (/ (- @r.w @side) 2)), y: (+ @r.y (* @entity.viewH @config.top)), z: @config.z }, d: (let ((first (default (array/nth @config.stops 0) { anchor: "", d: "" }))) @first.d), scale: (/ @side (math/max 1 @config.box)), fill: @l.fill, stroke: @l.stroke, strokeWidth: @l.strokeWidth, material: @l.material, hit: false, animation: { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: (array/map (array/range (array/len @config.stops)) (fn i (let ((st (default (array/nth @config.stops @i) { anchor: "", d: "" }))) { at: (if (> @to @from) (/ (- (default (array/nth @at @i) 0) @from) (- @to @from)) @i), d: @st.d }))) } }])) })))
       MORPH_PAINT -> ready when (not (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.stops) 0) (array/every @config.stops (fn s (object/has @entity.anchors @s.anchor)))))
     }
 

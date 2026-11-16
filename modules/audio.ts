@@ -8,7 +8,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { arg, osEffect } from './os-common.js';
+import { arg, osEffect, withKey } from './os-common.js';
 import { BOOLEAN, BYTES, INT, NUMBER, STRING, list, lit, shape, union } from '../signature.js';
 
 const ARENA: OperatorTypeRef = 'Arena';
@@ -91,7 +91,7 @@ export const AUDIO_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true, runsOn: 'client', returnType: 'void',
     effect: {
       kind: 'custom',
-      produces: shape({}),
+      produces: withKey(shape({})),
     },
     params: [
       { name: 'commands', type: list(AUDIO_COMMAND), description: 'The commands, applied in list order: start, stop or ramp records with exactly one key each' }

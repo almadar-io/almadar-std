@@ -4,8 +4,12 @@ app std-rasm-presence [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmPresenceView = { anchor : string!, order : [string]! }
+type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
+type RasmMotion = { signature : "rise" | "print-pass" | "fan" | "glitch" | "ink-bleed" | "paper-drop" | "kinetic" | "float" | "snap"!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
 
 orbital RasmPresenceOrbital {
   entity RasmPresenceItem [runtime] {
@@ -15,6 +19,7 @@ orbital RasmPresenceOrbital {
     offset : number @description "The page scroll from RASM_PAGE_SCROLLED." = 0
     played : [string] @description "The onView anchors whose group has entered." = []
     checks : number @description "Counts checks, so each check in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    motion : RasmMotion? @description "The announced style's motion, null before a style." = null
   }
 
   trait RasmPresence -> RasmPresenceItem [client] {
@@ -22,11 +27,11 @@ orbital RasmPresenceOrbital {
 
     state ready {
       INIT -> ready
-        (emit RASM_ENTER { order: @config.order, staggerMs: @config.staggerMs })
+        (emit PRESENCE_GO { order: @config.order })
       RASM_BOOT -> ready
-        (emit RASM_ENTER { order: @config.order, staggerMs: @config.staggerMs })
+        (emit PRESENCE_GO { order: @config.order })
       RASM_PRESENCE_PLAY -> ready
-        (emit RASM_ENTER { order: ?order, staggerMs: @config.staggerMs })
+        (emit PRESENCE_GO { order: ?order })
       RASM_PLACE -> ready when (array/some ?placed (fn p (array/some @config.onView (fn v (= @v.anchor @p.id)))))
         (set @entity.anchors (array/reduce (array/filter ?placed (fn p (array/some @config.onView (fn v (= @v.anchor @p.id))))) @entity.anchors (fn acc p (object/set @acc @p.id @p.rect))))
         (set @entity.checks (+ @entity.checks 1))
@@ -45,8 +50,12 @@ orbital RasmPresenceOrbital {
           (when (> (array/len @due) 0)
             (do
               (set @entity.played (array/concat @entity.played (array/map @due (fn v @v.anchor))))
-              (emit RASM_ENTER { order: (array/flatten (array/map @due (fn v @v.order))), staggerMs: @config.staggerMs }))))
+              (emit PRESENCE_GO { order: (array/flatten (array/map @due (fn v @v.order))) }))))
       PRESENCE_CHECK -> ready when (<= @entity.viewH 0)
+      RASM_STYLE -> ready
+        (set @entity.motion ?motion)
+      PRESENCE_GO -> ready
+        (emit RASM_ENTER { order: ?order, staggerMs: (if (= @entity.motion null) @config.staggerMs @entity.motion.stagger), entries: (let ((mo @entity.motion)) (if (or (= @mo null) (= @mo.keyframes null)) [] (let ((ks (default @mo.keyframes [])) (ms (default @mo.enterMs 520))) (array/map (array/range 0 (array/len ?order)) (fn i (let ((delay (* @i @mo.stagger))) (let ((dur (+ @ms @delay))) (let ((d (default (/ @delay @dur) 0)) (first (default (array/first @ks) { at: 0, opacity: 1, offsetX: 0, offsetY: 0 }))) { id: (default (array/nth ?order @i) ""), durationMs: @dur, keyframes: (array/concat [{ at: 0, opacity: @first.opacity, offsetX: @first.offsetX, offsetY: @first.offsetY }] (array/map @ks (fn k { at: (+ @d (* @k.at (- 1 @d))), opacity: @k.opacity, offsetX: @k.offsetX, offsetY: @k.offsetY }))) })))))))) })
     }
 
     listens {
@@ -58,11 +67,18 @@ orbital RasmPresenceOrbital {
         @description "Take the onView anchors' rects as they are placed."
       RASM_RESIZE { width : number!  height : number! }
         @description "Take the canvas height, the view the anchors are measured against."
+      RASM_STYLE { name : string!  layout : RasmLayout!  motion : RasmMotion! }
+        @description "Take the style's motion: its stagger and its signature's entry keyframes shape every entry from now on."
       RASM_PAGE_SCROLLED { offset : number!  max : number! }
         @description "Take the page scroll and play the onView groups it brought into view."
     }
 
     emits {
+      PRESENCE_GO -> internal {
+        order : [string]!
+      }
+        @description "Play the entry choreography for these ids, in this order."
+        @tier "internal"
       PRESENCE_CHECK -> internal {
         n : number!
       }
@@ -71,6 +87,7 @@ orbital RasmPresenceOrbital {
       RASM_ENTER -> external {
         order : [string]!
         staggerMs : number!
+        entries : [RasmEntryItem]!
       }
         @description "Start the entry choreography: controls in the order enter one after another."
         @tier "domain"

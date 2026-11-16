@@ -1,0 +1,56 @@
+{
+ "atom": "ui/rasm/page-example.lolo",
+ "trait": "ExamplePagePage",
+ "note": "The worked example for std-rasm-page: page-example.lolo extends RasmPage with sections hero and footer, a grid in hero and a rotated poster text, an image and a button in its cells. Each step is one trait of the composed program, fed the placement the step before it emitted.",
+ "cases": [
+  {
+   "id": "sections-place-the-grid-the-grid-places-a-rotated-text-and-an-image-and-each-paints",
+   "steps": [
+    {
+     "trait": "ExamplePagePage",
+     "from": "ready",
+     "entity": { "id": "page" },
+     "event": "RASM_PLACE",
+     "payload": { "placed": [{ "id": "page", "rect": { "x": 0, "y": 0, "w": 1280, "h": 800 } }] },
+     "expect": { "emits": [{ "event": "RASM_PLACE", "payload": { "placed": [
+       { "id": "hero", "rect": { "x": 0, "y": 0, "w": 1280, "h": 640 } },
+       { "id": "footer", "rect": { "x": 0, "y": 640, "w": 1280, "h": 120 } }] } }] }
+    },
+    {
+     "trait": "HeroGrid",
+     "from": "ready",
+     "entity": { "id": "hero", "looks": { "grid/rule/idle": { "stroke": "#999", "strokeWidth": 1 }, "grid/border/idle": { "stroke": "#111", "strokeWidth": 2 } } },
+     "event": "RASM_PLACE",
+     "payload": { "placed": [{ "id": "hero", "rect": { "x": 0, "y": 0, "w": 1280, "h": 640 } }] },
+     "expect": { "emits": [
+       { "event": "RASM_PLACE", "payload": { "placed": [
+         { "id": "headline", "rect": { "x": 25, "y": 25, "w": 800, "h": 500 }, "rotate": -0.05 },
+         { "id": "photo", "rect": { "x": 855, "y": 37, "w": 400, "h": 590 } },
+         { "id": "cta", "rect": { "x": 25, "y": 525, "w": 800, "h": 90 } }] } },
+       { "event": "RASM_PAINT", "payload": { "id": "hero", "z": 0, "nodes": [
+         { "type": "draw-shape", "shape": "path", "id": "hero:rule:col:0", "anchor": "top-left", "position": { "x": 0, "y": 0, "z": 0 }, "d": "M 840 25 L 840 615", "fill": "", "stroke": "#999", "strokeWidth": 1, "hit": false },
+         { "type": "draw-shape", "shape": "rect", "id": "hero:border", "anchor": "top-left", "position": { "x": 0, "y": 0, "z": 0 }, "width": 1280, "height": 640, "fill": "rgba(0,0,0,0)", "stroke": "#111", "strokeWidth": 2, "corners": null, "hit": false }] } }] }
+    },
+    {
+     "trait": "Headline",
+     "from": "ready",
+     "entity": { "id": "headline", "looks": { "text/poster/idle": { "textColor": "#111", "font": "120px serif" } } },
+     "event": "RASM_PLACE",
+     "payload": { "placed": [{ "id": "headline", "rect": { "x": 25, "y": 25, "w": 800, "h": 500 }, "rotate": -0.05 }] },
+     "expect": { "emits": [{ "event": "RASM_PAINT", "payload": { "id": "headline", "z": 0, "nodes": [], "texts": [
+       { "id": "headline", "key": "page-example:hero.headline", "x": 25, "y": 25, "z": 0, "baseline": "top", "width": 800, "wrap": true, "align": "left", "measure": true, "color": "#111", "font": "120px serif", "spring": null, "role": "text", "animation": null, "rotate": -0.05, "vertical": false }] } }] }
+    },
+    {
+     "trait": "Photo",
+     "from": "ready",
+     "entity": { "id": "photo", "url": "https://example.org/photo.jpg", "looks": { "image/none/idle": { "fill": "primary", "material": { "wgsl": "NONE", "params": [0, 0, 0, 0], "live": false } } } },
+     "event": "RASM_PLACE",
+     "payload": { "placed": [{ "id": "photo", "rect": { "x": 855, "y": 37, "w": 400, "h": 590 } }] },
+     "expect": { "emits": [{ "event": "RASM_PAINT", "payload": { "id": "photo", "z": 0, "texts": [], "nodes": [
+       { "type": "draw-group", "id": "photo:source", "position": { "x": 855, "y": 37, "z": 0 }, "target": { "id": "photo:target", "width": 400, "height": 590 }, "items": [{ "type": "draw-sprite", "id": "photo:photo", "asset": { "url": "https://example.org/photo.jpg" }, "fit": "cover", "anchor": "top-left", "position": { "x": 0, "y": 0, "z": 0 }, "width": 400, "height": 590 }] },
+       { "type": "draw-shape", "id": "photo", "shape": "rect", "anchor": "top-left", "position": { "x": 855, "y": 37, "z": 0 }, "width": 400, "height": 590, "fill": "primary", "material": { "wgsl": "NONE", "params": [0, 0, 0, 0], "live": false, "targets": ["photo:target"] } }] } }] }
+    }
+   ]
+  }
+ ]
+}

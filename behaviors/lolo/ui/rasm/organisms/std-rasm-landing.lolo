@@ -17,6 +17,7 @@ uses PresenceAtom from "std/behaviors/std-rasm-presence"
 uses ScrubAtom from "std/behaviors/std-rasm-scrub"
 uses MorphAtom from "std/behaviors/std-rasm-morph"
 uses CardsAtom from "std/behaviors/std-rasm-cards"
+uses ImageAtom from "std/behaviors/std-rasm-image"
 
 orbital RasmLanding {
   entity RasmLandingView [runtime] {
@@ -26,6 +27,7 @@ orbital RasmLanding {
   trait Theme = ThemeAtom.traits.RasmTheme {
     config {
       preset: @config.preset
+      style: @config.style
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
@@ -52,6 +54,7 @@ orbital RasmLanding {
       Page.RASM_PAINT -> RASM_PAINT
       Bar.RASM_PAINT -> RASM_PAINT
       Hero.RASM_PAINT -> RASM_PAINT
+      HeroArt.RASM_PAINT -> RASM_PAINT
       HeroBody.RASM_PAINT -> RASM_PAINT
       HeroBtns.RASM_PAINT -> RASM_PAINT
       Pillars.RASM_PAINT -> RASM_PAINT
@@ -167,10 +170,13 @@ orbital RasmLanding {
       padding: 0
       look: ""
       z: 1
-      children: [{ id: "heroBody", size: "fill" }, { id: "emblem", size: "fixed", main: @config.gutter }]
+      children: [{ id: "heroBody", size: "fill" }, { id: "heroArt", size: "fixed", main: 0 }, { id: "emblem", size: "fixed", main: @config.gutter }]
+      variantBy: "hero"
+      variants: { "centered": { axis: "vertical", gap: 24, padding: 0, look: "", children: [{ id: "heroArt", size: "fixed", main: 220 }, { id: "heroBody", size: "fill" }, { id: "emblem", size: "fixed", main: 0 }] }, "split": { axis: "horizontal", gap: 32, padding: 0, look: "", children: [{ id: "heroBody", size: "fill" }, { id: "heroArt", size: "fill" }, { id: "emblem", size: "fixed", main: 0 }] }, "offset": { axis: "horizontal", gap: 48, padding: 0, look: "", children: [{ id: "heroArt", size: "fixed", main: 300 }, { id: "heroBody", size: "fill" }, { id: "emblem", size: "fixed", main: 0 }] }, "full-bleed": { axis: "layer", gap: 0, padding: 0, look: "", children: [{ id: "heroArt", size: "fill" }, { id: "heroBody", size: "fill" }] }, "poster": { axis: "vertical", gap: 0, padding: 0, look: "", children: [{ id: "heroBody", size: "fill" }, { id: "heroArt", size: "fixed", main: 200 }, { id: "emblem", size: "fixed", main: 0 }] }, "editorial": { axis: "horizontal", gap: 40, padding: 0, look: "", children: [{ id: "heroBody", size: "fixed", main: 560 }, { id: "heroArt", size: "fill" }, { id: "emblem", size: "fixed", main: 0 }] }, "collage": { axis: "horizontal", gap: 0, padding: 0, look: "", children: [{ id: "heroArt", size: "fill" }, { id: "heroBody", size: "fill" }, { id: "emblem", size: "fixed", main: 0 }] } }
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
+      Theme.RASM_STYLE -> RASM_STYLE
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       Page.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -208,8 +214,11 @@ orbital RasmLanding {
       look: ""
       z: 2
       children: [{ id: "heroPrimary", size: "fill" }, { id: "heroSecondary", size: "fill" }]
+      variantBy: "align"
+      variants: { "center": { axis: "horizontal", gap: 12, padding: 0, look: "", children: [{ id: "heroBtnsLead", size: "fill" }, { id: "heroPrimary", size: "fixed", main: 220 }, { id: "heroSecondary", size: "fixed", main: 220 }, { id: "heroBtnsTrail", size: "fill" }] } }
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       HeroBody.RASM_PLACE -> RASM_PLACE
@@ -553,8 +562,10 @@ orbital RasmLanding {
       text: "hero.eyebrow"
       intent: "eyebrow"
       z: 3
+      followAlign: true
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       HeroBody.RASM_PLACE -> RASM_PLACE
@@ -568,8 +579,10 @@ orbital RasmLanding {
       text: "hero.headline"
       intent: "display"
       z: 3
+      followAlign: true
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       HeroBody.RASM_PLACE -> RASM_PLACE
@@ -583,8 +596,10 @@ orbital RasmLanding {
       text: "hero.lede"
       intent: "body"
       z: 3
+      followAlign: true
     }
     listens {
+      Theme.RASM_STYLE -> RASM_STYLE
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       HeroBody.RASM_PLACE -> RASM_PLACE
@@ -939,6 +954,19 @@ orbital RasmLanding {
     }
   }
 
+  trait HeroArt = ImageAtom.traits.RasmImage {
+    config {
+      id: "heroArt"
+      url: @config.heroImage
+      z: 1
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Theme.RASM_STYLE -> RASM_STYLE
+      Hero.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
   trait Emblem = MorphAtom.traits.RasmMorph {
     config {
       id: "emblem"
@@ -1014,6 +1042,7 @@ orbital RasmLanding {
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_STYLE -> RASM_STYLE
       Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
       Surface.RASM_RESIZE -> RASM_RESIZE
       Page.RASM_PLACE -> RASM_PLACE
@@ -1041,6 +1070,14 @@ orbital RasmLanding {
       @label "Hero stack"
       @description "The hero's column from the top: eyebrow, display, lede and heroBtns, and heroSlot (an empty rect a composing program paints into) where one is wanted."
       @tier "presentation"
+    style : string = ""
+      @label "Style"
+      @description "The std-rasm-theme style the page wears, named after the program's theme (gazette, risograph, art-deco, …): its looks, hero arrangement, image treatment and entry motion. Empty wears `preset`."
+      @tier "presentation"
+    heroImage : string = ""
+      @label "Hero picture"
+      @description "The URL of the hero's picture, shown in the style's image treatment wherever its hero arrangement places it; empty shows none."
+      @tier "domain"
     preset : string = "hearth"
       @label "Theme"
       @description "The std-rasm-theme preset the page wears, one of its family presets for a landing."
@@ -1095,5 +1132,5 @@ orbital RasmLanding {
       @tier "presentation"
   }
 
-  page "/landing" as RasmLandingPage -> Theme, Surface, Focus, Page, Bar, Hero, HeroBody, HeroBtns, Pillars, PillarsBody, PillarRow, P1, P2, P3, Rows, RowsBody, Feature, FeatureBody, Story, StoryBody, Cta, CtaBody, CtaCard, Footer, BarBrand, Eyebrow, Display, Lede, PillarsTitle, P1Title, P1Body, P2Title, P2Body, P3Title, P3Body, RowsTitle, RowsLede, FeatureTitle, FeatureLede, StoryTitle, StoryText, CtaTitle, CtaText, FootBrand, FootNote, BarCta, HeroPrimary, HeroSecondary, CtaBtn, Emblem, Cards, HeroLift, StoryArrive, Enter
+  page "/landing" as RasmLandingPage -> Theme, Surface, Focus, Page, Bar, Hero, HeroBody, HeroBtns, Pillars, PillarsBody, PillarRow, P1, P2, P3, Rows, RowsBody, Feature, FeatureBody, Story, StoryBody, Cta, CtaBody, CtaCard, Footer, BarBrand, Eyebrow, Display, Lede, PillarsTitle, P1Title, P1Body, P2Title, P2Body, P3Title, P3Body, RowsTitle, RowsLede, FeatureTitle, FeatureLede, StoryTitle, StoryText, CtaTitle, CtaText, FootBrand, FootNote, BarCta, HeroPrimary, HeroSecondary, CtaBtn, HeroArt, Emblem, Cards, HeroLift, StoryArrive, Enter
 }

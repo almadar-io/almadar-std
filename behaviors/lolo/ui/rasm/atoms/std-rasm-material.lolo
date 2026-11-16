@@ -4,14 +4,14 @@ app std-rasm-material [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
-type RasmShadow = { color : string!, blur : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
 
 orbital RasmMaterialOrbital {
@@ -19,6 +19,7 @@ orbital RasmMaterialOrbital {
     id : string!
     looks : Map string RasmLook @description "The announced look table." = {}
     rect : RasmRect? @description "The rect RASM_PLACE gave this material, null until placed." = null
+    rotate : number @description "The rotation in radians RASM_PLACE gave this material, 0 when none." = 0
     anchorMs : number @description "The first placement instant on the canvas epoch clock: the material's anchor." = 0
     params : [number] @description "The current material params, at most eight." = []
     wgsl : string @description "The shader source the last RASM_MATERIAL_SET carried; when not empty it is painted in preference to the look's material and the config." = ""
@@ -41,6 +42,7 @@ orbital RasmMaterialOrbital {
       RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.anchorMs (if (= @entity.rect null) (time/epoch-ms @now) @entity.anchorMs))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
         (set @entity.paints (+ @entity.paints 1))
         (emit MATERIAL_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
@@ -62,7 +64,7 @@ orbital RasmMaterialOrbital {
           (let ((lm (if (= @l null) null @l.material)))
             (let ((src (if (and (!= @lm null) (!= @lm.wgsl "")) @lm null)))
               (when (and (!= @r null) (or (not @config.awaitParams) @entity.settled) (or (!= @src null) (!= @config.wgsl "") (!= @entity.wgsl "")))
-                (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [(object/merge { type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: (if (or (= @l null) (= @l.fill null)) @config.fill @l.fill), hit: @config.hit, wheel: @config.wheel, material: (object/merge { wgsl: (if (!= @entity.wgsl "") @entity.wgsl (if (= @src null) @config.wgsl @src.wgsl)), params: @entity.params, live: (if (= @src null) @config.live @src.live), anchor: @entity.anchorMs } (if (> (array/len @config.targets) 0) { targets: @config.targets } {})) } (if (> @config.spring.stiffness 0) { spring: @config.spring } {}))] })))))
+                (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: (let ((rot @entity.rotate) (cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2)))) (let ((base : [node] [(object/merge { type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: (if (or (= @l null) (= @l.fill null)) @config.fill @l.fill), hit: @config.hit, wheel: @config.wheel, material: (object/merge { wgsl: (if (!= @entity.wgsl "") @entity.wgsl (if (= @src null) @config.wgsl @src.wgsl)), params: @entity.params, live: (if (= @src null) @config.live @src.live), anchor: @entity.anchorMs } (if (> (array/len @config.targets) 0) { targets: @config.targets } {})) } (if (> @config.spring.stiffness 0) { spring: @config.spring } {}))])) (if (= @rot 0) @base [{ type: draw-group, id: (str/concat @config.id ":rotate"), position: { x: @cx, y: @cy }, rotate: @rot, items: [{ type: draw-group, id: (str/concat @config.id ":origin"), position: { x: (- 0 @cx), y: (- 0 @cy) }, items: @base }] }]))) })))))
     }
 
     emits {

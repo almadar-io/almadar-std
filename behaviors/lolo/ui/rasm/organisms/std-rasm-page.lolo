@@ -1,0 +1,105 @@
+app std-rasm-page [
+  version: "0.1.0",
+  description: "std-rasm-page — the page shell for a composed Rasm page and nothing else: a Theme (std-rasm-theme, knobs preset and style), a Surface that scrolls inside itself (pageScroll on), a Focus, and a root Page stack whose children are the `sections` knob. It has no bar, hero, cards, emblem or text. A program extends the orbital RasmPage (`orbital MyPage = Shell.orbitals.RasmPage { ... }`), sets `sections`, and adds its own traits from the kit (grids, texts, images, materials, pressables, presence, scrub, ribbon, window, ticket, balloon), each wiring its `listens` to Theme.RASM_THEME, Theme.RASM_STYLE, Surface.RASM_DIRECTION, Surface.RASM_RESIZE as it needs and to its parent's RASM_PLACE, and wires every grid, stack and section atom it adds with `Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT` when it declares breakpoint variants (variantBy breakpoint) (the Theme and the root Page stack here already do), and adds orbital-level routes `X.RASM_PAINT -> Surface.RASM_PAINT` for every painting trait and `X.RASM_EXTENT -> Page.RASM_EXTENT` for every stack whose height the page measures; pressables join focus through `Focus` config order."
+]
+
+type RasmStackShape = { axis : "vertical" | "horizontal" | "layer"!, gap : number!, padding : number!, look : string!, children : [RasmChild]! }
+type RasmChild = { id : string!, size : "fixed" | "fill" | "measure"!, main : number, cross : number, min : number }
+
+uses ThemeAtom from "std/behaviors/std-rasm-theme"
+uses SurfaceAtom from "std/behaviors/std-rasm-surface"
+uses StackAtom from "std/behaviors/std-rasm-stack"
+uses FocusAtom from "std/behaviors/std-rasm-focus"
+
+orbital RasmPage {
+  entity RasmPageView [runtime] {
+    id : string!
+  }
+
+  trait Theme = ThemeAtom.traits.RasmTheme {
+    config {
+      preset: @config.preset
+      style: @config.style
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
+    }
+  }
+
+  trait Surface = SurfaceAtom.traits.RasmSurface {
+    config {
+      id: "rasm"
+      width: 1280
+      height: 800
+      rootChild: "page"
+      rootRect: { x: 0, y: 0, w: 1280, h: 800 }
+      fill: true
+      pageScroll: true
+      fixed: @config.fixed
+      scrollReportMs: 120
+      margin: 0
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      Page.RASM_EXTENT -> RASM_EXTENT
+      Page.RASM_PAINT -> RASM_PAINT
+    }
+  }
+
+  trait Focus = FocusAtom.traits.RasmFocus {
+    listens {
+      Surface.RASM_KEY -> RASM_KEY
+      Surface.RASM_ACCESS -> RASM_ACCESS
+      Surface.RASM_POINTER -> RASM_POINTER
+    }
+  }
+
+  trait Page = StackAtom.traits.RasmStack {
+    config {
+      id: "page"
+      axis: vertical
+      gap: 0
+      padding: 0
+      look: ""
+      z: 1
+      children: @config.sections
+      variantBy: breakpoint
+      variants: @config.sectionVariants
+    }
+    listens {
+      Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
+      Theme.RASM_THEME -> RASM_THEME
+      Theme.RASM_STYLE -> RASM_STYLE
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Surface.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+    }
+  }
+
+  config {
+    preset : string = "hearth"
+      @label "Theme"
+      @description "The std-rasm-theme preset the page wears."
+      @tier "presentation"
+    style : string = ""
+      @label "Style"
+      @description "The std-rasm-theme style the page wears, named after the program's theme: its looks, hero arrangement, image treatment and entry motion. Empty wears `preset`."
+      @tier "presentation"
+    sections : [RasmChild] = []
+      @label "Sections"
+      @description "The page from the top, as the root stack's children: each id names a stack, grid or other placed trait the composing program adds, with its height."
+      @tier "presentation"
+    sectionVariants : Map string RasmStackShape = {}
+      @label "Section variants"
+      @description "The page's sections at a smaller breakpoint, by breakpoint name (phone, tablet): a shape whose children list the sections with their heights there, replacing `sections` while that breakpoint is current (a missing name takes the next smaller declared one, desktop and wide keep `sections`, which is the desktop composition)."
+      @tier "presentation"
+    fixed : [string] = []
+      @label "Fixed ids"
+      @description "The paint ids that stay in place while the page scrolls, such as a bar."
+      @tier "presentation"
+  }
+
+  page "/page" as RasmPageRoute -> Theme, Surface, Focus, Page
+}

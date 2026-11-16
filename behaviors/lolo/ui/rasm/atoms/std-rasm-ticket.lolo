@@ -1,0 +1,180 @@
+app std-rasm-ticket [
+  version: "0.1.0",
+  description: "std-rasm-ticket — an admission ticket or stub as a Rasm layout and ornament node (event nights, travel, cinema, subscriptions). It paints no text and no image: it paints its chrome from the theme's looks and places two named slots that the composing program fills with text, image, grid or pressable atoms. The ticket splits at a perforation `stub` of its width from one side (axis horizontal: the stub is the right part, the left part under rtl; axis vertical: the stub is the bottom part). Looks: `ticket/body/idle` paints the whole ticket as ONE path (paint id `<id>`) with a half-circle bite of radius `notch` cut out of both edges at the perforation; `ticket/perforation/idle` paints the perforation line between the bites (`<id>:perforation`, strokeDash dashed or dots); `ticket/stub/idle`, when present, tints the stub part over the body (`<id>:stub:tint`, following the bites). A look the theme does not announce paints nothing for that part; the body path ignores corner radii. Slots: `<id>:stub` (or `stubSlot`) is the stub part and `<id>:body` (or `bodySlot`) the rest, each inset by `padding`. A non-zero placed rotation turns the chrome about the rect centre and the slots with it. RASM_ENTER plays the entry choreography on the chrome."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
+type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
+
+type RasmTicketShape = { axis : "horizontal" | "vertical", stub : number, notch : number, padding : number }
+
+orbital RasmTicketOrbital {
+  entity RasmTicketRun [runtime] {
+    id : string!
+    entry : RasmEntryItem? @description "This node's entry from the announced style's choreography, null for the built-in one." = null
+    rect : RasmRect? @description "The rect RASM_PLACE gave this node, null until placed." = null
+    rotate : number @description "The rotation in radians RASM_PLACE gave this node; the chrome and the slots it places turn about the rect centre." = 0
+    looks : Map string RasmLook @description "The announced look table." = {}
+    dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
+    enterIndex : number @description "This node's position in the RASM_ENTER order, -1 when it is not in it." = -1
+    enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
+    staggerMs : number = 70
+    variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmTicket -> RasmTicketRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit TICKET_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TICKET_PAINT { n: @entity.paints })
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit TICKET_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TICKET_PAINT { n: @entity.paints })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TICKET_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate))))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit TICKET_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TICKET_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
+        (set @entity.enterIndex (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (if (array/includes ?order @config.id) (time/epoch-ms @now) @entity.enteredMs))
+        (set @entity.staggerMs ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TICKET_PAINT { n: @entity.paints })
+      TICKET_LAYOUT -> ready when (= @entity.rect null)
+      TICKET_PAINT -> ready when (= @entity.rect null)
+      TICKET_LAYOUT -> ready when (!= @entity.rect null)
+        (emit RASM_PLACE { n: ?n, placed: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (rot @entity.rotate) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (vert (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.axis)) @config.axis) "vertical")) (sg (if (= @entity.dir "rtl") -1 1))) (let ((cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (co (math/cos @rot)) (si (math/sin @rot)) (stubW (* @r.w (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub))) (stubH (* @r.h (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub)))) (let ((hx (if (> @sg 0) (- (+ @r.x @r.w) @stubW) (+ @r.x @stubW)))) (let ((raw [{ id: (if (= @config.stubSlot "") (str/concat @config.id ":stub") @config.stubSlot), x: (if @vert (+ @r.x @pad) (+ (if (> @sg 0) @hx @r.x) @pad)), y: (if @vert (+ (- (+ @r.y @r.h) @stubH) @pad) (+ @r.y @pad)), w: (math/max 0 (- (if @vert @r.w @stubW) (* 2 @pad))), h: (math/max 0 (- (if @vert @stubH @r.h) (* 2 @pad))) }, { id: (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot), x: (if @vert (+ @r.x @pad) (+ (if (> @sg 0) @r.x @hx) @pad)), y: (+ @r.y @pad), w: (math/max 0 (- (if @vert @r.w (- @r.w @stubW)) (* 2 @pad))), h: (math/max 0 (- (if @vert (- @r.h @stubH) @r.h) (* 2 @pad))) }])) (array/map @raw (fn s (let ((dx (- (+ @s.x (/ @s.w 2)) @cx)) (dy (- (+ @s.y (/ @s.h 2)) @cy))) { id: @s.id, rotate: @rot, rect: { x: (- (+ @cx (- (* @dx @co) (* @dy @si))) (/ @s.w 2)), y: (- (+ @cy (+ (* @dx @si) (* @dy @co))) (/ @s.h 2)), w: @s.w, h: @s.h } }))))))) })
+      TICKET_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (none : [node] []) (bd (object/get @entity.looks "ticket/body/idle" null)) (pf (object/get @entity.looks "ticket/perforation/idle" null)) (st (object/get @entity.looks "ticket/stub/idle" null)) (rot @entity.rotate) (idx @entity.enterIndex) (stag @entity.staggerMs) (n (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.notch)) @config.notch)) (vert (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.axis)) @config.axis) "vertical")) (sg (if (= @entity.dir "rtl") -1 1)))
+          (let ((cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (entry (+ 520 (* @idx @stag))) (x2 (+ @r.x @r.w)) (y2 (+ @r.y @r.h)) (hx (if (> @sg 0) (- (+ @r.x @r.w) (* @r.w (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub))) (+ @r.x (* @r.w (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub))))) (vy (- (+ @r.y @r.h) (* @r.h (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub)))))
+            (let ((anim (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @entry, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @idx @stag) @entry), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null))
+                  (bodyD (if @vert (str/concat "M" @r.x " " @r.y " L" @x2 " " @r.y " L" @x2 " " (- @vy @n) " A" @n " " @n " 0 0 0 " @x2 " " (+ @vy @n) " L" @x2 " " @y2 " L" @r.x " " @y2 " L" @r.x " " (+ @vy @n) " A" @n " " @n " 0 0 0 " @r.x " " (- @vy @n) " Z") (str/concat "M" @r.x " " @r.y " L" (- @hx @n) " " @r.y " A" @n " " @n " 0 0 0 " (+ @hx @n) " " @r.y " L" @x2 " " @r.y " L" @x2 " " @y2 " L" (+ @hx @n) " " @y2 " A" @n " " @n " 0 0 0 " (- @hx @n) " " @y2 " L" @r.x " " @y2 " Z")))
+                  (stubD (if @vert (str/concat "M" @r.x " " (+ @vy @n) " L" @r.x " " @y2 " L" @x2 " " @y2 " L" @x2 " " (+ @vy @n) " A" @n " " @n " 0 0 1 " (- @x2 @n) " " @vy " L" (+ @r.x @n) " " @vy " A" @n " " @n " 0 0 1 " @r.x " " (+ @vy @n) " Z") (let ((xe (if (> @sg 0) @x2 @r.x)) (sw (if (> @sg 0) 0 1))) (str/concat "M" (+ @hx (* @sg @n)) " " @r.y " L" @xe " " @r.y " L" @xe " " @y2 " L" (+ @hx (* @sg @n)) " " @y2 " A" @n " " @n " 0 0 " @sw " " @hx " " (- @y2 @n) " L" @hx " " (+ @r.y @n) " A" @n " " @n " 0 0 " @sw " " (+ @hx (* @sg @n)) " " @r.y " Z"))))
+                  (perfD (if @vert (str/concat "M" (+ @r.x @n) " " @vy " L" (- @x2 @n) " " @vy) (str/concat "M" @hx " " (+ @r.y @n) " L" @hx " " (- @y2 @n)))))
+              (let ((body (if (= @bd null) @none [{ type: draw-shape, shape: "path", id: @config.id, position: { x: 0, y: 0 }, anchor: "top-left", d: @bodyD, fill: @bd.fill, stroke: @bd.stroke, strokeWidth: @bd.strokeWidth, shadow: @bd.shadow, material: @bd.material, spring: @bd.spring, animation: @anim, hit: false }]))
+                    (tint (if (= @st null) @none [{ type: draw-shape, shape: "path", id: (str/concat @config.id ":stub:tint"), position: { x: 0, y: 0 }, anchor: "top-left", d: @stubD, fill: @st.fill, stroke: @st.stroke, strokeWidth: @st.strokeWidth, material: @st.material, spring: @st.spring, animation: @anim, hit: false }]))
+                    (perf (if (= @pf null) @none [{ type: draw-shape, shape: "path", id: (str/concat @config.id ":perforation"), position: { x: 0, y: 0 }, anchor: "top-left", d: @perfD, fill: "", stroke: @pf.stroke, strokeWidth: @pf.strokeWidth, strokeDash: (if (= @config.perforation "dots") [2, 6] [6, 5]), spring: @pf.spring, animation: @anim, hit: false }])))
+                (let ((parts (array/concat (array/concat @body @tint) @perf)))
+                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @rot 0) @parts [{ type: draw-group, id: (str/concat @config.id ":turn"), position: { x: @cx, y: @cy }, rotate: @rot, items: [{ type: draw-group, id: (str/concat @config.id ":turned"), position: { x: (- 0 @cx), y: (- 0 @cy) }, items: @parts }] }]) }))))))
+    }
+
+    emits {
+      TICKET_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Place the slots from the stored rect, rotation and direction."
+        @tier "internal"
+      TICKET_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the chrome from the stored rect, rotation, looks and direction."
+        @tier "internal"
+      RASM_PLACE -> external {
+        n : number!
+        placed : [RasmPlaced]!
+      }
+        @description "The slots' rects, each carrying this node's rotation."
+        @tier "primary"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The chrome's nodes at its z; a non-zero rotation wraps them in a group turned about the rect centre."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction; the mirrored side is redone."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain (the announced breakpoint, then each smaller declared one, stopping at desktop) that `variants` holds, none of them keeping the configured shape, which is the desktop composition; it lays out and paints again when the variant changes. With any other variantBy it is ignored."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take this node's rect and rotation when its own id is placed, then place the slots; a placement for any other id is ignored."
+      RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
+        @description "Play the entry choreography on the chrome when this node's id is in the order."
+    }
+
+    config {
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant (desktop and wide stop at desktop), then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string RasmTicketShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the axis, the stub share, the notch and the padding a variant names replace the configured ones while that breakpoint is current; one it leaves out keeps the configured value."
+        @tier "presentation"
+      id : string = "ticket"
+        @label "Id"
+        @description "The ticket's id: its RASM_PLACE key, its body paint id and the prefix of its slot and part ids."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      stub : number = 0.28
+        @label "Stub"
+        @description "The stub's share of the ticket along its axis (0 to 1): of the width on a horizontal ticket, of the height on a vertical one."
+        @tier "presentation"
+      notch : number = 12
+        @label "Notch"
+        @description "The radius in px of the half-circle bites cut out of both edges at the perforation."
+        @tier "presentation"
+      perforation : "dashed" | "dots" = "dashed"
+        @label "Perforation"
+        @description "The perforation line's dash pattern: dashed strokes or round-spaced dots."
+        @tier "presentation"
+      axis : "horizontal" | "vertical" = "horizontal"
+        @label "Axis"
+        @description "horizontal splits the ticket left and right (stub on the right, the left under rtl); vertical splits it top and bottom (stub at the bottom)."
+        @tier "presentation"
+      padding : number = 12
+        @label "Padding"
+        @description "Space in px between each part's edge and the slot placed in it."
+        @tier "presentation"
+      stubSlot : string = ""
+        @label "Stub slot"
+        @description "The id placed for the stub part; empty uses `<id>:stub`."
+        @tier "presentation"
+      bodySlot : string = ""
+        @label "Body slot"
+        @description "The id placed for the main part; empty uses `<id>:body`."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmTicketStart -> RasmTicket
+}

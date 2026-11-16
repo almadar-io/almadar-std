@@ -1,14 +1,14 @@
 app std-rasm-ribbon [
   version: "0.1.0",
-  description: "std-rasm-ribbon — a row of marks on a line that the page's scroll pulls sideways, on a std-rasm-surface with pageScroll on. It paints the marks RASM_RIBBON hands it along a line through the middle of its placed rect, `spacing` apart: each a dot on the line with its label above (text/eyebrow/idle) and its caption below (text/body/idle), the line in ribbon/line/idle. It travels sideways on the scroll clock while the rect crosses the view: it starts `drift` beyond its rest position as the rect's top enters the view and, as the rect's bottom leaves it, has travelled past its rest position by however much it is wider than the rect, so its last mark has come into view, running back when the page scrolls back; only what is inside the rect shows. It holds no rows: a program reads its data and sends the marks. Under rtl the row starts at the right edge and travels the other way."
+  description: "std-rasm-ribbon — a row of marks on a line that the page's scroll pulls sideways, on a std-rasm-surface with pageScroll on. It paints the marks RASM_RIBBON hands it along a line through the middle of its placed rect, `spacing` apart: each a dot on the line with its label above (text/eyebrow/idle) and its caption below (text/body/idle), the line in ribbon/line/idle. It travels sideways on the scroll clock while the rect crosses the view: it starts `drift` beyond its rest position as the rect's top enters the view and, as the rect's bottom leaves it, has travelled past its rest position by however much it is wider than the rect, so its last mark has come into view, running back when the page scrolls back; only what is inside the rect shows. It holds no rows: a program reads its data and sends the marks. Under rtl the row starts at the right edge and travels the other way. With clock time it is a ticker: the row loops on the paint clock instead of the scroll, and marks none drops the line and dots."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
-type RasmShadow = { color : string!, blur : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string! }
@@ -53,10 +53,10 @@ orbital RasmRibbonOrbital {
         (emit RIBBON_PAINT { n: @entity.paints })
       RASM_RIBBON -> ready when (!= ?id @config.id)
       RIBBON_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @entity.marks) 0))
-        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (ln (default (object/get @entity.looks "ribbon/line/idle" null) {})) (lab (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (cap (default (object/get @entity.looks "text/body/idle" null) {})) (n (array/len @entity.marks)) (rtl (= @entity.dir "rtl")))
-          (let ((total (+ (* 2 @config.padding) (* (- @n 1) @config.spacing))) (mid (+ @r.y (/ @r.h 2))) (sign (if @rtl -1 1)))
-            (let ((travel (math/max 0 (- @total @r.w))) (x0 (if @rtl (- (+ @r.x @r.w) @config.padding) (+ @r.x @config.padding))) (from (math/max 0 (- @r.y @entity.viewH))) (to (+ @r.y @r.h)))
-              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-group, id: (str/concat @config.id ":clip"), position: { x: 0, y: 0 }, clip: { x: @r.x, y: @r.y, width: (math/max 1 @r.w), height: (math/max 1 @r.h) }, items: [{ type: draw-group, id: (str/concat @config.id ":row"), position: { x: 0, y: 0 }, animation: { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: [{ at: 0, offsetX: (* @sign @config.drift) }, { at: 1, offsetX: (* -1 (* @sign @travel)) }] }, items: (array/concat [{ type: draw-shape, shape: "path", id: (str/concat @config.id ":line"), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " (- @x0 (* @sign @config.padding)) " " @mid " L " (+ @x0 (* @sign (+ @total @config.padding))) " " @mid), fill: "", stroke: @ln.stroke, strokeWidth: (default @ln.strokeWidth 1), hit: false }] (array/flatten (array/map (array/range @n) (fn i (let ((blank : RasmRibbonMark { label: "" }) (m (default (array/nth @entity.marks @i) @blank)) (x (+ @x0 (* @sign (* @i @config.spacing))))) [{ type: draw-shape, shape: "ellipse", id: (str/concat @config.id ":dot:" @i), anchor: "top-left", position: { x: @x, y: @mid, z: (+ @config.z 1) }, radiusX: @config.dotR, fill: @ln.fill, stroke: "", hit: false }, { type: draw-text, id: (str/concat @config.id ":label:" @i), text: @m.label, anchor: "top-left", position: { x: (- @x (/ (- @config.spacing 16) 2)), y: (- @mid (+ @config.dotR @config.labelGap)), z: (+ @config.z 1) }, align: "center", baseline: "bottom", color: @lab.textColor, font: @lab.font, width: (- @config.spacing 16), wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":caption:" @i), text: (default @m.caption ""), anchor: "top-left", position: { x: (- @x (/ (- @config.spacing 16) 2)), y: (+ @mid (+ @config.dotR @config.labelGap)), z: (+ @config.z 1) }, align: "center", baseline: "top", color: @cap.textColor, font: @cap.font, width: (- @config.spacing 16), wrap: true, hit: false }]))))) }] }] }))))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (ln (default (object/get @entity.looks "ribbon/line/idle" null) {})) (lab (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (cap (default (object/get @entity.looks "text/body/idle" null) {})) (n (array/len @entity.marks)) (rtl (= @entity.dir "rtl")) (timed (= @config.clock "time")) (dots (= @config.marks "dots")))
+          (let ((total (+ (* 2 @config.padding) (* (- @n 1) @config.spacing))) (mid (+ @r.y (/ @r.h 2))) (sign (if @rtl -1 1)) (period (* @n @config.spacing)))
+            (let ((travel (math/max 0 (- @total @r.w))) (x0 (if @rtl (- (+ @r.x @r.w) @config.padding) (+ @r.x @config.padding))) (from (math/max 0 (- @r.y @entity.viewH))) (to (+ @r.y @r.h)) (copies (if @timed (+ 2 (math/ceil (/ @r.w (math/max 1 @period)))) 1)))
+              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-group, id: (str/concat @config.id ":clip"), position: { x: 0, y: 0 }, clip: { x: @r.x, y: @r.y, width: (math/max 1 @r.w), height: (math/max 1 @r.h) }, items: [{ type: draw-group, id: (str/concat @config.id ":row"), position: { x: 0, y: 0 }, animation: (if @timed { durationMs: @config.periodMs, loop: true, keyframes: [{ at: 0, offsetX: 0 }, { at: 1, offsetX: (* -1 (* @sign @period)) }] } { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: [{ at: 0, offsetX: (* @sign @config.drift) }, { at: 1, offsetX: (* -1 (* @sign @travel)) }] }), items: (array/concat (if @dots [{ type: draw-shape, shape: "path", id: (str/concat @config.id ":line"), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " (- @x0 (* @sign @config.padding)) " " @mid " L " (+ @x0 (* @sign (if @timed (* @copies @period) (+ @total @config.padding)))) " " @mid), fill: "", stroke: @ln.stroke, strokeWidth: (default @ln.strokeWidth 1), hit: false }] []) (array/flatten (array/map (array/range (* @copies @n)) (fn j (let ((k (math/floor (/ @j @n))) (blank : RasmRibbonMark { label: "" })) (let ((i (- @j (* @k @n)))) (let ((m (default (array/nth @entity.marks @i) @blank)) (x (+ @x0 (* @sign (+ (* @k @period) (* @i @config.spacing))))) (tag (if (= @k 0) (str/concat "" @i) (str/concat @i ":" @k)))) (array/concat (if @dots [{ type: draw-shape, shape: "ellipse", id: (str/concat @config.id ":dot:" @tag), anchor: "top-left", position: { x: @x, y: @mid, z: (+ @config.z 1) }, radiusX: @config.dotR, fill: @ln.fill, stroke: "", hit: false }] []) [{ type: draw-text, id: (str/concat @config.id ":label:" @tag), text: @m.label, anchor: "top-left", position: { x: (- @x (/ (- @config.spacing 16) 2)), y: (- @mid (+ @config.dotR @config.labelGap)), z: (+ @config.z 1) }, align: "center", baseline: "bottom", color: @lab.textColor, font: @lab.font, width: (- @config.spacing 16), wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":caption:" @tag), text: (default @m.caption ""), anchor: "top-left", position: { x: (- @x (/ (- @config.spacing 16) 2)), y: (+ @mid (+ @config.dotR @config.labelGap)), z: (+ @config.z 1) }, align: "center", baseline: "top", color: @cap.textColor, font: @cap.font, width: (- @config.spacing 16), wrap: true, hit: false }])))))))) }] }] }))))
       RIBBON_PAINT -> ready when (not (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @entity.marks) 0)))
     }
 
@@ -118,6 +118,18 @@ orbital RasmRibbonOrbital {
       labelGap : number = 14
         @label "Label gap"
         @description "Space between a dot and its label or caption in px."
+        @tier "presentation"
+      clock : "scroll" | "time" = "scroll"
+        @label "Clock"
+        @description "scroll travels the row with the page scroll; time loops it on the canvas paint clock, travelling one mark-set width every periodMs with the row painted end to end enough times for a seamless ticker."
+        @tier "presentation"
+      periodMs : number = 20000
+        @label "Period"
+        @description "With clock time, the milliseconds one loop takes."
+        @tier "presentation"
+      marks : "dots" | "none" = "dots"
+        @label "Marks"
+        @description "dots paints the line and a dot per mark; none paints only the labels and captions, a ticker of words."
         @tier "presentation"
     }
   }

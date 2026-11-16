@@ -1,0 +1,194 @@
+app std-rasm-balloon [
+  version: "0.1.0",
+  description: "std-rasm-balloon — a speech, thought or shout balloon as a Rasm layout and ornament node (comic panels, kawaii, chat). It paints no text and no image: it paints its outline from the theme's looks and places one named slot that the composing program fills with text, image, grid or pressable atoms. The placed rect is the whole footprint: on a side with a tail the body is `tailSize` px smaller and the tail fills that strip (a shout has no tail strip and fills its rect). Looks: `balloon/body/idle` paints body and tail as ONE path (paint id `<id>`; kind speech is a rounded rectangle with a triangular tail; kind thought is a scalloped outline with two small circles as the tail, `<id>:tail:0` and `<id>:tail:1`; kind shout is a jagged burst without a tail and uses `balloon/shout/idle` when the theme announces it, else the body look). A look the theme does not announce paints nothing. Slot: `<id>:body` (or `bodySlot`) is inset from the outline by the look's strokeWidth plus 8 px plus a share of the corner radius or scallop (a shout takes the middle 56 percent of its rect). rtl mirrors left and right tails. A non-zero placed rotation turns the chrome about the rect centre and the slot with it. RASM_ENTER plays the entry choreography on the chrome."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
+type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
+
+type RasmBalloonShape = { tail : "bottom-left" | "bottom-right" | "top-left" | "top-right" | "left" | "right" | "none", tailSize : number }
+
+orbital RasmBalloonOrbital {
+  entity RasmBalloonRun [runtime] {
+    id : string!
+    entry : RasmEntryItem? @description "This node's entry from the announced style's choreography, null for the built-in one." = null
+    rect : RasmRect? @description "The rect RASM_PLACE gave this node, null until placed." = null
+    rotate : number @description "The rotation in radians RASM_PLACE gave this node; the chrome and the slots it places turn about the rect centre." = 0
+    looks : Map string RasmLook @description "The announced look table." = {}
+    dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
+    enterIndex : number @description "This node's position in the RASM_ENTER order, -1 when it is not in it." = -1
+    enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
+    staggerMs : number = 70
+    variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmBalloon -> RasmBalloonRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit BALLOON_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BALLOON_PAINT { n: @entity.paints })
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit BALLOON_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BALLOON_PAINT { n: @entity.paints })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BALLOON_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate))))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit BALLOON_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BALLOON_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
+        (set @entity.enterIndex (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (if (array/includes ?order @config.id) (time/epoch-ms @now) @entity.enteredMs))
+        (set @entity.staggerMs ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BALLOON_PAINT { n: @entity.paints })
+      BALLOON_LAYOUT -> ready when (= @entity.rect null)
+      BALLOON_PAINT -> ready when (= @entity.rect null)
+      BALLOON_LAYOUT -> ready when (!= @entity.rect null)
+        (emit RASM_PLACE { n: ?n, placed: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (rot @entity.rotate) (kind @config.kind) (ts (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tailSize)) @config.tailSize)) (rtl (= @entity.dir "rtl")) (lk (let ((sl (object/get @entity.looks "balloon/shout/idle" null)) (bl (object/get @entity.looks "balloon/body/idle" null))) (if (and (= @config.kind "shout") (!= @sl null)) @sl @bl))))
+          (let ((tl (if (not @rtl) (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "bottom-left") "bottom-right" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "bottom-right") "bottom-left" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "top-left") "top-right" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "top-right") "top-left" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "left") "right" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "right") "left" (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail)))))))))
+                (sw (if (= @lk null) 0 (default @lk.strokeWidth 0))))
+            (let ((on (and (!= @kind "shout") (!= @tl "none"))) (isL (= @tl "left")) (isR (= @tl "right")) (isT (array/includes ["top-left", "top-right"] @tl)) (isB (array/includes ["bottom-left", "bottom-right"] @tl)))
+              (let ((bx (+ @r.x (if (and @on @isL) @ts 0))) (by (+ @r.y (if (and @on @isT) @ts 0))) (bw (- @r.w (if (and @on (or @isL @isR)) @ts 0))) (bh (- @r.h (if (and @on (or @isB @isT)) @ts 0))))
+                (let ((inset (+ @sw (+ 8 (if (= @kind "speech") (* 0.3 (math/min @config.radius (math/min (/ @bw 2) (/ @bh 2)))) (if (= @kind "thought") (/ @config.scallop 2) 0)))))
+                      (cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (co (math/cos @rot)) (si (math/sin @rot)))
+                  (let ((raw (if (= @kind "shout") [{ id: (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot), x: (+ @bx (* 0.22 @bw)), y: (+ @by (* 0.22 @bh)), w: (* 0.56 @bw), h: (* 0.56 @bh) }] [{ id: (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot), x: (+ @bx @inset), y: (+ @by @inset), w: (math/max 0 (- @bw (* 2 @inset))), h: (math/max 0 (- @bh (* 2 @inset))) }])))
+                    (array/map @raw (fn s (let ((dx (- (+ @s.x (/ @s.w 2)) @cx)) (dy (- (+ @s.y (/ @s.h 2)) @cy))) { id: @s.id, rotate: @rot, rect: { x: (- (+ @cx (- (* @dx @co) (* @dy @si))) (/ @s.w 2)), y: (- (+ @cy (+ (* @dx @si) (* @dy @co))) (/ @s.h 2)), w: @s.w, h: @s.h } }))))))))) })
+      BALLOON_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (none : [node] []) (rot @entity.rotate) (idx @entity.enterIndex) (stag @entity.staggerMs) (kind @config.kind) (ts (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tailSize)) @config.tailSize)) (rtl (= @entity.dir "rtl")) (lk (let ((sl (object/get @entity.looks "balloon/shout/idle" null)) (bl (object/get @entity.looks "balloon/body/idle" null))) (if (and (= @config.kind "shout") (!= @sl null)) @sl @bl))))
+          (let ((tl (if (not @rtl) (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "bottom-left") "bottom-right" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "bottom-right") "bottom-left" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "top-left") "top-right" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "top-right") "top-left" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "left") "right" (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail) "right") "left" (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.tail)) @config.tail)))))))))
+                (cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (entry (+ 520 (* @idx @stag))))
+            (let ((on (and (!= @kind "shout") (!= @tl "none"))) (isL (= @tl "left")) (isR (= @tl "right")) (isT (array/includes ["top-left", "top-right"] @tl)) (isB (array/includes ["bottom-left", "bottom-right"] @tl))
+                  (anim (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @entry, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @idx @stag) @entry), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null)))
+              (let ((x1 (+ @r.x (if (and @on @isL) @ts 0))) (y1 (+ @r.y (if (and @on @isT) @ts 0))) (bw (- @r.w (if (and @on (or @isL @isR)) @ts 0))) (bh (- @r.h (if (and @on (or @isB @isT)) @ts 0))))
+                (let ((x2 (+ @x1 @bw)) (y2 (+ @y1 @bh)) (rr (math/min @config.radius (math/min (/ @bw 2) (/ @bh 2)))) (leftCorner (array/includes ["top-left", "bottom-left"] @tl)) (br (/ @config.scallop 2)))
+                  (let ((ta (if (or @isL @isR) (- (+ @y1 (/ @bh 2)) (/ @ts 2)) (if @leftCorner (+ @x1 @rr) (- (- @x2 @rr) @ts)))))
+                    (let ((tb (+ @ta @ts)))
+                      (let ((tipx (if @isL (- @x1 @ts) (if @isR (+ @x2 @ts) (if @leftCorner (math/max @x1 (- @ta (* 0.3 @ts))) (math/min @x2 (+ @tb (* 0.3 @ts))))))) (tipy (if (or @isL @isR) (+ @y1 (/ @bh 2)) (if @isB (+ @y2 @ts) (- @y1 @ts)))))
+                        (let ((speechD (str/concat "M" (+ @x1 @rr) " " @y1 (if (and @on @isT) (str/concat " L" @ta " " @y1 " L" @tipx " " @tipy " L" @tb " " @y1) "") " L" (- @x2 @rr) " " @y1 " A" @rr " " @rr " 0 0 1 " @x2 " " (+ @y1 @rr) (if (and @on @isR) (str/concat " L" @x2 " " @ta " L" @tipx " " @tipy " L" @x2 " " @tb) "") " L" @x2 " " (- @y2 @rr) " A" @rr " " @rr " 0 0 1 " (- @x2 @rr) " " @y2 (if (and @on @isB) (str/concat " L" @tb " " @y2 " L" @tipx " " @tipy " L" @ta " " @y2) "") " L" (+ @x1 @rr) " " @y2 " A" @rr " " @rr " 0 0 1 " @x1 " " (- @y2 @rr) (if (and @on @isL) (str/concat " L" @x1 " " @tb " L" @tipx " " @tipy " L" @x1 " " @ta) "") " L" @x1 " " (+ @y1 @rr) " A" @rr " " @rr " 0 0 1 " (+ @x1 @rr) " " @y1 " Z"))
+                              (kx (math/max 1 (math/round (/ (- @bw @config.scallop) @config.scallop)))) (ky (math/max 1 (math/round (/ (- @bh @config.scallop) @config.scallop)))))
+                          (let ((thoughtD (let ((u1 (+ @x1 @br)) (u2 (- @x2 @br)) (v1 (+ @y1 @br)) (v2 (- @y2 @br))) (let ((lx (/ (- @u2 @u1) @kx)) (ly (/ (- @v2 @v1) @ky))) (str/concat "M" @u1 " " @v1 (array/reduce (array/range @kx) "" (fn acc i (str/concat @acc " A" (/ @lx 2) " " (/ @lx 2) " 0 0 1 " (+ @u1 (* (+ @i 1) @lx)) " " @v1))) (array/reduce (array/range @ky) "" (fn acc i (str/concat @acc " A" (/ @ly 2) " " (/ @ly 2) " 0 0 1 " @u2 " " (+ @v1 (* (+ @i 1) @ly))))) (array/reduce (array/range @kx) "" (fn acc i (str/concat @acc " A" (/ @lx 2) " " (/ @lx 2) " 0 0 1 " (- @u2 (* (+ @i 1) @lx)) " " @v2))) (array/reduce (array/range @ky) "" (fn acc i (str/concat @acc " A" (/ @ly 2) " " (/ @ly 2) " 0 0 1 " @u1 " " (- @v2 (* (+ @i 1) @ly))))) " Z"))))
+                                (shoutD (array/reduce (array/range 24) "" (fn acc i (str/concat @acc (if (= @i 0) "M" " L") (+ @cx (* (/ @r.w 2) (* (if (= (math/mod @i 2) 0) 1 0.78) (math/cos (/ (* @i 3.141592653589793) 12))))) " " (+ @cy (* (/ @r.h 2) (* (if (= (math/mod @i 2) 0) 1 0.78) (math/sin (/ (* @i 3.141592653589793) 12)))))))))
+                                (ax (if @isL @x1 (if @isR @x2 (/ (+ @ta @tb) 2)))) (ay (if (or @isL @isR) (+ @y1 (/ @bh 2)) (if @isB @y2 @y1))))
+                            (let ((d (if (= @kind "speech") @speechD (if (= @kind "thought") @thoughtD (str/concat @shoutD " Z"))))
+                                  (circles (if (and (= @kind "thought") @on) [{ i: 0, f: 0.35, k: 0.28 }, { i: 1, f: 0.8, k: 0.16 }] [])))
+                              (let ((body (if (= @lk null) @none [{ type: draw-shape, shape: "path", id: @config.id, position: { x: 0, y: 0 }, anchor: "top-left", d: @d, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, shadow: @lk.shadow, material: @lk.material, spring: @lk.spring, animation: @anim, hit: false }]))
+                                    (dots (if (= @lk null) @none (array/map @circles (fn c { type: draw-shape, shape: "ellipse", id: (str/concat @config.id ":tail:" @c.i), position: { x: (+ @ax (* (- @tipx @ax) @c.f)), y: (+ @ay (* (- @tipy @ay) @c.f)) }, anchor: "center", radiusX: (* @ts @c.k), radiusY: (* @ts @c.k), fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, spring: @lk.spring, animation: @anim, hit: false })))))
+                                (let ((parts (array/concat @body @dots)))
+                                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @rot 0) @parts [{ type: draw-group, id: (str/concat @config.id ":turn"), position: { x: @cx, y: @cy }, rotate: @rot, items: [{ type: draw-group, id: (str/concat @config.id ":turned"), position: { x: (- 0 @cx), y: (- 0 @cy) }, items: @parts }] }]) }))))))))))))))
+    }
+
+    emits {
+      BALLOON_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Place the slots from the stored rect, rotation and direction."
+        @tier "internal"
+      BALLOON_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the chrome from the stored rect, rotation, looks and direction."
+        @tier "internal"
+      RASM_PLACE -> external {
+        n : number!
+        placed : [RasmPlaced]!
+      }
+        @description "The slots' rects, each carrying this node's rotation."
+        @tier "primary"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The chrome's nodes at its z; a non-zero rotation wraps them in a group turned about the rect centre."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction; the mirrored side is redone."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain (the announced breakpoint, then each smaller declared one, stopping at desktop) that `variants` holds, none of them keeping the configured shape, which is the desktop composition; it lays out and paints again when the variant changes. With any other variantBy it is ignored."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take this node's rect and rotation when its own id is placed, then place the slots; a placement for any other id is ignored."
+      RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
+        @description "Play the entry choreography on the chrome when this node's id is in the order."
+    }
+
+    config {
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant (desktop and wide stop at desktop), then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string RasmBalloonShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the tail and its size a variant names replace the configured ones while that breakpoint is current; one it leaves out keeps the configured value."
+        @tier "presentation"
+      id : string = "balloon"
+        @label "Id"
+        @description "The balloon's id: its RASM_PLACE key, its outline paint id and the prefix of its slot and tail ids."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      tail : "bottom-left" | "bottom-right" | "top-left" | "top-right" | "left" | "right" | "none" = "bottom-left"
+        @label "Tail"
+        @description "Where the tail leaves the body in a left-to-right reading; rtl mirrors left and right. The tail fills a strip of tailSize px of the placed rect on that side. A shout paints no tail."
+        @tier "presentation"
+      tailSize : number = 22
+        @label "Tail size"
+        @description "The tail's length in px, and the width of its base on the body edge."
+        @tier "presentation"
+      kind : "speech" | "thought" | "shout" = "speech"
+        @label "Kind"
+        @description "speech is a rounded rectangle with a triangular tail; thought is a scalloped outline with two small circles as the tail; shout is a jagged burst without a tail."
+        @tier "presentation"
+      radius : number = 16
+        @label "Radius"
+        @description "The speech body's corner radius in px, held to half the body's shorter side."
+        @tier "presentation"
+      scallop : number = 18
+        @label "Scallop"
+        @description "The thought outline's bump diameter in px; each edge is divided into the nearest whole number of bumps."
+        @tier "presentation"
+      bodySlot : string = ""
+        @label "Body slot"
+        @description "The id placed for the content area; empty uses `<id>:body`."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmBalloonStart -> RasmBalloon
+}

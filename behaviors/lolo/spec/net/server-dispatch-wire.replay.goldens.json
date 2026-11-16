@@ -790,6 +790,7 @@
                   "options": {
                     "wire": true,
                     "stream": true,
+                    "framed": false,
                     "input": false,
                     "orbital": "Notes",
                     "targetTrait": "Layout",
@@ -844,6 +845,7 @@
                   "options": {
                     "wire": true,
                     "stream": true,
+                    "framed": false,
                     "input": false,
                     "orbital": "Notes",
                     "targetTrait": "Layout",
@@ -897,6 +899,7 @@
                   "options": {
                     "wire": true,
                     "stream": false,
+                    "framed": false,
                     "input": false,
                     "orbital": "Notes",
                     "targetTrait": "Layout",
@@ -922,6 +925,122 @@
                     },
                     "framesSince": null
                   }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "framed-accept-asks-the-host-for-the-framed-body",
+      "note": "EXEC-DIST-16b: a browser that accepts the framed body asks program/dispatch for it",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "",
+            "headers": {
+              "content-type": "application/json",
+              "accept": "application/vnd.almadar.framed"
+            },
+            "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DISPATCH_PREPARED",
+                "payload": {
+                  "requestId": 7,
+                  "options": {
+                    "wire": true,
+                    "stream": false,
+                    "framed": true,
+                    "input": false,
+                    "orbital": "Notes",
+                    "targetTrait": "Layout",
+                    "entityId": "",
+                    "event": "CREATE",
+                    "traits": null,
+                    "mount": [],
+                    "route": "",
+                    "clientId": "",
+                    "locale": "",
+                    "delivery": {},
+                    "dispatchLog": {},
+                    "entityByTrait": {},
+                    "framesSince": null
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-framed-answer-is-the-response-body-with-its-media-type",
+      "note": "EXEC-DIST-16b: the host answered the framed body, which is the response as it is",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "",
+            "headers": {
+              "content-type": "application/json",
+              "accept": "application/vnd.almadar.framed"
+            },
+            "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
+        },
+        {
+          "event": "DISPATCH_ANSWERED",
+          "payload": {
+            "result": {
+              "success": true,
+              "transitioned": true,
+              "states": {},
+              "emittedEvents": [],
+              "clientEffectsByTrait": [],
+              "rejections": [],
+              "framed": "AgAAAHt9"
+            },
+            "key": "dispatch-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/vnd.almadar.framed"
+                    }
+                  ],
+                  "body": "AgAAAHt9"
                 }
               }
             ]

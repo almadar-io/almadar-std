@@ -4,23 +4,31 @@ app std-rasm-text [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
-type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
-type RasmShadow = { color : string!, blur : number! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, rotate : number?, vertical : boolean?, pivotX : number?, pivotY : number? }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
+type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
+type RasmMotion = { signature : "rise" | "print-pass" | "fan" | "glitch" | "ink-bleed" | "paper-drop" | "kinetic" | "float" | "snap"!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
 
 orbital RasmTextOrbital {
   entity RasmTextRun [runtime] {
     id : string!
+    entry : RasmEntryItem? @description "This control's entry from the announced style's choreography, null for the built-in one." = null
     rect : RasmRect? @description "The rect RASM_PLACE gave this text, null until placed." = null
+    rotate : number @description "The rotation in radians RASM_PLACE gave this text, 0 when none." = 0
     looks : Map string RasmLook @description "The announced look table." = {}
     dir : "ltr" | "rtl" @description "The direction the surface announced; rtl aligns the paragraph to the right edge." = "ltr"
+    centered : boolean @description "The announced style centres this paragraph (followAlign on and the layout aligns to the centre)." = false
     enterIndex : number @description "This text's position in the RASM_ENTER order, -1 when it is not in it." = -1
     enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
     staggerMs : number = 70
@@ -36,23 +44,29 @@ orbital RasmTextOrbital {
         (set @entity.dir ?direction)
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
+      RASM_STYLE -> ready
+        (set @entity.centered (and @config.followAlign (= ?layout.align "center")))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TEXT_PAINT { n: @entity.paints })
       RASM_THEME -> ready
         (set @entity.looks ?looks)
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
       RASM_ENTER -> ready
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.enterIndex (array/indexOf ?order @config.id))
         (set @entity.enteredMs (if (array/includes ?order @config.id) (time/epoch-ms @now) @entity.enteredMs))
         (set @entity.staggerMs ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       TEXT_PAINT -> ready
-        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [{ id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if (= @entity.dir "rtl") "right" "left"), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null) }] })))))
+        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [(object/merge { id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {}))] })))))
     }
 
     emits {
@@ -74,12 +88,15 @@ orbital RasmTextOrbital {
 
     listens {
       RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction: rtl aligns the paragraph to the right edge."
+      RASM_STYLE { name : string!  layout : RasmLayout!  motion : RasmMotion! }
+        @description "With followAlign on, a layout that aligns to the centre centres the paragraph; any other alignment keeps it on the reading edge."
         @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this text's rect when it is placed and repaint."
-      RASM_ENTER { order : [string]!  staggerMs : number! }
+      RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
         @description "Play the entry choreography when this text's id is in the order."
     }
 
@@ -92,9 +109,17 @@ orbital RasmTextOrbital {
         @label "Text"
         @description "The catalog key of the paragraph."
         @tier "presentation"
-      intent : "display" | "title" | "card" | "eyebrow" | "body" = "body"
+      intent : "display" | "title" | "card" | "eyebrow" | "body" | "poster" | "numeral" | "caption" | "label" | "quote" = "body"
         @label "Intent"
-        @description "Selects the look text/<intent>/idle. display and eyebrow are the landing headline and the line above it; card is a title inside a card."
+        @description "Selects the look text/<intent>/idle. display and eyebrow are the landing headline and the line above it; card is a title inside a card; poster is oversized display type, numeral a large figure, caption a small line under a picture, label a short tag, quote a pulled quotation."
+        @tier "presentation"
+      vertical : boolean = false
+        @label "Vertical"
+        @description "Paints one character per line, top to bottom: a vertical cartouche for CJK-style or decorative vertical labels. Only the paint is split, the message stays one key. A vertical text, like a rotated one, is painted as a canvas text node in the active locale at paint time."
+        @tier "presentation"
+      followAlign : boolean = false
+        @label "Follow the style's alignment"
+        @description "Centre this paragraph when the announced style's layout aligns to the centre (a centred hero); off keeps it on the reading edge whatever the style."
         @tier "presentation"
       z : number = 0
         @label "Z"

@@ -1,0 +1,120 @@
+app page-example [
+  version: "0.1.0",
+  description: "A two-section Rasm page composed on std-rasm-page: the fixture the page goldens replay.",
+  locales: [en, ar, sl]
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+uses StackAtom from "std/behaviors/std-rasm-stack"
+uses GridAtom from "std/behaviors/std-rasm-grid"
+uses TextAtom from "std/behaviors/std-rasm-text"
+uses ImageAtom from "std/behaviors/std-rasm-image"
+uses PressAtom from "std/behaviors/std-rasm-pressable"
+uses PresenceAtom from "std/behaviors/std-rasm-presence"
+
+orbital ExamplePage = Shell.orbitals.RasmPage {
+  config {
+    style: "minimalist"
+    sections: [{ id: "hero", size: "fixed", main: 640 }, { id: "footer", size: "fixed", main: 120 }]
+  }
+
+  trait HeroGrid = GridAtom.traits.RasmGrid {
+    config {
+      id: "hero"
+      columns: [{ size: "fr", main: 2 }, { size: "fr", main: 1 }]
+      rows: [{ size: "fill" }, { size: "fixed", main: 90 }]
+      gap: 30
+      padding: 25
+      rules: "columns"
+      border: true
+      children: [{ id: "headline", col: 0, row: 0, rotate: -0.05 }, { id: "photo", col: 1, row: 0, rowSpan: 2, offsetY: 12 }, { id: "cta", col: 0, row: 1 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
+  trait Headline = TextAtom.traits.RasmText {
+    config {
+      id: "headline"
+      text: "hero.headline"
+      intent: "poster"
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      HeroGrid.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
+  trait Photo = ImageAtom.traits.RasmImage {
+    config {
+      id: "photo"
+      url: "https://example.org/photo.jpg"
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Theme.RASM_STYLE -> RASM_STYLE
+      HeroGrid.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
+  trait Cta = PressAtom.traits.RasmPressable {
+    config {
+      id: "cta"
+      label: "hero.cta"
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      HeroGrid.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Enter = PresenceAtom.traits.RasmPresence {
+    config {
+      order: ["headline", "cta"]
+      staggerMs: 60
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_STYLE -> RASM_STYLE
+      Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      Page.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
+  trait FooterText = TextAtom.traits.RasmText {
+    config {
+      id: "footer"
+      text: "footer.note"
+      intent: "caption"
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
+  traits {
+    Focus { config { order: ["cta"] } }
+  }
+
+  listens {
+    HeroGrid.RASM_PAINT -> Surface.RASM_PAINT
+    Headline.RASM_PAINT -> Surface.RASM_PAINT
+    Photo.RASM_PAINT -> Surface.RASM_PAINT
+    Cta.RASM_PAINT -> Surface.RASM_PAINT
+    FooterText.RASM_PAINT -> Surface.RASM_PAINT
+  }
+
+  pages { "/page": "/" -> Theme, Surface, Focus, Page, HeroGrid, Headline, Photo, Cta, FooterText, Enter }
+}

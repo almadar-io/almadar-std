@@ -4,20 +4,24 @@ app std-rasm-toggle [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
-type RasmShadow = { color : string!, blur : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
+type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
 
 orbital RasmToggleOrbital {
   entity RasmToggleItem [runtime] {
     id : string!
+    entry : RasmEntryItem? @description "This control's entry from the announced style's choreography, null for the built-in one." = null
     looks : Map string RasmLook = {}
     hasLooks : boolean = false
     rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
@@ -57,6 +61,7 @@ orbital RasmToggleOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> offIdle when (array/includes ?order @config.id)
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.entering (array/indexOf ?order @config.id))
         (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
@@ -88,7 +93,7 @@ orbital RasmToggleOrbital {
       REPAINT -> offIdle when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) (if (= @entity.entry null) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null))
             (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/off-idle")) {}))
             (sw (= @config.kind "switch"))
             (cy (+ @r.y (/ @r.h 2)))
@@ -120,6 +125,7 @@ orbital RasmToggleOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> offHovered when (array/includes ?order @config.id)
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.entering (array/indexOf ?order @config.id))
         (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
@@ -150,7 +156,7 @@ orbital RasmToggleOrbital {
       REPAINT -> offHovered when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) (if (= @entity.entry null) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null))
             (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/off-hovered")) {}))
             (sw (= @config.kind "switch"))
             (cy (+ @r.y (/ @r.h 2)))
@@ -182,6 +188,7 @@ orbital RasmToggleOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> offFocused when (array/includes ?order @config.id)
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.entering (array/indexOf ?order @config.id))
         (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
@@ -209,7 +216,7 @@ orbital RasmToggleOrbital {
       REPAINT -> offFocused when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) (if (= @entity.entry null) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null))
             (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/off-focused")) {}))
             (sw (= @config.kind "switch"))
             (cy (+ @r.y (/ @r.h 2)))
@@ -241,6 +248,7 @@ orbital RasmToggleOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> onIdle when (array/includes ?order @config.id)
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.entering (array/indexOf ?order @config.id))
         (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
@@ -272,7 +280,7 @@ orbital RasmToggleOrbital {
       REPAINT -> onIdle when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) (if (= @entity.entry null) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null))
             (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/on-idle")) {}))
             (sw (= @config.kind "switch"))
             (cy (+ @r.y (/ @r.h 2)))
@@ -304,6 +312,7 @@ orbital RasmToggleOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> onHovered when (array/includes ?order @config.id)
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.entering (array/indexOf ?order @config.id))
         (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
@@ -334,7 +343,7 @@ orbital RasmToggleOrbital {
       REPAINT -> onHovered when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) (if (= @entity.entry null) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null))
             (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/on-hovered")) {}))
             (sw (= @config.kind "switch"))
             (cy (+ @r.y (/ @r.h 2)))
@@ -366,6 +375,7 @@ orbital RasmToggleOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> onFocused when (array/includes ?order @config.id)
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.entering (array/indexOf ?order @config.id))
         (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
@@ -393,7 +403,7 @@ orbital RasmToggleOrbital {
       REPAINT -> onFocused when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) (if (= @entity.entry null) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null))
             (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/on-focused")) {}))
             (sw (= @config.kind "switch"))
             (cy (+ @r.y (/ @r.h 2)))
@@ -431,7 +441,7 @@ orbital RasmToggleOrbital {
         @description "The theme's looks; the control repaints with them."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Placed rects; the control takes the entry whose id is its own."
-      RASM_ENTER { order : [string]!  staggerMs : number! }
+      RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
         @description "The entry choreography; a control in the order paints with its stagger."
       RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
         @description "A pointer event from the surface; the control acts on its own id."

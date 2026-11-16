@@ -2123,6 +2123,842 @@
      }
     }
    ]
+  },
+  {
+   "id": "the-first-size-announces-the-breakpoint-it-falls-in",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "desktop",
+      "min": 1024
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 500,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "breakpoint": "phone",
+       "sizedW": 500
+      },
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "phone",
+         "width": 500,
+         "chain": [
+          "phone"
+         ]
+        }
+       },
+       {
+        "event": "RASM_RESIZE",
+        "payload": {
+         "width": 500,
+         "height": 800
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-size-on-a-breakpoint-minimum-is-in-that-breakpoint",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "desktop",
+      "min": 1024
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 640,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "breakpoint": "tablet"
+      },
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "tablet",
+         "width": 640,
+         "chain": [
+          "tablet",
+          "phone"
+         ]
+        }
+       },
+       {
+        "event": "RASM_RESIZE",
+        "payload": {
+         "width": 640,
+         "height": 800
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-resize-inside-the-same-breakpoint-announces-no-breakpoint",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "desktop",
+      "min": 1024
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ],
+    "breakpoint": "phone",
+    "sizedW": 500
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 600,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "breakpoint": "phone",
+       "sizedW": 600
+      },
+      "neverEmits": [
+       "RASM_BREAKPOINT"
+      ],
+      "emits": [
+       {
+        "event": "RASM_RESIZE",
+        "payload": {
+         "width": 600,
+         "height": 800
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "crossing-into-another-breakpoint-announces-it-once",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "desktop",
+      "min": 1024
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ],
+    "breakpoint": "phone",
+    "sizedW": 600
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 700,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "breakpoint": "tablet"
+      },
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "tablet",
+         "width": 700,
+         "chain": [
+          "tablet",
+          "phone"
+         ]
+        }
+       },
+       {
+        "event": "RASM_RESIZE",
+        "payload": {
+         "width": 700,
+         "height": 800
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 710,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_BREAKPOINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-dirty-surface-announces-the-breakpoint-too",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "desktop",
+      "min": 1024
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "dirty",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 500,
+      "height": 800
+     },
+     "expect": {
+      "state": "dirty",
+      "entity": {
+       "breakpoint": "phone"
+      },
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "phone",
+         "width": 500,
+         "chain": [
+          "phone"
+         ]
+        }
+       },
+       {
+        "event": "RASM_RESIZE",
+        "payload": {
+         "width": 500,
+         "height": 800
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-table-that-arrives-after-the-first-size-announces-the-breakpoint-then",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "sizedW": 500
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "naqsh",
+      "looks": {},
+      "breakpoints": [
+       {
+        "name": "phone",
+        "min": 0
+       },
+       {
+        "name": "tablet",
+        "min": 640
+       },
+       {
+        "name": "desktop",
+        "min": 1024
+       },
+       {
+        "name": "wide",
+        "min": 1440
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "breakpoint": "phone"
+      },
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "phone",
+         "width": 500,
+         "chain": [
+          "phone"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-table-before-any-size-announces-no-breakpoint",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "naqsh",
+      "looks": {},
+      "breakpoints": [
+       {
+        "name": "phone",
+        "min": 0
+       },
+       {
+        "name": "tablet",
+        "min": 640
+       },
+       {
+        "name": "desktop",
+        "min": 1024
+       },
+       {
+        "name": "wide",
+        "min": 1440
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_BREAKPOINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-theme-without-a-table-announces-no-breakpoint",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "sizedW": 500
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "naqsh",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_BREAKPOINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-rotated-text-is-wrapped-in-a-group-rotated-about-its-pivot",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.type": "draw-group",
+         "drawables.0.id": "t:rotate",
+         "drawables.0.rotate": 0.5,
+         "drawables.0.position.x": 110,
+         "drawables.0.position.y": 30,
+         "drawables.0.items.0.id": "t:origin",
+         "drawables.0.items.0.position.x": -110,
+         "drawables.0.items.0.position.y": -30,
+         "drawables.0.items.0.items.0.type": "draw-text",
+         "drawables.0.items.0.items.0.id": "t",
+         "drawables.0.items.0.items.0.position.x": 10
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [],
+        "texts": [
+         {
+          "id": "t",
+          "key": "panel:begin",
+          "x": 10,
+          "y": 20,
+          "z": 1,
+          "align": "left",
+          "baseline": "top",
+          "width": 200,
+          "wrap": true,
+          "rotate": 0.5,
+          "pivotX": 110,
+          "pivotY": 30
+         }
+        ]
+       }
+      },
+      "hidden": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-text-with-rotate-zero-is-the-plain-draw-text",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.type": "draw-text",
+         "drawables.0.id": "t",
+         "drawables.0.position.x": 10
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [],
+        "texts": [
+         {
+          "id": "t",
+          "key": "panel:begin",
+          "x": 10,
+          "y": 20,
+          "z": 1,
+          "align": "left",
+          "baseline": "top",
+          "width": 200,
+          "wrap": true,
+          "rotate": 0,
+          "pivotX": 110,
+          "pivotY": 30
+         }
+        ]
+       }
+      },
+      "hidden": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-text-without-rotate-is-the-plain-draw-text",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.type": "draw-text",
+         "drawables.0.id": "t"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [],
+        "texts": [
+         {
+          "id": "t",
+          "key": "panel:begin",
+          "x": 10,
+          "y": 20,
+          "z": 1,
+          "align": "left",
+          "baseline": "top"
+         }
+        ]
+       }
+      },
+      "hidden": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-rotated-text-without-a-pivot-turns-about-its-own-position",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.type": "draw-group",
+         "drawables.0.position.x": 10,
+         "drawables.0.position.y": 20,
+         "drawables.0.items.0.position.x": -10,
+         "drawables.0.items.0.position.y": -20
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [],
+        "texts": [
+         {
+          "id": "t",
+          "key": "panel:begin",
+          "x": 10,
+          "y": 20,
+          "z": 1,
+          "align": "left",
+          "baseline": "top",
+          "rotate": 1
+         }
+        ]
+       }
+      },
+      "hidden": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-desktop-size-takes-no-smaller-variant-so-its-chain-is-itself",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "desktop",
+      "min": 1024
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 1100,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "breakpoint": "desktop"
+      },
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "desktop",
+         "width": 1100,
+         "chain": [
+          "desktop"
+         ]
+        }
+       },
+       {
+        "event": "RASM_RESIZE",
+        "payload": {
+         "width": 1100,
+         "height": 800
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-wide-size-falls-back-to-desktop-and-stops-there",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "desktop",
+      "min": 1024
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 1600,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "breakpoint": "wide"
+      },
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "wide",
+         "width": 1600,
+         "chain": [
+          "wide",
+          "desktop"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-table-without-desktop-runs-the-chain-to-the-smallest",
+   "config": {},
+   "entity": {
+    "id": "s",
+    "breakpoints": [
+     {
+      "name": "phone",
+      "min": 0
+     },
+     {
+      "name": "tablet",
+      "min": 640
+     },
+     {
+      "name": "wide",
+      "min": 1440
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_RESIZE",
+     "payload": {
+      "width": 1600,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_BREAKPOINT",
+        "payload": {
+         "name": "wide",
+         "width": 1600,
+         "chain": [
+          "wide",
+          "tablet",
+          "phone"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }
