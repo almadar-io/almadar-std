@@ -1,0 +1,1185 @@
+app std-knowledge-base [
+  version: "1.0.0",
+  description: "std-knowledge-base — an embedded knowledge base over chunk rows. A source document of a caller-declared kind is added page by page with KB_ADD: each page is cut with the paragraph chunker, the chunks are stored as KbChunk rows with their source, page, fetch time and sha256, and the meaning index embeds them. Re-adding a document with the same sha256 changes nothing; a changed sha256 replaces that document's chunks. KB_SEARCH answers the nearest chunks with their source, page and score, optionally limited to some kinds. KB_LIST answers every chunk of the asked kinds in document, page and chunk order, or fails when there are more than the store reads; KB_REMOVE deletes a document's chunks. KB_ASK searches, then asks the grounded answer step with those chunks as passages and maps each cited passage back to its document, source and page. Embeddings and answers go through the configured provider (OpenRouter by default). The document kinds a caller indexes are its vocabulary: it retypes `kind` and sets KbIndex `indexedTypes` at its call site.",
+  net: { "openrouter.ai:443": [tcp] },
+]
+;; @capabilities "knowledge base, add a document, chunk and index pages, semantic search with sources, grounded answer with citations"
+uses Chunker from "std/behaviors/std-text-chunker"
+uses Index from "std/behaviors/std-semantic-index"
+uses GroundedAnswer from "std/behaviors/std-grounded-answer"
+
+orbital KnowledgeBaseOrbital {
+  type KbKind = string
+  type KbPage = {
+    page : number!
+    text : string!
+  }
+  type KbQueued = { op : "add" | "search" | "ask" | "list" | "remove"!, key : string!, docId : string!, source : string!, kind : KbKind!, sha256 : string!, pages : [KbPage]!, query : string!, k : number, kinds : [KbKind] }
+  type KbCut = {
+    id : string!
+    docId : string!
+    index : number!
+    text : string!
+    start : number!
+    end : number!
+  }
+  type KbPending = {
+    id : string!
+    page : number!
+    text : string!
+  }
+  type KbShaRow = {
+    id : string!
+    sha256 : string!
+  }
+  type KbNewRow = {
+    id : string!
+    graphId : string!
+    docId : string!
+    source : string!
+    kind : KbKind!
+    page : number!
+    sha256 : string!
+    text : string!
+  }
+  type KbRawRow = {
+    id : string!
+    docId : string
+    source : string
+    kind : KbKind
+    page : number
+    sha256 : string
+    text : string
+  }
+  type KbRowView = {
+    id : string!
+    docId : string!
+    source : string!
+    kind : KbKind!
+    page : number!
+    text : string!
+  }
+  type KbOrdRow = {
+    id : string!
+    docId : string!
+    source : string!
+    kind : KbKind!
+    page : number!
+    text : string!
+    ord : number!
+  }
+  type KbJoined = {
+    id : string!
+    docId : string!
+    source : string!
+    kind : KbKind!
+    page : number!
+    text : string!
+    score : number!
+  }
+  type KbOutHit = {
+    docId : string!
+    source : string!
+    kind : KbKind!
+    page : number!
+    text : string!
+    score : number!
+  }
+  type KbCitation = {
+    docId : string!
+    source : string!
+    page : number!
+    quote : string!
+  }
+  type KbPassage = {
+    id : string!
+    text : string!
+  }
+  type KbIndexItem = {
+    id : string!
+    graphId : string
+    nodeType : string!
+    name : string
+    texts : Map string string
+    numbers : Map string number
+    lists : Map string [string]
+  }
+  type KbSemanticHit = {
+    id : string!
+    graphId : string!
+    nodeId : string!
+    nodeType : string!
+    name : string!
+    score : number!
+  }
+
+  entity KbChunk [persistent: knowledge_base_chunks] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
+    @create none "This program declares no identity entity, so no signed-in viewer exists to own these rows: the app's own server traits create them for every visitor."
+    @index { fields: ["graphId", "nodeType"], nearest: { field: "embedding", dimension: 1024 } }
+    id : string!
+    graphId : string @description "The knowledge base the chunk belongs to." @synonyms "knowledge base" = ""
+    nodeId : string @description "The chunk's own id inside its document." @synonyms "chunk id" = ""
+    nodeType : string @description "The indexed type; the document kind." @synonyms "type" = ""
+    name : string @description "The chunk's display name." @synonyms "title, label" = ""
+    embedding : [number] @description "The embedding of the chunk text; nearest answers over it, so the field is literally named embedding." @synonyms "vector, meaning vector"
+    embeddedText : string @description "The exact text the embedding was made from." @synonyms "indexed text" = ""
+    embeddingModel : string @description "The model that made the embedding." @synonyms "vector model" = ""
+    docId : string @description "The source document the chunk was cut from." @synonyms "document" = ""
+    source : string @description "The document's address: a URL or a workspace path." @synonyms "url, path, origin" = ""
+    kind : string @description "What sort of document it is." @synonyms "document kind" = "page"
+    page : number @description "The page of the document; 0 when the document is not paged." @synonyms "page number" = 0
+    fetchedAt : instant @description "When the chunk was stored." @synonyms "retrieved at"
+    sha256 : string @description "The hash of the source document the chunk came from; the same hash means the same document." @synonyms "content hash, digest" = ""
+    text : string @description "The chunk's text." @synonyms "content, passage" = ""
+  }
+
+  entity KbRun [runtime] {
+    id : string!
+    key : string = ""
+    askNo : number @description "Counts the store asks of this run, so two asks never carry an identical payload (EXEC-QUEUE-4 collapses identical deliveries in one dispatch)." = 0
+    mode : "add" | "search" | "ask" | "list" | "remove" = add
+    docId : string = ""
+    source : string = ""
+    kind : KbKind = "page"
+    sha256 : string = ""
+    pages : [KbPage] = []
+    cursor : number = 0
+    chunks : [KbPending] = []
+    staleIds : [string] = []
+    question : string = ""
+    hits : [KbSemanticHit] = []
+    joined : [KbJoined] = []
+    message : string = ""
+    removed : number = 0
+    queue : [KbQueued] @description "The requests waiting their turn, oldest first; the head starts when the running one ends." = []
+    status : "idle" | "looking" | "clearing" | "chunking" | "storing" | "indexing" | "rollingBack" | "searching" | "fetching" | "answering" | "listing" | "removeLooking" | "removeClearing" = idle
+  }
+
+  trait KbChunkParagraph = Chunker.traits.ChunkerRun {
+    events {
+      CHUNKED: PAGE_CHUNKED
+      CHUNK_REFUSED: PAGE_REFUSED
+    }
+    config {
+      strategy: "paragraph"
+      chunkSize: 1200
+      overlap: 0
+      minChunkSize: 0
+    }
+    listens {
+      KbCoordinator.CHUNK_PAGE -> CHUNK
+      CHUNK {
+        docId : string!
+        text : string!
+      }
+    }
+  }
+
+  trait KbIndexLlm = Index.traits.SemanticIndexLlm {
+    config {
+      embedProvider: openrouter
+      embedBasePath: "/api/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+    }
+    listens {
+      KbIndex.KB_LLM_EMBED -> LLM_EMBED
+      KbEmbedWait.SEMIDX_EMBED_WAITED -> LLM_EMBED_WAITED
+      KbEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      KbEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      KbEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait KbEmbedWait = Index.traits.SemIdxEmbedWait {}
+
+  trait KbEmbedRequest = Index.traits.SemIdxEmbedRequest {}
+
+  trait KbEmbedHttp = Index.traits.SemIdxEmbedHttp {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "OPEN_ROUTER_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+  }
+
+  trait KbIndex = Index.traits.SemanticIndex -> KbChunk {
+    events {
+      LLM_EMBED: KB_LLM_EMBED
+    }
+    config {
+      indexedTypes: ["page"]
+      partKinds: ["text"]
+      partKeys: [["text"]]
+      partLabels: [""]
+      searchK: 5
+      maxK: 20
+      searchFloor: -1
+    }
+    listens {
+      KbIndexLlm.LLM_EMBED_RESULT -> SemanticEmbedded
+      KbIndexLlm.LLM_FAILED -> SemanticEmbedFailed
+      KbCoordinator.SEMANTIC_INDEX -> SEMANTIC_INDEX
+      KbCoordinator.SEMANTIC_SEARCH -> SEMANTIC_SEARCH
+    }
+  }
+
+  trait KbGroundedLlm = GroundedAnswer.traits.GroundedLlm {
+    config {
+      provider: openrouter
+      basePath: "/api/v1"
+      model: "anthropic/claude-sonnet-4.5"
+    }
+    listens {
+      KbGroundedRun.KB_LLM_GENERATE -> LLM_GENERATE
+      KbGroundedRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      KbGroundedRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      KbGroundedRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      KbGroundedHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait KbGroundedRequest = GroundedAnswer.traits.GroundedChatRequest {
+    listens {
+      KbGroundedLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      KbGroundedLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      KbGroundedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      KbGroundedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait KbGroundedHttp = GroundedAnswer.traits.GroundedChatHttp {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "OPEN_ROUTER_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      KbGroundedRequest.HTTP_SEND -> HTTP_SEND
+      KbGroundedRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait KbGroundedRun = GroundedAnswer.traits.GroundedRun {
+    events {
+      LLM_GENERATE: KB_LLM_GENERATE
+    }
+    config {
+      maxPassages: 8
+      ;; The chat model reasons before it answers; 1024 tokens can be spent on reasoning alone, leaving no answer.
+      maxTokens: 4096
+    }
+    listens {
+      KbGroundedLlm.LLM_GENERATE_RESULT -> GROUNDED_REPLY
+      KbGroundedLlm.LLM_FAILED -> GROUNDED_CALL_FAILED
+      KbCoordinator.GROUNDED_ASK -> GROUNDED_ASK
+      KbCoordinator.RESET -> RESET
+      GROUNDED_REPLY {
+        content : string!
+      }
+      GROUNDED_CALL_FAILED {
+        code : string
+        message : string!
+      }
+      GROUNDED_ASK {
+        question : string!
+        passages : [KbPassage]!
+      }
+      RESET
+    }
+  }
+
+  trait KbStore -> KbChunk [server] {
+    @description "Keeps the knowledge base's chunk rows: reads a document's rows, deletes rows, writes new rows with their source, page, fetch time and hash, reads rows by id, and reads every row of some kinds in document, page and chunk order."
+    initial: idle
+
+    config {
+      maxChunks : number = 5000
+        @label "Most chunks"
+        @description "Most chunk rows of one document read back. A document with more is refused rather than handled in part."
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+
+      KB_LOOKUP -> idle
+        (fetch KbChunk { filter: (= (object/get @entity docId) ?docId), limit: @config.maxChunks, emit: { success: LookupFetched, failure: StoreFailed } })
+      LookupFetched -> idle when (> ?totalCount (array/len ?data))
+        (emit KB_STORE_FAILED { error: (str/concat "the document has " ?totalCount " chunk rows, over the cap of " @config.maxChunks) })
+      LookupFetched -> idle when (<= ?totalCount (array/len ?data))
+        (emit KB_LOOKED_UP { rows: (array/map ?data (fn r { id: @r.id, sha256: (default @r.sha256 "") })) })
+
+      KB_CLEAR -> idle
+        (persist batch (array/map ?ids (fn i ["delete", "KbChunk", @i])) { emit: { success: ClearDone, failure: StoreFailed } })
+      ClearDone -> idle
+        (emit KB_CLEARED)
+
+      KB_WRITE -> idle
+        (persist batch (array/map ?rows (fn c ["create", "KbChunk", { id: @c.id, graphId: @c.graphId, nodeId: @c.id, nodeType: @c.kind, name: @c.id, docId: @c.docId, source: @c.source, kind: @c.kind, page: @c.page, fetchedAt: @now, sha256: @c.sha256, text: @c.text }])) { emit: { success: WriteDone, failure: StoreFailed } })
+      WriteDone -> idle
+        (emit KB_WRITTEN)
+
+      KB_FETCH -> idle
+        (fetch KbChunk { filter: (array/includes ?ids (object/get @entity id)), limit: (array/len ?ids), emit: { success: IdsFetched, failure: StoreFailed } })
+      IdsFetched -> idle
+        (emit KB_FETCHED { rows: (array/map ?data (fn r { id: @r.id, docId: (default @r.docId ""), source: (default @r.source ""), kind: (default @r.kind "page"), page: (default @r.page 0), text: (default @r.text "") })) })
+
+      KB_LIST_ROWS -> idle
+        (fetch KbChunk { filter: (array/includes ?kinds (object/get @entity kind)), limit: @config.maxChunks, emit: { success: ListFetched, failure: StoreFailed } })
+      ListFetched -> idle when (> ?totalCount (array/len ?data))
+        (emit KB_STORE_FAILED { error: (str/concat "too many chunks: the asked kinds have " ?totalCount " chunk rows, over the cap of " @config.maxChunks) })
+      ListFetched -> idle when (<= ?totalCount (array/len ?data))
+        (let ((docs : [string] (array/sort (array/unique (array/map ?data (fn r (default @r.docId "")))))))
+          (emit KB_LISTED_ROWS { rows: (array/flatten (array/map @docs (fn d (array/map (array/sort (array/map (array/filter ?data (fn r (== (default @r.docId "") @d))) (fn r { id: @r.id, docId: (default @r.docId ""), source: (default @r.source ""), kind: (default @r.kind "page"), page: (default @r.page 0), text: (default @r.text ""), ord: (+ (* (default @r.page 0) 1000000) (default (str/to-number (default (array/last (str/split @r.id "#")) "0")) 0)) })) "ord") (fn o { id: @o.id, docId: @o.docId, source: @o.source, kind: @o.kind, page: @o.page, text: @o.text }))))) }))
+
+      StoreFailed -> idle
+        (emit KB_STORE_FAILED { error: ?error })
+    }
+
+    emits {
+      KB_LOOKED_UP -> external {
+        rows : [KbShaRow]!
+      }
+        @description "The chunk rows a document already has, each with the hash it was stored under."
+        @tier "secondary"
+      KB_CLEARED -> external {}
+        @description "The named chunk rows are deleted."
+        @tier "secondary"
+      KB_WRITTEN -> external {}
+        @description "The new chunk rows are stored and ready to embed."
+        @tier "secondary"
+      KB_FETCHED -> external {
+        rows : [KbRowView]!
+      }
+        @description "The chunk rows with the requested ids."
+        @tier "secondary"
+      KB_LISTED_ROWS -> external {
+        rows : [KbRowView]!
+      }
+        @description "Every chunk row of the asked kinds, ordered by document, page and chunk."
+        @tier "secondary"
+      KB_STORE_FAILED -> external {
+        error : string!
+      }
+        @description "A chunk row read, delete or write failed, or more rows matched than the store reads."
+        @tier "secondary"
+      LookupFetched {
+        data : [KbRawRow]!
+        totalCount : number!
+      }
+        @tier "internal"
+      IdsFetched {
+        data : [KbRawRow]!
+      }
+        @tier "internal"
+      ListFetched {
+        data : [KbRawRow]!
+        totalCount : number!
+      }
+        @tier "internal"
+      ClearDone
+        @tier "internal"
+      WriteDone
+        @tier "internal"
+      StoreFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      KbCoordinator.KB_LOOKUP -> KB_LOOKUP
+      KbCoordinator.KB_CLEAR -> KB_CLEAR
+      KbCoordinator.KB_WRITE -> KB_WRITE
+      KbCoordinator.KB_FETCH -> KB_FETCH
+      KbCoordinator.KB_LIST_ROWS -> KB_LIST_ROWS
+      KB_LOOKUP {
+        req : number!
+        docId : string!
+      }
+      KB_CLEAR {
+        req : number!
+        ids : [string]!
+      }
+      KB_WRITE {
+        req : number!
+        rows : [KbNewRow]!
+      }
+      KB_FETCH {
+        req : number!
+        ids : [string]!
+      }
+      KB_LIST_ROWS {
+        req : number!
+        kinds : [KbKind]!
+      }
+      ListFetched {
+        data : [KbRawRow]!
+        totalCount : number!
+      }
+      LookupFetched {
+        data : [KbRawRow]!
+        totalCount : number!
+      }
+      IdsFetched {
+        data : [KbRawRow]!
+      }
+      ClearDone
+      WriteDone
+      StoreFailed {
+        error : string
+        code : string
+      }
+    }
+  }
+
+  trait KbCoordinator -> KbRun [server] {
+    @description "Runs the knowledge base's requests one at a time, in arrival order: a request that arrives while another runs waits in the queue and starts when that one ends, so no request is refused for being early. KB_LIST reads every chunk of some kinds in order; KB_REMOVE deletes one document's chunks. KB_ADD looks the document up, skips it when its hash is unchanged, clears a changed one, cuts each page into paragraph chunks, stores them and indexes them, undoing the stored rows when the index fails. KB_SEARCH asks the meaning index for the nearest chunks and answers them with their source and page. KB_ASK does the same search, then asks the grounded answer step with those chunks and maps the cited passages back to document, source and page."
+    initial: idle
+
+    config {
+      graphId : string = "knowledge-base"
+        @label "Knowledge base id"
+        @description "The graph id every chunk is stored and searched under."
+        @tier "domain"
+      kinds : [string] = ["page"]
+        @label "Searched kinds"
+        @description "The document kinds a search covers when it names none."
+        @tier "domain"
+      searchK : number = 5
+        @label "Search results"
+        @description "Chunks KB_SEARCH answers when it names no k."
+        @tier "policy"
+      askK : number = 6
+        @label "Question passages"
+        @description "Chunks KB_ASK hands the grounded answer step. Must not exceed the grounded answer step's maxPassages."
+        @tier "policy"
+      searchFloor : number = -1
+        @label "Search floor"
+        @description "Lowest cosine score a chunk may have. -1 keeps every chunk."
+        @tier "policy"
+      noPassagesAnswer : string = "No passage in the knowledge base matches the question."
+        @label "No passages answer"
+        @description "The refused answer given when a question finds no chunk."
+        @tier "presentation"
+      timeoutMessage : string = "A step did not finish in time:"
+        @label "Timeout message"
+        @description "The failure given when a step times out; the step name follows."
+        @tier "presentation"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.status idle)
+
+      KB_ADD -> idle
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+        (emit KB_DEQUEUE {})
+
+      KB_SEARCH -> idle
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+        (emit KB_DEQUEUE {})
+
+      KB_LIST -> idle
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+        (emit KB_DEQUEUE {})
+
+      KB_REMOVE -> idle
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+        (emit KB_DEQUEUE {})
+
+      KB_ASK -> idle
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+        (emit KB_DEQUEUE {})
+
+      KB_DEQUEUE -> looking when (and (> (array/len @entity.queue) 0) (= (object/get (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }) op) "add"))
+        (let ((h : KbQueued (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }))) (do
+          (set @entity.queue (array/drop @entity.queue 1))
+          (set @entity.key @h.key)
+          (set @entity.mode "add")
+          (set @entity.docId @h.docId)
+          (set @entity.source @h.source)
+          (set @entity.kind @h.kind)
+          (set @entity.sha256 @h.sha256)
+          (set @entity.pages @h.pages)
+          (set @entity.cursor 0)
+          (set @entity.chunks [])
+          (set @entity.staleIds [])
+          (set @entity.message "")
+          (set @entity.status looking)
+          (set @entity.askNo (+ @entity.askNo 1))
+          (emit KB_LOOKUP { req: @entity.askNo, docId: @h.docId })))
+
+      KB_DEQUEUE -> searching when (and (> (array/len @entity.queue) 0) (= (object/get (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }) op) "search"))
+        (let ((h : KbQueued (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }))) (do
+          (set @entity.queue (array/drop @entity.queue 1))
+          (set @entity.key @h.key)
+          (set @entity.mode "search")
+          (set @entity.hits [])
+          (set @entity.joined [])
+          (set @entity.status searching)
+          (emit SEMANTIC_SEARCH { query: @h.query, k: (if (= @h.k null) @config.searchK @h.k), floor: @config.searchFloor, graphIds: [@config.graphId], nodeTypes: (if (or (= @h.kinds null) (= (array/len @h.kinds) 0)) @config.kinds @h.kinds), key: (as (str/concat "kb-search-" @h.key) CallKey) })))
+
+      KB_DEQUEUE -> listing when (and (> (array/len @entity.queue) 0) (= (object/get (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }) op) "list"))
+        (let ((h : KbQueued (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }))) (do
+          (set @entity.queue (array/drop @entity.queue 1))
+          (set @entity.key @h.key)
+          (set @entity.mode "list")
+          (set @entity.status listing)
+          (set @entity.askNo (+ @entity.askNo 1))
+          (emit KB_LIST_ROWS { req: @entity.askNo, kinds: (default @h.kinds []) })))
+
+      KB_DEQUEUE -> removeLooking when (and (> (array/len @entity.queue) 0) (= (object/get (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }) op) "remove"))
+        (let ((h : KbQueued (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }))) (do
+          (set @entity.queue (array/drop @entity.queue 1))
+          (set @entity.key @h.key)
+          (set @entity.mode "remove")
+          (set @entity.docId @h.docId)
+          (set @entity.removed 0)
+          (set @entity.status removeLooking)
+          (set @entity.askNo (+ @entity.askNo 1))
+          (emit KB_LOOKUP { req: @entity.askNo, docId: @h.docId })))
+
+      KB_DEQUEUE -> searching when (and (> (array/len @entity.queue) 0) (= (object/get (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }) op) "ask"))
+        (let ((h : KbQueued (default (array/first @entity.queue) { op: "add", key: "", docId: "", source: "", kind: page, sha256: "", pages: [], query: "" }))) (do
+          (set @entity.queue (array/drop @entity.queue 1))
+          (set @entity.key @h.key)
+          (set @entity.mode "ask")
+          (set @entity.question @h.query)
+          (set @entity.hits [])
+          (set @entity.joined [])
+          (set @entity.status searching)
+          (emit SEMANTIC_SEARCH { query: @h.query, k: @config.askK, floor: @config.searchFloor, graphIds: [@config.graphId], nodeTypes: (if (or (= @h.kinds null) (= (array/len @h.kinds) 0)) @config.kinds @h.kinds), key: (as (str/concat "kb-search-" @h.key) CallKey) })))
+
+      KB_DEQUEUE -> idle when (= (array/len @entity.queue) 0)
+    }
+
+    state looking for 60s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_LOOKED_UP -> idle when (and (> (array/len ?rows) 0) (= (array/len (array/filter ?rows (fn r (== (default @r.sha256 "") @entity.sha256)))) (array/len ?rows)))
+        (set @entity.status idle)
+        (emit KB_ADDED { key: @entity.key, docId: @entity.docId, chunks: 0 })
+        (emit KB_DEQUEUE {})
+      KB_LOOKED_UP -> chunking when (= (array/len ?rows) 0)
+        (set @entity.status chunking)
+        (emit ChunkNext)
+      KB_LOOKED_UP -> clearing when (and (> (array/len ?rows) 0) (< (array/len (array/filter ?rows (fn r (== (default @r.sha256 "") @entity.sha256)))) (array/len ?rows)))
+        (set @entity.status clearing)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_CLEAR { req: @entity.askNo, ids: (array/map ?rows (fn r @r.id)) })
+      KB_STORE_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?error  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " looking")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> looking
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> looking
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> looking
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> looking
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> looking
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state clearing for 60s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_CLEARED -> chunking
+        (set @entity.status chunking)
+        (emit ChunkNext)
+      KB_STORE_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?error  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " clearing")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> clearing
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> clearing
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> clearing
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> clearing
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> clearing
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state chunking for 300s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      ChunkNext -> chunking when (< @entity.cursor (array/len @entity.pages))
+        (emit CHUNK_PAGE { docId: (str/concat @entity.docId ":p" (object/get (default (array/nth @entity.pages @entity.cursor) { page: 0, text: "" }) page 0)), text: (object/get (default (array/nth @entity.pages @entity.cursor) { page: 0, text: "" }) text "") })
+      ChunkNext -> idle when (and (>= @entity.cursor (array/len @entity.pages)) (= (array/len @entity.chunks) 0))
+        (set @entity.status idle)
+        (emit KB_ADDED { key: @entity.key, docId: @entity.docId, chunks: 0 })
+        (emit KB_DEQUEUE {})
+      ChunkNext -> storing when (and (>= @entity.cursor (array/len @entity.pages)) (> (array/len @entity.chunks) 0))
+        (set @entity.status storing)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_WRITE { req: @entity.askNo, rows: (array/map @entity.chunks (fn c { id: @c.id, graphId: @config.graphId, docId: @entity.docId, source: @entity.source, kind: @entity.kind, page: @c.page, sha256: @entity.sha256, text: @c.text })) })
+
+      PageChunked -> chunking
+        (set @entity.chunks (array/concat @entity.chunks (array/map ?chunks (fn c { id: @c.id, page: (object/get (default (array/nth @entity.pages @entity.cursor) { page: 0, text: "" }) page 0), text: @c.text }))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit ChunkNext)
+      PageRefused -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?reason  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " chunking")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> chunking
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> chunking
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> chunking
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> chunking
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> chunking
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state storing for 120s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_WRITTEN -> indexing
+        (set @entity.status indexing)
+        (emit SEMANTIC_INDEX { items: (array/map @entity.chunks (fn c { id: @c.id, graphId: @config.graphId, nodeType: @entity.kind, name: @c.id, texts: { text: @c.text }, numbers: {}, lists: {} })), key: (as (str/concat "kb-index-" @entity.key) CallKey) })
+      KB_STORE_FAILED -> rollingBack
+        (set @entity.message ?error)
+        (set @entity.status rollingBack)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_CLEAR { req: @entity.askNo, ids: (array/map @entity.chunks (fn c @c.id)) })
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " storing")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> storing
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> storing
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> storing
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> storing
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> storing
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state indexing for 900s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      SEMANTIC_INDEXED -> idle
+        (set @entity.status idle)
+        (emit KB_ADDED { key: @entity.key, docId: @entity.docId, chunks: (array/len @entity.chunks) })
+        (emit KB_DEQUEUE {})
+      SEMANTIC_FAILED -> rollingBack
+        (set @entity.message ?message)
+        (set @entity.status rollingBack)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_CLEAR { req: @entity.askNo, ids: (array/map @entity.chunks (fn c @c.id)) })
+      SEMANTIC_REJECTED -> rollingBack
+        (set @entity.message ?reason)
+        (set @entity.status rollingBack)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_CLEAR { req: @entity.askNo, ids: (array/map @entity.chunks (fn c @c.id)) })
+      TIMEOUT -> rollingBack
+        (set @entity.message (str/concat @config.timeoutMessage " indexing"))
+        (set @entity.status rollingBack)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_CLEAR { req: @entity.askNo, ids: (array/map @entity.chunks (fn c @c.id)) })
+
+      KB_ADD -> indexing
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> indexing
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> indexing
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> indexing
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> indexing
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state rollingBack for 120s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_CLEARED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: @entity.message  })
+        (emit KB_DEQUEUE {})
+      KB_STORE_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @entity.message "; the stored chunks could not be removed: " ?error)  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @entity.message "; " @config.timeoutMessage " removing the stored chunks")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> rollingBack
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> rollingBack
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> rollingBack
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> rollingBack
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> rollingBack
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state searching for 120s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      SEMANTIC_RESULTS -> idle when (and (= (array/len ?hits) 0) (= @entity.mode "search"))
+        (set @entity.status idle)
+        (emit KB_HITS { key: @entity.key, hits: [] })
+        (emit KB_DEQUEUE {})
+      SEMANTIC_RESULTS -> idle when (and (= (array/len ?hits) 0) (= @entity.mode "ask"))
+        (set @entity.status idle)
+        (emit KB_ANSWERED { key: @entity.key, answer: @config.noPassagesAnswer, citations: [], refused: true })
+        (emit KB_DEQUEUE {})
+      SEMANTIC_RESULTS -> fetching when (> (array/len ?hits) 0)
+        (set @entity.hits ?hits)
+        (set @entity.status fetching)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_FETCH { req: @entity.askNo, ids: (array/map ?hits (fn h @h.id)) })
+      SEMANTIC_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?message  })
+        (emit KB_DEQUEUE {})
+      SEMANTIC_REJECTED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?reason  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " searching")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> searching
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> searching
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> searching
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> searching
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> searching
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state fetching for 60s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_FETCHED -> idle when (= @entity.mode "search")
+        (let ((joined : [KbJoined] (array/flatten (array/map @entity.hits (fn h (array/map (array/filter ?rows (fn r (== @r.id @h.id))) (fn r { id: @r.id, docId: (default @r.docId ""), source: (default @r.source ""), kind: (default @r.kind "page"), page: (default @r.page 0), text: (default @r.text ""), score: @h.score })))))))
+          (do
+            (set @entity.status idle)
+            (emit KB_HITS { key: @entity.key, hits: (array/map @joined (fn j { docId: @j.docId, source: @j.source, kind: @j.kind, page: @j.page, text: @j.text, score: @j.score })) })))
+        (emit KB_DEQUEUE {})
+      KB_FETCHED -> answering when (= @entity.mode "ask")
+        (let ((joined : [KbJoined] (array/flatten (array/map @entity.hits (fn h (array/map (array/filter ?rows (fn r (== @r.id @h.id))) (fn r { id: @r.id, docId: (default @r.docId ""), source: (default @r.source ""), kind: (default @r.kind "page"), page: (default @r.page 0), text: (default @r.text ""), score: @h.score })))))))
+          (do
+            (set @entity.joined @joined)
+            (set @entity.status answering)
+            (emit GROUNDED_ASK { question: @entity.question, passages: (array/map @joined (fn j { id: @j.id, text: @j.text })) })))
+      KB_STORE_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?error  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " fetching")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> fetching
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> fetching
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> fetching
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> fetching
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> fetching
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state answering for 180s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      GROUNDED_ANSWERED -> idle
+        (set @entity.status idle)
+        (emit RESET)
+        (emit KB_ANSWERED { key: @entity.key, answer: ?answer, citations: (array/flatten (array/map ?citations (fn id (array/map (array/filter @entity.joined (fn j (== @j.id @id))) (fn j { docId: @j.docId, source: @j.source, page: @j.page, quote: @j.text }))))), refused: ?refused })
+        (emit KB_DEQUEUE {})
+      GROUNDED_FAILED -> idle
+        (set @entity.status idle)
+        (emit RESET)
+        (emit KB_FAILED { key: @entity.key, error: ?error  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit RESET)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " answering")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> answering
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> answering
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> answering
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> answering
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> answering
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state listing for 60s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_LISTED_ROWS -> idle
+        (set @entity.status idle)
+        (emit KB_LISTED { key: @entity.key, chunks: ?rows })
+        (emit KB_DEQUEUE {})
+      KB_STORE_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?error  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " listing")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> listing
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> listing
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> listing
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> listing
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> listing
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state removeLooking for 60s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_LOOKED_UP -> idle when (= (array/len ?rows) 0)
+        (set @entity.status idle)
+        (emit KB_REMOVED { key: @entity.key, docId: @entity.docId, chunks: 0 })
+        (emit KB_DEQUEUE {})
+      KB_LOOKED_UP -> removeClearing when (> (array/len ?rows) 0)
+        (set @entity.removed (array/len ?rows))
+        (set @entity.status removeClearing)
+        (set @entity.askNo (+ @entity.askNo 1))
+        (emit KB_CLEAR { req: @entity.askNo, ids: (array/map ?rows (fn r @r.id)) })
+      KB_STORE_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?error  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " looking")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> removeLooking
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> removeLooking
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> removeLooking
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> removeLooking
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> removeLooking
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    state removeClearing for 60s {
+      INIT -> idle
+        (emit KB_DEQUEUE {})
+
+      KB_CLEARED -> idle
+        (set @entity.status idle)
+        (emit KB_REMOVED { key: @entity.key, docId: @entity.docId, chunks: @entity.removed })
+        (emit KB_DEQUEUE {})
+      KB_STORE_FAILED -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: ?error  })
+        (emit KB_DEQUEUE {})
+      TIMEOUT -> idle
+        (set @entity.status idle)
+        (emit KB_FAILED { key: @entity.key, error: (str/concat @config.timeoutMessage " removing")  })
+        (emit KB_DEQUEUE {})
+
+      KB_ADD -> removeClearing
+        (set @entity.queue (array/append @entity.queue { op: "add", key: ?key, docId: ?docId, source: ?source, kind: ?kind, sha256: ?sha256, pages: ?pages, query: "" }))
+      KB_SEARCH -> removeClearing
+        (set @entity.queue (array/append @entity.queue { op: "search", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?query, k: ?k, kinds: ?kinds }))
+      KB_ASK -> removeClearing
+        (set @entity.queue (array/append @entity.queue { op: "ask", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: ?question, kinds: ?kinds }))
+      KB_LIST -> removeClearing
+        (set @entity.queue (array/append @entity.queue { op: "list", key: ?key, docId: "", source: "", kind: page, sha256: "", pages: [], query: "", kinds: ?kinds }))
+      KB_REMOVE -> removeClearing
+        (set @entity.queue (array/append @entity.queue { op: "remove", key: ?key, docId: ?docId, source: "", kind: page, sha256: "", pages: [], query: "" }))
+    }
+
+    emits {
+      KB_ADDED -> external {
+        key : string!
+        docId : string!
+        chunks : number!
+      }
+        @description "The document is in the knowledge base: how many chunks were stored and indexed, 0 when its hash was already there or it had no text."
+        @tier "primary"
+      KB_DEQUEUE -> internal {}
+        @description "Internal: start the oldest waiting request, if any."
+        @tier "internal"
+      KB_FAILED -> external {
+        key : string!
+        error : string!
+      }
+        @description "A request ended without an answer: the store, the chunker, the index or the grounded answer step failed, or a step timed out."
+        @tier "primary"
+      KB_HITS -> external {
+        key : string!
+        hits : [KbOutHit]!
+      }
+        @description "The chunks nearest in meaning to the query, best first, each with its document, source, kind, page, text and score."
+        @tier "primary"
+      KB_ANSWERED -> external {
+        key : string!
+        answer : string!
+        citations : [KbCitation]!
+        refused : boolean!
+      }
+        @description "The answer to the question, the passages it cited as document, source, page and quote, and whether the passages could not answer it."
+        @tier "primary"
+      KB_LISTED -> external {
+        key : string!
+        chunks : [KbRowView]!
+      }
+        @description "Every chunk of the asked kinds, ordered by document, page and chunk, each with its document, source, kind, page and text."
+        @tier "primary"
+      KB_REMOVED -> external {
+        key : string!
+        docId : string!
+        chunks : number!
+      }
+        @description "The document's chunks are deleted: how many, 0 when the document had none."
+        @tier "primary"
+      KB_LIST_ROWS -> external {
+        req : number!
+        kinds : [KbKind]!
+      }
+        @description "Read every chunk row of the asked kinds."
+        @tier "secondary"
+      CHUNK_PAGE -> external {
+        docId : string!
+        text : string!
+      }
+        @description "Cut one page of the document with the paragraph chunker."
+        @tier "secondary"
+      KB_LOOKUP -> external {
+        req : number!
+        docId : string!
+      }
+        @description "Read the chunk rows a document already has."
+        @tier "secondary"
+      KB_CLEAR -> external {
+        req : number!
+        ids : [string]!
+      }
+        @description "Delete chunk rows."
+        @tier "secondary"
+      KB_WRITE -> external {
+        req : number!
+        rows : [KbNewRow]!
+      }
+        @description "Store the document's new chunks as rows."
+        @tier "secondary"
+      KB_FETCH -> external {
+        req : number!
+        ids : [string]!
+      }
+        @description "Read the chunk rows of the search hits."
+        @tier "secondary"
+      SEMANTIC_INDEX -> external {
+        items : [KbIndexItem]!
+        key : CallKey!
+      }
+        @description "Embed the stored chunks."
+        @tier "secondary"
+      SEMANTIC_SEARCH -> external {
+        query : string!
+        k : number
+        floor : number
+        graphIds : [string]
+        nodeTypes : [string]
+        key : CallKey!
+      }
+        @description "Find the chunks nearest in meaning to the query."
+        @tier "secondary"
+      GROUNDED_ASK -> external {
+        question : string!
+        passages : [KbPassage]!
+      }
+        @description "Answer the question from the found chunks, with citations."
+        @tier "secondary"
+      RESET -> external {}
+        @description "Return the grounded answer step to idle after an answer."
+        @tier "secondary"
+      ChunkNext
+        @tier "internal"
+    }
+
+    listens {
+      KB_ADD {
+        key : string!
+        docId : string!
+        source : string!
+        kind : KbKind!
+        sha256 : string!
+        pages : [KbPage]!
+      }
+        @description "Add a document, page by page. The same sha256 changes nothing; a changed one replaces the document's chunks."
+        @synonyms "ingest document, add source, index document"
+      KB_SEARCH {
+        key : string!
+        query : string!
+        k : number
+        kinds : [KbKind]
+      }
+        @description "Find the chunks nearest in meaning to the query, optionally only in the given kinds."
+        @synonyms "search the knowledge base, find passages"
+      KB_ASK {
+        key : string!
+        question : string!
+        kinds : [KbKind]
+      }
+        @description "Answer a question from the knowledge base with citations to source and page."
+        @synonyms "ask the knowledge base, grounded answer"
+      KB_LIST {
+        key : string!
+        kinds : [KbKind]!
+      }
+        @description "Answer every chunk of the given kinds, ordered by document, page and chunk. Fails rather than answering part when there are more chunks than the store reads."
+        @synonyms "list rules, read all chunks, list the knowledge base"
+      KB_REMOVE {
+        key : string!
+        docId : string!
+      }
+        @description "Delete every chunk of a document; the answer says how many, 0 when there were none."
+        @synonyms "remove document, delete rule, forget source"
+      KbStore.KB_LOOKED_UP -> KB_LOOKED_UP
+      KbStore.KB_CLEARED -> KB_CLEARED
+      KbStore.KB_WRITTEN -> KB_WRITTEN
+      KbStore.KB_FETCHED -> KB_FETCHED
+      KbStore.KB_LISTED_ROWS -> KB_LISTED_ROWS
+      KbStore.KB_STORE_FAILED -> KB_STORE_FAILED
+      KbChunkParagraph.PAGE_CHUNKED -> PageChunked
+      KbChunkParagraph.PAGE_REFUSED -> PageRefused
+      KbIndex.SEMANTIC_INDEXED -> SEMANTIC_INDEXED
+      KbIndex.SEMANTIC_RESULTS -> SEMANTIC_RESULTS
+      KbIndex.SEMANTIC_FAILED -> SEMANTIC_FAILED
+      KbIndex.SEMANTIC_REJECTED -> SEMANTIC_REJECTED
+      KbGroundedRun.GROUNDED_ANSWERED -> GROUNDED_ANSWERED
+      KbGroundedRun.GROUNDED_FAILED -> GROUNDED_FAILED
+      KB_LOOKED_UP {
+        rows : [KbShaRow]!
+      }
+      KB_CLEARED
+      KB_WRITTEN
+      KB_FETCHED {
+        rows : [KbRowView]!
+      }
+      KB_LISTED_ROWS {
+        rows : [KbRowView]!
+      }
+      KB_STORE_FAILED {
+        error : string!
+      }
+      PageChunked {
+        docId : string!
+        chunks : [KbCut]!
+      }
+      PageRefused {
+        docId : string!
+        reason : string!
+      }
+      SEMANTIC_INDEXED {
+        ids : [string]!
+        skipped : [string]!
+        key : string
+      }
+      SEMANTIC_RESULTS {
+        hits : [KbSemanticHit]!
+        key : string
+        query : string!
+      }
+      SEMANTIC_FAILED {
+        op : string!
+        message : string!
+        key : string
+      }
+      SEMANTIC_REJECTED {
+        reason : string!
+        key : string
+      }
+      GROUNDED_ANSWERED {
+        answer : string!
+        citations : [string]!
+        unknownCitations : [string]!
+        uncitedPassages : [string]!
+        refused : boolean!
+      }
+      GROUNDED_FAILED {
+        error : string!
+      }
+      ChunkNext
+    }
+  }
+
+  page boot as InspectorateKbPage -> KbCoordinator, KbStore, KbChunkParagraph, KbIndexLlm, KbEmbedWait, KbEmbedRequest, KbEmbedHttp, KbIndex, KbGroundedLlm, KbGroundedRequest, KbGroundedHttp, KbGroundedRun
+}

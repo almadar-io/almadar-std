@@ -44,7 +44,7 @@ type ProfileCpuSite = { site : string!, ms : number! }
 type ProfileTaskFunctions = { startMs : number!, durMs : number!, functions : [ProfileCpuSite]! }
 type ProfileHeapPage = { behavior : string!, liveBytes : number!, sites : [ProfileHeapSite]! }
 type ProfileCpuPage = { behavior : string!, sampledMs : number!, functions : [ProfileCpuSite]!, longTasks : [ProfileTaskFunctions]! }
-type ProfilePage = { behavior : string!, mainBusyMs : number!, longTasks : number!, longestMs : number!, worst : ProfileLongTask?, jsHeapUsedBytes : number!, nodes : number!, rssBytes : number!, error : string! }
+type ProfilePage = { behavior : string!, cycle : number!, mainBusyMs : number!, longTasks : number!, longestMs : number!, worst : ProfileLongTask?, jsHeapUsedBytes : number!, nodes : number!, rssBytes : number!, error : string! }
 type ProfileHotFunction = { name : string!, lib : string!, selfSamples : number!, totalSamples : number!, selfCpuUs : number!, totalCpuUs : number! }
 type ProfileReportJson = { behaviors : [ProfileBehavior]!, steps : [ProfileRanked]!, effects : [ProfileRanked]!, unmeasured : number!, rss : [ProfileRss]!, held : ProfileHeld?, totalMs : number!, notMeasured : [string]! }
 
@@ -87,6 +87,8 @@ orbital OrbProfileOrbital {
     heaps : [ProfileHeapPage] = []
     cpus : [ProfileCpuPage] = []
     pageError : string = ""
+    cycles : number = 1
+    cycle : number = 1
   }
 
   trait VerifyMachine = Machine.traits.Machine {
@@ -207,6 +209,14 @@ orbital OrbProfileOrbital {
         @label "Full screen button"
         @description "The label of the machine view's full-screen button; --machine full clicks it after opening the view."
         @tier "policy"
+      cycleRssGrowthMb : number = 0
+        @label "Allowed launchpad growth per cycle set"
+        @description "With --cycles N, the MB the launchpad's RSS may end the last cycle above where it ended the first; more answers status 500 (exit 1)."
+        @tier "policy"
+      cycleHeapGrowthMb : number = 0
+        @label "Allowed JS heap growth per cycle set"
+        @description "With --cycles N, the MB the page's JS heap after GC may end the last cycle above where it ended the first; more answers status 500 (exit 1)."
+        @tier "policy"
     }
     initial: ready
 
@@ -229,6 +239,8 @@ orbital OrbProfileOrbital {
               (set @entity.launchpadPid (let ((at (array/findIndex @argv (fn a (= @a "--pid"))))) (if (< @at 0) 0 (default (str/to-number (default (array/nth @argv (+ @at 1)) "")) 0))))
               (set @entity.settleMs (let ((at (array/findIndex @argv (fn a (= @a "--settle"))))) (if (< @at 0) 1500 (default (str/to-number (default (array/nth @argv (+ @at 1)) "")) 1500))))
               (set @entity.pages [])
+              (set @entity.cycles (let ((at (array/findIndex @argv (fn a (= @a "--cycles"))))) (if (< @at 0) 1 (math/max 1 (default (str/to-number (default (array/nth @argv (+ @at 1)) "")) 1)))))
+              (set @entity.cycle 1)
               (set @entity.heap (array/includes @argv "--heap"))
               (set @entity.cpu (array/includes @argv "--cpu"))
               (set @entity.machine (let ((at (array/findIndex @argv (fn a (= @a "--machine"))))) (if (< @at 0) "off" (if (= (default (array/nth @argv (+ @at 1)) "") "full") "full" "side"))))
@@ -399,7 +411,14 @@ orbital OrbProfileOrbital {
         (set @entity.pageError "")
         (log (str/concat "profile page " (+ @entity.index 1) "/" (array/len @entity.queue) " " (default (array/nth @entity.queue @entity.index) "")))
         (emit PROFILE_TRACE_START { label: (default (array/nth @entity.queue @entity.index) ""), heap: @entity.heap, cpu: @entity.cpu })
-      PROFILE_PAGE_NEXT -> reporting when (>= @entity.index (array/len @entity.queue))
+      PROFILE_PAGE_NEXT -> browsing when (and (>= @entity.index (array/len @entity.queue)) (< @entity.cycle @entity.cycles))
+        (set @entity.cycle (+ @entity.cycle 1))
+        (set @entity.index 0)
+        (emit PROFILE_CYCLE_NEXT { cycle: @entity.cycle })
+      PROFILE_CYCLE_NEXT -> browsing
+        (log (str/concat "profile cycle " ?cycle "/" @entity.cycles))
+        (emit PROFILE_PAGE_NEXT {})
+      PROFILE_PAGE_NEXT -> reporting when (and (>= @entity.index (array/len @entity.queue)) (>= @entity.cycle @entity.cycles))
         (emit PROFILE_CHROME_STOP {})
         (if (= @entity.samplyState "running") (emit PROFILE_SAMPLY_STOP { key: (str/concat "profile-launchpad-" @entity.launchpadPid) }) null)
         (emit PROFILE_PAGES_DONE {})
@@ -417,7 +436,7 @@ orbital OrbProfileOrbital {
       PROFILE_PAGE_COST -> browsing
         (let ((tasks : [ProfileLongTask] ?longTasks) (metrics : ProfilePageMetrics ?metrics))
           (do
-            (set @entity.pages (array/append @entity.pages { behavior: @entity.current, mainBusyMs: ?mainBusyMs, longTasks: (array/len @tasks),
+            (set @entity.pages (array/append @entity.pages { behavior: @entity.current, cycle: @entity.cycle, mainBusyMs: ?mainBusyMs, longTasks: (array/len @tasks),
               longestMs: (array/reduce @tasks 0 (fn acc t (math/max @acc @t.durMs))), worst: (array/first @tasks),
               jsHeapUsedBytes: @metrics.jsHeapUsedBytes, nodes: @metrics.nodes, rssBytes: 0, error: @entity.pageError }))
             (emit PROFILE_PROCESS_SAMPLE { key: (str/concat "lp-" @entity.index), pids: [(if (> @entity.launchpadPid 0) @entity.launchpadPid @entity.pid)] })))
@@ -426,7 +445,7 @@ orbital OrbProfileOrbital {
         (emit PROFILE_CHROME_STOP {})
         (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: " ?label " could not be opened (" ?code "): " ?error) })
       PROFILE_BROWSER_FAILED -> browsing when (and (!= ?label "") (not (array/includes ["playground", "leaves"] ?label)))
-        (let ((failed : ProfilePage { behavior: @entity.current, mainBusyMs: 0, longTasks: 0, longestMs: 0, jsHeapUsedBytes: 0, nodes: 0, rssBytes: 0, error: (str/concat "trace " ?code ": " ?error) }))
+        (let ((failed : ProfilePage { behavior: @entity.current, cycle: @entity.cycle, mainBusyMs: 0, longTasks: 0, longestMs: 0, jsHeapUsedBytes: 0, nodes: 0, rssBytes: 0, error: (str/concat "trace " ?code ": " ?error) }))
           (set @entity.pages (array/append @entity.pages @failed)))
         (set @entity.index (+ @entity.index 1))
         (emit PROFILE_PAGE_NEXT {})
@@ -437,8 +456,8 @@ orbital OrbProfileOrbital {
       PROFILE_RSS -> browsing
         (let ((measured : [ProfileMeasured] ?processes))
           (do
-            (set @entity.pages (array/map @entity.pages (fn pg (if (= @pg.behavior @entity.current)
-              { behavior: @pg.behavior, mainBusyMs: @pg.mainBusyMs, longTasks: @pg.longTasks, longestMs: @pg.longestMs, worst: @pg.worst, jsHeapUsedBytes: @pg.jsHeapUsedBytes, nodes: @pg.nodes,
+            (set @entity.pages (array/map @entity.pages (fn pg (if (and (= @pg.behavior @entity.current) (= @pg.cycle @entity.cycle))
+              { behavior: @pg.behavior, cycle: @pg.cycle, mainBusyMs: @pg.mainBusyMs, longTasks: @pg.longTasks, longestMs: @pg.longestMs, worst: @pg.worst, jsHeapUsedBytes: @pg.jsHeapUsedBytes, nodes: @pg.nodes,
                 rssBytes: (object/get (default (array/first @measured) { pid: 0, rssBytes: 0, cpuSeconds: 0, startedAt: 0 }) "rssBytes"), error: @pg.error }
               @pg))))
             (set @entity.index (+ @entity.index 1))
@@ -453,9 +472,17 @@ orbital OrbProfileOrbital {
         (set @entity.tableReady true)
         (emit PROFILE_FINISH {})
       PROFILE_FINISH -> ready when (and (= @entity.mode "launchpad") @entity.tableReady (!= @entity.samplyState "running"))
-        (let ((busiest (array/sort @entity.pages "mainBusyMs" "desc")) (rss (array/map (array/filter @entity.pages (fn pg (> @pg.rssBytes 0))) (fn pg @pg.rssBytes))) (totalMs (time/diff @now (default @entity.runStartedAt @now) "ms")))
-          (emit PROFILE_ANSWERED { status: 200, body: (if (= @entity.report "json")
-            (json/stringify { pages: @busiest, heaps: @entity.heaps, cpus: @entity.cpus, totalMs: @totalMs })
+        (let ((busiest (array/sort @entity.pages "mainBusyMs" "desc")) (rss (array/map (array/filter @entity.pages (fn pg (> @pg.rssBytes 0))) (fn pg @pg.rssBytes))) (totalMs (time/diff @now (default @entity.runStartedAt @now) "ms"))
+              (firstPages (array/filter @entity.pages (fn pg (= @pg.cycle 1)))) (lastPages (array/filter @entity.pages (fn pg (= @pg.cycle @entity.cycles)))))
+         (let ((cycle { cycles: @entity.cycles,
+                        rssEndFirst: (default (array/last (array/map (array/filter @firstPages (fn pg (> @pg.rssBytes 0))) (fn pg @pg.rssBytes))) 0),
+                        rssEndLast: (default (array/last (array/map (array/filter @lastPages (fn pg (> @pg.rssBytes 0))) (fn pg @pg.rssBytes))) 0),
+                        heapEndFirst: (default (array/last (array/map (array/filter @firstPages (fn pg (> @pg.jsHeapUsedBytes 0))) (fn pg @pg.jsHeapUsedBytes))) 0),
+                        heapEndLast: (default (array/last (array/map (array/filter @lastPages (fn pg (> @pg.jsHeapUsedBytes 0))) (fn pg @pg.jsHeapUsedBytes))) 0),
+                        rssAllowedBytes: (* @config.cycleRssGrowthMb 1048576), heapAllowedBytes: (* @config.cycleHeapGrowthMb 1048576) }))
+         (let ((grew (and (> @entity.cycles 1) (or (> (- @cycle.rssEndLast @cycle.rssEndFirst) @cycle.rssAllowedBytes) (> (- @cycle.heapEndLast @cycle.heapEndFirst) @cycle.heapAllowedBytes)))))
+          (emit PROFILE_ANSWERED { status: (if @grew 500 200), body: (if (= @entity.report "json")
+            (json/stringify { pages: @busiest, heaps: @entity.heaps, cpus: @entity.cpus, totalMs: @totalMs, cycle: @cycle, grew: @grew })
             (str/join (array/concat
               [(str/concat "orb profile launchpad: " (array/len @entity.pages) " pages in " (/ (math/round (/ @totalMs 100)) 10) " s (" @entity.baseUrl ", settle " @entity.settleMs " ms)"), "",
                "Busiest pages (main-thread busy ms | long tasks | longest ms | JS heap MB after GC | DOM nodes | launchpad RSS MB)  behavior  [worst long task by activity]"]
@@ -463,6 +490,9 @@ orbital OrbProfileOrbital {
                 (if (!= @pg.error "") (str/concat "  ERROR " @pg.error) "")
                 (if (== @pg.worst null) "" (str/concat "  [" (str/join (array/map (object/get (default @pg.worst { startMs: 0, durMs: 0, groups: [], unattributedMs: 0 }) "groups") (fn gr (str/concat @gr.group " " (/ (math/round (* @gr.ms 10)) 10)))) ", ") "]")))))
               ["", (str/concat "Launchpad memory (RSS) over the run: first " (/ (math/round (/ (default (array/first @rss) 0) 10485.76)) 100) " MB, last " (/ (math/round (/ (default (array/last @rss) 0) 10485.76)) 100) " MB, peak " (/ (math/round (/ (array/reduce @rss 0 (fn acc v (math/max @acc @v))) 10485.76)) 100) " MB")]
+              (if (> @entity.cycles 1)
+                ["", (str/concat "Open/close cycles (" @entity.cycles "), end of cycle 1 -> end of cycle " @entity.cycles ": launchpad RSS " (/ (math/round (/ @cycle.rssEndFirst 10485.76)) 100) " -> " (/ (math/round (/ @cycle.rssEndLast 10485.76)) 100) " MB (allowed +" @config.cycleRssGrowthMb "), JS heap after GC " (/ (math/round (/ @cycle.heapEndFirst 10485.76)) 100) " -> " (/ (math/round (/ @cycle.heapEndLast 10485.76)) 100) " MB (allowed +" @config.cycleHeapGrowthMb "): " (if @grew "GREW, a repeated open keeps memory" "held"))]
+                [])
               ["", "Biggest JS heaps after GC (MB)  behavior"]
               (array/map (array/take (array/sort @entity.pages "jsHeapUsedBytes" "desc") 20) (fn pg (str/concat "  " (/ (math/round (/ @pg.jsHeapUsedBytes 10485.76)) 100) "  " @pg.behavior)))
               (if @entity.heap
@@ -491,7 +521,7 @@ orbital OrbProfileOrbital {
                   ["", (if (!= @entity.hotError "") (str/concat "Hot functions in the launchpad: samply failed: " @entity.hotError) (str/concat "Hot functions in the launchpad process (samply, " @entity.hotSamples " samples at 100 Hz; self | total samples, self CPU ms)"))]
                   (array/map (array/take @entity.hot 50) (fn f (str/concat "  " @f.selfSamples " | " @f.totalSamples " | " (/ (math/round (/ @f.selfCpuUs 10)) 100) "  " @f.name "  (" @f.lib ")"))))
                 ["", "Hot functions in the launchpad: not sampled (run with --samply)."])
-              ["", "Not measured by this pass: the launchpad kernel's cost per step (its guests run in its own process; see orb profile catalog for kernel cost per behavior)."]) "\n")) }))
+              ["", "Not measured by this pass: the launchpad kernel's cost per step (its guests run in its own process; see orb profile catalog for kernel cost per behavior)."]) "\n")) }))))
       INIT -> reporting
       PROFILE_KERNEL -> reporting
         (set @entity.held ?heldBytes)
@@ -580,6 +610,8 @@ orbital OrbProfileOrbital {
       PROFILE_SETTLE { key : string!, delayMs : number! }
         @tier "internal"
       PROFILE_PAGE_NEXT {}
+        @tier "internal"
+      PROFILE_CYCLE_NEXT { cycle : number! }
         @tier "internal"
       PROFILE_PAGES_DONE {}
         @tier "internal"
