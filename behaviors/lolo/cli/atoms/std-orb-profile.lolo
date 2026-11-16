@@ -6,7 +6,7 @@ app std-orb-profile [
   env: ["ALMADAR_PERSONA_OWNS", "ORB_CHROME", "PATH", "HOME"],
   net: { "127.0.0.1:9333": [tcp] },
   fs: { cwd: "**/*.lolo": [read], "/**/*.lolo": [read], cwd: ".orbital/profile/**": [read, write, create], cwd: ".orbital/profile": [create], env HOME: ".almadar/profile": [create], env HOME: ".almadar/profile/samply/": [create, read], env HOME: ".almadar/profile/samply/**": [read] },
-  description: "std-orb-profile — the `orb profile <program.lolo> | catalog [--limit N] [--report json]` command (P-034): it measures where a program's own steps spend their time and allocations, on the kernel (EXEC-COST-1). `orb profile <file>` walks the program's transitions with std-verify-walk (cost on, validate off: every plannable row played once from its own state) and folds each played outcome's cost into std-trace-cost. `orb profile catalog` lists the installed behaviors under std and almadar-behaviors (specs left out), resolves each one's file and walks it the same way, one after the other, timing each behavior from its resolve to its walk's answer and reading this process's resident memory after each (std-process-sample), so a behavior that leaves memory behind shows as growth; --limit walks only the first N. A behavior that does not resolve, or whose walk fails, is listed with its error and the run goes on. The answer (status 200) is the report: the behaviors by wall time, the steps by total time (count, median, 95th percentile, allocations and bytes, per behavior, trait and event), the effects by operator the same way, the process's memory at the start, the end and its peak, the kernel's held bytes at the end (std-orb-stats), and how many outcomes carried no cost; --report json answers the same as JSON. A usage error answers status 400 (exit 2). What this does not measure yet is said in the report: the browser (std-cdp-profile) and hot Rust functions (std-samply) join this command next."
+  description: "std-orb-profile — the `orb profile <program.lolo> | catalog [--limit N] [--report json]` command (P-034): it measures where a program's own steps spend their time and allocations, on the kernel (EXEC-COST-1). `orb profile <file>` walks the program's transitions with std-verify-walk (cost on, validate off: every plannable row played once from its own state) and folds each played outcome's cost into std-trace-cost. `orb profile catalog` lists the installed behaviors under std and almadar-behaviors (specs left out), resolves each one's file and walks it the same way, one after the other, timing each behavior from its resolve to its walk's answer and reading this process's resident memory after each (std-process-sample), so a behavior that leaves memory behind shows as growth; --limit walks only the first N; --only a,b names the behaviors to profile (in any mode that lists them), the rest left out. A behavior that does not resolve, or whose walk fails, is listed with its error and the run goes on. The answer (status 200) is the report: the behaviors by wall time, the steps by total time (count, median, 95th percentile, allocations and bytes, per behavior, trait and event), the effects by operator the same way, the process's memory at the start, the end and its peak, the kernel's held bytes at the end (std-orb-stats), and how many outcomes carried no cost; --report json answers the same as JSON. A usage error answers status 400 (exit 2). What this does not measure yet is said in the report: the browser (std-cdp-profile) and hot Rust functions (std-samply) join this command next."
 ]
 ;; @capabilities "profile where a program's or the behavior catalog's steps spend time and memory"
 uses Spec from "almadar-std/orb-profile"
@@ -88,6 +88,7 @@ orbital OrbProfileOrbital {
     cpus : [ProfileCpuPage] = []
     pageError : string = ""
     cycles : number = 1
+    only : [string] @description "The behaviors --only names, comma separated; empty profiles every one listed." = []
     cycle : number = 1
   }
 
@@ -241,6 +242,7 @@ orbital OrbProfileOrbital {
               (set @entity.pages [])
               (set @entity.cycles (let ((at (array/findIndex @argv (fn a (= @a "--cycles"))))) (if (< @at 0) 1 (math/max 1 (default (str/to-number (default (array/nth @argv (+ @at 1)) "")) 1)))))
               (set @entity.cycle 1)
+              (set @entity.only (let ((at (array/findIndex @argv (fn a (= @a "--only"))))) (if (< @at 0) [] (array/filter (str/split (default (array/nth @argv (+ @at 1)) "") ",") (fn n (!= @n ""))))))
               (set @entity.heap (array/includes @argv "--heap"))
               (set @entity.cpu (array/includes @argv "--cpu"))
               (set @entity.machine (let ((at (array/findIndex @argv (fn a (= @a "--machine"))))) (if (< @at 0) "off" (if (= (default (array/nth @argv (+ @at 1)) "") "full") "full" "side"))))
@@ -316,7 +318,7 @@ orbital OrbProfileOrbital {
         (let ((entries : [ProfileCatalogEntry] ?result))
           (let ((names (array/map (array/filter @entries (fn e (!= @e.topic "spec"))) (fn e @e.behavior))))
             (do
-              (set @entity.queue (if (> @entity.limit 0) (array/take @names @entity.limit) @names))
+              (set @entity.queue (let ((picked (if (> (array/len @entity.only) 0) (array/filter @names (fn n (array/includes @entity.only @n))) @names))) (if (> @entity.limit 0) (array/take @picked @entity.limit) @picked)))
               (emit PROFILE_NEXT {}))))
       PROFILE_FAILED -> ready
         (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile: " ?error) })
@@ -373,7 +375,7 @@ orbital OrbProfileOrbital {
         (let ((entries : [ProfileCatalogEntry] ?result))
           (let ((names (array/map (array/filter @entries (fn e (!= @e.topic "spec"))) (fn e @e.behavior))))
             (do
-              (set @entity.queue (if (> @entity.limit 0) (array/take @names @entity.limit) @names))
+              (set @entity.queue (let ((picked (if (> (array/len @entity.only) 0) (array/filter @names (fn n (array/includes @entity.only @n))) @names))) (if (> @entity.limit 0) (array/take @picked @entity.limit) @picked)))
               (set @entity.index 0)
               (if @entity.clicks
                 (emit PROFILE_PAGE_NAVIGATE { key: "warmup", url: (str/concat @entity.baseUrl "/") })
@@ -389,7 +391,7 @@ orbital OrbProfileOrbital {
       PROFILE_EVALUATED -> browsing when (= ?key "leaves")
         (let ((names (default (object/get (object/get (object/get (default (json/parse ?frame ProfileLeavesReply) { result: { result: { value: [] } } }) "result") "result") "value") [])))
           (do
-            (set @entity.queue (if (> @entity.limit 0) (array/take @names @entity.limit) @names))
+            (set @entity.queue (let ((picked (if (> (array/len @entity.only) 0) (array/filter @names (fn n (array/includes @entity.only @n))) @names))) (if (> @entity.limit 0) (array/take @picked @entity.limit) @picked)))
             (set @entity.index 0)
             (emit PROFILE_PAGE_NEXT {})))
       PROFILE_CLICKED -> browsing when (and (= ?key "nav") (= @entity.machine "off"))

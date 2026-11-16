@@ -1223,6 +1223,110 @@
         }
       ],
       "now": 1760531445678
+    },
+    {
+      "id": "only-keeps-the-named-leaves",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_EVALUATED",
+          "payload": {
+            "key": "leaves",
+            "frame": "{\"id\": 3, \"result\": {\"result\": {\"type\": \"object\", \"value\": [\"std-a\", \"std-b\", \"std-c\"]}}}"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "limit": 0,
+            "only": [
+              "std-a",
+              "std-c"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "queue": [
+                "std-a",
+                "std-c"
+              ]
+            },
+            "emits": [
+              {
+                "event": "PROFILE_PAGE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "only-keeps-the-named-catalog-behaviors",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "listing",
+          "event": "PROFILE_CATALOG",
+          "payload": {
+            "result": [
+              {
+                "behavior": "a/one",
+                "topic": "ui",
+                "level": "atom",
+                "package": "p"
+              },
+              {
+                "behavior": "a/spec",
+                "topic": "spec",
+                "level": "atom",
+                "package": "p"
+              },
+              {
+                "behavior": "a/two",
+                "topic": "ui",
+                "level": "atom",
+                "package": "p"
+              },
+              {
+                "behavior": "a/three",
+                "topic": "ui",
+                "level": "atom",
+                "package": "p"
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "mode": "catalog",
+            "limit": 0,
+            "only": [
+              "a/three"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "walking",
+            "emits": [
+              {
+                "event": "PROFILE_NEXT",
+                "payload": {}
+              }
+            ],
+            "entity": {
+              "queue": [
+                "a/three"
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
     }
   ]
 }
