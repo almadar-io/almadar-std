@@ -151,8 +151,8 @@ orbital LlmOrbital {
             system: (str/concat "You are a text classifier. Classify each item below into exactly one of these categories:\n"
               (str/join (array/map @payload.categories (fn c (str/concat "- " @c))) "\n")
               "\nAnswer with one verdict per item: its id, the category, your confidence from 0 to 1 and a short reasoning. Return JSON: { \"verdicts\": [{ \"id\", \"category\", \"confidence\", \"reasoning\" }] }."),
-            user: (str/concat (if (!= (default @payload.instructions "") "") (str/concat "<instructions>\n" @payload.instructions "\n</instructions>\n\n") "") (str/join (array/map @payload.items (fn it (str/concat "[" (+ @index 1) "] " @it.text))) "\n")),
-            base: (str/concat (if (!= (default @payload.instructions "") "") (str/concat "<instructions>\n" @payload.instructions "\n</instructions>\n\n") "") (str/join (array/map @payload.items (fn it (str/concat "[" (+ @index 1) "] " @it.text))) "\n")),
+            user: (str/concat (if (!= (default @payload.instructions "") "") (str/concat "<instructions>\n" @payload.instructions "\n</instructions>\n\n") "") (str/join (array/map @payload.items (fn (it index) (str/concat "[" (+ @index 1) "] " @it.text))) "\n")),
+            base: (str/concat (if (!= (default @payload.instructions "") "") (str/concat "<instructions>\n" @payload.instructions "\n</instructions>\n\n") "") (str/join (array/map @payload.items (fn (it index) (str/concat "[" (+ @index 1) "] " @it.text))) "\n")),
             model: (if (and (object/has @payload "model") (!= @payload.model "")) @payload.model @config.model),
             temperature: 0.1, maxTokens: 0,
             categories: @payload.categories, itemIds: (array/map @payload.items (fn it @it.id)),
@@ -531,7 +531,7 @@ orbital LlmOrbital {
         (emit LLM_CHAT_STRIPPED {
           job: @payload.job,
           text: (let ((parts (str/split @payload.content "</think>")))
-            (str/trim (str/join (array/map @parts (fn p
+            (str/trim (str/join (array/map @parts (fn (p index)
               (let ((i @index))
                 (let ((seg (if (> @i 0) (str/trimStart @p) @p)))
                   (if (< @i (- (array/len @parts) 1)) (default (array/first (str/split @seg "<think>")) "") @seg))))) "")))
@@ -604,7 +604,7 @@ orbital LlmOrbital {
           (emit LLM_CHAT_CHECKED {
             job: @payload.job, json: @payload.json,
             issues: (if (= @vs null) "verdicts: Required"
-              (let ((shape (str/join (array/flatten (array/map @vs (fn v (let ((i @index))
+              (let ((shape (str/join (array/flatten (array/map @vs (fn (v index) (let ((i @index))
                   (array/concat
                     (if (= (object/get @v id null) null) [(str/concat "verdicts." @i ".id: Required")] [])
                     (if (= (object/get @v category null) null) [(str/concat "verdicts." @i ".category: Required")] [])
@@ -643,11 +643,11 @@ orbital LlmOrbital {
         })
       LLM_CHAT_CHECKED -> idle when (and (= @payload.issues "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classifyMany"))
         (let ((ids (object/get (default (json/parse @payload.job LlmJob) {}) itemIds [])) (vs (object/get (default (json/parse @payload.json VerdictsReply) {}) verdicts [])))
-          (let ((labels (array/map @ids (fn x (str/concat (+ @index 1) "")))) (verdictIds (array/map @vs (fn v (object/get @v id "")))))
-            (let ((errs (array/map @vs (fn v (let ((k @index))
+          (let ((labels (array/map @ids (fn (x index) (str/concat (+ @index 1) "")))) (verdictIds (array/map @vs (fn v (object/get @v id "")))))
+            (let ((errs (array/map @vs (fn (v index) (let ((k @index))
                 (if (not (array/includes @labels (object/get @v id ""))) (str/concat "The model gave a verdict for item '" (object/get @v id "") "', which was not sent")
                   (if (!= (array/findIndex @vs (fn x (= (object/get @x id "") (object/get @v id "")))) @k) (str/concat "The model gave item '" (object/get @v id "") "' two verdicts") "")))))))
-              (let ((missing (array/filter @ids (fn itemId (not (array/includes @verdictIds (str/concat (+ @index 1) "")))))))
+              (let ((missing (array/filter @ids (fn (itemId index) (not (array/includes @verdictIds (str/concat (+ @index 1) "")))))))
                 (emit LLM_CHAT_VERDICTS {
                   job: @payload.job, json: @payload.json,
                   problem: (if (> (array/count @errs (fn e (!= @e ""))) 0) (default (array/find @errs (fn e (!= @e ""))) "")
@@ -658,7 +658,7 @@ orbital LlmOrbital {
       LLM_CHAT_VERDICTS -> idle when (= @payload.problem "")
         (let ((ids (object/get (default (json/parse @payload.job LlmJob) {}) itemIds [])) (vs (object/get (default (json/parse @payload.json VerdictsReply) {}) verdicts [])))
           (emit LLM_CLASSIFY_MANY_RESULT {
-            verdicts: (array/map @ids (fn itemId (let ((k @index))
+            verdicts: (array/map @ids (fn (itemId index) (let ((k @index))
               (let ((v (array/find @vs (fn x (= (object/get @x id "") (str/concat (+ @k 1) ""))))))
                 { id: @itemId, category: (if (validate/required @v) (object/get @v category "") ""), confidence: (if (validate/required @v) (object/get @v confidence 0) 0), reasoning: (if (validate/required @v) (object/get @v reasoning "") "") }))))
           }))
@@ -1074,7 +1074,7 @@ orbital LlmOrbital {
         (emit LLM_EMBED_RESULT {
           embeddings: (let ((data (object/get (default (json/parse @payload.body EmbedReply) {}) data [])))
             (let ((n (array/len @data)))
-              (array/map (array/sort (array/map @data (fn x (+ (* (object/get @x index 0) @n) @index)))) (fn k (object/get (default (let ((nxi (default (math/mod @k @n) 0))) (if (>= @nxi 0) (array/nth @data @nxi) null)) {}) embedding []))))),
+              (array/map (array/sort (array/map @data (fn (x index) (+ (* (object/get @x "index" 0) @n) @index)))) (fn k (object/get (default (let ((nxi (default (math/mod @k @n) 0))) (if (>= @nxi 0) (array/nth @data @nxi) null)) {}) embedding []))))),
           usage: { promptTokens: (object/get (object/get (default (json/parse @payload.body EmbedReply) {}) usage {}) prompt_tokens 0), totalTokens: (object/get (object/get (default (json/parse @payload.body EmbedReply) {}) usage {}) total_tokens 0) },
           key: (object/get (default (json/parse @payload.key EmbedJob) {}) callKey ""),
           model: (object/get (default (json/parse @payload.key EmbedJob) {}) model "")

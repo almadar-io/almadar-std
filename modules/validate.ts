@@ -319,17 +319,17 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/check': {
     module: 'validate',
     category: 'std-validate',
-    evaluation: 'form',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
-    description: 'Run validation rules by field over a value, return { valid, errors } with one `field: rule validation failed` per broken rule. The rules are read as data: `{ field: [[rule, args…], …] }`. Rules: required string number boolean email minLength maxLength min max range pattern oneOf; an unknown rule is skipped',
+    description: 'Run validation rules by field over a value, return { valid, errors } with one `field: rule validation failed` per broken rule. The rules are a record of field to a list of rule records: `{ field: [{ rule, args? }, …] }`, `rule` the rule name and `args` its arguments. Rules: required string number boolean email minLength maxLength min max range pattern oneOf; an unknown rule is skipped',
     hasSideEffects: false,
     returnType: shape({ valid: BOOLEAN, errors: list(STRING) }),
     params: [
       { name: 'value', type: tv('T'), description: 'Value or object to validate' },
       { name: 'rules', type: rec('V'), description: 'Validation rules by field; a predicate function is not accepted' },
     ],
-    example: '["validate/check", {"name": "Ann", "email": "ann@example.com", "age": 20}, {"name": [["required"], ["minLength", 2], ["maxLength", 50]], "email": [["required"], ["email"]], "age": [["number"]]}]',
+    example: '["validate/check", {"name": "Ann", "email": "ann@example.com", "age": 20}, {"name": [{"rule": "required"}, {"rule": "minLength", "args": [2]}, {"rule": "maxLength", "args": [50]}], "email": [{"rule": "required"}, {"rule": "email"}], "age": [{"rule": "number"}]}]',
   },
 };
 

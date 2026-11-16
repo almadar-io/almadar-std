@@ -87,11 +87,11 @@ orbital OrbLintBindingRootsOrbital {
     (let ((known : [string] (array/concat (object/keys @entity.ents) (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (object/get @o "expects" []) (fn ex (if (and (or (= (object/get @ex "kind" "") "entity") (= (object/get @ex "kind" "") "identity")) (object/has @ex "name")) [(object/get @ex "name" "")] @nostr))))))))) (roots : [BrRoot] (array/concat
   (array/flatten
     (array/map @orbitals
-      (fn o
+      (fn (o index)
         (let ((oi @index) (trts : [BrTraitBR] (object/get @o "traits" [])))
           (array/flatten
             (array/map @trts
-              (fn t
+              (fn (t index)
                 (let ((ti @index))
                   (if (not (object/has @t "stateMachine"))
                     @noroots
@@ -99,43 +99,43 @@ orbital OrbLintBindingRootsOrbital {
                       (array/concat
                         (array/flatten
                           (array/map @trs
-                            (fn tr
+                            (fn (tr index)
                               (let ((xp (str/concat @tp ".stateMachine.transitions[" @index "]")) (effs : [BrShape] (object/get @tr "effects" [])) (ens : [BrShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)))
                                 (array/concat
                                   (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
                                   (array/concat
-                                    (array/map @effs (fn e { x: @e, w: (str/concat @xp ".effects[" @index "]"), c: "effect" }))
-                                    (array/map @ens (fn e { x: @e, w: (str/concat @xp ".ensures[" @index "]"), c: "ensures" }))))))))
+                                    (array/map @effs (fn (e index) { x: @e, w: (str/concat @xp ".effects[" @index "]"), c: "effect" }))
+                                    (array/map @ens (fn (e index) { x: @e, w: (str/concat @xp ".ensures[" @index "]"), c: "ensures" }))))))))
                         (array/concat
                           (array/flatten
                             (array/map @sts
-                              (fn st
+                              (fn (st index)
                                 (let ((h (object/get @st "holds" null)))
                                   (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @index "].holds"), c: "guard" }] @noroots)))))
                           (array/flatten
                             (array/map @tks
-                              (fn tk
+                              (fn (tk index)
                                 (let ((ki @index) (teffs : [BrShape] (object/get @tk "effects" [])))
-                                  (array/map @teffs (fn e { x: @e, w: (str/concat @tp ".ticks[" @ki "].effects[" @index "]"), c: "tick" }))))))))))))))))))
+                                  (array/map @teffs (fn (e index) { x: @e, w: (str/concat @tp ".ticks[" @ki "].effects[" @index "]"), c: "tick" }))))))))))))))))))
   (array/concat
     (array/flatten
       (array/map @orbitals
-        (fn o
+        (fn (o index)
           (let ((oi @index) (ent (object/get @o "entity" null)))
             (if (validate/object @ent)
               (let ((invs : [BrShape] (object/get @ent "invariants" [])))
-                (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].entity.invariants[" @index "]"), c: "guard" })))
+                (array/map @invs (fn (iv index) { x: @iv, w: (str/concat "orbitals[" @oi "].entity.invariants[" @index "]"), c: "guard" })))
               @noroots)))))
     (array/flatten
       (array/map @orbitals
-        (fn o
+        (fn (o index)
           (let ((oi @index) (auxs : [BrEntity] (object/get @o "auxiliaryEntities" [])))
             (array/flatten
               (array/map @auxs
-                (fn a
+                (fn (a index)
                   (let ((ai @index) (invs : [BrShape] (object/get @a "invariants" [])))
                     (if (validate/object @a)
-                      (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "guard" }))
+                      (array/map @invs (fn (iv index) { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "guard" }))
                       @noroots)))))))))))) (knownIdx (default (object/fromEntries (array/map @known (fn z [@z, true]))) {  }))
       (rh (let ((nroot : BrRoot { x: null, w: "", c: "" }) (ux (array/unique (array/map @roots (fn kx (object/get @kx "x" null))))))  (let ((hsU (array/pmap @ux (fn xv (let ((raw (tree/index @xv (array/concat ["fn" "let"] @collOps) { prefixes: [(quote "@")] })))
 (let ((ix (default (as (object/omit @raw [(quote "@")]) BrIdx) {})) (ats : [BrAt] (array/flatten (object/values (default (as (object/omit @raw (array/concat ["fn" "let"] @collOps)) BrAtIdx) {})))))
@@ -154,7 +154,8 @@ orbital OrbLintBindingRootsOrbital {
                       [{ q: @q, kind: "lo", names: (object/keys @p1), pairs: [] }]
                       [{ q: @q, kind: "l0", names: @nostr, pairs: [] }]))
                   (if (and (validate/string @op) (object/has @collIdx @op))
-                    [{ q: @q, kind: "co", names: ["item" "index"], pairs: [] }]
+                    (let ((nopair : [BrPair] []))
+                      [{ q: @q, kind: "co", names: ["item" "index"], pairs: (array/flatten (array/map (array/range 1 (array/len @cn)) (fn k (let ((opd (array/nth @cn @k))) (if (and (validate/array @opd) (> (array/len @opd) 0) (= (array/nth @opd 0) "fn")) [{ pfx: (str/concat "[" @k "]"), before: @nostr }] @nopair))))) }])
                     [])))))))))))
   (let ((out : [BrHit] (array/flatten (array/map @ats (fn hit
     (let ((hp (object/get @hit "path" "")) (hn (object/get @hit "node" "")))
@@ -162,7 +163,7 @@ orbital OrbLintBindingRootsOrbital {
             (fn (acc s)
               (let ((sfx (str/slice @hp (str/len (object/get @s "q")))) (kind (object/get @s "kind")))
                 (let ((flt (if (= @kind "co")
-                              (if (str/startsWith @sfx "[1]") @nostr (if (str/startsWith @sfx "[0]") null (object/get @s "names")))
+                              (if (str/startsWith @sfx "[1]") @nostr (if (str/startsWith @sfx "[0]") null (if (array/some (object/get @s "pairs") (fn pq (str/startsWith @sfx (object/get @pq "pfx")))) @nostr (object/get @s "names"))))
                               (if (str/startsWith @sfx "[2]") (object/get @s "names")
                                 (if (= @kind "lo") (if (str/startsWith @sfx "[1]") (object/get @s "names") null)
                                   (if (= @kind "la") (let ((pf (array/find (object/get @s "pairs") (fn pq (str/startsWith @sfx (object/get @pq "pfx")))))) (if (= @pf null) null (object/get @pf "before"))) null))))))

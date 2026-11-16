@@ -64,7 +64,7 @@ orbital LlmLocalOrbital {
           text: (str/concat
             (str/join ["Classify each item below into exactly one of these categories:" (str/join (array/map @payload.categories (fn c (str/concat "- " @c))) "\n") "Answer with one verdict per item: its id, the category, and your confidence from 0 to 1."] "\n")
             "\n\n"
-            (str/join (array/map @payload.items (fn it (str/concat "[" (+ @index 1) "] " @it.text))) "\n")),
+            (str/join (array/map @payload.items (fn (it index) (str/concat "[" (+ @index 1) "] " @it.text))) "\n")),
           schema: (json/stringify {
             type: "object",
             properties: {
@@ -75,7 +75,7 @@ orbital LlmLocalOrbital {
                 items: {
                   type: "object",
                   properties: {
-                    id: { type: "string", enum: (array/map @payload.items (fn it (str/concat (+ @index 1) ""))) },
+                    id: { type: "string", enum: (array/map @payload.items (fn (it index) (str/concat (+ @index 1) ""))) },
                     category: { type: "string", enum: @payload.categories },
                     confidence: { type: "number", minimum: 0, maximum: 1 }
                   },
@@ -152,12 +152,12 @@ orbital LlmLocalOrbital {
               (if (not (validate/array (object/get @p verdicts null))) "The on-device model replied outside the declared shape"
                 (let ((vs (object/get @p verdicts [])))
                   (if (not (array/every @vs (fn v (if (validate/object @v) (and (validate/string (object/get @v id null)) (validate/string (object/get @v category null)) (validate/number (object/get @v confidence null))) false)))) "The on-device model replied outside the declared shape"
-                    (let ((labels (array/map @ids (fn x (str/concat (+ @index 1) "")))) (verdictIds (array/map @vs (fn v (object/get @v id "")))))
-                      (let ((errs (array/map @vs (fn v (let ((k @index))
+                    (let ((labels (array/map @ids (fn (x index) (str/concat (+ @index 1) "")))) (verdictIds (array/map @vs (fn v (object/get @v id "")))))
+                      (let ((errs (array/map @vs (fn (v index) (let ((k @index))
                           (if (not (array/includes @labels (object/get @v id ""))) (str/concat "The model gave a verdict for item '" (object/get @v id "") "', which was not sent")
                             (if (!= (array/findIndex @vs (fn x (= (object/get @x id "") (object/get @v id "")))) @k) (str/concat "The model gave item '" (object/get @v id "") "' two verdicts")
                               (if (not (array/includes @cats (object/get @v category ""))) (str/concat "The model chose '" (object/get @v category "") "' for item '" (object/get @v id "") "', not a declared category") ""))))))))
-                        (let ((missing (array/filter @ids (fn itemId (not (array/includes @verdictIds (str/concat (+ @index 1) "")))))))
+                        (let ((missing (array/filter @ids (fn (itemId index) (not (array/includes @verdictIds (str/concat (+ @index 1) "")))))))
                           (if (> (array/count @errs (fn e (!= @e ""))) 0) (array/find @errs (fn e (!= @e ""))) (if (> (array/len @missing) 0) (str/concat "The model gave no verdict for " (str/join @missing ", ")) ""))))))))))
         })
       LLM_LOCAL_CHECKED -> idle when (!= @payload.problem "")
@@ -171,7 +171,7 @@ orbital LlmLocalOrbital {
       LLM_LOCAL_CHECKED -> idle when (and (= @payload.problem "") (= (object/get (default (json/parse @payload.job LocalJob) { action: "" }) action "") "classifyMany"))
         (let ((ids (object/get (default (json/parse @payload.job LocalJob) { action: "" }) itemIds [])) (vs (object/get (default (json/parse @payload.reply LocalVerdicts) { verdicts: [] }) verdicts [])))
           (emit LLM_CLASSIFY_MANY_RESULT {
-            verdicts: (array/map @ids (fn itemId (let ((k @index))
+            verdicts: (array/map @ids (fn (itemId index) (let ((k @index))
               (let ((v (default (array/find @vs (fn x (= (object/get @x id "") (str/concat (+ @k 1) "")))) { id: "", category: "", confidence: 0 })))
                 { id: @itemId, category: (object/get @v category ""), confidence: (object/get @v confidence 0) }))))
           }))

@@ -51,7 +51,7 @@ orbital StepFlowOrbital {
         (set @entity.id (let ((nthv (array/nth ?data 0))) (if (= @nthv null) @entity.id (object/get @nthv id))))
         (set @entity.currentStepIndex 0)
         (set @entity.totalSteps (array/len @config.steps))
-        (set @entity.wizardSteps (array/map @config.steps (fn step {
+        (set @entity.wizardSteps (array/map @config.steps (fn (step index) {
           badgeVariant: (if (< @index @entity.currentStepIndex) success (if (= @index @entity.currentStepIndex) primary neutral))
           description: (object/get @step description "")
           icon: (object/get @step icon circle)
@@ -115,7 +115,7 @@ orbital StepFlowOrbital {
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
         (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) success primary))
         (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
-        (set @entity.wizardSteps (array/map @config.steps (fn step {
+        (set @entity.wizardSteps (array/map @config.steps (fn (step index) {
           badgeVariant: (if (< @index @entity.currentStepIndex) success (if (= @index @entity.currentStepIndex) primary neutral))
           description: (object/get @step description "")
           icon: (object/get @step icon circle)
@@ -138,7 +138,7 @@ orbital StepFlowOrbital {
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
         (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) success primary))
         (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
-        (set @entity.wizardSteps (array/map @config.steps (fn step {
+        (set @entity.wizardSteps (array/map @config.steps (fn (step index) {
           badgeVariant: (if (< @index @entity.currentStepIndex) success (if (= @index @entity.currentStepIndex) primary neutral))
           description: (object/get @step description "")
           icon: (object/get @step icon circle)
@@ -173,7 +173,7 @@ orbital StepFlowOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             action: RESTART
@@ -209,7 +209,7 @@ orbital StepFlowOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             action: RESTART
@@ -233,7 +233,7 @@ orbital StepFlowOrbital {
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
         (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) success primary))
         (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
-        (set @entity.wizardSteps (array/map @config.steps (fn step {
+        (set @entity.wizardSteps (array/map @config.steps (fn (step index) {
           badgeVariant: (if (< @index @entity.currentStepIndex) success (if (= @index @entity.currentStepIndex) primary neutral))
           description: (object/get @step description "")
           icon: (object/get @step icon circle)
@@ -571,7 +571,7 @@ orbital StepFlowOrbital {
         }, {
           allowNavigation: false
           currentStep: @entity.currentStepIndex
-          steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
+          steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
           type: wizard-progress
         }, {
           children: [{

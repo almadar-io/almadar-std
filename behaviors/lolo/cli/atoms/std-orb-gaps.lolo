@@ -289,7 +289,7 @@ orbital OrbGapsOrbital {
           (array/filter @entity.probes (fn p (and (!= (object/get @p "path") ".") (object/get @p "dirOk") (not (object/get @p "hasPy")) (or (not (object/get @p "nested")) (object/get @p "hasLedger")) (not (array/includes @config.deprecated (object/get @p "path"))))))
           (fn p { sort: (str/concat (str/padStart (str/concat (let ((i (array/indexOf @config.order (object/get @p "path")))) (if (< @i 0) (array/len @config.order) @i))) 3 "0") "|" (str/collate-key (object/get @p "path"))), path: (object/get @p "path") })) "sort") (fn k (object/get @k "path"))))
         (set @entity.findings (array/map @entity.repos (fn p (if (= @p "orbital-rust") "ORB" (let ((dir (os/path-base @p))) (if (= @dir "almadar") "ALMADAR" (str/upper (str/replace-pattern @dir "^almadar-" "")))))))) 
-        (set @entity.fail (let ((dup (array/find @entity.findings (fn v (< (array/indexOf @entity.findings @v) @index))))) (if (= @dup null) "" (str/concat "two repos derive the same gap prefix G-" @dup "-"))))
+        (set @entity.fail (let ((dup (array/find @entity.findings (fn (v index) (< (array/indexOf @entity.findings @v) @index))))) (if (= @dup null) "" (str/concat "two repos derive the same gap prefix G-" @dup "-"))))
         (emit GAPS_PROBED { })
       GAPS_PROBED -> ready when (!= @entity.fail "")
         (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
@@ -352,7 +352,7 @@ orbital OrbGapsOrbital {
         (set @entity.curLines (str/split (object/get (default (if (>= @entity.cursor 0) (array/nth @entity.jobs @entity.cursor) null) { key: "", text: "", repo: "" }) "text") "\n"))
         (set @entity.curN (array/len @entity.curLines))
         (set @entity.curBegin (array/findIndex @entity.curLines (fn l (str/includes @l "<!-- BEGIN GENERATED ROLL-UP"))))
-        (set @entity.curCand (array/filter (array/map @entity.curLines (fn l (if (validate/pattern @l "^\\s*(`{3,}|~{3,})") { at: @index, text: @l } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.curCand (array/filter (array/map @entity.curLines (fn (l index) (if (validate/pattern @l "^\\s*(`{3,}|~{3,})") { at: @index, text: @l } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.curFences (array/reduce @entity.curCand (array/take [""] 0) (fn acc m
           (let ((prev (if (= (array/len @acc) 0) "" (array/last @acc)))
                 (lead (str/trimStart (object/get @m "text"))))
@@ -364,14 +364,14 @@ orbital OrbGapsOrbital {
           { lo: (object/get (default (array/nth @entity.curCand @k) { at: 0, text: "" }) "at"),
             hi: (let ((j (array/find (array/range (+ @k 1) (array/len @entity.curCand)) (fn j (= (if (>= @j 0) (array/nth @entity.curFences @j) null) ""))))) (if (= @j null) @entity.curN (object/get (default (if (>= @j 0) (array/nth @entity.curCand @j) null) { at: 0, text: "" }) "at"))) })))
         (set @entity.curFlags (array/map (array/range 0 @entity.curN) (fn i (not (array/some @entity.curSpans (fn sp (and (<= (object/get @sp "lo") @i) (<= @i (object/get @sp "hi")))))))))
-        (set @entity.curBounds (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^(?:#{1,4} |[-*+] |Next (?:cross-repo )?code:|_No open gaps\\._|---\\s*$|<!--)")) @index -1))) (fn i (>= @i 0))))
-        (set @entity.curSecs (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^#{1,4} ")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
-        (set @entity.curStarts (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^- \\*\\*G-[A-Z0-9_-]+-\\d+\\*\\*")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.curBounds (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^(?:#{1,4} |[-*+] |Next (?:cross-repo )?code:|_No open gaps\\._|---\\s*$|<!--)")) @index -1))) (fn i (>= @i 0))))
+        (set @entity.curSecs (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^#{1,4} ")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.curStarts (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^- \\*\\*G-[A-Z0-9_-]+-\\d+\\*\\*")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.scans (array/append @entity.scans {
           key: @entity.curKey,
           lines: (if (or (= @entity.cursor 0) (= @entity.curKey "__body__") (= @entity.curKey "__u__")) @entity.curLines (array/take [""] 0)),
           flags: (if (or (= @entity.cursor 0) (= @entity.curKey "__body__") (= @entity.curKey "__u__")) @entity.curFlags (array/take [true] 0)),
-          gapLines: (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (str/startsWith (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "- **G-") (or (< @entity.curBegin 0) (< @index @entity.curBegin))) { code: (array/nth (str/split (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "**") 1), line: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) ""), path: @entity.curKey } { code: "", line: "", path: "" }))) (fn r (!= (object/get @r "code") ""))),
+          gapLines: (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (str/startsWith (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "- **G-") (or (< @entity.curBegin 0) (< @index @entity.curBegin))) { code: (array/nth (str/split (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "**") 1), line: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) ""), path: @entity.curKey } { code: "", line: "", path: "" }))) (fn r (!= (object/get @r "code") ""))),
           entries: (array/map @entity.curStarts (fn m
             (let ((s (object/get @m "at"))
                   (e (default (let ((nxi (+ (array/indexOf @entity.curBounds (object/get @m "at")) 1))) (if (>= @nxi 0) (array/nth @entity.curBounds @nxi) null)) @entity.curN))
@@ -438,8 +438,8 @@ orbital OrbGapsOrbital {
         (set @entity.curLines (object/get (default (array/first @entity.scans) { key: "", lines: [], flags: [], entries: [], gapLines: [] }) "lines"))
         (set @entity.curFlags (object/get (default (array/first @entity.scans) { key: "", lines: [], flags: [], entries: [], gapLines: [] }) "flags"))
         (set @entity.curN (array/len @entity.curLines))
-        (set @entity.markB (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^<!-- BEGIN GENERATED ROLL-UP:.*-->$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
-        (set @entity.markE (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^<!-- END GENERATED ROLL-UP -->$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markB (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^<!-- BEGIN GENERATED ROLL-UP:.*-->$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markE (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^<!-- END GENERATED ROLL-UP -->$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.fail (if (or (!= (array/len @entity.markB) 1) (!= (array/len @entity.markE) 1)) "docs/Almadar_Gaps.md needs exactly one ordered roll-up marker pair" (if (< (object/get (default (array/first @entity.markE) { at: 0, text: "" }) "at") (object/get (default (array/first @entity.markB) { at: 0, text: "" }) "at")) "docs/Almadar_Gaps.md needs exactly one ordered roll-up marker pair" "")))
         (emit GAPS_S3B { })
       GAPS_S3B -> analyzing when (!= @entity.fail "")
@@ -458,7 +458,7 @@ orbital OrbGapsOrbital {
       GAPS_S4 -> analyzing
         (set @entity.curLines (object/get (default (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) { key: "", lines: [], flags: [], entries: [], gapLines: [] }) "lines"))
         (set @entity.curFlags (object/get (default (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) { key: "", lines: [], flags: [], entries: [], gapLines: [] }) "flags"))
-        (set @entity.markB (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^## `[^`]+` \\(source: `[^`]+`\\)$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markB (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^## `[^`]+` \\(source: `[^`]+`\\)$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.hdrIdx (array/map @entity.markB (fn m (object/get @m "at"))))
         (set @entity.hdrRepos (array/map @entity.markB (fn m (let ((r (default (array/nth (str/split (object/get @m "text") "`") 1) ""))) (object/get @config.ownerMoves @r @r)))))
         (set @entity.hdrSrcs (array/map @entity.markB (fn m (let ((p (default (array/nth (str/split (object/get @m "text") "`") 3) ""))) (str/concat (object/get @config.ownerMoves (os/path-dir @p) (os/path-dir @p)) "/" (os/path-base @p))))))
@@ -487,9 +487,9 @@ orbital OrbGapsOrbital {
           (if (array/some @entity.mEntries (fn e (= (object/get @e "repo") ""))) "gap outside an explicit repo section in master roll-up" ""),
           (default (array/find (array/map (array/filter @entity.repos (fn r (and (array/includes @entity.hdrRepos @r) (not (array/includes @entity.ledgerRepos @r))))) (fn r (str/concat "missing ledger: " @r "/Almadar_Gaps.md"))) (fn m (!= @m ""))) ""),
           (if (and @entity.hasBaseline (= (json/parse (object/get (default (array/find @entity.reads (fn r (= (object/get @r "path") @config.baseline))) { path: "", ok: false, text: "" }) "text") GapBaseline) null)) (str/concat "the sync baseline " @config.baseline " is not readable") "") ,
-          (let ((d (array/find @entity.mCodes (fn c (< (array/indexOf @entity.mCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
-          (let ((d (array/find @entity.lCodes (fn c (< (array/indexOf @entity.lCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
-          (let ((d (array/find @entity.rCodes (fn c (< (array/indexOf @entity.rCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
+          (let ((d (array/find @entity.mCodes (fn (c index) (< (array/indexOf @entity.mCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
+          (let ((d (array/find @entity.lCodes (fn (c index) (< (array/indexOf @entity.lCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
+          (let ((d (array/find @entity.rCodes (fn (c index) (< (array/indexOf @entity.rCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
           (let ((d (array/find @entity.mOwn (fn o (and (array/includes @entity.lCodes (array/first (str/split @o "|"))) (not (array/includes @entity.lOwn @o))))))) (if (= @d null) "" (str/concat "conflicting owners for " (default (array/first (str/split @d "|")) "")))),
           (let ((d (array/find (array/unique (array/concat @entity.mCodes @entity.lCodes)) (fn c (array/includes @entity.rCodes @c))))) (if (= @d null) "" (str/concat "duplicate gap code in root and repo: " @d))) ])
         (set @entity.fail (default (array/find @entity.errs (fn m (!= @m ""))) ""))
@@ -651,8 +651,8 @@ orbital OrbGapsOrbital {
           (array/concat
             (if (= (array/len @entity.pCauses) 0) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md P-017 lists no causes under its cause subsections") (array/take ["x"] 0))
             (if (or (< @entity.pBeginAt 0) (< @entity.pEndAt 0) (< @entity.pEndAt @entity.pBeginAt)) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md P-017 needs exactly one ordered p017-gaps marker pair") (array/take ["x"] 0))
-            (array/map (array/filter (array/map @entity.pCauses (fn c (object/get @c "id"))) (fn i (< (array/indexOf (array/map @entity.pCauses (fn c (object/get @c "id"))) @i) @index))) (fn i (str/concat "duplicate cause id: " @i)))
-            (array/map (array/filter (array/map @entity.pTags (fn t (object/get @t "code"))) (fn c (< (array/indexOf (array/map @entity.pTags (fn t (object/get @t "code"))) @c) @index))) (fn c (str/concat "duplicate gap code: " @c)))
+            (array/map (array/filter (array/map @entity.pCauses (fn c (object/get @c "id"))) (fn (i index) (< (array/indexOf (array/map @entity.pCauses (fn c (object/get @c "id"))) @i) @index))) (fn i (str/concat "duplicate cause id: " @i)))
+            (array/map (array/filter (array/map @entity.pTags (fn t (object/get @t "code"))) (fn (c index) (< (array/indexOf (array/map @entity.pTags (fn t (object/get @t "code"))) @c) @index))) (fn c (str/concat "duplicate gap code: " @c)))
             (array/map (array/filter @entity.pTags (fn t (= (array/len (object/get @t "tags")) 0))) (fn t (str/concat "untagged: " (object/get @t "code") " has no Root cause tag")))
             (array/map (array/filter @entity.pTags (fn t (> (array/len (object/get @t "tags")) 1))) (fn t (str/concat "double-tagged: " (object/get @t "code") " (" (str/join (object/get @t "tags") ", ") ")")))
             (array/map (array/filter @entity.pTags (fn t (= (array/len (object/get @t "sev")) 0))) (fn t (str/concat "unrated: " (object/get @t "code") " has no Severity")))
@@ -681,7 +681,7 @@ orbital OrbGapsOrbital {
         (set @entity.uLines (str/split (object/get (default (array/find @entity.reads (fn r (= (object/get @r "path") (str/concat @entity.uRepo "/Almadar_Gaps.md")))) { path: "", ok: false, text: "" }) "text") "\n"))
         (set @entity.uEntries (object/get (default (array/find @entity.scans (fn s (= (object/get @s "key") (str/concat @entity.uRepo "/Almadar_Gaps.md")))) { key: "", lines: [], flags: [], entries: [], gapLines: [] }) "entries"))
         (set @entity.uPend0 (array/filter @entity.merged (fn e (= (object/get @e "repo") @entity.uRepo))))
-        (set @entity.uText (str/join (array/flatten (array/map @entity.uLines (fn line
+        (set @entity.uText (str/join (array/flatten (array/map @entity.uLines (fn (line index)
           (let ((i @index))
            (let ((ex (array/find @entity.uEntries (fn e (and (<= (object/get @e "at") @i) (< @i (object/get @e "endAt")))))))
             (if (= @ex null) [@line]
@@ -702,7 +702,7 @@ orbital OrbGapsOrbital {
       GAPS_UPD_INSERT -> updating
         (set @entity.curLines (object/get (default (array/last @entity.scans) { key: "", lines: [], flags: [], entries: [], gapLines: [] }) "lines"))
         (set @entity.curFlags (object/get (default (array/last @entity.scans) { key: "", lines: [], flags: [], entries: [], gapLines: [] }) "flags"))
-        (set @entity.markB (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^#{2,3} .+$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markB (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn (i index) (if (and (default (if (>= @i 0) (array/nth @entity.curFlags @i) null) false) (validate/pattern (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") "^#{2,3}.+$")) { at: @index, text: (default (if (>= @i 0) (array/nth @entity.curLines @i) null) "") } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
         (set @entity.uText (let ((en (default (if (>= @entity.upc 0) (array/nth @entity.uPend @entity.upc) null) { code: "", repo: "", heading: "", body: "", at: 0, endAt: 0 })))
           (let ((hl (if (= (object/get @en "heading") "") "## Open gaps" (str/concat "### " (object/get @en "heading")))))
             (let ((si (array/findIndex @entity.markB (fn m (= (object/get @m "text") @hl)))))
@@ -726,7 +726,7 @@ orbital OrbGapsOrbital {
                 (needle (str/concat "Next code: `G-" @entity.uPrefix "-")))
             (let ((digits (default (array/first (str/split (default (array/nth (str/split (default (array/nth @lines @entity.uCi) "") @needle) 1) "") "`")) "")))
               (let ((num (array/max (array/append (array/map (array/filter (array/concat (array/map @entity.merged (fn e (object/get @e "code"))) (array/map @entity.uEntries (fn e (object/get @e "code")))) (fn c (and (str/startsWith @c (str/concat "G-" @entity.uPrefix "-")) (validate/pattern @c (str/concat "^G-" @entity.uPrefix "-\\d+$"))))) (fn c (+ 1 (default (str/to-number (str/replace @c (str/concat "G-" @entity.uPrefix "-") "")) 0)))) (default (str/to-number @digits) 0)))))
-                (str/join (array/flatten (array/map @lines (fn line
+                (str/join (array/flatten (array/map @lines (fn (line index)
                   (if (= @index @entity.uCi)
                     [(str/replace @line (str/concat @needle @digits "`") (str/concat @needle (str/padStart (str/concat (default @num 0)) 3 "0") "`"))]
                     (if (and (> (array/len @entity.uPend) 0) (= @line "_No open gaps._"))
