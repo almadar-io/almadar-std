@@ -18,6 +18,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/abs': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Absolute value',
@@ -31,6 +32,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/min': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: 'Minimum of values',
@@ -44,6 +46,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/max': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: 'Maximum of values',
@@ -57,6 +60,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/clamp': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Constrain value to range [min, max]',
@@ -73,6 +77,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/floor': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Round down to integer',
@@ -85,6 +90,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/ceil': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Round up to integer',
@@ -97,6 +103,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/round': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Round to nearest integer or specified decimals',
@@ -112,6 +119,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/pow': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Exponentiation (base^exp)',
@@ -127,6 +135,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/sqrt': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Square root',
@@ -140,6 +149,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/log10': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Base-10 logarithm',
@@ -152,6 +162,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/ln': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Natural logarithm (base e)',
@@ -164,6 +175,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/mod': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Modulo (remainder)',
@@ -180,6 +192,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/sign': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Returns -1, 0, or 1 indicating sign',
@@ -191,6 +204,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/lerp': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Linear interpolation between a and b by factor t',
@@ -206,6 +220,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/map': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 5,
     maxArity: 5,
     description: 'Map value from one range to another',
@@ -223,6 +238,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/random': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 0,
     maxArity: 0,
     description: 'Random number between 0 (inclusive) and 1 (exclusive)',
@@ -234,6 +250,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/randomInt': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Random integer in range [min, max] (inclusive)',
@@ -249,6 +266,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/sin': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Sine of an angle in radians',
@@ -260,6 +278,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/cos': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Cosine of an angle in radians',
@@ -271,6 +290,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/tan': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Tangent of an angle in radians',
@@ -282,6 +302,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/atan2': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Angle in radians from the positive x-axis to point (x, y)',
@@ -296,6 +317,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/asin': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Arcsine (inverse sine) in radians',
@@ -308,6 +330,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/acos': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Arccosine (inverse cosine) in radians',
@@ -320,6 +343,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/atan': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Arctangent (inverse tangent) in radians',
@@ -331,6 +355,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/hypot': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Euclidean length sqrt(a²+b²)',
@@ -345,6 +370,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/deg-rad': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert degrees to radians',
@@ -356,6 +382,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/rad-deg': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert radians to degrees',
@@ -367,6 +394,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/wrap': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Wrap a value into the half-open range [min, max)',
@@ -382,6 +410,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/approach': {
     module: 'math',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Move cur toward target by at most maxDelta',

@@ -18,6 +18,7 @@ export const PATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'path/astar': {
     module: 'path',
     category: 'std-path',
+    evaluation: 'strict',
     minArity: 5,
     maxArity: 6,
     description: 'A* shortest path on a w×h grid; returns cells start→goal (incl. both) or [] if none',
@@ -36,6 +37,7 @@ export const PATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'path/reachable': {
     module: 'path',
     category: 'std-path',
+    evaluation: 'strict',
     minArity: 5,
     maxArity: 6,
     description: 'BFS cells reachable within N moves from start (incl. start); sorted row-major',

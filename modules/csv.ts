@@ -16,6 +16,7 @@ export const CSV_OPERATORS: Record<string, StdOperatorMeta> = {
   'csv/parse': {
     module: 'csv',
     category: 'std-csv',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Parse CSV text (RFC 4180: quoted fields, "" escapes a quote, quoted line breaks) into one map per data row, keyed by the header row; blank lines are skipped, a short row\'s missing cells are "", empty or header-only text returns []',

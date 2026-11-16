@@ -31,6 +31,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/now': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 0,
     maxArity: 0,
     description: 'Current moment as an ISO-8601 instant (UTC)',
@@ -42,6 +43,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/today': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 0,
     maxArity: 0,
     description: 'Today at midnight UTC as an ISO-8601 instant (the host timezone is never read)',
@@ -53,6 +55,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/toDate': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'The UTC calendar day of a moment, as a date (YYYY-MM-DD); a date answers itself. Compare a date field with now through it',
@@ -66,6 +69,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/toInstant': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'A moment as a UTC instant; a date is its midnight UTC. Compare a field that may be a date or a datetime with now through it',
@@ -79,6 +83,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/parse': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Parse ISO 8601 text: text with no time answers a `date` (YYYY-MM-DD); text with a time and a zone answers a UTC `datetime`; an unparseable string, or a date-time without a zone, answers null; any other kind (null included) is a type mismatch',
@@ -94,6 +99,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/valid': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'True iff time/parse would succeed on the string (an ISO 8601 date, or a date-time with a zone); a non-string input (null included) is a type mismatch',
@@ -107,6 +113,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/format': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Format a date or datetime to text, in UTC; a time-of-day token (HH, mm, ss, H, m, s) on a bare date is refused',
@@ -121,6 +128,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/year': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get year from a date or datetime (UTC)',
@@ -132,6 +140,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/month': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get month from a date or datetime (UTC, 1-12)',
@@ -143,6 +152,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/day': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get day of month from a date or datetime (UTC, 1-31)',
@@ -154,6 +164,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/weekday': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get day of week (UTC, 0=Sunday, 6=Saturday)',
@@ -165,6 +176,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/hour': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get hour from a date or datetime (UTC, 0-23)',
@@ -176,6 +188,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/minute': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get minute from a date or datetime (UTC, 0-59)',
@@ -187,6 +200,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/second': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get second from a date or datetime (UTC, 0-59)',
@@ -198,6 +212,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/add': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Add time to a date or datetime (calendar units in UTC)',
@@ -213,6 +228,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/subtract': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Subtract time from a date or datetime (calendar units in UTC)',
@@ -228,6 +244,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/diff': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Signed difference a - b: a number of ms, or of whole units with the third argument',
@@ -243,6 +260,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/epoch-ms': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'A time as milliseconds since the Unix epoch, a number (the clock a canvas paints by)',
@@ -256,6 +274,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/startOf': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Get start of time period (UTC)',
@@ -270,6 +289,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/endOf': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Get end of time period (UTC)',
@@ -284,6 +304,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/isBefore': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if a is before b',
@@ -298,6 +319,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/isAfter': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if a is after b',
@@ -312,6 +334,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/isBetween': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Check if date is between start and end',
@@ -327,6 +350,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/isSame': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Check if date or datetimes are same (optionally by unit, compared in UTC)',
@@ -342,6 +366,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/isPast': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if date or datetime is in the past',
@@ -353,6 +378,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/isFuture': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if date or datetime is in the future',
@@ -364,6 +390,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/isToday': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if date or datetime falls on today\'s UTC date',
@@ -375,6 +402,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/relative': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Format as relative time ("2 hours ago", "in 3 days")',
@@ -386,6 +414,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
   'time/duration': {
     module: 'time',
     category: 'std-time',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Format milliseconds as duration ("2h 30m")',

@@ -101,6 +101,7 @@ export function osPure(def: { description: string; params: OsParam[]; returnType
   return {
     module: 'os',
     category: 'std-os',
+    evaluation: 'strict',
     minArity: required,
     maxArity: def.variadic ? null : def.params.length,
     description: def.description,

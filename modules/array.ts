@@ -20,6 +20,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/len': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Array length',
@@ -32,6 +33,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/range': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 3,
     description: 'Generate numbers: (range n) => [0,n); (range start end) => [start,end); optional step',
@@ -47,6 +49,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/first': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get first element (element type of input array; null when the array is empty)',
@@ -58,6 +61,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/last': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get last element (element type of input array; null when the array is empty)',
@@ -69,6 +73,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/nth': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Get element at index (element type of input array; null at or past the length). The index is a whole number from 0: a negative index (such as the -1 of array/findIndex) is invalid and raises. A pair or tuple of unlike types (an entry of object/entries) is indexed too; its element type is then not determined',
@@ -84,6 +89,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/slice': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Extract subarray',
@@ -100,6 +106,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/concat': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: 'Concatenate arrays',
@@ -112,6 +119,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/append': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Add item to end (returns new array)',
@@ -127,6 +135,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/prepend': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Add item to start (returns new array)',
@@ -142,6 +151,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/insert': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Insert item at index (returns new array)',
@@ -158,6 +168,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/remove': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Remove item at index (returns new array)',
@@ -173,6 +184,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/removeItem': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Remove first matching item (returns new array)',
@@ -188,6 +200,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/reverse': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Reverse array order (returns new array)',
@@ -200,6 +213,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/sort': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 3,
     description: 'Sort array (returns new array); null and an object missing the key sort last in both directions',
@@ -216,6 +230,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/shuffle': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Randomly shuffle array (returns new array)',
@@ -228,6 +243,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/unique': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Remove duplicates (returns new array)',
@@ -240,6 +256,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/flatten': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Flatten nested arrays one level',
@@ -252,6 +269,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/zip': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Pair elements from two arrays',
@@ -266,6 +284,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/includes': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if array contains item',
@@ -280,6 +299,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/indexOf': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Find index of item (-1 if not found)',
@@ -294,6 +314,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/find': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Find first element matching predicate (element type of input array; null when nothing matches)',
@@ -310,6 +331,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/findIndex': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Find index of first element matching predicate (-1 if none)',
@@ -326,6 +348,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/filter': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Keep elements matching predicate (returns same array element type as input)',
@@ -343,6 +366,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/reject': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Remove elements matching predicate (returns same array element type as input)',
@@ -360,6 +384,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/map': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Transform each element (return type wraps the lambda result in an array)',
@@ -377,6 +402,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/reduce': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'site',
     minArity: 3,
     maxArity: 3,
     description: 'Reduce array to single value (return type matches the lambda result / init type)',
@@ -395,6 +421,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/pmap': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Transform each element like array/map, evaluating elements in parallel (rayon on native hosts, sequential on wasm and no_std with identical results); the result keeps input order. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.',
@@ -412,6 +439,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/preduce': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'form',
     minArity: 3,
     maxArity: 3,
     description: 'Reduce like array/reduce with a fixed grouping so the result is the same parallel or sequential: the array is split into chunks of 1024 elements, each chunk is folded left to right starting from its first element, then the chunk results are folded left to right starting from init; an empty array answers init. The reducer should therefore be associative with init as its identity. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.',
@@ -430,6 +458,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/every': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Check if all elements match predicate',
@@ -446,6 +475,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/some': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Check if any element matches predicate',
@@ -462,6 +492,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/count': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'form',
     minArity: 1,
     maxArity: 2,
     description: 'Count elements (optionally matching predicate)',
@@ -479,6 +510,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/sum': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Sum values (optionally by field)',
@@ -493,6 +525,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/avg': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Average of values (optionally by field)',
@@ -508,6 +541,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/min': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Minimum value (optionally by field); null when no element counts',
@@ -522,6 +556,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/max': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Maximum value (optionally by field); null when no element counts',
@@ -536,6 +571,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/groupBy': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Group elements by the text of a field or of a key function; an item whose key is missing, null or not text is an error',
@@ -550,6 +586,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/partition': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Split array by predicate into [matches, nonMatches]',
@@ -566,6 +603,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/take': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Take first n elements',
@@ -581,6 +619,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/drop': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Skip first n elements',
@@ -596,6 +635,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/takeLast': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Take last n elements',
@@ -611,6 +651,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/dropLast': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Skip last n elements',
@@ -626,6 +667,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/cosine': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Cosine similarity between two numeric vectors, in [-1, 1] (1 = identical direction). The building block for "is this answer semantically the reference answer" checks over embeddings. Pure math — usable in guards and value position, unlike the async llm/* substrate operators.',
@@ -641,6 +683,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/nearest': {
     module: 'array',
     category: 'std-array',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Find the candidate vector nearest a query vector by cosine similarity. Returns { index, score, margin } — index/score of the best match, and margin (best score minus second-best), which is what makes an abstaining gate possible: a small margin means the top match is not confidently distinguished from the runner-up.',

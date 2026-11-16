@@ -17,6 +17,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/from-string': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `Encode a string as its UTF-8 bytes. ${REPRESENTATION}`,
@@ -28,6 +29,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/to-string': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `Decode bytes as UTF-8 text; bytes that are not valid UTF-8 fail with kind invalid. ${REPRESENTATION}`,
@@ -40,6 +42,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/valid-utf8': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `Whether the bytes are well-formed UTF-8 text. ${REPRESENTATION}`,
@@ -51,6 +54,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/from-base64': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `The bytes a standard padded base64 text (RFC 4648) encodes, unchanged at run time; other text fails with kind invalid. ${REPRESENTATION}`,
@@ -63,6 +67,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/to-base64': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `The standard padded base64 text (RFC 4648) of bytes, unchanged at run time. ${REPRESENTATION}`,
@@ -74,6 +79,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/length': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `Number of bytes (not the length of the base64 text). ${REPRESENTATION}`,
@@ -86,6 +92,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/slice': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: `Bytes from start (inclusive) to end (exclusive, default the length), both counted in bytes. ${REPRESENTATION}`,
@@ -101,6 +108,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/concat': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `Join byte values in order into one bytes value. ${REPRESENTATION}`,
@@ -112,6 +120,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/xor': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: `Each byte of data XOR the key byte at the same position, the key repeated cyclically; empty data answers empty bytes. An empty key fails with kind invalid. ${REPRESENTATION}`,
@@ -127,6 +136,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/equals': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: `Whether two bytes values hold the same bytes. ${REPRESENTATION}`,
@@ -141,6 +151,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/index-of': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: `Byte offset of the first occurrence of needle at or after from (default 0; a negative from counts from the end, out-of-range clamps), or -1 when absent. An empty needle answers from. ${REPRESENTATION}`,
@@ -156,6 +167,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/at': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: `The byte at index i as an integer 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. ${REPRESENTATION}`,
@@ -171,6 +183,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/read-uint': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 4,
     maxArity: 4,
     description: `The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^63 - 1 answers null rather than round; every width up to that is an exact int. ${REPRESENTATION}`,
@@ -188,6 +201,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/read-int': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 4,
     maxArity: 4,
     description: `The signed (two complement) integer stored in width bytes at offset, big-endian (be) or little-endian (le), sign-extended from its top bit; null when those bytes run past the data. ${REPRESENTATION}`,
@@ -205,6 +219,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/write-uint': {
     module: 'bytes',
     category: 'std-codec',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: `A whole number as width unsigned bytes, big-endian (be) or little-endian (le). A value that is negative, not whole, too large for the width, or above 2^53 - 1 fails with kind invalid. ${REPRESENTATION}`,

@@ -18,6 +18,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/keys': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get object keys as array',
@@ -29,6 +30,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/values': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get object values as array',
@@ -40,6 +42,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/entries': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Get [key, value] pairs as array',
@@ -51,6 +54,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/fromEntries': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Create object from [key, value] pairs.',
@@ -62,6 +66,8 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/get': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'site',
+    lazyOperands: [2],
     minArity: 2,
     maxArity: 3,
     description: 'Get nested value by path; a path segment of a list or tuple is an index (return type derived from the input type and key). A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written',
@@ -77,6 +83,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/set': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'site',
     minArity: 3,
     maxArity: 3,
     description: 'Set nested value by path (returns new object). A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written',
@@ -93,6 +100,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/has': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Check if path exists. A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written',
@@ -107,6 +115,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/merge': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: 'Shallow merge objects (later wins).',
@@ -118,6 +127,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/deepMerge': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: 'Deep merge objects (later wins).',
@@ -129,6 +139,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/pick': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Select only specified keys (return type is subset of input object shape)',
@@ -143,6 +154,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/omit': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Exclude specified keys',
@@ -157,6 +169,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/mapValues': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Transform all values',
@@ -173,6 +186,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/mapKeys': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Transform all keys.',
@@ -189,6 +203,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/filter': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Filter entries by predicate',
@@ -205,6 +220,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/equals': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Deep equality check',
@@ -219,6 +235,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/clone': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Shallow clone object',
@@ -230,6 +247,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/deepClone': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Deep clone object',
@@ -241,6 +259,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'path': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: null, // variadic
     description: 'Build a dot-separated path string from segments. Used with set effect for dynamic field paths.',
@@ -254,6 +273,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'row/matches': {
     module: 'object',
     category: 'std-object',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Whether the row satisfies the typed RowPredicate, decided by the kernel\'s one predicate evaluator (the one every store runs a compiled where/filter through); an absent predicate or row is an absent result',

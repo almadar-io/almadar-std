@@ -104,6 +104,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '+': {
     module: 'core',
     category: 'arithmetic',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: 'Add numbers',
@@ -118,6 +119,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '-': {
     module: 'core',
     category: 'arithmetic',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Subtract or negate',
@@ -134,6 +136,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '*': {
     module: 'core',
     category: 'arithmetic',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: 'Multiply numbers',
@@ -148,6 +151,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '/': {
     module: 'core',
     category: 'arithmetic',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Divide numbers',
@@ -164,6 +168,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '%': {
     module: 'core',
     category: 'arithmetic',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Modulo (remainder)',
@@ -184,6 +189,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '=': {
     module: 'core',
     category: 'comparison',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Equal to',
@@ -199,6 +205,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '==': {
     module: 'core',
     category: 'comparison',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Equal to (canonical .lolo spelling)',
@@ -214,6 +221,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '!=': {
     module: 'core',
     category: 'comparison',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Not equal to',
@@ -229,6 +237,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '<': {
     module: 'core',
     category: 'comparison',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Less than',
@@ -244,6 +253,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '>': {
     module: 'core',
     category: 'comparison',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Greater than',
@@ -259,6 +269,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '<=': {
     module: 'core',
     category: 'comparison',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Less than or equal',
@@ -274,6 +285,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '>=': {
     module: 'core',
     category: 'comparison',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Greater than or equal',
@@ -293,6 +305,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'series' },
     module: 'core',
     category: 'logic',
+    evaluation: 'form',
     minArity: 2,
     maxArity: null,
     description: 'Logical AND of booleans; short-circuits on the first false',
@@ -305,6 +318,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'parallel' },
     module: 'core',
     category: 'logic',
+    evaluation: 'form',
     minArity: 2,
     maxArity: null,
     description: 'Logical OR of booleans; short-circuits on the first true',
@@ -316,6 +330,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   default: {
     module: 'core',
     category: 'logic',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'The value, or the fallback (evaluated only then) when the value is null',
@@ -332,6 +347,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'invert' },
     module: 'core',
     category: 'logic',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Logical NOT',
@@ -344,6 +360,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'branch', glyph: 'M-1 0 L0 0 L0.8 -0.7 M0 0 L0.8 0.7' },
     module: 'core',
     category: 'logic',
+    evaluation: 'form',
     minArity: 3,
     maxArity: 3,
     description: 'Conditional expression (ternary). Both branches have the same type, which is the result type.',
@@ -361,6 +378,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   as: {
     module: 'core',
     category: 'logic',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description:
@@ -381,6 +399,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'scope' },
     module: 'core',
     category: 'control',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Bind local variables for a body expression',
@@ -401,6 +420,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'ladder' },
     module: 'core',
     category: 'control',
+    evaluation: 'form',
     minArity: 1,
     maxArity: null,
     description: 'Sequential execution of multiple effects/expressions',
@@ -413,6 +433,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   list: {
     module: 'core',
     category: 'control',
+    evaluation: 'strict',
     minArity: 0,
     maxArity: null,
     description: 'Literal array constructor — evaluates each argument and returns them as an array. Lowering wraps a literal list bound for a literal-array slot in `list` so it is unambiguously data, never a call (disambiguates a list whose first element collides with an operator name, e.g. [path method …]).',
@@ -426,6 +447,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'branch', glyph: 'M-1 0 L0 0 L0.8 -0.7' },
     module: 'core',
     category: 'control',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Conditional effect without an else branch',
@@ -441,6 +463,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'template' },
     module: 'core',
     category: 'control',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Lambda expression (used for per-item renders and transforms)',
@@ -459,6 +482,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'template' },
     module: 'core',
     category: 'control',
+    evaluation: 'form',
     minArity: 1,
     maxArity: 1,
     description: 'Holds an S-expression as data: nothing inside it is evaluated, and its bindings are not resolved (a guard or effect handed to a diagram)',
@@ -474,6 +498,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'template' },
     module: 'core',
     category: 'control',
+    evaluation: 'form',
     minArity: 1,
     maxArity: null,
     description: 'A quoted template with live holes: the template is held as data like `quote`, and each `(unquote e)` inside it is replaced by the value of `e` (a program built from values the trait holds, for `program/eval`)',
@@ -489,6 +514,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   unquote: {
     module: 'core',
     category: 'control',
+    evaluation: 'form',
     minArity: 1,
     maxArity: 1,
     description: 'A live hole inside `(quasiquote …)`: its expression is evaluated and spliced into the template. Legal only inside a quasiquote',

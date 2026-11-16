@@ -1,0 +1,128 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-countdown.lolo",
+ "trait": "RasmCountdown",
+ "cases": [
+  {
+   "id": "a-future-instant-starts-counting-and-paints-the-cells",
+   "config": {
+    "id": "next"
+   },
+   "entity": {
+    "id": "c",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 80
+    }
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_COUNTDOWN",
+     "payload": {
+      "id": "next",
+      "at": 4102444800000
+     },
+     "expect": {
+      "state": "counting",
+      "emitCounts": {
+       "RASM_PAINT": 1
+      },
+      "neverEmits": [
+       "COUNTDOWN_REACHED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-passed-instant-paints-zero-and-is-reached",
+   "config": {
+    "id": "next"
+   },
+   "entity": {
+    "id": "c",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 80
+    }
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_COUNTDOWN",
+     "payload": {
+      "id": "next",
+      "at": 1000
+     },
+     "expect": {
+      "state": "counting",
+      "emitCounts": {
+       "RASM_PAINT": 1,
+       "COUNTDOWN_REACHED": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-countdowns-instant-is-ignored",
+   "config": {
+    "id": "next"
+   },
+   "entity": {
+    "id": "c",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 80
+    }
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_COUNTDOWN",
+     "payload": {
+      "id": "other",
+      "at": 4102444800000
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-unplaced-cells-count-without-painting",
+   "config": {
+    "id": "next"
+   },
+   "entity": {
+    "id": "c"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_COUNTDOWN",
+     "payload": {
+      "id": "next",
+      "at": 4102444800000
+     },
+     "expect": {
+      "state": "counting",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

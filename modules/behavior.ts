@@ -18,6 +18,7 @@ import { BOOLEAN, DESCRIPTION, EMIT_ENVELOPE, EVENT_KEY, list, nullable, openSha
 
 export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/apply': {
+    evaluation: 'strict',
     module: 'behavior', category: 'std-behavior-value',
     minArity: 2, maxArity: 2,
     description: 'Record overrides on a behavior value and return the new value of the same kind. A trait value takes the §8 trait-reference surface (config, events and fields merge key-wise, the later value winning; listens, emitsScope and linkedEntity replace); an orbital value takes the §8b import body (maps merge key-wise, traits per trait, extend and retype by field name, the rest replaces). Nothing is resolved until the value is bound or evaluated.',
@@ -31,6 +32,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["behavior/apply", "@entity.widget", { "config": { "compact": true } }]',
   },
   'behavior/ref': {
+    evaluation: 'strict',
     module: 'behavior', category: 'std-behavior-value',
     minArity: 1, maxArity: 1,
     description: 'A whole behavior as a value (`.lolo` type `behavior`), named by its specifier: `<prefix>/<name>`, `std/behaviors/<name>`, or a workspace-relative `./<dir>/<name>` (what `program/eval` wrote). A literal specifier is resolved when the program is checked; a computed one when the value is mounted. Embedding the value in a render tree runs the whole program in place, with its own pages.',

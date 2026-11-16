@@ -26,6 +26,7 @@ function kernelPure(def: { description: string; params: KernelParam[]; returnTyp
   return {
     module: 'kernel',
     category: 'std-kernel-read',
+    evaluation: 'strict',
     minArity: def.params.length,
     maxArity: def.params.length,
     description: def.description,

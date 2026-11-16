@@ -1,0 +1,169 @@
+app std-rasm-countdown [
+  version: "0.1.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-countdown — the time left until an instant, ticking on the Rasm canvas. RASM_COUNTDOWN { id, at } (epoch ms) starts it: once a second it paints days, hours, minutes and seconds as four cells across its placed rect, each a two-digit value in text/title/idle over its unit in text/eyebrow/idle (the units are message keys the surface paints in the visitor's language); a value that changed since the last second rolls in from above while the others stand still. When the instant passes it rests at zero and emits COUNTDOWN_REACHED { id }. Under rtl the cells run from the right."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, width : number?, wrap : boolean? }
+
+orbital RasmCountdownOrbital {
+  entity RasmCountdownRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the cells, null until placed." = null
+    at : number @description "The instant counted down to, epoch ms; 0 before RASM_COUNTDOWN." = 0
+    shown : [number] @description "The days, hours, minutes and seconds last painted, so only a changed cell rolls." = []
+    changedMs : number @description "The epoch-ms instant of the last tick, when the changed cells began to roll." = 0
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced; rtl runs the cells from the right." = "ltr"
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmCountdown -> RasmCountdownRun [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      RASM_THEME -> idle
+        (set @entity.looks ?looks)
+      RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+      RASM_PLACE -> idle when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> idle
+        (set @entity.dir ?direction)
+      RASM_COUNTDOWN -> counting when (= ?id @config.id)
+        (set @entity.at ?at)
+        (set @entity.shown [])
+        (set @entity.paints (+ @entity.paints 1))
+        (emit COUNTDOWN_TICK { n: @entity.paints })
+      RASM_COUNTDOWN -> idle when (!= ?id @config.id)
+    }
+
+    state counting {
+      INIT -> counting
+      RASM_THEME -> counting
+        (set @entity.looks ?looks)
+        (set @entity.shown [])
+        (set @entity.paints (+ @entity.paints 1))
+        (emit COUNTDOWN_TICK { n: @entity.paints })
+      RASM_PLACE -> counting when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.shown [])
+        (set @entity.paints (+ @entity.paints 1))
+        (emit COUNTDOWN_TICK { n: @entity.paints })
+      RASM_PLACE -> counting when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> counting
+        (set @entity.dir ?direction)
+        (set @entity.shown [])
+        (set @entity.paints (+ @entity.paints 1))
+        (emit COUNTDOWN_TICK { n: @entity.paints })
+      RASM_COUNTDOWN -> counting when (= ?id @config.id)
+        (set @entity.at ?at)
+        (set @entity.shown [])
+        (set @entity.paints (+ @entity.paints 1))
+        (emit COUNTDOWN_TICK { n: @entity.paints })
+      RASM_COUNTDOWN -> counting when (!= ?id @config.id)
+      COUNTDOWN_TICK -> counting when (!= @entity.rect null)
+        (let ((t0 (time/epoch-ms @now)))
+          (let ((left (math/max 0 (math/floor (/ (- @entity.at @t0) 1000)))))
+            (let ((vals [(math/floor (/ @left 86400)), (math/mod (math/floor (/ @left 3600)) 24), (math/mod (math/floor (/ @left 60)) 60), (math/mod @left 60)]) (r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (num (default (object/get @entity.looks "text/title/idle" null) {})) (unit (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (keys : [MessageKey] [@config.daysLabel, @config.hoursLabel, @config.minutesLabel, @config.secondsLabel]))
+              (let ((cw (/ @r.w 4)) (rolled (array/map (array/range 4) (fn i (!= (array/nth @vals @i) (array/nth @entity.shown @i))))))
+                (do
+                  (set @entity.changedMs @t0)
+                  (set @entity.shown @vals)
+                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (array/map (array/range 4) (fn i { id: (str/concat @config.id ":unit:" @i), key: (default (array/nth @keys @i) @config.secondsLabel), x: (+ @r.x (* (if (= @entity.dir "rtl") (- 3 @i) @i) @cw)), y: (+ @r.y @config.unitTop), z: @config.z, align: "center", baseline: "top", color: @unit.textColor, font: @unit.font, width: @cw, wrap: false })), nodes: (array/map (array/range 4) (fn i { type: draw-text, id: (str/concat @config.id ":value:" @i), text: (str/padStart (str/concat "" (default (array/nth @vals @i) 0)) 2 "0"), anchor: "top-left", position: { x: (+ @r.x (* (+ (if (= @entity.dir "rtl") (- 3 @i) @i) 0.5) @cw)), y: @r.y, z: @config.z }, align: "center", baseline: "top", color: @num.textColor, font: @num.font, hit: false, animation: (if (default (array/nth @rolled @i) false) { durationMs: @config.rollMs, loop: false, startMs: @t0, keyframes: [{ at: 0, opacity: 0, offsetY: -14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: 1, loop: false, keyframes: [{ at: 0, opacity: 1, offsetY: 0 }, { at: 1, opacity: 1, offsetY: 0 }] }) })) })
+                  (emit COUNTDOWN_LEFT { seconds: @left }))))))
+      COUNTDOWN_TICK -> counting when (= @entity.rect null)
+      COUNTDOWN_LEFT -> idle when (= ?seconds 0)
+        (emit COUNTDOWN_REACHED { id: @config.id })
+      COUNTDOWN_LEFT -> counting when (> ?seconds 0)
+    }
+
+    ticks {
+      countdownTick every 1000ms in counting
+        (emit COUNTDOWN_TICK { n: 0 })
+    }
+
+    emits {
+      COUNTDOWN_TICK -> internal {
+        n : number!
+      }
+        @description "One second passed or the cells moved: repaint the time left."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The four values, each rolling in when it changed, over their units."
+        @tier "primary"
+      COUNTDOWN_LEFT -> internal {
+        seconds : number!
+      }
+        @description "The whole seconds left after a paint; zero rests the countdown."
+        @tier "internal"
+      COUNTDOWN_REACHED -> external {
+        id : string!
+      }
+        @description "The instant has passed; the cells rest at zero."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rect the cells are laid out in."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction; rtl runs the cells from the right."
+      RASM_COUNTDOWN { id : string!  at : number! }
+        @description "Count down to `at`, epoch ms, for the countdown with this id."
+    }
+
+    config {
+      id : string = "countdown"
+        @label "Id"
+        @description "The cells' RASM_PLACE key, paint id and RASM_COUNTDOWN address."
+        @tier "presentation"
+      z : number = 3
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      unitTop : number = 54
+        @label "Unit offset"
+        @description "The unit's distance below the top of its value in px."
+        @tier "presentation"
+      rollMs : number = 420
+        @label "Roll"
+        @description "How long a changed value takes to roll in, in ms."
+        @tier "presentation"
+      daysLabel : MessageKey = "countdown.days"
+        @label "Days"
+        @description "The message key under the days."
+        @tier "presentation"
+      hoursLabel : MessageKey = "countdown.hours"
+        @label "Hours"
+        @description "The message key under the hours."
+        @tier "presentation"
+      minutesLabel : MessageKey = "countdown.minutes"
+        @label "Minutes"
+        @description "The message key under the minutes."
+        @tier "presentation"
+      secondsLabel : MessageKey = "countdown.seconds"
+        @label "Seconds"
+        @description "The message key under the seconds."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmCountdownStart -> RasmCountdown
+}

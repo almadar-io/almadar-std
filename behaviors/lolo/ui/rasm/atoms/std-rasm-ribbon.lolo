@@ -1,0 +1,126 @@
+app std-rasm-ribbon [
+  version: "0.1.0",
+  description: "std-rasm-ribbon — a row of marks on a line that the page's scroll pulls sideways, on a std-rasm-surface with pageScroll on. It paints the marks RASM_RIBBON hands it along a line through the middle of its placed rect, `spacing` apart: each a dot on the line with its label above (text/eyebrow/idle) and its caption below (text/body/idle), the line in ribbon/line/idle. It travels sideways on the scroll clock while the rect crosses the view: it starts `drift` beyond its rest position as the rect's top enters the view and, as the rect's bottom leaves it, has travelled past its rest position by however much it is wider than the rect, so its last mark has come into view, running back when the page scrolls back; only what is inside the rect shows. It holds no rows: a program reads its data and sends the marks. Under rtl the row starts at the right edge and travels the other way."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string! }
+type RasmRibbonMark = { label : string!, caption : string }
+
+orbital RasmRibbonOrbital {
+  entity RasmRibbonRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the ribbon, null until placed." = null
+    marks : [RasmRibbonMark] @description "The marks the last RASM_RIBBON sent." = []
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced." = "ltr"
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmRibbon -> RasmRibbonRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RIBBON_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RIBBON_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RIBBON_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RIBBON_PAINT { n: @entity.paints })
+      RASM_RIBBON -> ready when (= ?id @config.id)
+        (set @entity.marks ?marks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RIBBON_PAINT { n: @entity.paints })
+      RASM_RIBBON -> ready when (!= ?id @config.id)
+      RIBBON_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @entity.marks) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (ln (default (object/get @entity.looks "ribbon/line/idle" null) {})) (lab (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (cap (default (object/get @entity.looks "text/body/idle" null) {})) (n (array/len @entity.marks)) (rtl (= @entity.dir "rtl")))
+          (let ((total (+ (* 2 @config.padding) (* (- @n 1) @config.spacing))) (mid (+ @r.y (/ @r.h 2))) (sign (if @rtl -1 1)))
+            (let ((travel (math/max 0 (- @total @r.w))) (x0 (if @rtl (- (+ @r.x @r.w) @config.padding) (+ @r.x @config.padding))) (from (math/max 0 (- @r.y @entity.viewH))) (to (+ @r.y @r.h)))
+              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-group, id: (str/concat @config.id ":clip"), position: { x: 0, y: 0 }, clip: { x: @r.x, y: @r.y, width: (math/max 1 @r.w), height: (math/max 1 @r.h) }, items: [{ type: draw-group, id: (str/concat @config.id ":row"), position: { x: 0, y: 0 }, animation: { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: [{ at: 0, offsetX: (* @sign @config.drift) }, { at: 1, offsetX: (* -1 (* @sign @travel)) }] }, items: (array/concat [{ type: draw-shape, shape: "path", id: (str/concat @config.id ":line"), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " (- @x0 (* @sign @config.padding)) " " @mid " L " (+ @x0 (* @sign (+ @total @config.padding))) " " @mid), fill: "", stroke: @ln.stroke, strokeWidth: (default @ln.strokeWidth 1), hit: false }] (array/flatten (array/map (array/range @n) (fn i (let ((blank : RasmRibbonMark { label: "" }) (m (default (array/nth @entity.marks @i) @blank)) (x (+ @x0 (* @sign (* @i @config.spacing))))) [{ type: draw-shape, shape: "ellipse", id: (str/concat @config.id ":dot:" @i), anchor: "top-left", position: { x: @x, y: @mid, z: (+ @config.z 1) }, radiusX: @config.dotR, fill: @ln.fill, stroke: "", hit: false }, { type: draw-text, id: (str/concat @config.id ":label:" @i), text: @m.label, anchor: "top-left", position: { x: (- @x (/ (- @config.spacing 16) 2)), y: (- @mid (+ @config.dotR @config.labelGap)), z: (+ @config.z 1) }, align: "center", baseline: "bottom", color: @lab.textColor, font: @lab.font, width: (- @config.spacing 16), wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":caption:" @i), text: (default @m.caption ""), anchor: "top-left", position: { x: (- @x (/ (- @config.spacing 16) 2)), y: (+ @mid (+ @config.dotR @config.labelGap)), z: (+ @config.z 1) }, align: "center", baseline: "top", color: @cap.textColor, font: @cap.font, width: (- @config.spacing 16), wrap: true, hit: false }]))))) }] }] }))))
+      RIBBON_PAINT -> ready when (not (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @entity.marks) 0)))
+    }
+
+    emits {
+      RIBBON_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the row from the stored rect, looks, marks, view height and direction."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The row clipped to the rect: the line and per mark its dot, label and caption, travelling on the scroll clock."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rect the row shows in."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the travel is measured in."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction; rtl starts the row at the right edge."
+      RASM_RIBBON { id : string!  marks : [RasmRibbonMark]! }
+        @description "The marks to paint, for the ribbon with this id."
+    }
+
+    config {
+      id : string = "ribbon"
+        @label "Id"
+        @description "The ribbon's RASM_PLACE key, paint id and RASM_RIBBON address."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      spacing : number = 220
+        @label "Spacing"
+        @description "The distance between two marks along the line in px."
+        @tier "presentation"
+      padding : number = 80
+        @label "Padding"
+        @description "The space before the first mark and after the last in px."
+        @tier "presentation"
+      drift : number = 240
+        @label "Drift"
+        @description "How far in px the row starts beyond its rest position, on the side it travels from, so a row that fits its rect still travels into place."
+        @tier "presentation"
+      dotR : number = 6
+        @label "Dot radius"
+        @description "Each mark's dot radius in px."
+        @tier "presentation"
+      labelGap : number = 14
+        @label "Label gap"
+        @description "Space between a dot and its label or caption in px."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmRibbonStart -> RasmRibbon
+}

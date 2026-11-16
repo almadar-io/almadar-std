@@ -20,6 +20,7 @@ function fold(name: string, label: string, example: string): StdOperatorMeta {
   return {
     module: 'bit',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: null,
     description: `${label} of two or more 32-bit words, folded left. Each operand must be ${WORD}. ${REFUSED} ${RESULT}`,
@@ -35,6 +36,7 @@ function shift(name: string, label: string, example: string): StdOperatorMeta {
   return {
     module: 'bit',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: `${label} The word must be ${WORD}. ${REFUSED} ${COUNT_REFUSED} ${RESULT}`,
@@ -56,6 +58,7 @@ export const BIT_OPERATORS: Record<string, StdOperatorMeta> = {
   'bit/not': {
     module: 'bit',
     category: 'std-math',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: `Bitwise NOT over 32 bits (4294967295 - a). The operand must be ${WORD}. ${REFUSED} ${RESULT}`,

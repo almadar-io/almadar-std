@@ -105,6 +105,9 @@ interface CanonicalOperatorEntry {
      * wrong-arg-order class (e.g. `(array/reduce arr (fn …) init)`).
      */
     lambdaArgPosition?: number;
+    /** How the evaluator runs the operator (`strict` or `form`, EXEC-EVAL-3b). */
+    evaluation?: 'strict' | 'site' | 'form';
+    lazyOperands?: number[];
     /** The AVL circuit form every reader draws this operator with (`operatorVisualForm`). */
     visual: { form: OperatorVisualForm; infix?: boolean; glyph?: string };
     failable?: FailableMeta;
@@ -207,6 +210,8 @@ function toCanonicalEntry(
     if (meta.acceptsLambda && meta.lambdaArgPosition != null) {
         entry.lambdaArgPosition = meta.lambdaArgPosition;
     }
+    if (meta.evaluation) entry.evaluation = meta.evaluation;
+    if (meta.lazyOperands) entry.lazyOperands = meta.lazyOperands;
     if (existing?.valueSourceSlots !== undefined) entry.valueSourceSlots = existing.valueSourceSlots;
     if (existing?.fieldProjection !== undefined) entry.fieldProjection = existing.fieldProjection;
     // Docs enrichment: existing curated fields win; the module source's

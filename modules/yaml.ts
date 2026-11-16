@@ -18,6 +18,7 @@ export const YAML_OPERATORS: Record<string, StdOperatorMeta> = {
   'yaml/parse': {
     module: 'yaml',
     category: 'std-codec',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Parse YAML 1.2 text (core schema) into a value of the declared shape (the second argument names a type): one document only, anchors and aliases resolved, `yes`/`on`/`<<` plain strings; text that is not one well-formed document, a mapping key that is not a string, a tag outside the core schema, NaN, an infinity, or a value not of the shape returns null; a non-string input (null included) is a type mismatch',

@@ -1,0 +1,122 @@
+app std-rasm-pulse [
+  version: "0.1.0",
+  description: "std-rasm-pulse — live marks that beat at the rate their data gives, on the Rasm canvas. It paints the marks and links RASM_PULSES hands it in its placed rect: each mark a dot at (x, y), fractions of the rect, with its label under it, and, when its periodMs is above zero, a ring that swells out of the dot and fades once every periodMs, forever, on the canvas clock; each link a dashed line between two marks whose dashes flow from the first to the second. A mark's tone picks its look, pulse/<tone>/idle (fill for the dot, stroke for the ring, textColor and font for the label), and links wear pulse/link/idle. It holds no rows: a program reads its data and sends the marks, so a faster beat or a different tone is a data change, never a repaint loop. Under rtl the marks mirror across the rect."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string! }
+type RasmPulseMark = { key : string!, label : string!, x : number!, y : number!, periodMs : number!, tone : string! }
+type RasmPoint = { key : string!, x : number!, y : number! }
+type RasmPulseLink = { from : string!, to : string! }
+
+orbital RasmPulseOrbital {
+  entity RasmPulseRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the marks, null until placed." = null
+    marks : [RasmPulseMark] @description "The marks the last RASM_PULSES sent." = []
+    links : [RasmPulseLink] @description "The links the last RASM_PULSES sent." = []
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced; rtl mirrors the marks." = "ltr"
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmPulse -> RasmPulseRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PULSE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PULSE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PULSE_PAINT { n: @entity.paints })
+      RASM_PULSES -> ready when (= ?id @config.id)
+        (set @entity.marks ?marks)
+        (set @entity.links ?links)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PULSE_PAINT { n: @entity.paints })
+      RASM_PULSES -> ready when (!= ?id @config.id)
+      PULSE_PAINT -> ready when (and (!= @entity.rect null) (> (array/len @entity.marks) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (lk (default (object/get @entity.looks "pulse/link/idle" null) {})))
+          (let ((at : [RasmPoint] (array/map @entity.marks (fn m { key: @m.key, x: (+ @r.x (* @r.w (if (= @entity.dir "rtl") (- 1 @m.x) @m.x))), y: (+ @r.y (* @r.h @m.y)) }))))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/concat (array/map (array/filter @entity.links (fn k (and (array/some @at (fn q (= @q.key @k.from))) (array/some @at (fn q (= @q.key @k.to)))))) (fn k (let ((a (default (array/find @at (fn q (= @q.key @k.from))) { key: "", x: 0, y: 0 })) (b (default (array/find @at (fn q (= @q.key @k.to))) { key: "", x: 0, y: 0 }))) { type: draw-shape, shape: "path", id: (str/concat @config.id ":link:" @k.from ":" @k.to), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " @a.x " " @a.y " L " @b.x " " @b.y), fill: "", stroke: @lk.stroke, strokeWidth: (default @lk.strokeWidth 1), strokeDash: [4, 8], hit: false, animation: { durationMs: @config.flowMs, loop: true, keyframes: [{ at: 0, strokeDashOffset: 0 }, { at: 1, strokeDashOffset: -24 }] } }))) (array/flatten (array/map (array/range (array/len @entity.marks)) (fn i (let ((blank : RasmPulseMark { key: "", label: "", x: 0, y: 0, periodMs: 0, tone: "" }) (m (default (array/nth @entity.marks @i) @blank))) (let ((l (default (object/get @entity.looks (str/concat "pulse/" @m.tone "/idle") null) {})) (p (default (array/find @at (fn q (= @q.key @m.key))) { key: "", x: 0, y: 0 }))) (let ((dot : [node] [{ type: draw-shape, shape: "ellipse", id: (str/concat @config.id ":mark:" @m.key), anchor: "top-left", position: { x: @p.x, y: @p.y, z: (+ @config.z 1) }, radiusX: @config.dotR, fill: @l.fill, stroke: "", hit: false }, { type: draw-text, id: (str/concat @config.id ":mark:" @m.key ":label"), text: @m.label, anchor: "top-left", position: { x: @p.x, y: (+ @p.y (+ @config.dotR @config.labelGap)), z: (+ @config.z 1) }, align: "center", baseline: "top", color: @l.textColor, font: @l.font, wrap: false, hit: false }])) (if (> @m.periodMs 0) (array/concat [{ type: draw-shape, shape: "ellipse", id: (str/concat @config.id ":mark:" @m.key ":ring"), anchor: "top-left", position: { x: @p.x, y: @p.y, z: @config.z }, radiusX: @config.dotR, fill: "", stroke: @l.stroke, strokeWidth: 2, opacity: 0, hit: false, animation: { durationMs: @m.periodMs, loop: true, startMs: (* @i @config.phaseMs), keyframes: [{ at: 0, radiusX: @config.dotR, opacity: 0.85, strokeWidth: 2 }, { at: 1, radiusX: (* @config.dotR @config.reach), opacity: 0, strokeWidth: 0.5 }] } }] @dot) @dot)))))))) })))
+      PULSE_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.marks) 0)))
+    }
+
+    emits {
+      PULSE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the marks from the stored rect, looks, marks and direction."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The links, then per mark its ring (when it beats), dot and label."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rect the marks are laid out in."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction; rtl mirrors the marks across the rect."
+      RASM_PULSES { id : string!  marks : [RasmPulseMark]!  links : [RasmPulseLink]! }
+        @description "The marks and links to paint, for the pulse with this id."
+    }
+
+    config {
+      id : string = "pulse"
+        @label "Id"
+        @description "The marks' RASM_PLACE key, paint id and RASM_PULSES address."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      dotR : number = 7
+        @label "Dot radius"
+        @description "Each mark's dot radius in px; the ring starts at it."
+        @tier "presentation"
+      reach : number = 4
+        @label "Reach"
+        @description "How far a ring swells, as a multiple of the dot radius, before it has faded."
+        @tier "presentation"
+      labelGap : number = 10
+        @label "Label gap"
+        @description "Space between a dot and its label in px."
+        @tier "presentation"
+      phaseMs : number = 173
+        @label "Phase step"
+        @description "Each mark's beat starts this many ms after the one before, so marks with one period never beat in step."
+        @tier "presentation"
+      flowMs : number = 1400
+        @label "Flow"
+        @description "How long the dashes of a link take to move one dash pattern along it, in ms."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmPulseStart -> RasmPulse
+}

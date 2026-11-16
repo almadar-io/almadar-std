@@ -17,6 +17,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
   'geo/aabb-overlap': {
     module: 'geo',
     category: 'std-geo',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Axis-aligned bounding box overlap test',
@@ -32,6 +33,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
   'geo/circle-overlap': {
     module: 'geo',
     category: 'std-geo',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Circle overlap test: distance(centers) <= a.r+b.r',
@@ -47,6 +49,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
   'geo/rect-circle-overlap': {
     module: 'geo',
     category: 'std-geo',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Rect-circle overlap via closest point on rect to circle center',
@@ -62,6 +65,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
   'geo/point-in-rect': {
     module: 'geo',
     category: 'std-geo',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Point containment in rect (inclusive bounds)',
@@ -76,6 +80,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
   'geo/point-in-circle': {
     module: 'geo',
     category: 'std-geo',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Point containment in circle (inclusive)',
@@ -90,6 +95,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
   'geo/reflect': {
     module: 'geo',
     category: 'std-geo',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Reflect vector v across normal n (assumed normalized)',
@@ -104,6 +110,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
   'geo/segment-intersect': {
     module: 'geo',
     category: 'std-geo',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Intersection point of two segments, or null when parallel/none',

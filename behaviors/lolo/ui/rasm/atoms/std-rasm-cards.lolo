@@ -1,6 +1,6 @@
 app std-rasm-cards [
   version: "0.1.0",
-  description: "std-rasm-cards — a grid of cards on the Rasm canvas, painted from the records RASM_CARDS hands it: each card a title, an optional body and an optional badge (literal text, or `badgeKey`, a message key the surface paints in the visitor's language), in the stack/card/idle, text/card/idle, text/body/idle and text/eyebrow/idle looks. It holds no rows of its own: a program reads its data and sends the records. Once placed it fits as many rows of `cols` cards as its rect holds. On a std-rasm-surface with pageScroll on the cards arrive the first time the grid's top crosses the `viewAt` line of the view: each rises and fades in, `staggerMs` after the one before; until then they wait unseen."
+  description: "std-rasm-cards — a grid of cards on the Rasm canvas, painted from the records RASM_CARDS hands it: each card a title, an optional body and an optional badge (literal text, or `badgeKey`, a message key the surface paints in the visitor's language), in the stack/card/idle, text/card/idle, text/body/idle and text/eyebrow/idle looks. It holds no rows of its own: a program reads its data and sends the records. With `turn` on each card is a pointer region: entering it turns the card over (its face fades up and away and its `back` text rises in under its title) and leaving turns it back. Under rtl each row starts at the right edge and the text aligns right. Once placed it fits as many rows of `cols` cards as its rect holds. On a std-rasm-surface with pageScroll on the cards arrive the first time the grid's top crosses the `viewAt` line of the view: each rises and fades in, `staggerMs` after the one before; until then they wait unseen."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -14,7 +14,7 @@ type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners 
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]!, startMs : number }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
-type RasmCard = { title : string!, body : string, badge : string, badgeKey : MessageKey }
+type RasmCard = { title : string!, body : string, badge : string, badgeKey : MessageKey, back : string }
 type KeyedCard = { title : string!, badgeKey : MessageKey! }
 
 orbital RasmCardsOrbital {
@@ -26,6 +26,10 @@ orbital RasmCardsOrbital {
     viewH : number @description "The canvas height from RASM_RESIZE." = 0
     offset : number @description "The page scroll from RASM_PAGE_SCROLLED." = 0
     arrivedMs : number @description "The epoch-ms instant the cards began to arrive, 0 before they have been seen." = 0
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced; rtl starts each row at the right edge." = "ltr"
+    turned : number @description "The card the pointer has turned over, -1 for none." = -1
+    was : number @description "The card last turned back, -1 for none; its back face fades away." = -1
+    turnedMs : number @description "The epoch-ms instant of the last turn either way." = 0
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -47,12 +51,31 @@ orbital RasmCardsOrbital {
         (set @entity.viewH ?height)
         (set @entity.paints (+ @entity.paints 1))
         (emit CARDS_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
       RASM_PAGE_SCROLLED -> ready
         (set @entity.offset ?offset)
         (set @entity.paints (+ @entity.paints 1))
         (emit CARDS_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and @config.turn (= ?kind "enter") (array/includes (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id))
+        (set @entity.was @entity.turned)
+        (set @entity.turned (array/indexOf (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id))
+        (set @entity.turnedMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and @config.turn (= ?kind "leave") (> @entity.turned -1) (= ?id (str/concat @config.id ":card:" @entity.turned ":plate")))
+        (set @entity.was @entity.turned)
+        (set @entity.turned -1)
+        (set @entity.turnedMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (not (or (and @config.turn (= ?kind "enter") (array/includes (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id)) (and @config.turn (= ?kind "leave") (> @entity.turned -1) (= ?id (str/concat @config.id ":card:" @entity.turned ":plate")))))
       RASM_CARDS -> ready when (= ?id @config.id)
         (set @entity.cards ?cards)
+        (set @entity.turned -1)
+        (set @entity.was -1)
         (set @entity.paints (+ @entity.paints 1))
         (emit CARDS_PAINT { n: @entity.paints })
       RASM_CARDS -> ready when (!= ?id @config.id)
@@ -63,9 +86,9 @@ orbital RasmCardsOrbital {
               (set @entity.arrivedMs (time/epoch-ms @now)))
             (let ((card (default (object/get @entity.looks "stack/card/idle" null) {})) (title (default (object/get @entity.looks "text/card/idle" null) {})) (body (default (object/get @entity.looks "text/body/idle" null) {})) (badge (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (cols (math/max 1 @config.cols)))
               (let ((cw (/ (- @r.w (* @config.gap (- @cols 1))) @cols)) (rows (math/max 1 (math/floor (/ (+ @r.h @config.gap) (+ @config.cardH @config.gap))))))
-                (let ((shown (array/take @entity.cards (* @rows @cols))) (pad @config.padding))
-                  (let ((laid (array/map (array/range (array/len @shown)) (fn i (let ((blank : RasmCard { title: "" }) (c (default (array/nth @shown @i) @blank))) { i: @i, c: @c, x: (+ @r.x (* (math/mod @i @cols) (+ @cw @config.gap))), y: (+ @r.y (* (math/floor (/ @i @cols)) (+ @config.cardH @config.gap))), anim: (if (= @entity.arrivedMs 0) { durationMs: 1, loop: false, startMs: 0, keyframes: [{ at: 0, opacity: 0, offsetY: 24 }, { at: 1, opacity: 0, offsetY: 24 }] } { durationMs: @config.arriveMs, loop: false, startMs: (+ @entity.arrivedMs (* @i @config.staggerMs)), keyframes: [{ at: 0, opacity: 0, offsetY: 24 }, { at: 1, opacity: 1, offsetY: 0 }] }) })))))
-                    (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (array/map (array/filter @laid (fn l (!= @l.c.badgeKey null))) (fn l { id: (str/concat @config.id ":card:" @l.i ":badge"), key: (let ((k (as @l.c KeyedCard))) @k.badgeKey), x: (+ @l.x @pad), y: (+ @l.y @pad), z: @config.z, align: "left", baseline: "top", color: @badge.textColor, font: @badge.font, width: (- @cw (* 2 @pad)), wrap: false, animation: @l.anim })), nodes: (array/map @laid (fn l { type: draw-group, id: (str/concat @config.id ":card:" @l.i), position: { x: 0, y: 0 }, animation: @l.anim, items: [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":card:" @l.i ":plate"), anchor: "top-left", position: { x: @l.x, y: @l.y, z: @config.z }, width: @cw, height: @config.cardH, fill: @card.fill, stroke: @card.stroke, strokeWidth: @card.strokeWidth, corners: @card.corners, shadow: @card.shadow, material: @card.material, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":tag"), text: (if (= @l.c.badgeKey null) (default @l.c.badge "") ""), anchor: "top-left", position: { x: (+ @l.x @pad), y: (+ @l.y @pad), z: @config.z }, align: "left", baseline: "top", color: @badge.textColor, font: @badge.font, width: (- @cw (* 2 @pad)), wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":title"), text: @l.c.title, anchor: "top-left", position: { x: (+ @l.x @pad), y: (+ @l.y (+ @pad @config.titleTop)), z: @config.z }, align: "left", baseline: "top", color: @title.textColor, font: @title.font, width: (- @cw (* 2 @pad)), wrap: true, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":body"), text: (default @l.c.body ""), anchor: "top-left", position: { x: (+ @l.x @pad), y: (+ @l.y (+ @pad (+ @config.titleTop (* @config.titleLines @config.titleLineH)))), z: @config.z }, align: "left", baseline: "top", color: @body.textColor, font: @body.font, width: (- @cw (* 2 @pad)), wrap: true, hit: false }] })) })))))))
+                (let ((shown (array/take @entity.cards (* @rows @cols))) (pad @config.padding) (out { durationMs: @config.turnMs, loop: false, startMs: @entity.turnedMs, keyframes: [{ at: 0, opacity: 1, offsetY: 0 }, { at: 1, opacity: 0, offsetY: -12 }] }) (inn { durationMs: @config.turnMs, loop: false, startMs: @entity.turnedMs, keyframes: [{ at: 0, opacity: 0, offsetY: 12 }, { at: 1, opacity: 1, offsetY: 0 }] }))
+                  (let ((laid (array/map (array/range (array/len @shown)) (fn i (let ((blank : RasmCard { title: "" }) (c (default (array/nth @shown @i) @blank))) { i: @i, c: @c, x: (+ @r.x (* (if (= @entity.dir "rtl") (- (- @cols 1) (math/mod @i @cols)) (math/mod @i @cols)) (+ @cw @config.gap))), y: (+ @r.y (* (math/floor (/ @i @cols)) (+ @config.cardH @config.gap))), st: (if (= @entity.turned @i) "on" (if (= @entity.was @i) "off" "rest")), anim: (if (= @entity.arrivedMs 0) { durationMs: 1, loop: false, startMs: 0, keyframes: [{ at: 0, opacity: 0, offsetY: 24 }, { at: 1, opacity: 0, offsetY: 24 }] } { durationMs: @config.arriveMs, loop: false, startMs: (+ @entity.arrivedMs (* @i @config.staggerMs)), keyframes: [{ at: 0, opacity: 0, offsetY: 24 }, { at: 1, opacity: 1, offsetY: 0 }] }) })))))
+                    (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (array/map (array/filter @laid (fn l (!= @l.c.badgeKey null))) (fn l { id: (str/concat @config.id ":card:" @l.i ":badge"), key: (let ((k (as @l.c KeyedCard))) @k.badgeKey), x: (if (= @entity.dir "rtl") (- (+ @l.x @cw) @pad) (+ @l.x @pad)), y: (+ @l.y @pad), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @badge.textColor, font: @badge.font, width: (- @cw (* 2 @pad)), wrap: false, animation: (if (= @l.st "on") @out (if (= @l.st "off") @inn @l.anim)) })), nodes: (array/map @laid (fn l (let ((tx (if (= @entity.dir "rtl") (- (+ @l.x @cw) @pad) (+ @l.x @pad))) (al (if (= @entity.dir "rtl") "right" "left")) (tw (- @cw (* 2 @pad)))) (let ((front : [node] [{ type: draw-text, id: (str/concat @config.id ":card:" @l.i ":tag"), text: (if (= @l.c.badgeKey null) (default @l.c.badge "") ""), anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @l.x @cw) @pad) (+ @l.x @pad)), y: (+ @l.y @pad), z: @config.z }, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @badge.textColor, font: @badge.font, width: (- @cw (* 2 @pad)), wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":title"), text: @l.c.title, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @l.x @cw) @pad) (+ @l.x @pad)), y: (+ @l.y (+ @pad @config.titleTop)), z: @config.z }, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @title.textColor, font: @title.font, width: (- @cw (* 2 @pad)), wrap: true, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":body"), text: (default @l.c.body ""), anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @l.x @cw) @pad) (+ @l.x @pad)), y: (+ @l.y (+ @pad (+ @config.titleTop (* @config.titleLines @config.titleLineH)))), z: @config.z }, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @body.textColor, font: @body.font, width: (- @cw (* 2 @pad)), wrap: true, hit: false }]) (backs : [node] [{ type: draw-text, id: (str/concat @config.id ":card:" @l.i ":backTitle"), text: @l.c.title, anchor: "top-left", position: { x: @tx, y: (+ @l.y @pad), z: @config.z }, align: @al, baseline: "top", color: @badge.textColor, font: @badge.font, width: @tw, wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":back"), text: (default @l.c.back ""), anchor: "top-left", position: { x: @tx, y: (+ @l.y (+ @pad @config.titleTop)), z: @config.z }, align: @al, baseline: "top", color: @title.textColor, font: @body.font, width: @tw, wrap: true, hit: false }])) { type: draw-group, id: (str/concat @config.id ":card:" @l.i), position: { x: 0, y: 0 }, animation: @l.anim, items: (array/concat [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":card:" @l.i ":plate"), anchor: "top-left", position: { x: @l.x, y: @l.y, z: @config.z }, width: @cw, height: @config.cardH, fill: @card.fill, stroke: @card.stroke, strokeWidth: @card.strokeWidth, corners: @card.corners, shadow: @card.shadow, material: @card.material, hit: @config.turn }] (if (= @l.st "rest") @front [{ type: draw-group, id: (str/concat @config.id ":card:" @l.i ":front"), position: { x: 0, y: 0 }, animation: (if (= @l.st "on") @out @inn), items: @front }, { type: draw-group, id: (str/concat @config.id ":card:" @l.i ":backFace"), position: { x: 0, y: 0 }, animation: (if (= @l.st "on") @inn @out), items: @backs }])) })))) })))))))
       CARDS_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0)))
     }
 
@@ -93,8 +116,12 @@ orbital RasmCardsOrbital {
         @description "Take the grid's rect when it is placed."
       RASM_RESIZE { width : number!  height : number! }
         @description "Take the canvas height, the view arrival is measured against."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction: rtl starts each row at the right edge and aligns the text right."
       RASM_PAGE_SCROLLED { offset : number!  max : number! }
         @description "Take the page scroll; the cards arrive the first time the grid reaches the view line."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "With `turn` on, the pointer entering a card turns it over and leaving turns it back."
       RASM_CARDS { id : string!  cards : [RasmCard]! }
         @description "The records to paint, for the grid with this id."
     }
@@ -135,6 +162,14 @@ orbital RasmCardsOrbital {
       titleLineH : number = 26
         @label "Title line height"
         @description "The height of one title line in px."
+        @tier "presentation"
+      turn : boolean = false
+        @label "Turn on hover"
+        @description "Each card is a pointer region: entering one turns it over to its `back` text under its title, leaving turns it back."
+        @tier "presentation"
+      turnMs : number = 360
+        @label "Turn"
+        @description "How long a card takes to turn either way, in ms."
         @tier "presentation"
       viewAt : number = 0.85
         @label "View line"

@@ -17,6 +17,7 @@ export const ANIM_OPERATORS: Record<string, StdOperatorMeta> = {
   'anim/frame-at': {
     module: 'anim',
     category: 'std-anim',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 4,
     description: 'Frame index for elapsed time; loops by default, else clamps to last',
@@ -33,6 +34,7 @@ export const ANIM_OPERATORS: Record<string, StdOperatorMeta> = {
   'anim/sheet-rect': {
     module: 'anim',
     category: 'std-anim',
+    evaluation: 'strict',
     minArity: 4,
     maxArity: 4,
     description: 'Source rect {sx,sy,sw,sh} for a frame index on a sprite sheet',
@@ -49,6 +51,7 @@ export const ANIM_OPERATORS: Record<string, StdOperatorMeta> = {
   'anim/direction-from-delta': {
     module: 'anim',
     category: 'std-anim',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Facing direction string from (dx,dy); 4-way (default) or 8-way',

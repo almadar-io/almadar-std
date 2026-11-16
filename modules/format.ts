@@ -17,6 +17,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/number': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Format number with locale grouping and decimal separators. Supported locales: en, en-US, en-GB, en-CA, en-AU, ja, de, pt, pt-BR, nl, fr, es, it, sl, ar, ru (and their -DE/-FR/-ES/-IT/-SI/-NL/-RU/-JP forms); another locale is an error. Rounds half away from zero; with no options the fraction is 0 to 3 digits',
@@ -32,6 +33,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/currency': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Format as currency, written as English writes it (symbol before the amount, the currency\'s own minor units). Supported currencies: USD EUR GBP JPY CNY INR KRW CAD AUD CHF MXN BRL SEK NOK DKK PLN CZK ZAR NZD SGD HKD AED SAR ILS TRY RUB KWD BHD CLP VND; another currency is an error',
@@ -48,6 +50,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/percent': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Format as percentage (en-US conventions): the value times 100 with `decimals` fraction digits and a percent sign',
@@ -63,6 +66,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/bytes': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Format bytes as human-readable size (1024 steps, B to PB); a negative or non-finite size is an error',
@@ -75,6 +79,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/ordinal': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Format number as ordinal (1st, 2nd, 3rd)',
@@ -86,6 +91,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/plural': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Format count with singular/plural word',
@@ -101,6 +107,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/list': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Format array as natural language list; `style` is the joining word ("and" or "or")',
@@ -115,6 +122,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/phone': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Format phone number: `US` (the default) groups 10 digits as (555) 123-4567 and 11 digits led by 1 as +1 (555) 123-4567; any other format, or 10 or more digits otherwise, writes ddd-ddd-rest; fewer than 10 digits are returned as given',
@@ -129,6 +137,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
   'format/creditCard': {
     module: 'format',
     category: 'std-format',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Format credit card with masked digits',

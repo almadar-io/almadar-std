@@ -499,6 +499,14 @@ export interface StdOperatorMeta extends OperatorMeta {
   /** Position of the lambda argument (0-indexed) */
   lambdaArgPosition?: number;
   /**
+   * How the evaluator runs the operator (EXEC-EVAL-3b), on every operator the evaluator dispatches: `strict` when
+   * every operand is evaluated, left to right, before it runs; `form` when it evaluates its operands itself (a
+   * control form, a callback, a raw expression).
+   */
+  evaluation?: 'strict' | 'site' | 'form';
+  /** The operands a `site` operator evaluates on demand, by position: each reaches it as a callable. */
+  lazyOperands?: number[];
+  /**
    * Position of the argument naming the target entity (0-indexed), on a data
    * effect: the effect runs where that entity's rows live, so a `runsOn: server`
    * data effect on a client-resident entity runs on the client.

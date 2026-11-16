@@ -185,6 +185,250 @@
      }
     }
    ]
+  },
+  {
+   "id": "rtl-takes-the-surface-direction-and-repaints",
+   "config": {
+    "id": "menu",
+    "cols": 3
+   },
+   "entity": {
+    "id": "c",
+    "looks": {
+     "stack/card/idle": {
+      "fill": "#111"
+     },
+     "text/title/idle": {
+      "textColor": "#fff",
+      "font": "400 20px serif"
+     },
+     "text/body/idle": {
+      "textColor": "#ccc",
+      "font": "400 15px serif"
+     },
+     "text/eyebrow/idle": {
+      "textColor": "#f80",
+      "font": "600 12px serif"
+     }
+    },
+    "viewH": 800,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 900,
+     "h": 340
+    },
+    "cards": [
+     {
+      "title": "A",
+      "body": "one",
+      "badge": "x"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "rtl"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "dir": "rtl"
+      },
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "with-turn-on-entering-a-card-turns-it-and-leaving-turns-it-back",
+   "config": {
+    "id": "menu",
+    "turn": true
+   },
+   "entity": {
+    "id": "c",
+    "looks": {
+     "stack/card/idle": {
+      "fill": "#111"
+     }
+    },
+    "viewH": 800,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 900,
+     "h": 340
+    },
+    "arrivedMs": 1,
+    "cards": [
+     {
+      "title": "A",
+      "body": "one",
+      "badge": "x",
+      "back": "Pairs with the bream"
+     },
+     {
+      "title": "B",
+      "body": "two",
+      "badge": "y"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "menu:card:0:plate",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "RASM_PAINT": 1
+      },
+      "entity": {
+       "turned": 0,
+       "was": -1
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "leave",
+      "id": "menu:card:0:plate",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "RASM_PAINT": 1
+      },
+      "entity": {
+       "turned": -1,
+       "was": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-with-turn-off-a-card-never-turns",
+   "config": {
+    "id": "menu"
+   },
+   "entity": {
+    "id": "c",
+    "looks": {
+     "stack/card/idle": {
+      "fill": "#111"
+     }
+    },
+    "viewH": 800,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 900,
+     "h": 340
+    },
+    "arrivedMs": 1,
+    "cards": [
+     {
+      "title": "A",
+      "body": "one",
+      "badge": "x",
+      "back": "Pairs with the bream"
+     },
+     {
+      "title": "B",
+      "body": "two",
+      "badge": "y"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "menu:card:0:plate",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-grids-card-never-turns-this-one",
+   "config": {
+    "id": "menu",
+    "turn": true
+   },
+   "entity": {
+    "id": "c",
+    "looks": {
+     "stack/card/idle": {
+      "fill": "#111"
+     }
+    },
+    "viewH": 800,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 900,
+     "h": 340
+    },
+    "arrivedMs": 1,
+    "cards": [
+     {
+      "title": "A",
+      "body": "one",
+      "badge": "x",
+      "back": "Pairs with the bream"
+     },
+     {
+      "title": "B",
+      "body": "two",
+      "badge": "y"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "wine:card:0:plate",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

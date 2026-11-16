@@ -23,6 +23,7 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/compose': {
     module: 'composition',
     category: 'std-composition',
+    evaluation: 'form',
     minArity: 1,
     maxArity: 1,
     description: 'Compose N orbitals into one application schema. Wires events, picks layout, generates pages.',
@@ -41,6 +42,7 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/wire': {
     module: 'composition',
     category: 'std-composition',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Apply cross-orbital event wiring. Adds external emits/listens to inline traits.',
@@ -64,6 +66,7 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/detect-layout': {
     module: 'composition',
     category: 'std-composition',
+    evaluation: 'form',
     minArity: 1,
     maxArity: 2,
     description: 'Auto-detect layout from orbital count and wiring topology. Returns single, tabs, sidebar, dashboard, or wizard-flow.',
@@ -88,6 +91,7 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/pipe': {
     module: 'composition',
     category: 'std-composition',
+    evaluation: 'form',
     minArity: 2,
     maxArity: null,
     description: 'Left-to-right composition. Each step receives the previous result as its first arg.',

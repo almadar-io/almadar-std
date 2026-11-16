@@ -18,6 +18,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/to-world': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Cell to world-space center point',
@@ -33,6 +34,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/from-world': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'World point to grid cell (floor)',
@@ -47,6 +49,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/iso-to-screen': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Isometric cell to screen point',
@@ -62,6 +65,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/screen-to-iso': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Screen point to isometric cell coordinates',
@@ -78,6 +82,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/distance': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Chebyshev distance max(|dx|,|dy|)',
@@ -92,6 +97,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/manhattan-distance': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Manhattan distance |dx|+|dy|',
@@ -106,6 +112,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/neighbors': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Adjacent cells in order N,E,S,W (+NE,SE,SW,NW if diagonal)',
@@ -121,6 +128,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/cells-in-radius': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'All cells within Euclidean radius r (row-major order)',
@@ -136,6 +144,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/line': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Bresenham line cells from a to b, inclusive, in step order',
@@ -151,6 +160,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
   'grid/in-bounds': {
     module: 'grid',
     category: 'std-grid',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Whether cell lies within a w×h grid',

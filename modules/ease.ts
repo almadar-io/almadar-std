@@ -16,6 +16,7 @@ export const EASE_OPERATORS: Record<string, StdOperatorMeta> = {
   'ease/apply': {
     module: 'ease',
     category: 'std-ease',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description:
@@ -32,6 +33,7 @@ export const EASE_OPERATORS: Record<string, StdOperatorMeta> = {
   'ease/smoothstep': {
     module: 'ease',
     category: 'std-ease',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Smoothstep: clamp((x-edge0)/(edge1-edge0),0,1) then t*t*(3-2*t)',

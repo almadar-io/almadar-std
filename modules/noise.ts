@@ -17,6 +17,7 @@ export const NOISE_OPERATORS: Record<string, StdOperatorMeta> = {
   'noise/perlin': {
     module: 'noise',
     category: 'std-noise',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: '2D Perlin noise at (x,y) with optional seed; output [-1,1]',
@@ -32,6 +33,7 @@ export const NOISE_OPERATORS: Record<string, StdOperatorMeta> = {
   'noise/simplex': {
     module: 'noise',
     category: 'std-noise',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Value-coherent noise (perlin-derived) at (x,y) with optional seed; output [-1,1]',
@@ -47,6 +49,7 @@ export const NOISE_OPERATORS: Record<string, StdOperatorMeta> = {
   'noise/fbm': {
     module: 'noise',
     category: 'std-noise',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 4,
     description: 'Fractal Brownian motion: summed perlin octaves (clamped 1..8); output [-1,1]',

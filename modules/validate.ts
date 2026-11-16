@@ -20,6 +20,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/required': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is not null, undefined, or empty string',
@@ -31,6 +32,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/string': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a string',
@@ -42,6 +44,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/number': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a number',
@@ -53,6 +56,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/boolean': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a boolean',
@@ -64,6 +68,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/array': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is an array',
@@ -75,6 +80,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/object': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is an object',
@@ -86,6 +92,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/email': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a valid email format',
@@ -98,6 +105,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/url': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a valid URL format',
@@ -110,6 +118,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/uuid': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a valid UUID',
@@ -122,6 +131,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/phone': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a valid phone number',
@@ -134,6 +144,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/creditCard': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a valid credit card number (Luhn algorithm)',
@@ -145,6 +156,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/date': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Check if value is a valid date',
@@ -156,6 +168,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/minLength': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if string/array has minimum length',
@@ -170,6 +183,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/maxLength': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if string/array has maximum length',
@@ -184,6 +198,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/length': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if string/array has exact length',
@@ -198,6 +213,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/min': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if number is >= minimum',
@@ -212,6 +228,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/max': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if number is <= maximum',
@@ -226,6 +243,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/range': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Check if number is within range [min, max]',
@@ -241,6 +259,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/pattern': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if string matches a regex pattern of the shared dialect (the subset ECMAScript and the Rust regex crate evaluate identically: no lookaround, backreferences, named groups or inline flags; \\d \\w \\b are ASCII; \\p{L} \\p{N} general categories are supported). An invalid or unsupported pattern is false; a non-string value or pattern is a type mismatch',
@@ -255,6 +274,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/oneOf': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if value is in list of allowed values',
@@ -269,6 +289,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/noneOf': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if value is not in list of disallowed values',
@@ -283,6 +304,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/equals': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Deep equality check',
@@ -297,6 +319,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
   'validate/check': {
     module: 'validate',
     category: 'std-validate',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Run validation rules by field over a value, return { valid, errors } with one `field: rule validation failed` per broken rule. The rules are read as data: `{ field: [[rule, args…], …] }`. Rules: required string number boolean email minLength maxLength min max range pattern oneOf; an unknown rule is skipped',

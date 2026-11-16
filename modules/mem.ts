@@ -29,6 +29,7 @@ function memPure(def: { description: string; params: MemParam[]; returnType: Ope
   return {
     module: 'mem',
     category: 'std-mem-read',
+    evaluation: 'strict',
     minArity: def.params.length,
     maxArity: def.params.length,
     description: def.description,

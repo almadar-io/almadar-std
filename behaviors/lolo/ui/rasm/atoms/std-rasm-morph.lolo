@@ -1,6 +1,6 @@
 app std-rasm-morph [
   version: "0.1.0",
-  description: "std-rasm-morph — one outline that changes shape as the page scrolls, on a std-rasm-surface with pageScroll on. It paints a path in its placed rect whose outline passes through each stop's `d` as that stop's anchor reaches the `focus` line of the view (a stop reached before the page can scroll is reached at the top), blending between neighbours and running backwards when the page scrolls back. Every `d` is drawn in a `box`-unit square scaled to the rect's width and has the same number of subpaths; the canvas resamples and blends them every frame, so nothing is re-laid-out or repainted while the page moves. Its paint is listed in the surface's `fixed` paints to stay in view while the sections pass. The look is morph/<intent>/idle (fill, stroke, strokeWidth, material)."
+  description: "std-rasm-morph — one outline that changes shape as the page scrolls, on a std-rasm-surface with pageScroll on. It paints a path in its placed rect whose outline passes through each stop's `d` as that stop's anchor reaches the `focus` line of the view (a stop reached before the page can scroll is reached at the top), blending between neighbours and running backwards when the page scrolls back. Every `d` is drawn in a `box`-unit square, scaled to `span` of the rect's width but never above `maxView` of the view height, and has the same number of subpaths; the canvas resamples and blends them every frame, so nothing is re-laid-out or repainted while the page moves. Its paint is listed in the surface's `fixed` paints to stay in view while the sections pass. The look is morph/<intent>/idle (fill, stroke, strokeWidth, material)."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -47,8 +47,8 @@ orbital RasmMorphOrbital {
         (emit MORPH_PAINT { n: @entity.paints })
       MORPH_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.stops) 0) (array/every @config.stops (fn s (object/has @entity.anchors @s.anchor))))
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (l (default (object/get @entity.looks (str/concat "morph/" @config.intent "/idle") null) {})) (at (array/map @config.stops (fn s (let ((a (default (object/get @entity.anchors @s.anchor null) { x: 0, y: 0, w: 0, h: 0 }))) (math/max 0 (- @a.y (* @entity.viewH @config.focus))))))))
-          (let ((from (default (array/nth @at 0) 0)) (to (default (array/nth @at (- (array/len @at) 1)) 0)))
-            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: "path", position: { x: @r.x, y: @r.y, z: @config.z }, d: (let ((first (default (array/nth @config.stops 0) { anchor: "", d: "" }))) @first.d), scale: (/ @r.w (math/max 1 @config.box)), fill: @l.fill, stroke: @l.stroke, strokeWidth: @l.strokeWidth, material: @l.material, hit: false, animation: { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: (array/map (array/range (array/len @config.stops)) (fn i (let ((st (default (array/nth @config.stops @i) { anchor: "", d: "" }))) { at: (if (> @to @from) (/ (- (default (array/nth @at @i) 0) @from) (- @to @from)) @i), d: @st.d }))) } }] })))
+          (let ((from (default (array/nth @at 0) 0)) (to (default (array/nth @at (- (array/len @at) 1)) 0)) (side (math/min (* @r.w @config.span) (* @entity.viewH @config.maxView))))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: "path", position: { x: (+ @r.x (/ (- @r.w @side) 2)), y: (+ @r.y (* @entity.viewH @config.top)), z: @config.z }, d: (let ((first (default (array/nth @config.stops 0) { anchor: "", d: "" }))) @first.d), scale: (/ @side (math/max 1 @config.box)), fill: @l.fill, stroke: @l.stroke, strokeWidth: @l.strokeWidth, material: @l.material, hit: false, animation: { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: (array/map (array/range (array/len @config.stops)) (fn i (let ((st (default (array/nth @config.stops @i) { anchor: "", d: "" }))) { at: (if (> @to @from) (/ (- (default (array/nth @at @i) 0) @from) (- @to @from)) @i), d: @st.d }))) } }] })))
       MORPH_PAINT -> ready when (not (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.stops) 0) (array/every @config.stops (fn s (object/has @entity.anchors @s.anchor)))))
     }
 
@@ -92,7 +92,19 @@ orbital RasmMorphOrbital {
         @tier "presentation"
       box : number = 100
         @label "Box"
-        @description "The side of the square every stop's `d` is drawn in; the outline is scaled so the box fills the rect's width."
+        @description "The side of the square every stop's `d` is drawn in."
+        @tier "presentation"
+      span : number = 1
+        @label "Span"
+        @description "The outline's side as a fraction of the rect's width, centred across it."
+        @tier "presentation"
+      maxView : number = 1
+        @label "Most of the view"
+        @description "The largest side the outline may take, as a fraction of the view height, so a short view keeps it small."
+        @tier "presentation"
+      top : number = 0
+        @label "Top"
+        @description "How far below the rect's top the outline sits, as a fraction of the view height."
         @tier "presentation"
       focus : number = 0.5
         @label "Focus"

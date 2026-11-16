@@ -17,6 +17,7 @@ export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
   'i18n/t': {
     module: 'i18n',
     category: 'std-i18n',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: "The active locale's message for a catalog key, with {{placeholders}} filled from params; a `locale` in params reads that declared locale's catalog instead (it is never a placeholder)",
@@ -32,6 +33,7 @@ export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
   'i18n/direction': {
     module: 'i18n',
     category: 'std-i18n',
+    evaluation: 'strict',
     minArity: 0,
     maxArity: 1,
     description: "The active locale's reading direction, rtl or ltr, or a named locale's with { locale }; null until the host sets a locale. Render-time, like i18n/t",

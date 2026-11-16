@@ -18,6 +18,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/add': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Componentwise vector addition a+b',
@@ -33,6 +34,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/sub': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Componentwise vector subtraction a-b',
@@ -48,6 +50,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/scale': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Componentwise scalar multiply a*k',
@@ -63,6 +66,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/dot': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Dot product ax·bx+ay·by(+az·bz)',
@@ -78,6 +82,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/cross': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: '3D cross product → vector; 2D → scalar ax·by-ay·bx',
@@ -93,6 +98,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/length': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Vector magnitude sqrt(dot(a,a))',
@@ -105,6 +111,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/length-sq': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Squared magnitude dot(a,a)',
@@ -117,6 +124,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/normalize': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Unit vector a/len; zero-length → zero vector (same dim)',
@@ -129,6 +137,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/distance': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Euclidean distance length(sub(a,b))',
@@ -144,6 +153,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/distance-sq': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Squared distance length-sq(sub(a,b))',
@@ -159,6 +169,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/lerp': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Componentwise linear interpolation a+(b-a)*t',
@@ -175,6 +186,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/angle': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'Heading atan2(y,x) (1 arg) or angle between two vectors (2 args), radians',
@@ -190,6 +202,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/rotate': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: '2D rotate by rad (z preserved): x\'=x·cos-y·sin, y\'=x·sin+y·cos',
@@ -205,6 +218,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
   'vec/clamp-length': {
     module: 'vec',
     category: 'std-vec',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Clamp magnitude to max (preserves direction)',

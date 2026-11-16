@@ -24,6 +24,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/seed': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Set seeded PRNG for deterministic probabilistic sampling; without it a dispatch seeds the stream from one journaled Random ask and a pure evaluation raises',
@@ -36,6 +37,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/flip': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Bernoulli trial: returns true with probability p',
@@ -47,6 +49,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/gaussian': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Sample from a Gaussian (normal) distribution',
@@ -61,6 +64,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/uniform': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Sample from a uniform distribution [lo, hi)',
@@ -75,6 +79,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/beta': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Sample from a Beta(alpha, beta) distribution',
@@ -89,6 +94,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/categorical': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Weighted random selection from items',
@@ -103,6 +109,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/poisson': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Sample from a Poisson distribution',
@@ -118,6 +125,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/condition': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Mark current sample as rejected if predicate is false',
@@ -130,6 +138,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/sample': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'form',
     minArity: 2,
     maxArity: 2,
     description: 'Evaluate an expression n times and collect results',
@@ -144,6 +153,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/posterior': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'form',
     minArity: 4,
     maxArity: 4,
     description: 'Rejection sampling: returns accepted query values',
@@ -160,6 +170,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/infer': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'form',
     minArity: 4,
     maxArity: 4,
     description: 'Like posterior but returns {mean, variance, samples, acceptRate}',
@@ -180,6 +191,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/expected-value': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Mean of numeric samples',
@@ -191,6 +203,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/variance': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Population variance of numeric samples',
@@ -202,6 +215,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/histogram': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Bin numeric samples into a histogram',
@@ -217,6 +231,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/percentile': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Get the p-th percentile (0-100) from samples',
@@ -232,6 +247,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/credible-interval': {
     module: 'prob',
     category: 'std-prob',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Compute symmetric credible interval from samples',

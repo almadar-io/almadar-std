@@ -17,6 +17,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/to-number': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert a string using JavaScript Number semantics; malformed text returns NaN',
@@ -29,6 +30,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/to-int': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Strict integer parse matching Rust i64::from_str: an optional leading + or -, then one or more ASCII digits 0-9 and nothing else (no whitespace, no decimal point, no exponent, no hex, no other digit scripts). An exact int (EXEC-EVAL-11); null for any other text and for a value beyond the 64-bit range',
@@ -40,6 +42,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/len': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'String length',
@@ -52,6 +55,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/concat': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: null,
     description: 'Concatenate the text of each value',
@@ -63,6 +67,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/upper': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert to uppercase',
@@ -74,6 +79,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/lower': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert to lowercase',
@@ -85,6 +91,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/trim': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Remove leading and trailing whitespace',
@@ -96,6 +103,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/trimStart': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Remove leading whitespace',
@@ -107,6 +115,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/trimEnd': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Remove trailing whitespace',
@@ -118,6 +127,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/split': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Split string into array by delimiter. An empty delimiter splits by Unicode scalar value',
@@ -132,6 +142,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/join': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Join array elements into string',
@@ -146,6 +157,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/slice': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Extract substring',
@@ -161,6 +173,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/replace': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Replace first occurrence',
@@ -176,6 +189,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/replace-pattern': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Replace every match of a regex pattern of the shared dialect (see validate/pattern; Unicode mode, so \\p{L} and \\p{N} work). The replacement is literal: $ has no meaning. An invalid or unsupported pattern is an error',
@@ -192,6 +206,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/find-pattern': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Every match of a regex pattern of the shared dialect (see validate/pattern; Unicode mode) at or after a character offset (default 0), in order, as { start, end, text } with start and end in characters, the units of str/len and str/slice. Empty matches step one character on. An empty list when nothing matches; null for a pattern outside the dialect',
@@ -208,6 +223,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/replaceAll': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'Replace all occurrences',
@@ -223,6 +239,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/includes': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if string contains substring',
@@ -237,6 +254,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/startsWith': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if string starts with prefix',
@@ -251,6 +269,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/endsWith': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Check if string ends with suffix',
@@ -265,6 +284,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/padStart': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Pad string from start to target length',
@@ -280,6 +300,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/padEnd': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Pad string from end to target length',
@@ -295,6 +316,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/repeat': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Repeat string n times',
@@ -309,6 +331,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/reverse': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Reverse string',
@@ -320,6 +343,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/capitalize': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Capitalize first character',
@@ -331,6 +355,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/titleCase': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert to Title Case',
@@ -342,6 +367,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/camelCase': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert to camelCase',
@@ -353,6 +379,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/kebabCase': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert to kebab-case',
@@ -364,6 +391,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/snakeCase': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Convert to snake_case',
@@ -375,6 +403,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/template': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Substitute each {{key}} in the template with the text of that key in vars; a placeholder with no key stays as written',
@@ -390,6 +419,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/truncate': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
     description: 'Keep the first len characters and append the suffix when anything was cut; a string of len characters or fewer is returned whole (the suffix is added after len, not inside it)',
@@ -406,6 +436,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/encode-uri-component': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Percent-encode a string as a URI component (JavaScript encodeURIComponent; UTF-8 bytes, unreserved A-Z a-z 0-9 - _ . ! ~ * \' ( ) kept)',
@@ -417,6 +448,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/decode-uri-component': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'Decode a percent-encoded URI component (JavaScript decodeURIComponent; %XX sequences as UTF-8, + is not a space, malformed input answers null, a non-string input (null included) is a type mismatch)',
@@ -429,6 +461,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/uri-component-valid': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'True iff str/decode-uri-component would succeed on the string (well-formed percent escapes decoding to valid UTF-8); a non-string input (null included) is a type mismatch',
@@ -440,6 +473,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/collate': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Compare two strings by the CLDR root collation (Unicode Collation Algorithm, tertiary strength): -1, 0 or 1. Case-insensitive first, accents beside their letter, the same on every execution path; a non-string on either side (null included) is a type mismatch',
@@ -454,6 +488,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/collate-key': {
     module: 'str',
     category: 'std-str',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
     description: 'A sort key of the string under the CLDR root collation: a string (lowercase hex) whose code-point order is the collation order, so array/sort by a field holding it sorts by collation; a non-string input (null included) is a type mismatch',
