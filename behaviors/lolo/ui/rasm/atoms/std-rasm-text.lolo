@@ -1,6 +1,6 @@
 app std-rasm-text [
   version: "0.1.0",
-  description: "std-rasm-text — the Rasm kit's paragraph. Once it has a rect wider than zero and looks it paints one measured, wrapping draw-text in the text/<intent>/idle look, so its parent stack can size it from RASM_MEASURED. RASM_ENTER plays its entry choreography."
+  description: "std-rasm-text — the Rasm kit's paragraph. Once it has a rect wider than zero and looks it paints one measured, wrapping draw-text in the text/<intent>/idle look, so its parent stack can size it from RASM_MEASURED. RASM_ENTER plays its entry choreography. With fit shrink the paragraph steps its font size down until it fits its placed rect; with reveal type it types out glyph by glyph."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -10,7 +10,8 @@ type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "s
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
-type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, rotate : number?, vertical : boolean?, pivotX : number?, pivotY : number? }
+type RasmReveal = { startMs : number!, perGlyphMs : number!, durationMs : number! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, reveal : RasmReveal?, height : number?, fit : "none" | "shrink"?, minSize : number?, rotate : number?, vertical : boolean?, pivotX : number?, pivotY : number? }
 type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
@@ -31,6 +32,7 @@ orbital RasmTextOrbital {
     centered : boolean @description "The announced style centres this paragraph (followAlign on and the layout aligns to the centre)." = false
     enterIndex : number @description "This text's position in the RASM_ENTER order, -1 when it is not in it." = -1
     enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
+    placedMs : number @description "The epoch-ms instant this text was first placed, 0 before it; the typed reveal starts here when the text has no entry." = 0
     staggerMs : number = 70
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
@@ -55,6 +57,7 @@ orbital RasmTextOrbital {
       RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
         (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
+        (set @entity.placedMs (if (= @entity.placedMs 0) (time/epoch-ms @now) @entity.placedMs))
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
@@ -66,7 +69,7 @@ orbital RasmTextOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       TEXT_PAINT -> ready
-        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [(object/merge { id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {}))] })))))
+        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [(object/merge (object/merge (object/merge { id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {})) (if (= @config.fit "shrink") { height: @r.h, fit: "shrink", minSize: @config.minSize } {})) (if (= @config.reveal "type") { reveal: { startMs: (if (> @entity.enteredMs 0) @entity.enteredMs @entity.placedMs), perGlyphMs: @config.revealMs, durationMs: @config.revealMs } } {}))] })))))
     }
 
     emits {
@@ -120,6 +123,22 @@ orbital RasmTextOrbital {
       followAlign : boolean = false
         @label "Follow the style's alignment"
         @description "Centre this paragraph when the announced style's layout aligns to the centre (a centred hero); off keeps it on the reading edge whatever the style."
+        @tier "presentation"
+      fit : "none" | "shrink" = "none"
+        @label "Fit"
+        @description "none wraps the paragraph at its rect width and lets it grow downward. shrink steps the font size down, to minSize, until the wrapped paragraph fits the placed rect (its width and height); at minSize it paints at that size and may overflow."
+        @tier "presentation"
+      minSize : number = 12
+        @label "Smallest size"
+        @description "With fit shrink, the smallest font size in px the paragraph steps down to."
+        @tier "presentation"
+      reveal : "none" | "type" = "none"
+        @label "Reveal"
+        @description "none paints the paragraph at once. type shows it glyph by glyph like a typewriter or boot log, starting when its entry starts (RASM_ENTER) or, with no entry, when it is first placed."
+        @tier "presentation"
+      revealMs : number = 40
+        @label "Reveal step"
+        @description "With reveal type, the ms between one glyph and the next; each glyph also takes this long to settle in."
         @tier "presentation"
       z : number = 0
         @label "Z"

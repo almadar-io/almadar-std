@@ -1087,6 +1087,406 @@
           "trait": "OrbLintListenWildcardUnkeyed"
         }
       ]
+    },
+    {
+      "id": "a-per-call-key-row-clause-is-accepted",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Provider",
+                      "linkedEntity": "E",
+                      "emits": [
+                        {
+                          "event": "KNOWLEDGE_FAILED",
+                          "payloadSchema": [
+                            {
+                              "name": "key",
+                              "type": "CallKey"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "on",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "Consumer",
+                      "linkedEntity": "E",
+                      "listens": [
+                        {
+                          "event": "KNOWLEDGE_FAILED",
+                          "triggers": "LOAD_FAILED",
+                          "source": {
+                            "kind": "any"
+                          },
+                          "key": "@payload.key"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "on",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "on",
+                            "to": "on",
+                            "event": "ASK",
+                            "effects": [
+                              [
+                                "emit",
+                                "KNOWLEDGE_ASK",
+                                {
+                                  "key": [
+                                    "as",
+                                    "c|ask",
+                                    "CallKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintListenWildcardUnkeyed"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "listen-wildcard-unkeyed",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintListenWildcardUnkeyed"
+        }
+      ]
+    },
+    {
+      "id": "control-a-row-clause-on-another-field-is-still-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Provider",
+                      "linkedEntity": "E",
+                      "emits": [
+                        {
+                          "event": "KNOWLEDGE_FAILED",
+                          "payloadSchema": [
+                            {
+                              "name": "key",
+                              "type": "CallKey"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "on",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "Consumer",
+                      "linkedEntity": "E",
+                      "listens": [
+                        {
+                          "event": "KNOWLEDGE_FAILED",
+                          "triggers": "LOAD_FAILED",
+                          "source": {
+                            "kind": "any"
+                          },
+                          "key": "@payload.nodeKey"
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "on",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "on",
+                            "to": "on",
+                            "event": "ASK",
+                            "effects": [
+                              [
+                                "emit",
+                                "KNOWLEDGE_ASK",
+                                {
+                                  "key": [
+                                    "as",
+                                    "c|ask",
+                                    "CallKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintListenWildcardUnkeyed"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "listen-wildcard-unkeyed",
+                  "findings": [
+                    {
+                      "code": "ORB_LISTEN_WILDCARD_UNKEYED",
+                      "path": "orbitals.O.traits.Consumer.listens",
+                      "message": "listens route `*.KNOWLEDGE_FAILED -> LOAD_FAILED` in `O.Consumer` hears every caller's `KNOWLEDGE_FAILED`, whose payload carries the call's `key`, and its guard never reads it",
+                      "suggestion": "guard the route on the call's own key: `*.KNOWLEDGE_FAILED -> LOAD_FAILED when (= ?key <the key this trait sent>)`",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintListenWildcardUnkeyed"
+        }
+      ]
+    },
+    {
+      "id": "a-per-viewer-and-call-key-row-clause-is-accepted",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Provider",
+                      "linkedEntity": "E",
+                      "emits": [
+                        {
+                          "event": "KNOWLEDGE_FAILED",
+                          "payloadSchema": [
+                            {
+                              "name": "key",
+                              "type": "CallKey"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "on",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    },
+                    {
+                      "name": "Consumer",
+                      "linkedEntity": "E",
+                      "listens": [
+                        {
+                          "event": "KNOWLEDGE_FAILED",
+                          "triggers": "LOAD_FAILED",
+                          "source": {
+                            "kind": "any"
+                          },
+                          "key": [
+                            "str/concat",
+                            "@user.id",
+                            "|",
+                            "@payload.key"
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "on",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "on",
+                            "to": "on",
+                            "event": "ASK",
+                            "effects": [
+                              [
+                                "emit",
+                                "KNOWLEDGE_ASK",
+                                {
+                                  "key": [
+                                    "as",
+                                    "c|ask",
+                                    "CallKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintListenWildcardUnkeyed"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "listen-wildcard-unkeyed",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintListenWildcardUnkeyed"
+        }
+      ]
     }
   ]
 }

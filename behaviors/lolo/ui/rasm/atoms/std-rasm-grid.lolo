@@ -6,7 +6,7 @@ app std-rasm-grid [
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
 type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmTrack = { size : "fixed" | "fill" | "fr"!, main : number }
-type RasmGridShape = { columns : [RasmTrack], rows : [RasmTrack], gap : number, rowGap : number, padding : number, children : [RasmGridChild] }
+type RasmGridShape = { columns : [RasmTrack], rows : [RasmTrack], gap : number, rowGap : number, padding : number, rules : "none" | "columns" | "rows" | "both", border : boolean, children : [RasmGridChild] }
 type RasmGridChild = { id : string!, col : number!, row : number!, colSpan : number, rowSpan : number, rotate : number, offsetX : number, offsetY : number }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
@@ -29,6 +29,7 @@ orbital RasmGridOrbital {
     variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    painted : boolean @description "True while this grid has rules or a border on the surface, so a variant that drops them clears what it painted." = false
   }
 
   trait RasmGrid -> RasmGridRun [client] {
@@ -64,11 +65,15 @@ orbital RasmGridOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit GRID_PAINT { n: @entity.paints })
       GRID_LAYOUT -> ready when (= @entity.rect null)
-      GRID_PAINT -> ready when (and (!= @entity.rect null) (or (!= @config.rules "none") @config.border))
+      GRID_PAINT -> ready when (and (!= @entity.rect null) (or (!= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rules)) @config.rules) "none") (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.border)) @config.border)))
+        (set @entity.painted true)
         (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (rule (object/get @entity.looks "grid/rule/idle" null)) (frame (object/get @entity.looks "grid/border/idle" null)))
           (let ((top (+ @r.y @pad)) (bottom (- (+ @r.y @r.h) @pad)) (colN (array/len @entity.colW)) (rowN (array/len @entity.rowH)))
-            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (array/concat (array/concat (if (and (!= @rule null) (array/includes ["columns", "both"] @config.rules)) (array/map (array/range (math/max 0 (- @colN 1))) (fn i (let ((pos (+ (+ (default (array/nth @entity.colAt @i) 0) (default (array/nth @entity.colW @i) 0)) (/ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap) 2)))) (let ((x (if @rtl (- (- (+ @r.x @r.w) @pad) @pos) (+ (+ @r.x @pad) @pos)))) { type: draw-shape, shape: "path", id: (str/concat @config.id ":rule:col:" @i), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " @x " " @top " L " @x " " @bottom), fill: "", stroke: @rule.stroke, strokeWidth: (default @rule.strokeWidth 1), hit: false })))) []) (if (and (!= @rule null) (array/includes ["rows", "both"] @config.rules)) (array/map (array/range (math/max 0 (- @rowN 1))) (fn i (let ((y (+ (+ @top (+ (default (array/nth @entity.rowAt @i) 0) (default (array/nth @entity.rowH @i) 0))) (/ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap) 2)))) { type: draw-shape, shape: "path", id: (str/concat @config.id ":rule:row:" @i), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " (+ @r.x @pad) " " @y " L " (- (+ @r.x @r.w) @pad) " " @y), fill: "", stroke: @rule.stroke, strokeWidth: (default @rule.strokeWidth 1), hit: false }))) [])) (if (and @config.border (!= @frame null)) [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":border"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "rgba(0,0,0,0)", stroke: @frame.stroke, strokeWidth: (default @frame.strokeWidth 1), corners: @frame.corners, hit: false }] [])) })))
-      GRID_PAINT -> ready when (not (and (!= @entity.rect null) (or (!= @config.rules "none") @config.border)))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (array/concat (array/concat (if (and (!= @rule null) (array/includes ["columns", "both"] (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rules)) @config.rules))) (array/map (array/range (math/max 0 (- @colN 1))) (fn i (let ((pos (+ (+ (default (array/nth @entity.colAt @i) 0) (default (array/nth @entity.colW @i) 0)) (/ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap) 2)))) (let ((x (if @rtl (- (- (+ @r.x @r.w) @pad) @pos) (+ (+ @r.x @pad) @pos)))) { type: draw-shape, shape: "path", id: (str/concat @config.id ":rule:col:" @i), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " @x " " @top " L " @x " " @bottom), fill: "", stroke: @rule.stroke, strokeWidth: (default @rule.strokeWidth 1), hit: false })))) []) (if (and (!= @rule null) (array/includes ["rows", "both"] (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rules)) @config.rules))) (array/map (array/range (math/max 0 (- @rowN 1))) (fn i (let ((y (+ (+ @top (+ (default (array/nth @entity.rowAt @i) 0) (default (array/nth @entity.rowH @i) 0))) (/ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap) 2)))) { type: draw-shape, shape: "path", id: (str/concat @config.id ":rule:row:" @i), anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M " (+ @r.x @pad) " " @y " L " (- (+ @r.x @r.w) @pad) " " @y), fill: "", stroke: @rule.stroke, strokeWidth: (default @rule.strokeWidth 1), hit: false }))) [])) (if (and (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.border)) @config.border) (!= @frame null)) [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":border"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "rgba(0,0,0,0)", stroke: @frame.stroke, strokeWidth: (default @frame.strokeWidth 1), corners: @frame.corners, hit: false }] [])) })))
+      GRID_PAINT -> ready when (and (not (and (!= @entity.rect null) (or (!= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rules)) @config.rules) "none") (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.border)) @config.border)))) @entity.painted)
+        (set @entity.painted false)
+        (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [] })
+      GRID_PAINT -> ready when (and (not (and (!= @entity.rect null) (or (!= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rules)) @config.rules) "none") (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.border)) @config.border)))) (not @entity.painted))
     }
 
     emits {
@@ -156,7 +161,7 @@ orbital RasmGridOrbital {
         @tier "presentation"
       variants : Map string RasmGridShape = {}
         @label "Variants"
-        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the columns, rows, gap, rowGap, padding and children a variant names replace the configured ones while that breakpoint is current; one it leaves out keeps the configured value."
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the columns, rows, gap, rowGap, padding, rules, border and children a variant names replace the configured ones while that breakpoint is current; one it leaves out keeps the configured value."
         @tier "presentation"
       children : [RasmGridChild] = []
         @label "Children"
