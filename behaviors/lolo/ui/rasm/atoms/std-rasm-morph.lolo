@@ -1,0 +1,109 @@
+app std-rasm-morph [
+  version: "0.1.0",
+  description: "std-rasm-morph — one outline that changes shape as the page scrolls, on a std-rasm-surface with pageScroll on. It paints a path in its placed rect whose outline passes through each stop's `d` as that stop's anchor reaches the `focus` line of the view, blending between neighbours and running backwards when the page scrolls back. Every `d` is drawn in a `box`-unit square scaled to the rect's width and has the same number of subpaths; the canvas resamples and blends them every frame, so nothing is re-laid-out or repainted while the page moves. Its paint is listed in the surface's `fixed` paints to stay in view while the sections pass. The look is morph/<intent>/idle (fill, stroke, strokeWidth, material)."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmMorphStop = { anchor : string!, d : string! }
+
+orbital RasmMorphOrbital {
+  entity RasmMorphRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the outline, null until placed." = null
+    anchors : Map string RasmRect @description "The placed rect of every stop's anchor seen so far." = {}
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmMorph -> RasmMorphRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MORPH_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (array/some @config.stops (fn s (= @s.anchor @p.id))))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.anchors (array/reduce (array/filter ?placed (fn p (array/some @config.stops (fn s (= @s.anchor @p.id))))) @entity.anchors (fn acc p (object/set @acc @p.id @p.rect))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MORPH_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (array/some @config.stops (fn s (= @s.anchor @p.id)))))))
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MORPH_PAINT { n: @entity.paints })
+      MORPH_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.stops) 0) (array/every @config.stops (fn s (object/has @entity.anchors @s.anchor))))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (l (default (object/get @entity.looks (str/concat "morph/" @config.intent "/idle") null) {})) (at (array/map @config.stops (fn s (let ((a (default (object/get @entity.anchors @s.anchor null) { x: 0, y: 0, w: 0, h: 0 }))) (- @a.y (* @entity.viewH @config.focus)))))))
+          (let ((from (default (array/nth @at 0) 0)) (to (default (array/nth @at (- (array/len @at) 1)) 0)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: "path", position: { x: @r.x, y: @r.y, z: @config.z }, d: (let ((first (default (array/nth @config.stops 0) { anchor: "", d: "" }))) @first.d), scale: (/ @r.w (math/max 1 @config.box)), fill: @l.fill, stroke: @l.stroke, strokeWidth: @l.strokeWidth, material: @l.material, hit: false, animation: { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: (array/map (array/range (array/len @config.stops)) (fn i (let ((st (default (array/nth @config.stops @i) { anchor: "", d: "" }))) { at: (if (> @to @from) (/ (- (default (array/nth @at @i) 0) @from) (- @to @from)) @i), d: @st.d }))) } }] })))
+      MORPH_PAINT -> ready when (not (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.stops) 0) (array/every @config.stops (fn s (object/has @entity.anchors @s.anchor)))))
+    }
+
+    emits {
+      MORPH_PAINT -> internal {
+        n : number!
+      }
+        @description "Paint once the outline's rect, every anchor and the canvas height are known."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The outline as one draw-shape path whose animation morphs through the stops on the scroll clock."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the outline's rect and the anchors' rects as they are placed."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the stops are measured in."
+    }
+
+    config {
+      id : string = "morph"
+        @label "Id"
+        @description "The outline's RASM_PLACE key and paint id."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      intent : string = "default"
+        @label "Intent"
+        @description "The look is morph/<intent>/idle."
+        @tier "presentation"
+      box : number = 100
+        @label "Box"
+        @description "The side of the square every stop's `d` is drawn in; the outline is scaled so the box fills the rect's width."
+        @tier "presentation"
+      focus : number = 0.5
+        @label "Focus"
+        @description "Where in the view, as a fraction of its height from the top, an anchor's top is when its stop's outline is reached."
+        @tier "presentation"
+      stops : [RasmMorphStop] = []
+        @label "Stops"
+        @description "In page order: an anchor (a placed id, a section) and the SVG path the outline has when that anchor reaches the focus line; every path has the same number of subpaths."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmMorphStart -> RasmMorph
+}

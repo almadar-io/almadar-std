@@ -20,6 +20,8 @@ type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z :
 type RasmTarget = { id : string!, fragments : [string]! }
 type RasmTransition = { durationMs : number!, distance : number!, staggerMs : number!, owners : [string]!, still : [string]! }
 type RasmPaintEntry = { id : string!, z : number!, nodes : [node]!, texts : [RasmText]! }
+type RasmScrubFrame = { at : number!, opacity : number, offsetX : number, offsetY : number, scale : number, rotate : number }
+type RasmScrubEntry = { id : string!, paints : [string]!, from : number!, to : number!, keyframes : [RasmScrubFrame]! }
 
 orbital RasmSurfaceOrbital {
   entity RasmSurfaceRun [runtime] {
@@ -38,6 +40,8 @@ orbital RasmSurfaceOrbital {
     entering : [string] @description "The paint ids the last transitioning RASM_VISIBLE showed: drawn fading and sliding in." = []
     movedMs : number @description "The epoch-ms instant the last RASM_VISIBLE arrived: the transition's start." = 0
     moveSign : number @description "1 when content travels toward the reading start (forward), -1 backward; flipped under rtl." = 1
+    scrubs : Map string RasmScrubEntry @description "The scrubs RASM_SCRUB announced, by id: their paints play their keyframes at the page scroll." = {}
+    scrollY : number @description "With pageScroll on, the offset the canvas last reported, in px." = 0
     repaints : number @description "Counts repaints, so each repaint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -62,7 +66,7 @@ orbital RasmSurfaceOrbital {
       RASM_RESIZE -> ready when @config.fill
         (set @entity.viewW ?width)
         (set @entity.containerH ?height)
-        (set @entity.viewH (math/max ?height @config.minHeight @entity.fillMin))
+        (set @entity.viewH (if @config.pageScroll ?height (math/max ?height @config.minHeight @entity.fillMin)))
         (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin)))) (h (math/max 0 (- ?height (* 2 @config.margin))))) (if (= @config.align "center") { x: (/ (- ?width (math/min @config.rootRect.w @w)) 2), y: (/ (- ?height (math/min @config.rootRect.h @h)) 2), w: (math/min @config.rootRect.w @w), h: (math/min @config.rootRect.h @h) } { x: @config.margin, y: @config.margin, w: @w, h: @h })))
         (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
@@ -83,7 +87,7 @@ orbital RasmSurfaceOrbital {
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> ready when (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))
         (set @entity.fillMin ?h)
-        (set @entity.viewH (math/max @entity.containerH @config.minHeight ?h))
+        (set @entity.viewH (if @config.pageScroll @entity.containerH (math/max @entity.containerH @config.minHeight ?h)))
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> ready when (not (or (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH)) (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))))
@@ -106,8 +110,13 @@ orbital RasmSurfaceOrbital {
         (emit SURFACE_REPAINT { n: @entity.repaints })
       SURFACE_WHEEL -> ready
         (emit RASM_WHEEL { target: ?target, x: ?x, y: ?y, dx: ?dx, dy: ?dy })
+      SURFACE_SCROLLED -> ready
+        (set @entity.scrollY ?offset)
+        (emit RASM_PAGE_SCROLLED { offset: ?offset, max: ?max })
       RASM_PAINT -> dirty
         (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
+      RASM_SCRUB -> dirty
+        (set @entity.scrubs (object/set @entity.scrubs ?id { id: ?id, paints: ?paints, from: ?from, to: ?to, keyframes: ?keyframes }))
       RASM_VISIBLE -> dirty
         (let ((moves (and (> @config.transition.durationMs 0) (array/includes @config.transition.owners ?owner))) (in (array/filter ?shown (fn h (and (array/includes @entity.hidden @h) (not (array/includes @config.transition.still @h)))))) (out (array/filter ?hidden (fn h (not (or (array/includes @entity.hidden @h) (array/includes @config.transition.still @h)))))))
           (do
@@ -125,7 +134,8 @@ orbital RasmSurfaceOrbital {
           camera: { mode: "top-down", zoom: 1 }
           pointerMoves: "captured"
           fillContainer: (if @config.fill true "width")
-          minHeight: (math/max @config.minHeight @entity.fillMin)
+          minHeight: (if @config.pageScroll 0 (math/max @config.minHeight @entity.fillMin))
+          scroll: (if @config.pageScroll { height: (math/max @entity.viewH @entity.fillMin), event: "SURFACE_SCROLLED", reportMs: @config.scrollReportMs } null)
           worldWidth: @entity.viewW
           worldHeight: @entity.viewH
           resizeEvent: "SURFACE_RESIZE"
@@ -142,7 +152,7 @@ orbital RasmSurfaceOrbital {
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
           keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) }))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m @m.items))))))
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) }))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false, fixed: @config.pageScroll }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m (let ((sc (array/find (object/values @entity.scrubs) (fn s (array/includes @s.paints @m.id))))) (let ((its (if (= @sc null) @m.items (let ((moved : [node] [{ type: draw-group, id: (str/concat @config.id ":scrub:" @m.id), position: { x: 0, y: 0 }, animation: { clock: "scroll", from: (default @sc.from 0), to: (default @sc.to 0), keyframes: (default @sc.keyframes []) }, items: @m.items }])) @moved)))) (if (array/includes @config.fixed @m.id) (let ((pinned : [node] [{ type: draw-group, id: (str/concat @config.id ":fixed:" @m.id), position: { x: 0, y: 0 }, fixed: true, items: @its }])) @pinned) @its)))))))))
         })
       POINTER_DOWN -> ready
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
@@ -199,7 +209,7 @@ orbital RasmSurfaceOrbital {
       RASM_RESIZE -> dirty when @config.fill
         (set @entity.viewW ?width)
         (set @entity.containerH ?height)
-        (set @entity.viewH (math/max ?height @config.minHeight @entity.fillMin))
+        (set @entity.viewH (if @config.pageScroll ?height (math/max ?height @config.minHeight @entity.fillMin)))
         (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin)))) (h (math/max 0 (- ?height (* 2 @config.margin))))) (if (= @config.align "center") { x: (/ (- ?width (math/min @config.rootRect.w @w)) 2), y: (/ (- ?height (math/min @config.rootRect.h @h)) 2), w: (math/min @config.rootRect.w @w), h: (math/min @config.rootRect.h @h) } { x: @config.margin, y: @config.margin, w: @w, h: @h })))
         (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
@@ -220,7 +230,7 @@ orbital RasmSurfaceOrbital {
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> dirty when (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))
         (set @entity.fillMin ?h)
-        (set @entity.viewH (math/max @entity.containerH @config.minHeight ?h))
+        (set @entity.viewH (if @config.pageScroll @entity.containerH (math/max @entity.containerH @config.minHeight ?h)))
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> dirty when (not (or (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH)) (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))))
@@ -243,8 +253,13 @@ orbital RasmSurfaceOrbital {
         (emit SURFACE_REPAINT { n: @entity.repaints })
       SURFACE_WHEEL -> dirty
         (emit RASM_WHEEL { target: ?target, x: ?x, y: ?y, dx: ?dx, dy: ?dy })
+      SURFACE_SCROLLED -> dirty
+        (set @entity.scrollY ?offset)
+        (emit RASM_PAGE_SCROLLED { offset: ?offset, max: ?max })
       RASM_PAINT -> dirty
         (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
+      RASM_SCRUB -> dirty
+        (set @entity.scrubs (object/set @entity.scrubs ?id { id: ?id, paints: ?paints, from: ?from, to: ?to, keyframes: ?keyframes }))
       RASM_VISIBLE -> dirty
         (let ((moves (and (> @config.transition.durationMs 0) (array/includes @config.transition.owners ?owner))) (in (array/filter ?shown (fn h (and (array/includes @entity.hidden @h) (not (array/includes @config.transition.still @h)))))) (out (array/filter ?hidden (fn h (not (or (array/includes @entity.hidden @h) (array/includes @config.transition.still @h)))))))
           (do
@@ -262,7 +277,8 @@ orbital RasmSurfaceOrbital {
           camera: { mode: "top-down", zoom: 1 }
           pointerMoves: "captured"
           fillContainer: (if @config.fill true "width")
-          minHeight: (math/max @config.minHeight @entity.fillMin)
+          minHeight: (if @config.pageScroll 0 (math/max @config.minHeight @entity.fillMin))
+          scroll: (if @config.pageScroll { height: (math/max @entity.viewH @entity.fillMin), event: "SURFACE_SCROLLED", reportMs: @config.scrollReportMs } null)
           worldWidth: @entity.viewW
           worldHeight: @entity.viewH
           resizeEvent: "SURFACE_RESIZE"
@@ -279,7 +295,7 @@ orbital RasmSurfaceOrbital {
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
           keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) }))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m @m.items))))))
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) }))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false, fixed: @config.pageScroll }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m (let ((sc (array/find (object/values @entity.scrubs) (fn s (array/includes @s.paints @m.id))))) (let ((its (if (= @sc null) @m.items (let ((moved : [node] [{ type: draw-group, id: (str/concat @config.id ":scrub:" @m.id), position: { x: 0, y: 0 }, animation: { clock: "scroll", from: (default @sc.from 0), to: (default @sc.to 0), keyframes: (default @sc.keyframes []) }, items: @m.items }])) @moved)))) (if (array/includes @config.fixed @m.id) (let ((pinned : [node] [{ type: draw-group, id: (str/concat @config.id ":fixed:" @m.id), position: { x: 0, y: 0 }, fixed: true, items: @its }])) @pinned) @its)))))))))
         })
       POINTER_DOWN -> dirty
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
@@ -408,6 +424,12 @@ orbital RasmSurfaceOrbital {
       }
         @description "The surface's reading direction, announced once before the root is placed."
         @tier "primary"
+      RASM_PAGE_SCROLLED -> external {
+        offset : number!
+        max : number!
+      }
+        @description "With pageScroll on, how far the page is scrolled in px and the furthest it goes: at most once per scrollReportMs while it moves, and once when it rests."
+        @tier "primary"
     }
 
     listens {
@@ -415,6 +437,8 @@ orbital RasmSurfaceOrbital {
         @description "Store the looks, paint the ground and place the root."
       RASM_PAINT { id : string!  z : number!  nodes : [node]!  texts : [RasmText]  n : number }
         @description "Keep one control's nodes and its catalog-keyed texts at its z and repaint; each text is painted in the active locale."
+      RASM_SCRUB { id : string!  paints : [string]!  from : number!  to : number!  keyframes : [RasmScrubFrame]! }
+        @description "Play these paints' keyframes at the page scroll between from and to (px); the same id replaces an earlier scrub."
       RASM_VISIBLE { owner : string!  shown : [string]!  hidden : [string]!  forward : boolean }
         @description "Stop drawing the paints of the hidden ids and draw the shown ids again; the paints are kept. When the owner is listed in `transition.owners` and the call swaps shown content for hidden content, the hidden ids fade and slide out and the shown ids fade and slide in, one after another, toward the reading start (or away from it when forward is false)."
       RASM_RESIZE { width : number!  height : number! }
@@ -431,6 +455,8 @@ orbital RasmSurfaceOrbital {
         @description "The page locale's reading direction, reported by the canvas once and on change."
       SURFACE_WHEEL { target : string!  x : number!  y : number!  dx : number!  dy : number! }
         @description "The canvas wheel, in CSS pixels."
+      SURFACE_SCROLLED { offset : number!  max : number! }
+        @description "The canvas page scroll, reported by the canvas."
       SURFACE_ACCESS { target : string!  action : "focus" | "activate" | "increment" | "decrement"! }
         @description "An assistive-technology action on a semantic node."
       POINTER_DOWN { target : string!  x : number!  y : number!  index : number  touches : [RasmTouch] }
@@ -511,6 +537,18 @@ orbital RasmSurfaceOrbital {
       targets : [RasmTarget] = []
         @label "Render targets"
         @description "Each entry names a render target and the paint ids painted into it: those paints leave the frame and paint, ordered by z, as the children of one offscreen texture the surface's size, placed before everything else so a material that declares `targets` samples this frame's texture. A paint listed in no target paints in the frame. Children of a target take no pointer hits."
+        @tier "presentation"
+      pageScroll : boolean = false
+        @label "Page scroll"
+        @description "With fill on, the canvas keeps its container's height and the page scrolls inside it: the wheel, a touch that travels and its glide move every paint except the ground and the `fixed` paints, with no layout or repaint, and RASM_PAGE_SCROLLED reports the offset. Off, the canvas grows with its content and the document scrolls it."
+        @tier "presentation"
+      fixed : [string] = []
+        @label "Fixed paints"
+        @description "With pageScroll on, the paint ids that stay where they are drawn while the page scrolls (a header, a rail)."
+        @tier "presentation"
+      scrollReportMs : number = 100
+        @label "Scroll report interval"
+        @description "With pageScroll on, the least time in ms between two RASM_PAGE_SCROLLED while the page moves; the resting offset is always reported."
         @tier "presentation"
     }
   }

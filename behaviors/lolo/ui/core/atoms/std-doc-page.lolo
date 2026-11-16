@@ -6,10 +6,55 @@ type DocNavItem = { label : string!, href : string, items : [DocNavItem], active
 type DocCrumb = { label : string!, href : string }
 type DocTocEntry = { id : string!, label : string!, level : number! }
 type DocLink = { label : string!, href : string!, category : string }
+type DocNote = { body : string! }
+type DocNotes = { states : Map string DocNote, transitions : Map string DocNote }
+type DocEffect = { type : string! }
+type DocTransition = { from : string!, to : string!, event : string!, effects : [DocEffect], index : number }
+type DocMachineState = { name : string!, isInitial : boolean, isTerminal : boolean }
+type DocMachine = { name : string!, linkedEntity : string, states : [DocMachineState], transitions : [DocTransition], emittedEvents : [string], listenedEvents : [string] }
+type DocExplanation = { id : string!, orbitalName : string, traitName : string!, transition : SExpr! }
+type DocSegment = { anchor : string, heading : string, markdown : string, language : string, codeTitle : string, code : string, example : string, machine : DocMachine, machineLabel : string, explain : string, notes : DocNotes }
+type DocExample = { id : string!, view : pattern! }
+type DocPageData = { path : string, navItems : [DocNavItem], sidebarLabel : string, title : string!, lede : string, crumbs : [DocCrumb], toc : [DocTocEntry], prev : DocLink, next : DocLink, direction : "ltr" | "rtl", segments : [DocSegment] }
 orbital DocPageOrbital {
 
   entity DocPageView [runtime] {
     id : string!
+    path : string @description "The route of the page shown; the sidebar marks the item whose href it is." = ""
+    title : string = ""
+    lede : string = ""
+    crumbs : [DocCrumb] = []
+    toc : [DocTocEntry] = []
+    prev : DocLink = { label: "", href: "" }
+    next : DocLink = { label: "", href: "" }
+    direction : "ltr" | "rtl" = "ltr"
+    navItems : [DocNavItem] @description "The sidebar of the page shown; empty keeps the configured one." = []
+    sidebarLabel : string = ""
+    segments : [DocSegment] @description "The page body as typed segments (a section heading, markdown, code and a live example slot) in reading order." = []
+  }
+
+  entity DocPageRow [persistent: doc_pages] {
+    @read none "Documentation is public: every visitor reads every page."
+    @create none "Pages are written by the site build, never by a visitor."
+    id : string! @description "The page key: its locale and route."
+    path : string @description "The route the page answers." = ""
+    locale : string @description "The language of the page." = ""
+    title : string = ""
+    lede : string = ""
+    crumbs : [DocCrumb] = []
+    toc : [DocTocEntry] = []
+    prev : DocLink = { label: "", href: "" }
+    next : DocLink = { label: "", href: "" }
+    direction : "ltr" | "rtl" = "ltr"
+    segments : [DocSegment] = []
+  }
+
+  entity DocNavRow [persistent: doc_navs] {
+    @read none "Documentation is public: every visitor reads the sidebar."
+    @create none "The sidebar is written by the site build, never by a visitor."
+    id : string! @description "The locale whose sidebar this is."
+    sidebarLabel : string = ""
+    items : [DocNavItem] = []
   }
 
   trait DocPageRender -> @rebindable DocPageView [client] {
@@ -17,11 +62,33 @@ orbital DocPageOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.lede @config.lede)
+        (set @entity.crumbs @config.crumbs)
+        (set @entity.toc @config.toc)
+        (set @entity.prev @config.prev)
+        (set @entity.next @config.next)
+        (set @entity.direction @config.direction)
+        (emit DOC_PAGE_PAINT { })
+      DOC_PAGE_SHOW -> idle
+        (set @entity.path ?page.path)
+        (set @entity.navItems (default ?page.navItems []))
+        (set @entity.sidebarLabel (default ?page.sidebarLabel ""))
+        (set @entity.title ?page.title)
+        (set @entity.lede ?page.lede)
+        (set @entity.crumbs ?page.crumbs)
+        (set @entity.toc ?page.toc)
+        (set @entity.prev ?page.prev)
+        (set @entity.next ?page.next)
+        (set @entity.direction ?page.direction)
+        (set @entity.segments ?page.segments)
+        (emit DOC_PAGE_PAINT { })
+      DOC_PAGE_PAINT -> idle
         (render-ui main {
           type: box
           paddingY: lg
           fullWidth: true
-          dir: @config.direction
+          dir: @entity.direction
           children: [{
             type: container
             size: xl
@@ -38,13 +105,13 @@ orbital DocPageOrbital {
                 className: "lg:sticky lg:top-6 self-start"
                 children: [{
                   type: typography
-                  content: @config.sidebarLabel
+                  content: (if (== @entity.sidebarLabel "") @config.sidebarLabel @entity.sidebarLabel)
                   variant: label
                   weight: semibold
-                  className: (if (== @config.sidebarLabel "") hidden "px-3")
+                  className: (if (and (== @config.sidebarLabel "") (== @entity.sidebarLabel "")) hidden "px-3")
                 }, {
                   type: doc-sidebar
-                  items: @config.navItems
+                  items: (array/map (if (== (array/len @entity.navItems) 0) @config.navItems @entity.navItems) (fn a { label: @a.label, href: (default @a.href ""), active: (or (default @a.active false) (and (!= @entity.path "") (= (default @a.href "") @entity.path))), items: (array/map (default @a.items []) (fn b { label: @b.label, href: (default @b.href ""), active: (or (default @b.active false) (and (!= @entity.path "") (= (default @b.href "") @entity.path))), items: (array/map (default @b.items []) (fn c { label: @c.label, href: (default @c.href ""), active: (or (default @c.active false) (and (!= @entity.path "") (= (default @c.href "") @entity.path))), items: [] })) })) }))
                   aria-label: @config.sidebarLabel
                 }]
               }, {
@@ -54,31 +121,31 @@ orbital DocPageOrbital {
                 className: "min-w-0"
                 children: [{
                   type: doc-breadcrumb
-                  items: @config.crumbs
-                  className: (if (== (array/len @config.crumbs) 0) hidden "")
+                  items: @entity.crumbs
+                  className: (if (== (array/len @entity.crumbs) 0) hidden "")
                 }, {
                   type: stack
                   direction: vertical
                   gap: sm
                   children: [{
                     type: typography
-                    content: @config.title
+                    content: @entity.title
                     variant: h1
                     weight: bold
                     className: "tracking-tight text-balance"
                   }, {
                     type: typography
-                    content: @config.lede
+                    content: @entity.lede
                     variant: large
                     color: muted
-                    className: (if (== @config.lede "") hidden "max-w-3xl text-pretty")
+                    className: (if (== @entity.lede "") hidden "max-w-3xl text-pretty")
                   }]
                 }, {
                   type: box
                   bg: muted
                   padding: md
                   rounded: lg
-                  className: (if (== (array/len @config.toc) 0) hidden "")
+                  className: (if (== (array/len @entity.toc) 0) hidden "")
                   children: [{
                     type: stack
                     direction: vertical
@@ -90,21 +157,80 @@ orbital DocPageOrbital {
                       weight: semibold
                     }, {
                       type: doc-toc
-                      items: @config.toc
+                      items: @entity.toc
                       aria-label: @config.tocLabel
                     }]
                   }]
                 }, @config.content, {
+                  type: stack
+                  direction: vertical
+                  gap: xl
+                  className: (if (== (array/len @entity.segments) 0) hidden "")
+                  children: (array/map @entity.segments (fn s {
+                    type: stack
+                    id: (default @s.anchor "")
+                    direction: vertical
+                    gap: md
+                    className: "scroll-mt-20"
+                    children: [{
+                      type: typography
+                      content: (default @s.heading "")
+                      variant: h2
+                      weight: semibold
+                      className: (if (== (default @s.heading "") "") hidden "")
+                    }, {
+                      type: markdown-content
+                      content: (default @s.markdown "")
+                      direction: @entity.direction
+                      className: (if (== (default @s.markdown "") "") hidden "")
+                    }, {
+                      type: code-block
+                      language: (default @s.language "text")
+                      title: (default @s.codeTitle "")
+                      code: (default @s.code "")
+                      showCopyButton: true
+                      showLineNumbers: true
+                      maxHeight: "520px"
+                      className: (if (== (default @s.code "") "") hidden "")
+                    }, {
+                      type: avl-state-machine
+                      trait: (default @s.machine { name: "", linkedEntity: "", states: [], transitions: [], emittedEvents: [], listenedEvents: [] })
+                      annotations: (default @s.notes { states: {}, transitions: {} })
+                      aria-label: (default @s.machineLabel "")
+                      direction: @entity.direction
+                      className: (if (== @s.machine null) hidden "")
+                    }, {
+                      type: box
+                      className: (if (== (default @s.explain "") "") hidden "")
+                      children: (array/map (array/filter @config.explanations (fn x (= @x.id (default @s.explain "")))) (fn x { type: avl-transition-explainer, orbitalName: (default @x.orbitalName ""), traitName: @x.traitName, transition: @x.transition, annotations: (default @s.notes { states: {}, transitions: {} }) }))
+                    }, {
+                      type: box
+                      className: (if (== (default @s.example "") "") hidden "")
+                      children: (array/map (array/filter @config.examples (fn x (= @x.id (default @s.example "")))) (fn x @x.view))
+                    }]
+                  }))
+                }, {
                   type: divider
                 }, {
                   type: doc-pagination
-                  prev: (if (== (object/get @config.prev href "") "") null @config.prev)
-                  next: (if (== (object/get @config.next href "") "") null @config.next)
+                  prev: (if (== (object/get @entity.prev href "") "") null @entity.prev)
+                  next: (if (== (object/get @entity.next href "") "") null @entity.next)
                 }]
               }]
             }]
           }]
         })
+    }
+
+    emits {
+      DOC_PAGE_PAINT { }
+        @description "Internal: paint the page from the view."
+    }
+
+    listens {
+      DocPageLoad.DOC_PAGE_SHOW -> DOC_PAGE_SHOW
+      DOC_PAGE_SHOW { page : DocPageData! }
+        @description "Show a page read from the documentation rows."
     }
 
     config {
@@ -148,8 +274,64 @@ orbital DocPageOrbital {
       direction : "ltr" | "rtl" = "ltr"
         @label "Direction"
         @tier "presentation"
+      explanations : [DocExplanation] = []
+        @label "Transition explainers"
+        @description "The transitions a page segment can explain, each by the id a segment names, with the trait it belongs to"
+        @tier "presentation"
+      examples : [DocExample] = []
+        @label "Live examples"
+        @description "The live behaviors a page segment can show, each by the id a segment names; a view usually embeds a composed trait"
+        @tier "presentation"
     }
   }
 
-  page "/doc" as DocPage -> DocPageRender
+  entity DocPageLoadRun [runtime] {
+    id : string!
+    held : DocPageData = { path: "", navItems: [], sidebarLabel: "", title: "", lede: "", crumbs: [], toc: [], prev: { label: "", href: "" }, next: { label: "", href: "" }, direction: "ltr", segments: [] }
+    locale : string = ""
+  }
+
+  trait DocPageLoad -> DocPageLoadRun [server] {
+    @description "Reads one documentation page row by its key and its locale's sidebar row, and shows the page."
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      DOC_PAGE_OPEN -> idle
+        (fetch DocPageRow { filter: (= (object/get @entity id) ?id), limit: 1, emit: { success: DOC_PAGE_FETCHED, failure: DOC_PAGE_FETCH_FAILED } })
+      DOC_PAGE_FETCHED -> idle when (> (array/len ?data) 0)
+        (let ((r (array/first ?data)))
+          (do
+            (set @entity.locale (default @r.locale ""))
+            (set @entity.held { path: (default @r.path ""), navItems: [], sidebarLabel: "", title: (default @r.title ""), lede: (default @r.lede ""), crumbs: (default @r.crumbs []), toc: (default @r.toc []), prev: (default @r.prev { label: "", href: "" }), next: (default @r.next { label: "", href: "" }), direction: (default @r.direction "ltr"), segments: (default @r.segments []) })))
+        (fetch DocNavRow { filter: (= (object/get @entity id) @entity.locale), limit: 1, emit: { success: DOC_NAV_FETCHED, failure: DOC_PAGE_FETCH_FAILED } })
+      DOC_PAGE_FETCHED -> idle when (= (array/len ?data) 0)
+        (emit DOC_PAGE_MISSING { })
+      DOC_NAV_FETCHED -> idle
+        (let ((n (array/first ?data)) (h @entity.held))
+          (emit DOC_PAGE_SHOW { page: (default (as { path: @h.path, navItems: (if (= @n null) [] (default @n.items [])), sidebarLabel: (if (= @n null) "" (default @n.sidebarLabel "")), title: @h.title, lede: @h.lede, crumbs: @h.crumbs, toc: @h.toc, prev: @h.prev, next: @h.next, direction: @h.direction, segments: @h.segments } DocPageData) @h) }))
+      DOC_PAGE_FETCH_FAILED -> idle
+        (emit DOC_PAGE_MISSING { })
+    }
+
+    emits {
+      DOC_PAGE_SHOW -> external { page : DocPageData! }
+        @description "The page row read for the key asked, with its locale's sidebar."
+      DOC_PAGE_MISSING -> external { }
+        @description "No page row has the key asked, or a read failed."
+    }
+
+    listens {
+      DOC_PAGE_OPEN { id : string! }
+        @description "Read the page row with this key."
+      DOC_PAGE_FETCHED { data : [DocPageRow]! }
+        @description "The page rows the read answered."
+      DOC_NAV_FETCHED { data : [DocNavRow]! }
+        @description "The sidebar rows the read answered."
+      DOC_PAGE_FETCH_FAILED { error : string }
+        @description "A read failed."
+    }
+  }
+
+  page "/doc" as DocPage -> DocPageRender, DocPageLoad
 }

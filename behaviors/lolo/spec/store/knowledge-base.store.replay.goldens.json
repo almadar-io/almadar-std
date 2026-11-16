@@ -1,0 +1,192 @@
+{
+ "atom": "store/atoms/std-knowledge-base.lolo",
+ "trait": "KbStore",
+ "note": "knowledge-base store: the list read answers every row of the asked kinds in document, page and chunk order and refuses a list over its cap.",
+ "cases": [
+  {
+   "id": "the-store-lists-rows-ordered-by-document-page-and-chunk",
+   "steps": [
+    {
+     "event": "ListFetched",
+     "payload": {
+      "data": [
+       {
+        "id": "b:p0#0",
+        "docId": "b",
+        "source": "s",
+        "kind": "page",
+        "page": 0,
+        "text": "b0"
+       },
+       {
+        "id": "a:p10#0",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 10,
+        "text": "a10"
+       },
+       {
+        "id": "a:p2#1",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 2,
+        "text": "a2b"
+       },
+       {
+        "id": "a:p2#0",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 2,
+        "text": "a2a"
+       },
+       {
+        "id": "a:p2#10",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 2,
+        "text": "a2k"
+       }
+      ],
+      "totalCount": 5
+     },
+     "from": "idle",
+     "entity": {
+      "id": "s"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_LISTED_ROWS",
+        "payload": {
+         "rows": [
+          {
+           "id": "a:p2#0",
+           "docId": "a",
+           "source": "s",
+           "kind": "page",
+           "page": 2,
+           "text": "a2a"
+          },
+          {
+           "id": "a:p2#1",
+           "docId": "a",
+           "source": "s",
+           "kind": "page",
+           "page": 2,
+           "text": "a2b"
+          },
+          {
+           "id": "a:p2#10",
+           "docId": "a",
+           "source": "s",
+           "kind": "page",
+           "page": 2,
+           "text": "a2k"
+          },
+          {
+           "id": "a:p10#0",
+           "docId": "a",
+           "source": "s",
+           "kind": "page",
+           "page": 10,
+           "text": "a10"
+          },
+          {
+           "id": "b:p0#0",
+           "docId": "b",
+           "source": "s",
+           "kind": "page",
+           "page": 0,
+           "text": "b0"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "the-store-refuses-a-list-over-its-cap",
+   "steps": [
+    {
+     "event": "ListFetched",
+     "payload": {
+      "data": [
+       {
+        "id": "b:p0#0",
+        "docId": "b",
+        "source": "s",
+        "kind": "page",
+        "page": 0,
+        "text": "b0"
+       },
+       {
+        "id": "a:p10#0",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 10,
+        "text": "a10"
+       },
+       {
+        "id": "a:p2#1",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 2,
+        "text": "a2b"
+       },
+       {
+        "id": "a:p2#0",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 2,
+        "text": "a2a"
+       },
+       {
+        "id": "a:p2#10",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 2,
+        "text": "a2k"
+       }
+      ],
+      "totalCount": 6
+     },
+     "from": "idle",
+     "entity": {
+      "id": "s"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_STORE_FAILED",
+        "payload": {
+         "error": "too many chunks: the asked kinds have 6 chunk rows, over the cap of 5000"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_LISTED_ROWS"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  }
+ ]
+}

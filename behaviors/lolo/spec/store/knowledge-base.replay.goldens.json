@@ -1,0 +1,2948 @@
+{
+ "atom": "store/atoms/std-knowledge-base.lolo",
+ "trait": "KbCoordinator",
+ "note": "knowledge-base: composed atoms' answers (store, chunker, index, grounded answer) are played as events.",
+ "cases": [
+  {
+   "id": "a-new-document-is-looked-up-chunked-per-page-stored-and-sent-to-the-index",
+   "steps": [
+    {
+     "event": "KB_ADD",
+     "payload": {
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "page": 4,
+        "text": "more"
+       }
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_LOOKUP",
+        "payload": {
+         "docId": "d"
+        }
+       },
+       {
+        "event": "CHUNK_PAGE",
+        "payload": {
+         "docId": "d:p3",
+         "text": "first"
+        }
+       },
+       {
+        "event": "CHUNK_PAGE",
+        "payload": {
+         "docId": "d:p4",
+         "text": "more"
+        }
+       },
+       {
+        "event": "KB_WRITE",
+        "payload": {
+         "rows": [
+          {
+           "id": "d:p3#0",
+           "graphId": "knowledge-base",
+           "docId": "d",
+           "source": "https://x/d",
+           "kind": "page",
+           "page": 3,
+           "sha256": "h1",
+           "text": "first"
+          },
+          {
+           "id": "d:p4#0",
+           "graphId": "knowledge-base",
+           "docId": "d",
+           "source": "https://x/d",
+           "kind": "page",
+           "page": 4,
+           "sha256": "h1",
+           "text": "more"
+          }
+         ]
+        }
+       },
+       {
+        "event": "SEMANTIC_INDEX",
+        "payload": {
+         "items": [
+          {
+           "id": "d:p3#0",
+           "graphId": "knowledge-base",
+           "nodeType": "page",
+           "name": "d:p3#0",
+           "texts": {
+            "text": "first"
+           },
+           "numbers": {},
+           "lists": {}
+          },
+          {
+           "id": "d:p4#0",
+           "graphId": "knowledge-base",
+           "nodeType": "page",
+           "name": "d:p4#0",
+           "texts": {
+            "text": "more"
+           },
+           "numbers": {},
+           "lists": {}
+          }
+         ],
+         "key": "kb-index-k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ADDED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "KbStore",
+    "KbChunkParagraph",
+    "KbIndex"
+   ]
+  },
+  {
+   "id": "same-sha256-is-a-no-op",
+   "steps": [
+    {
+     "event": "KB_LOOKED_UP",
+     "payload": {
+      "rows": [
+       {
+        "id": "d:p0#0",
+        "sha256": "h1"
+       },
+       {
+        "id": "d:p1#0",
+        "sha256": "h1"
+       }
+      ]
+     },
+     "from": "looking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_ADDED",
+        "payload": {
+         "key": "k1",
+         "docId": "d",
+         "chunks": 0
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_CLEAR",
+       "ChunkNext",
+       "KB_WRITE",
+       "SEMANTIC_INDEX"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "control-a-changed-sha256-clears-the-old-chunks",
+   "steps": [
+    {
+     "event": "KB_LOOKED_UP",
+     "payload": {
+      "rows": [
+       {
+        "id": "d:p0#0",
+        "sha256": "h1"
+       },
+       {
+        "id": "d:p1#0",
+        "sha256": "old"
+       }
+      ]
+     },
+     "from": "looking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "clearing",
+      "emits": [
+       {
+        "event": "KB_CLEAR",
+        "payload": {
+         "ids": [
+          "d:p0#0",
+          "d:p1#0"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ADDED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "control-a-new-document-goes-straight-to-chunking",
+   "steps": [
+    {
+     "event": "KB_LOOKED_UP",
+     "payload": {
+      "rows": []
+     },
+     "from": "looking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 3,
+        "text": "first"
+       }
+      ],
+      "cursor": 0,
+      "chunks": []
+     },
+     "expect": {
+      "state": "chunking",
+      "emits": [
+       {
+        "event": "ChunkNext"
+       },
+       {
+        "event": "CHUNK_PAGE",
+        "payload": {
+         "docId": "d:p3",
+         "text": "first"
+        }
+       },
+       {
+        "event": "KB_WRITE"
+       },
+       {
+        "event": "SEMANTIC_INDEX"
+       }
+      ],
+      "neverEmits": [
+       "KB_ADDED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "KbStore",
+    "KbChunkParagraph",
+    "KbIndex"
+   ]
+  },
+  {
+   "id": "cleared-rows-lead-to-chunking-and-an-empty-document-adds-zero",
+   "steps": [
+    {
+     "event": "KB_CLEARED",
+     "payload": {},
+     "from": "clearing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [],
+      "cursor": 0,
+      "chunks": []
+     },
+     "expect": {
+      "state": "chunking",
+      "emits": [
+       {
+        "event": "ChunkNext"
+       },
+       {
+        "event": "KB_ADDED",
+        "payload": {
+         "key": "k1",
+         "docId": "d",
+         "chunks": 0
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "each-page-is-chunked-under-its-own-doc-id",
+   "steps": [
+    {
+     "event": "ChunkNext",
+     "payload": {},
+     "from": "chunking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "page": 4,
+        "text": "more"
+       }
+      ],
+      "cursor": 0,
+      "chunks": []
+     },
+     "expect": {
+      "state": "chunking",
+      "emits": [
+       {
+        "event": "CHUNK_PAGE",
+        "payload": {
+         "docId": "d:p3",
+         "text": "first"
+        }
+       },
+       {
+        "event": "CHUNK_PAGE",
+        "payload": {
+         "docId": "d:p4",
+         "text": "more"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "KbStore",
+    "KbChunkParagraph",
+    "KbIndex"
+   ]
+  },
+  {
+   "id": "a-chunked-page-adds-its-chunks-with-the-page-number",
+   "steps": [
+    {
+     "event": "PageChunked",
+     "payload": {
+      "docId": "d:p3",
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "docId": "d:p3",
+        "index": 0,
+        "text": "first",
+        "start": 0,
+        "end": 5
+       }
+      ]
+     },
+     "from": "chunking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 3,
+        "text": "first"
+       }
+      ],
+      "cursor": 0,
+      "chunks": []
+     },
+     "expect": {
+      "state": "chunking",
+      "emits": [
+       {
+        "event": "ChunkNext"
+       },
+       {
+        "event": "KB_WRITE"
+       }
+      ],
+      "entity": {
+       "cursor": 1,
+       "chunks": [
+        {
+         "id": "d:p3#0",
+         "page": 3,
+         "text": "first"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "KbStore",
+    "KbChunkParagraph",
+    "KbIndex"
+   ]
+  },
+  {
+   "id": "after-the-last-page-the-chunks-are-written-with-source-and-hash",
+   "steps": [
+    {
+     "event": "ChunkNext",
+     "payload": {},
+     "from": "chunking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "page": 4,
+        "text": "more"
+       }
+      ],
+      "cursor": 2,
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "page": 3,
+        "text": "first"
+       }
+      ]
+     },
+     "expect": {
+      "state": "storing",
+      "emits": [
+       {
+        "event": "KB_WRITE",
+        "payload": {
+         "rows": [
+          {
+           "id": "d:p3#0",
+           "graphId": "knowledge-base",
+           "docId": "d",
+           "source": "https://x/d",
+           "kind": "page",
+           "page": 3,
+           "sha256": "h1",
+           "text": "first"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ADDED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "control-a-document-with-no-text-adds-zero-chunks",
+   "steps": [
+    {
+     "event": "ChunkNext",
+     "payload": {},
+     "from": "chunking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "page": 4,
+        "text": "more"
+       }
+      ],
+      "cursor": 2,
+      "chunks": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_ADDED",
+        "payload": {
+         "key": "k1",
+         "docId": "d",
+         "chunks": 0
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_WRITE"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "written-chunks-are-indexed-under-their-kind",
+   "steps": [
+    {
+     "event": "KB_WRITTEN",
+     "payload": {},
+     "from": "storing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "page": 3,
+        "text": "first"
+       }
+      ]
+     },
+     "expect": {
+      "state": "indexing",
+      "emits": [
+       {
+        "event": "SEMANTIC_INDEX",
+        "payload": {
+         "items": [
+          {
+           "id": "d:p3#0",
+           "graphId": "knowledge-base",
+           "nodeType": "page",
+           "name": "d:p3#0",
+           "texts": {
+            "text": "first"
+           },
+           "numbers": {},
+           "lists": {}
+          }
+         ],
+         "key": "kb-index-k1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "indexed-chunks-answer-added-with-their-count",
+   "steps": [
+    {
+     "event": "SEMANTIC_INDEXED",
+     "payload": {
+      "ids": [
+       "d:p3#0",
+       "d:p3#1"
+      ],
+      "skipped": [],
+      "key": "kb-index-k1"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "id": "d:p3#1",
+        "page": 3,
+        "text": "second"
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_ADDED",
+        "payload": {
+         "key": "k1",
+         "docId": "d",
+         "chunks": 2
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-failed-index-removes-the-stored-chunks-then-fails",
+   "steps": [
+    {
+     "event": "SEMANTIC_FAILED",
+     "payload": {
+      "op": "index",
+      "message": "embed down",
+      "key": "kb-index-k1"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "id": "d:p3#1",
+        "page": 3,
+        "text": "second"
+       }
+      ]
+     },
+     "expect": {
+      "state": "rollingBack",
+      "emits": [
+       {
+        "event": "KB_CLEAR",
+        "payload": {
+         "ids": [
+          "d:p3#0",
+          "d:p3#1"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ADDED"
+      ]
+     }
+    },
+    {
+     "event": "KB_CLEARED",
+     "payload": {},
+     "from": "rollingBack",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "message": "embed down"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "embed down"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ADDED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-rejected-index-also-rolls-back",
+   "steps": [
+    {
+     "event": "SEMANTIC_REJECTED",
+     "payload": {
+      "reason": "key-in-use",
+      "key": "kb-index-k1"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "page": 3,
+        "text": "first"
+       }
+      ]
+     },
+     "expect": {
+      "state": "rollingBack",
+      "emits": [
+       {
+        "event": "KB_CLEAR",
+        "payload": {
+         "ids": [
+          "d:p3#0"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-rollback-that-fails-says-so",
+   "steps": [
+    {
+     "event": "KB_STORE_FAILED",
+     "payload": {
+      "error": "disk"
+     },
+     "from": "rollingBack",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "message": "embed down"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "embed down; the stored chunks could not be removed: disk"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-failed-write-rolls-back-what-was-stored",
+   "steps": [
+    {
+     "event": "KB_STORE_FAILED",
+     "payload": {
+      "error": "disk"
+     },
+     "from": "storing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "page": 3,
+        "text": "first"
+       }
+      ]
+     },
+     "expect": {
+      "state": "rollingBack",
+      "emits": [
+       {
+        "event": "KB_CLEAR",
+        "payload": {
+         "ids": [
+          "d:p3#0"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-failed-lookup-fails-the-add",
+   "steps": [
+    {
+     "event": "KB_STORE_FAILED",
+     "payload": {
+      "error": "disk"
+     },
+     "from": "looking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "disk"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ADDED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-refused-chunking-fails-the-add",
+   "steps": [
+    {
+     "event": "PageRefused",
+     "payload": {
+      "docId": "d:p3",
+      "reason": "bad config"
+     },
+     "from": "chunking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "bad config"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-timed-out-step-fails-the-request",
+   "steps": [
+    {
+     "event": "TIMEOUT",
+     "payload": {},
+     "from": "indexing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "chunks": [
+       {
+        "id": "d:p3#0",
+        "page": 3,
+        "text": "first"
+       }
+      ]
+     },
+     "expect": {
+      "state": "rollingBack",
+      "emits": [
+       {
+        "event": "KB_CLEAR",
+        "payload": {
+         "ids": [
+          "d:p3#0"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TIMEOUT",
+     "payload": {},
+     "from": "searching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "A step did not finish in time: searching"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-request-while-busy-waits-in-the-queue",
+   "steps": [
+    {
+     "event": "KB_SEARCH",
+     "payload": {
+      "key": "k2",
+      "query": "q"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "indexing",
+      "emits": [],
+      "neverEmits": [
+       "KB_FAILED",
+       "SEMANTIC_SEARCH"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "search",
+         "key": "k2",
+         "docId": "",
+         "source": "",
+         "kind": "page",
+         "sha256": "",
+         "pages": [],
+         "query": "q",
+         "k": null,
+         "kinds": null
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "control-an-add-while-busy-waits-in-the-queue",
+   "steps": [
+    {
+     "event": "KB_ADD",
+     "payload": {
+      "key": "k3",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "page": 4,
+        "text": "more"
+       }
+      ]
+     },
+     "from": "searching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "searching",
+      "emits": [],
+      "neverEmits": [
+       "KB_FAILED",
+       "KB_LOOKUP"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "add",
+         "key": "k3",
+         "docId": "d",
+         "source": "https://x/d",
+         "kind": "page",
+         "sha256": "h1",
+         "pages": [
+          {
+           "page": 3,
+           "text": "first"
+          },
+          {
+           "page": 4,
+           "text": "more"
+          }
+         ],
+         "query": ""
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "search-covers-the-configured-kinds-by-default",
+   "steps": [
+    {
+     "event": "KB_SEARCH",
+     "payload": {
+      "key": "k1",
+      "query": "cookies"
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_DEQUEUE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": [
+       {
+        "op": "search",
+        "key": "k1",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "cookies"
+       }
+      ]
+     },
+     "expect": {
+      "state": "searching",
+      "emits": [
+       {
+        "event": "SEMANTIC_SEARCH",
+        "payload": {
+         "query": "cookies",
+         "k": 5,
+         "floor": -1,
+         "graphIds": [
+          "knowledge-base"
+         ],
+         "nodeTypes": [
+          "page"
+         ],
+         "key": "kb-search-k1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "search-takes-its-own-k-and-kinds",
+   "steps": [
+    {
+     "event": "KB_SEARCH",
+     "payload": {
+      "key": "k1",
+      "query": "cookies",
+      "k": 3,
+      "kinds": [
+       "page"
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_DEQUEUE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": [
+       {
+        "op": "search",
+        "key": "k1",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "cookies",
+        "k": 3,
+        "kinds": [
+         "page"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "state": "searching",
+      "emits": [
+       {
+        "event": "SEMANTIC_SEARCH",
+        "payload": {
+         "query": "cookies",
+         "k": 3,
+         "floor": -1,
+         "graphIds": [
+          "knowledge-base"
+         ],
+         "nodeTypes": [
+          "page"
+         ],
+         "key": "kb-search-k1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "no-hits-answer-an-empty-search",
+   "steps": [
+    {
+     "event": "SEMANTIC_RESULTS",
+     "payload": {
+      "hits": [],
+      "key": "kb-search-k1",
+      "query": "q"
+     },
+     "from": "searching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "search"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_HITS",
+        "payload": {
+         "key": "k1",
+         "hits": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_FETCH"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "hits-are-fetched-by-id-and-ids-the-store-no-longer-has-are-dropped",
+   "steps": [
+    {
+     "event": "SEMANTIC_RESULTS",
+     "payload": {
+      "hits": [
+       {
+        "id": "d:p3#1",
+        "graphId": "knowledge-base",
+        "nodeId": "d:p3#1",
+        "nodeType": "page",
+        "name": "d:p3#1",
+        "score": 0.9
+       },
+       {
+        "id": "d:p3#0",
+        "graphId": "knowledge-base",
+        "nodeId": "d:p3#0",
+        "nodeType": "page",
+        "name": "d:p3#0",
+        "score": 0.7
+       }
+      ],
+      "key": "kb-search-k1",
+      "query": "q"
+     },
+     "from": "searching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "search"
+     },
+     "expect": {
+      "state": "fetching",
+      "emits": [
+       {
+        "event": "KB_FETCH",
+        "payload": {
+         "ids": [
+          "d:p3#1",
+          "d:p3#0"
+         ]
+        }
+       },
+       {
+        "event": "KB_FETCHED",
+        "payload": {
+         "rows": []
+        }
+       },
+       {
+        "event": "KB_HITS",
+        "payload": {
+         "key": "k1",
+         "hits": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "KbStore",
+    "KbChunkParagraph",
+    "KbIndex"
+   ]
+  },
+  {
+   "id": "fetched-rows-answer-hits-in-score-order-with-source-and-page",
+   "steps": [
+    {
+     "event": "KB_FETCHED",
+     "payload": {
+      "rows": [
+       {
+        "id": "d:p3#0",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "id": "d:p3#1",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "second"
+       }
+      ]
+     },
+     "from": "fetching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "search",
+      "hits": [
+       {
+        "id": "d:p3#1",
+        "graphId": "knowledge-base",
+        "nodeId": "d:p3#1",
+        "nodeType": "page",
+        "name": "d:p3#1",
+        "score": 0.9
+       },
+       {
+        "id": "d:p3#0",
+        "graphId": "knowledge-base",
+        "nodeId": "d:p3#0",
+        "nodeType": "page",
+        "name": "d:p3#0",
+        "score": 0.7
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_HITS",
+        "payload": {
+         "key": "k1",
+         "hits": [
+          {
+           "docId": "d",
+           "source": "https://x/d",
+           "kind": "page",
+           "page": 3,
+           "text": "second",
+           "score": 0.9
+          },
+          {
+           "docId": "d",
+           "source": "https://x/d",
+           "kind": "page",
+           "page": 3,
+           "text": "first",
+           "score": 0.7
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "GROUNDED_ASK"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "ask-searches-with-the-question-and-the-ask-k",
+   "steps": [
+    {
+     "event": "KB_ASK",
+     "payload": {
+      "key": "k1",
+      "question": "may a shop track?",
+      "kinds": [
+       "page",
+       "page"
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_DEQUEUE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": [
+       {
+        "op": "ask",
+        "key": "k1",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "may a shop track?",
+        "kinds": [
+         "page",
+         "page"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "state": "searching",
+      "emits": [
+       {
+        "event": "SEMANTIC_SEARCH",
+        "payload": {
+         "query": "may a shop track?",
+         "k": 6,
+         "floor": -1,
+         "graphIds": [
+          "knowledge-base"
+         ],
+         "nodeTypes": [
+          "page",
+          "page"
+         ],
+         "key": "kb-search-k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GROUNDED_ASK"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "ask-with-no-hits-refuses-without-calling-the-model",
+   "steps": [
+    {
+     "event": "SEMANTIC_RESULTS",
+     "payload": {
+      "hits": [],
+      "key": "kb-search-k1",
+      "query": "q"
+     },
+     "from": "searching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "ask",
+      "question": "q"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_ANSWERED",
+        "payload": {
+         "key": "k1",
+         "answer": "No passage in the knowledge base matches the question.",
+         "citations": [],
+         "refused": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "GROUNDED_ASK",
+       "KB_FETCH"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "ask-hands-the-fetched-passages-to-the-grounded-step",
+   "steps": [
+    {
+     "event": "KB_FETCHED",
+     "payload": {
+      "rows": [
+       {
+        "id": "d:p3#0",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "first"
+       },
+       {
+        "id": "d:p3#1",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "second"
+       }
+      ]
+     },
+     "from": "fetching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "ask",
+      "question": "may a shop track?",
+      "hits": [
+       {
+        "id": "d:p3#1",
+        "graphId": "knowledge-base",
+        "nodeId": "d:p3#1",
+        "nodeType": "page",
+        "name": "d:p3#1",
+        "score": 0.9
+       },
+       {
+        "id": "d:p3#0",
+        "graphId": "knowledge-base",
+        "nodeId": "d:p3#0",
+        "nodeType": "page",
+        "name": "d:p3#0",
+        "score": 0.7
+       }
+      ]
+     },
+     "expect": {
+      "state": "answering",
+      "emits": [
+       {
+        "event": "GROUNDED_ASK",
+        "payload": {
+         "question": "may a shop track?",
+         "passages": [
+          {
+           "id": "d:p3#1",
+           "text": "second"
+          },
+          {
+           "id": "d:p3#0",
+           "text": "first"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ANSWERED",
+       "KB_HITS"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "cited-passages-map-back-to-source-and-page",
+   "steps": [
+    {
+     "event": "GROUNDED_ANSWERED",
+     "payload": {
+      "answer": "Yes [d:p3#0].",
+      "citations": [
+       "d:p3#0"
+      ],
+      "unknownCitations": [],
+      "uncitedPassages": [
+       "d:p3#1"
+      ],
+      "refused": false
+     },
+     "from": "answering",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "ask",
+      "joined": [
+       {
+        "id": "d:p3#1",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "second",
+        "score": 0.9
+       },
+       {
+        "id": "d:p3#0",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "first",
+        "score": 0.7
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESET"
+       },
+       {
+        "event": "KB_ANSWERED",
+        "payload": {
+         "key": "k1",
+         "answer": "Yes [d:p3#0].",
+         "citations": [
+          {
+           "docId": "d",
+           "source": "https://x/d",
+           "page": 3,
+           "quote": "first"
+          }
+         ],
+         "refused": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-refusal-passes-through-with-no-citations",
+   "steps": [
+    {
+     "event": "GROUNDED_ANSWERED",
+     "payload": {
+      "answer": "I cannot answer this from the provided passages.",
+      "citations": [],
+      "unknownCitations": [],
+      "uncitedPassages": [
+       "d:p3#1",
+       "d:p3#0"
+      ],
+      "refused": true
+     },
+     "from": "answering",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "ask",
+      "joined": [
+       {
+        "id": "d:p3#1",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "second",
+        "score": 0.9
+       },
+       {
+        "id": "d:p3#0",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "first",
+        "score": 0.7
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_ANSWERED",
+        "payload": {
+         "key": "k1",
+         "answer": "I cannot answer this from the provided passages.",
+         "citations": [],
+         "refused": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-failed-grounded-answer-fails-the-ask-and-resets-the-step",
+   "steps": [
+    {
+     "event": "GROUNDED_FAILED",
+     "payload": {
+      "error": "7 passages supplied"
+     },
+     "from": "answering",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "ask",
+      "joined": [
+       {
+        "id": "d:p3#1",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "second",
+        "score": 0.9
+       },
+       {
+        "id": "d:p3#0",
+        "docId": "d",
+        "source": "https://x/d",
+        "kind": "page",
+        "page": 3,
+        "text": "first",
+        "score": 0.7
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RESET"
+       },
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "7 passages supplied"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_ANSWERED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-failed-search-fails-the-request",
+   "steps": [
+    {
+     "event": "SEMANTIC_FAILED",
+     "payload": {
+      "op": "search",
+      "message": "embed down",
+      "key": "kb-search-k1"
+     },
+     "from": "searching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "mode": "search"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "embed down"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_HITS"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-late-index-answer-while-idle-does-nothing",
+   "steps": [
+    {
+     "event": "SEMANTIC_INDEXED",
+     "payload": {
+      "ids": [],
+      "skipped": [],
+      "key": "kb-index-k1"
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [],
+      "neverEmits": [
+       "KB_ADDED",
+       "KB_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-rule-document-is-added-like-any-other",
+   "steps": [
+    {
+     "event": "KB_ADD",
+     "payload": {
+      "key": "k1",
+      "docId": "r1",
+      "source": "workspace://rules/r1",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 0,
+        "text": "escalate fires"
+       }
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_DEQUEUE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": [
+       {
+        "op": "add",
+        "key": "k1",
+        "docId": "r1",
+        "source": "workspace://rules/r1",
+        "kind": "page",
+        "sha256": "h1",
+        "pages": [
+         {
+          "page": 0,
+          "text": "escalate fires"
+         }
+        ],
+        "query": ""
+       }
+      ]
+     },
+     "expect": {
+      "state": "looking",
+      "emits": [
+       {
+        "event": "KB_LOOKUP",
+        "payload": {
+         "docId": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "list-asks-the-store-for-every-row-of-the-kinds",
+   "steps": [
+    {
+     "event": "KB_LIST",
+     "payload": {
+      "key": "k1",
+      "kinds": [
+       "page"
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_DEQUEUE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": [
+       {
+        "op": "list",
+        "key": "k1",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "",
+        "kinds": [
+         "page"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "state": "listing",
+      "emits": [
+       {
+        "event": "KB_LIST_ROWS",
+        "payload": {
+         "kinds": [
+          "page"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "SEMANTIC_SEARCH",
+       "KB_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "listed-rows-answer-the-list-in-the-store-order",
+   "steps": [
+    {
+     "event": "KB_LISTED_ROWS",
+     "payload": {
+      "rows": [
+       {
+        "id": "a:p0#0",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 0,
+        "text": "one"
+       },
+       {
+        "id": "a:p2#0",
+        "docId": "a",
+        "source": "s",
+        "kind": "page",
+        "page": 2,
+        "text": "two"
+       },
+       {
+        "id": "b:p0#0",
+        "docId": "b",
+        "source": "s",
+        "kind": "page",
+        "page": 0,
+        "text": "three"
+       }
+      ]
+     },
+     "from": "listing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "mode": "list"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_LISTED",
+        "payload": {
+         "key": "k1",
+         "chunks": [
+          {
+           "id": "a:p0#0",
+           "docId": "a",
+           "source": "s",
+           "kind": "page",
+           "page": 0,
+           "text": "one"
+          },
+          {
+           "id": "a:p2#0",
+           "docId": "a",
+           "source": "s",
+           "kind": "page",
+           "page": 2,
+           "text": "two"
+          },
+          {
+           "id": "b:p0#0",
+           "docId": "b",
+           "source": "s",
+           "kind": "page",
+           "page": 0,
+           "text": "three"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-list-that-is-too-big-fails-instead-of-answering-part",
+   "steps": [
+    {
+     "event": "KB_STORE_FAILED",
+     "payload": {
+      "error": "too many chunks: the asked kinds have 6000 chunk rows, over the cap of 5000"
+     },
+     "from": "listing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "mode": "list"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "too many chunks: the asked kinds have 6000 chunk rows, over the cap of 5000"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_LISTED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-timed-out-list-fails",
+   "steps": [
+    {
+     "event": "TIMEOUT",
+     "payload": {},
+     "from": "listing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "mode": "list"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "A step did not finish in time: listing"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_LISTED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-list-while-busy-waits-in-the-queue",
+   "steps": [
+    {
+     "event": "KB_LIST",
+     "payload": {
+      "key": "k2",
+      "kinds": [
+       "page"
+      ]
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "indexing",
+      "emits": [],
+      "neverEmits": [
+       "KB_FAILED",
+       "KB_LIST_ROWS"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "list",
+         "key": "k2",
+         "docId": "",
+         "source": "",
+         "kind": "page",
+         "sha256": "",
+         "pages": [],
+         "query": "",
+         "kinds": [
+          "page"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-list-while-listing-waits-in-the-queue",
+   "steps": [
+    {
+     "event": "KB_LIST",
+     "payload": {
+      "key": "k2",
+      "kinds": [
+       "page"
+      ]
+     },
+     "from": "listing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "mode": "list"
+     },
+     "expect": {
+      "state": "listing",
+      "emits": [],
+      "neverEmits": [
+       "KB_FAILED",
+       "KB_LIST_ROWS"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "list",
+         "key": "k2",
+         "docId": "",
+         "source": "",
+         "kind": "page",
+         "sha256": "",
+         "pages": [],
+         "query": "",
+         "kinds": [
+          "page"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-remove-while-busy-waits-in-the-queue",
+   "steps": [
+    {
+     "event": "KB_REMOVE",
+     "payload": {
+      "key": "k2",
+      "docId": "r1"
+     },
+     "from": "searching",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1"
+     },
+     "expect": {
+      "state": "searching",
+      "emits": [],
+      "neverEmits": [
+       "KB_CLEAR",
+       "KB_FAILED",
+       "KB_LOOKUP"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "remove",
+         "key": "k2",
+         "docId": "r1",
+         "source": "",
+         "kind": "page",
+         "sha256": "",
+         "pages": [],
+         "query": ""
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "an-add-while-removing-waits-in-the-queue",
+   "steps": [
+    {
+     "event": "KB_ADD",
+     "payload": {
+      "key": "k2",
+      "docId": "d2",
+      "source": "s",
+      "kind": "page",
+      "sha256": "h",
+      "pages": []
+     },
+     "from": "removeClearing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "r1",
+      "mode": "remove",
+      "removed": 2
+     },
+     "expect": {
+      "state": "removeClearing",
+      "emits": [],
+      "neverEmits": [
+       "KB_FAILED",
+       "KB_LOOKUP"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "add",
+         "key": "k2",
+         "docId": "d2",
+         "source": "s",
+         "kind": "page",
+         "sha256": "h",
+         "pages": [],
+         "query": ""
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "remove-looks-the-document-up",
+   "steps": [
+    {
+     "event": "KB_REMOVE",
+     "payload": {
+      "key": "k1",
+      "docId": "r1"
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_LOOKUP",
+        "payload": {
+         "docId": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_CLEAR",
+       "KB_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "KbStore"
+   ]
+  },
+  {
+   "id": "remove-deletes-the-rows-the-document-has",
+   "steps": [
+    {
+     "event": "KB_LOOKED_UP",
+     "payload": {
+      "rows": [
+       {
+        "id": "r1:p0#0",
+        "sha256": "h1"
+       },
+       {
+        "id": "r1:p0#1",
+        "sha256": "h1"
+       }
+      ]
+     },
+     "from": "removeLooking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "r1",
+      "mode": "remove"
+     },
+     "expect": {
+      "state": "removeClearing",
+      "emits": [
+       {
+        "event": "KB_CLEAR",
+        "payload": {
+         "ids": [
+          "r1:p0#0",
+          "r1:p0#1"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_REMOVED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "cleared-rows-answer-how-many-were-removed",
+   "steps": [
+    {
+     "event": "KB_CLEARED",
+     "payload": {},
+     "from": "removeClearing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "r1",
+      "mode": "remove",
+      "removed": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_REMOVED",
+        "payload": {
+         "key": "k1",
+         "docId": "r1",
+         "chunks": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "removing-a-missing-document-answers-zero",
+   "steps": [
+    {
+     "event": "KB_LOOKED_UP",
+     "payload": {
+      "rows": []
+     },
+     "from": "removeLooking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "gone",
+      "mode": "remove"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_REMOVED",
+        "payload": {
+         "key": "k1",
+         "docId": "gone",
+         "chunks": 0
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_CLEAR",
+       "KB_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-failed-remove-lookup-fails-the-request",
+   "steps": [
+    {
+     "event": "KB_STORE_FAILED",
+     "payload": {
+      "error": "disk"
+     },
+     "from": "removeLooking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "r1",
+      "mode": "remove"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "disk"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_REMOVED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-failed-remove-clear-fails-the-request",
+   "steps": [
+    {
+     "event": "KB_STORE_FAILED",
+     "payload": {
+      "error": "disk"
+     },
+     "from": "removeClearing",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "r1",
+      "mode": "remove",
+      "removed": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "disk"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_REMOVED"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "each-store-ask-carries-a-new-request-number-so-a-remove-then-add-of-one-document-is-not-collapsed",
+   "steps": [
+    {
+     "event": "KB_ADD",
+     "payload": {
+      "key": "k1",
+      "docId": "d",
+      "source": "s",
+      "kind": "page",
+      "sha256": "h1",
+      "pages": [
+       {
+        "page": 1,
+        "text": "R1: x"
+       }
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "askNo": 4
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_DEQUEUE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "askNo": 4,
+      "queue": [
+       {
+        "op": "add",
+        "key": "k1",
+        "docId": "d",
+        "source": "s",
+        "kind": "page",
+        "sha256": "h1",
+        "pages": [
+         {
+          "page": 1,
+          "text": "R1: x"
+         }
+        ],
+        "query": ""
+       }
+      ]
+     },
+     "expect": {
+      "state": "looking",
+      "emits": [
+       {
+        "event": "KB_LOOKUP",
+        "payload": {
+         "req": 5,
+         "docId": "d"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-that-ends-starts-the-next-queued-one",
+   "config": {},
+   "steps": [
+    {
+     "event": "KB_LOOKED_UP",
+     "payload": {
+      "rows": [
+       {
+        "id": "d:p1#0",
+        "sha256": "h1"
+       }
+      ]
+     },
+     "from": "looking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "queue": [
+       {
+        "op": "search",
+        "key": "k2",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "cookies",
+        "k": null,
+        "kinds": null
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "KB_ADDED",
+        "payload": {
+         "key": "k1",
+         "docId": "d",
+         "chunks": 0
+        }
+       },
+       {
+        "event": "KB_DEQUEUE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-oldest-queued-request-starts-first-and-the-rest-keep-their-order",
+   "config": {},
+   "steps": [
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": [
+       {
+        "op": "search",
+        "key": "k2",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "cookies",
+        "k": null,
+        "kinds": null
+       },
+       {
+        "op": "list",
+        "key": "k3",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "",
+        "kinds": [
+         "page"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "state": "searching",
+      "emits": [
+       {
+        "event": "SEMANTIC_SEARCH",
+        "payload": {
+         "query": "cookies",
+         "k": 5,
+         "graphIds": [
+          "knowledge-base"
+         ],
+         "key": "kb-search-k2"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KB_LIST_ROWS"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "list",
+         "key": "k3",
+         "docId": "",
+         "source": "",
+         "kind": "page",
+         "sha256": "",
+         "pages": [],
+         "query": "",
+         "kinds": [
+          "page"
+         ]
+        }
+       ],
+       "key": "k2",
+       "mode": "search"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-queued-list-starts-with-its-kinds",
+   "config": {},
+   "steps": [
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": [
+       {
+        "op": "list",
+        "key": "k3",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "",
+        "kinds": [
+         "page"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "state": "listing",
+      "emits": [
+       {
+        "event": "KB_LIST_ROWS",
+        "payload": {
+         "kinds": [
+          "page"
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "queue": [],
+       "key": "k3"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-empty-queue-starts-nothing",
+   "config": {},
+   "steps": [
+    {
+     "event": "KB_DEQUEUE",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "r",
+      "queue": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [],
+      "neverEmits": [
+       "SEMANTIC_SEARCH",
+       "KB_LIST_ROWS",
+       "KB_LOOKUP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-request-while-busy-is-never-refused",
+   "config": {},
+   "steps": [
+    {
+     "event": "KB_LIST",
+     "payload": {
+      "key": "k3",
+      "kinds": [
+       "page"
+      ]
+     },
+     "from": "looking",
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "docId": "d",
+      "source": "https://x/d",
+      "kind": "page",
+      "sha256": "h1",
+      "queue": [
+       {
+        "op": "search",
+        "key": "k2",
+        "docId": "",
+        "source": "",
+        "kind": "page",
+        "sha256": "",
+        "pages": [],
+        "query": "cookies",
+        "k": null,
+        "kinds": null
+       }
+      ]
+     },
+     "expect": {
+      "state": "looking",
+      "emits": [],
+      "neverEmits": [
+       "KB_FAILED"
+      ],
+      "entity": {
+       "queue": [
+        {
+         "op": "search",
+         "key": "k2",
+         "docId": "",
+         "source": "",
+         "kind": "page",
+         "sha256": "",
+         "pages": [],
+         "query": "cookies",
+         "k": null,
+         "kinds": null
+        },
+        {
+         "op": "list",
+         "key": "k3",
+         "docId": "",
+         "source": "",
+         "kind": "page",
+         "sha256": "",
+         "pages": [],
+         "query": "",
+         "kinds": [
+          "page"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

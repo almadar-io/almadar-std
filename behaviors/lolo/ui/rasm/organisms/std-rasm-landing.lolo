@@ -1,0 +1,974 @@
+app std-rasm-landing [
+  version: "0.1.0",
+  description: "std-rasm-landing — a one-page landing on one Rasm canvas that scrolls inside itself (std-rasm-surface pageScroll): a fixed top bar with the brand and a call to action, then sections in the order the `sections` knob lists them, each placed only when listed: hero (eyebrow, display headline, lede, two calls to action), pillars (three cards), rows (a title, a lede and the `rowsSlot` region a composing program fills with its own rows), story, a call-to-action card and a footer. An emblem (std-rasm-morph) stays beside the content and changes shape as each section reaches it; the hero lifts away and the story arrives as the page scrolls (std-rasm-scrub), and the pillars, rows and call to action enter as the reader reaches them (std-rasm-presence onView). Every word is a message key a composing program overrides, the look is a std-rasm-theme preset (`preset`), and a press leaves as LANDING_BAR_PRESSED, LANDING_PRIMARY_PRESSED, LANDING_SECONDARY_PRESSED or LANDING_CTA_PRESSED, navigating as well when its link knob is on.",
+  locales: [en, ar, sl]
+]
+
+type RasmChild = { id : string!, size : "fixed" | "fill" | "measure"!, main : number, cross : number, min : number }
+type RasmMorphStop = { anchor : string!, d : string! }
+
+uses ThemeAtom from "std/behaviors/std-rasm-theme"
+uses SurfaceAtom from "std/behaviors/std-rasm-surface"
+uses StackAtom from "std/behaviors/std-rasm-stack"
+uses TextAtom from "std/behaviors/std-rasm-text"
+uses PressAtom from "std/behaviors/std-rasm-pressable"
+uses FocusAtom from "std/behaviors/std-rasm-focus"
+uses PresenceAtom from "std/behaviors/std-rasm-presence"
+uses ScrubAtom from "std/behaviors/std-rasm-scrub"
+uses MorphAtom from "std/behaviors/std-rasm-morph"
+
+orbital RasmLanding {
+  entity RasmLandingView [runtime] {
+    id : string!
+  }
+
+  trait Theme = ThemeAtom.traits.RasmTheme {
+    config {
+      preset: @config.preset
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+    }
+  }
+
+  trait Surface = SurfaceAtom.traits.RasmSurface {
+    config {
+      id: "rasm"
+      width: 1280
+      height: 800
+      rootChild: "page"
+      rootRect: { x: 0, y: 0, w: 1280, h: 800 }
+      fill: true
+      pageScroll: true
+      fixed: ["bar", "barBrand", "barCta", "emblem"]
+      scrollReportMs: 120
+      margin: 0
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      Page.RASM_EXTENT -> RASM_EXTENT
+      Page.RASM_PAINT -> RASM_PAINT
+      Bar.RASM_PAINT -> RASM_PAINT
+      Hero.RASM_PAINT -> RASM_PAINT
+      HeroBody.RASM_PAINT -> RASM_PAINT
+      HeroBtns.RASM_PAINT -> RASM_PAINT
+      Pillars.RASM_PAINT -> RASM_PAINT
+      PillarsBody.RASM_PAINT -> RASM_PAINT
+      PillarRow.RASM_PAINT -> RASM_PAINT
+      P1.RASM_PAINT -> RASM_PAINT
+      P2.RASM_PAINT -> RASM_PAINT
+      P3.RASM_PAINT -> RASM_PAINT
+      Rows.RASM_PAINT -> RASM_PAINT
+      RowsBody.RASM_PAINT -> RASM_PAINT
+      Story.RASM_PAINT -> RASM_PAINT
+      StoryBody.RASM_PAINT -> RASM_PAINT
+      Cta.RASM_PAINT -> RASM_PAINT
+      CtaBody.RASM_PAINT -> RASM_PAINT
+      CtaCard.RASM_PAINT -> RASM_PAINT
+      Footer.RASM_PAINT -> RASM_PAINT
+      BarBrand.RASM_PAINT -> RASM_PAINT
+      Eyebrow.RASM_PAINT -> RASM_PAINT
+      Display.RASM_PAINT -> RASM_PAINT
+      Lede.RASM_PAINT -> RASM_PAINT
+      PillarsTitle.RASM_PAINT -> RASM_PAINT
+      P1Title.RASM_PAINT -> RASM_PAINT
+      P1Body.RASM_PAINT -> RASM_PAINT
+      P2Title.RASM_PAINT -> RASM_PAINT
+      P2Body.RASM_PAINT -> RASM_PAINT
+      P3Title.RASM_PAINT -> RASM_PAINT
+      P3Body.RASM_PAINT -> RASM_PAINT
+      RowsTitle.RASM_PAINT -> RASM_PAINT
+      RowsLede.RASM_PAINT -> RASM_PAINT
+      StoryTitle.RASM_PAINT -> RASM_PAINT
+      StoryText.RASM_PAINT -> RASM_PAINT
+      CtaTitle.RASM_PAINT -> RASM_PAINT
+      CtaText.RASM_PAINT -> RASM_PAINT
+      FootBrand.RASM_PAINT -> RASM_PAINT
+      FootNote.RASM_PAINT -> RASM_PAINT
+      BarCta.RASM_PAINT -> RASM_PAINT
+      HeroPrimary.RASM_PAINT -> RASM_PAINT
+      HeroSecondary.RASM_PAINT -> RASM_PAINT
+      CtaBtn.RASM_PAINT -> RASM_PAINT
+      Emblem.RASM_PAINT -> RASM_PAINT
+      HeroLift.RASM_SCRUB -> RASM_SCRUB
+      StoryArrive.RASM_SCRUB -> RASM_SCRUB
+    }
+  }
+
+  trait Focus = FocusAtom.traits.RasmFocus {
+    config {
+      order: ["barCta", "heroPrimary", "heroSecondary", "ctaBtn"]
+    }
+    listens {
+      Surface.RASM_KEY -> RASM_KEY
+      Surface.RASM_ACCESS -> RASM_ACCESS
+      Surface.RASM_POINTER -> RASM_POINTER
+    }
+  }
+
+  trait Page = StackAtom.traits.RasmStack {
+    config {
+      id: "page"
+      axis: vertical
+      gap: 0
+      padding: 0
+      look: ""
+      z: 1
+      children: @config.sections
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Surface.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Bar.RASM_EXTENT -> RASM_EXTENT
+      Hero.RASM_EXTENT -> RASM_EXTENT
+      Pillars.RASM_EXTENT -> RASM_EXTENT
+      Rows.RASM_EXTENT -> RASM_EXTENT
+      Story.RASM_EXTENT -> RASM_EXTENT
+      Cta.RASM_EXTENT -> RASM_EXTENT
+      Footer.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Bar = StackAtom.traits.RasmStack {
+    config {
+      id: "bar"
+      axis: horizontal
+      gap: 16
+      padding: 14
+      look: "stack/panel/idle"
+      z: 6
+      children: [{ id: "barBrand", size: "fill" }, { id: "barCta", size: "fixed", main: 180 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Hero = StackAtom.traits.RasmStack {
+    config {
+      id: "hero"
+      axis: horizontal
+      gap: 0
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "heroBody", size: "fill" }, { id: "emblem", size: "fixed", main: 440 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      HeroBody.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait HeroBody = StackAtom.traits.RasmStack {
+    config {
+      id: "heroBody"
+      axis: vertical
+      gap: 18
+      padding: 64
+      look: ""
+      z: 1
+      children: [{ id: "eyebrow", size: "measure" }, { id: "display", size: "measure" }, { id: "lede", size: "measure" }, { id: "heroBtns", size: "fixed", main: 52 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Hero.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      HeroBtns.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait HeroBtns = StackAtom.traits.RasmStack {
+    config {
+      id: "heroBtns"
+      axis: horizontal
+      gap: 12
+      padding: 0
+      look: ""
+      z: 2
+      children: [{ id: "heroPrimary", size: "fill" }, { id: "heroSecondary", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      HeroBody.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Pillars = StackAtom.traits.RasmStack {
+    config {
+      id: "pillars"
+      axis: horizontal
+      gap: 0
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "pillarsBody", size: "fill" }, { id: "pillarsGut", size: "fixed", main: 440 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      PillarsBody.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait PillarsBody = StackAtom.traits.RasmStack {
+    config {
+      id: "pillarsBody"
+      axis: vertical
+      gap: 18
+      padding: 64
+      look: ""
+      z: 1
+      children: [{ id: "pillarsTitle", size: "measure" }, { id: "pillarRow", size: "fixed", main: 240 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Pillars.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      PillarRow.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait PillarRow = StackAtom.traits.RasmStack {
+    config {
+      id: "pillarRow"
+      axis: horizontal
+      gap: 18
+      padding: 0
+      look: ""
+      z: 2
+      children: [{ id: "p1", size: "fill" }, { id: "p2", size: "fill" }, { id: "p3", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      PillarsBody.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      P1.RASM_EXTENT -> RASM_EXTENT
+      P2.RASM_EXTENT -> RASM_EXTENT
+      P3.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P1 = StackAtom.traits.RasmStack {
+    config {
+      id: "p1"
+      axis: vertical
+      gap: 10
+      padding: 24
+      look: "stack/card/idle"
+      z: 2
+      children: [{ id: "p1Title", size: "measure" }, { id: "p1Body", size: "measure" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      PillarRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P2 = StackAtom.traits.RasmStack {
+    config {
+      id: "p2"
+      axis: vertical
+      gap: 10
+      padding: 24
+      look: "stack/card/idle"
+      z: 2
+      children: [{ id: "p2Title", size: "measure" }, { id: "p2Body", size: "measure" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      PillarRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P3 = StackAtom.traits.RasmStack {
+    config {
+      id: "p3"
+      axis: vertical
+      gap: 10
+      padding: 24
+      look: "stack/card/idle"
+      z: 2
+      children: [{ id: "p3Title", size: "measure" }, { id: "p3Body", size: "measure" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      PillarRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Rows = StackAtom.traits.RasmStack {
+    config {
+      id: "rows"
+      axis: horizontal
+      gap: 0
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "rowsBody", size: "fill" }, { id: "rowsGut", size: "fixed", main: 440 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      RowsBody.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait RowsBody = StackAtom.traits.RasmStack {
+    config {
+      id: "rowsBody"
+      axis: vertical
+      gap: 18
+      padding: 64
+      look: ""
+      z: 1
+      children: [{ id: "rowsTitle", size: "measure" }, { id: "rowsLede", size: "measure" }, { id: "rowsSlot", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Rows.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Story = StackAtom.traits.RasmStack {
+    config {
+      id: "story"
+      axis: horizontal
+      gap: 0
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "storyBody", size: "fill" }, { id: "storyGut", size: "fixed", main: 440 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      StoryBody.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait StoryBody = StackAtom.traits.RasmStack {
+    config {
+      id: "storyBody"
+      axis: vertical
+      gap: 18
+      padding: 64
+      look: ""
+      z: 1
+      children: [{ id: "storyTitle", size: "measure" }, { id: "storyText", size: "measure" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Story.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Cta = StackAtom.traits.RasmStack {
+    config {
+      id: "cta"
+      axis: horizontal
+      gap: 0
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "ctaBody", size: "fill" }, { id: "ctaGut", size: "fixed", main: 440 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      CtaBody.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait CtaBody = StackAtom.traits.RasmStack {
+    config {
+      id: "ctaBody"
+      axis: vertical
+      gap: 18
+      padding: 64
+      look: ""
+      z: 1
+      children: [{ id: "ctaCard", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Cta.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      CtaCard.RASM_EXTENT -> RASM_EXTENT
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait CtaCard = StackAtom.traits.RasmStack {
+    config {
+      id: "ctaCard"
+      axis: vertical
+      gap: 16
+      padding: 36
+      look: "stack/card/idle"
+      z: 2
+      children: [{ id: "ctaTitle", size: "measure" }, { id: "ctaText", size: "measure" }, { id: "ctaBtn", size: "fixed", main: 52 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      CtaBody.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Footer = StackAtom.traits.RasmStack {
+    config {
+      id: "footer"
+      axis: horizontal
+      gap: 16
+      padding: 32
+      look: ""
+      z: 1
+      children: [{ id: "footBrand", size: "fill" }, { id: "footNote", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait BarBrand = TextAtom.traits.RasmText {
+    config {
+      id: "barBrand"
+      text: "brand"
+      intent: "eyebrow"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Bar.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Eyebrow = TextAtom.traits.RasmText {
+    config {
+      id: "eyebrow"
+      text: "hero.eyebrow"
+      intent: "eyebrow"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      HeroBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Display = TextAtom.traits.RasmText {
+    config {
+      id: "display"
+      text: "hero.headline"
+      intent: "display"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      HeroBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait Lede = TextAtom.traits.RasmText {
+    config {
+      id: "lede"
+      text: "hero.lede"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      HeroBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait PillarsTitle = TextAtom.traits.RasmText {
+    config {
+      id: "pillarsTitle"
+      text: "pillars.title"
+      intent: "title"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      PillarsBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P1Title = TextAtom.traits.RasmText {
+    config {
+      id: "p1Title"
+      text: "pillar1.title"
+      intent: "title"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      P1.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P1Body = TextAtom.traits.RasmText {
+    config {
+      id: "p1Body"
+      text: "pillar1.body"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      P1.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P2Title = TextAtom.traits.RasmText {
+    config {
+      id: "p2Title"
+      text: "pillar2.title"
+      intent: "title"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      P2.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P2Body = TextAtom.traits.RasmText {
+    config {
+      id: "p2Body"
+      text: "pillar2.body"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      P2.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P3Title = TextAtom.traits.RasmText {
+    config {
+      id: "p3Title"
+      text: "pillar3.title"
+      intent: "title"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      P3.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait P3Body = TextAtom.traits.RasmText {
+    config {
+      id: "p3Body"
+      text: "pillar3.body"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      P3.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait RowsTitle = TextAtom.traits.RasmText {
+    config {
+      id: "rowsTitle"
+      text: "rows.title"
+      intent: "title"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      RowsBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait RowsLede = TextAtom.traits.RasmText {
+    config {
+      id: "rowsLede"
+      text: "rows.lede"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      RowsBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait StoryTitle = TextAtom.traits.RasmText {
+    config {
+      id: "storyTitle"
+      text: "story.title"
+      intent: "display"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      StoryBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait StoryText = TextAtom.traits.RasmText {
+    config {
+      id: "storyText"
+      text: "story.text"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      StoryBody.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait CtaTitle = TextAtom.traits.RasmText {
+    config {
+      id: "ctaTitle"
+      text: "cta.title"
+      intent: "title"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      CtaCard.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait CtaText = TextAtom.traits.RasmText {
+    config {
+      id: "ctaText"
+      text: "cta.text"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      CtaCard.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait FootBrand = TextAtom.traits.RasmText {
+    config {
+      id: "footBrand"
+      text: "brand"
+      intent: "eyebrow"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Footer.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait FootNote = TextAtom.traits.RasmText {
+    config {
+      id: "footNote"
+      text: "footer.note"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Footer.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait BarCta = PressAtom.traits.RasmPressable {
+    config {
+      id: "barCta"
+      label: "bar.cta"
+      intent: "primary"
+      action: LANDING_BAR_PRESSED
+      link: @config.barLink
+      href: @config.barHref
+      order: 1
+      z: 4
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Theme.RASM_THEME -> RASM_THEME
+      Bar.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
+  trait HeroPrimary = PressAtom.traits.RasmPressable {
+    config {
+      id: "heroPrimary"
+      label: "hero.primary"
+      intent: "primary"
+      action: LANDING_PRIMARY_PRESSED
+      link: @config.primaryLink
+      href: @config.primaryHref
+      order: 2
+      z: 4
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Theme.RASM_THEME -> RASM_THEME
+      HeroBtns.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
+  trait HeroSecondary = PressAtom.traits.RasmPressable {
+    config {
+      id: "heroSecondary"
+      label: "hero.secondary"
+      intent: "secondary"
+      action: LANDING_SECONDARY_PRESSED
+      link: @config.secondaryLink
+      href: @config.secondaryHref
+      order: 3
+      z: 4
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Theme.RASM_THEME -> RASM_THEME
+      HeroBtns.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
+  trait CtaBtn = PressAtom.traits.RasmPressable {
+    config {
+      id: "ctaBtn"
+      label: "cta.label"
+      intent: "primary"
+      action: LANDING_CTA_PRESSED
+      link: @config.ctaLink
+      href: @config.ctaHref
+      order: 4
+      z: 4
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Theme.RASM_THEME -> RASM_THEME
+      CtaCard.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
+  trait Emblem = MorphAtom.traits.RasmMorph {
+    config {
+      id: "emblem"
+      z: 2
+      box: 100
+      focus: 0.45
+      stops: @config.emblemStops
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Hero.RASM_PLACE -> RASM_PLACE
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_RESIZE -> RASM_RESIZE
+    }
+  }
+
+  trait HeroLift = ScrubAtom.traits.RasmScrub {
+    config {
+      id: "heroLift"
+      anchor: "hero"
+      paints: ["eyebrow", "display", "lede", "heroPrimary", "heroSecondary"]
+      enter: 0
+      exit: 0
+      keyframes: [{ at: 0, opacity: 1, offsetY: 0 }, { at: 0.35, opacity: 1, offsetY: 0 }, { at: 1, opacity: 0, offsetY: -80 }]
+    }
+    listens {
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_RESIZE -> RASM_RESIZE
+    }
+  }
+
+  trait StoryArrive = ScrubAtom.traits.RasmScrub {
+    config {
+      id: "storyArrive"
+      anchor: "story"
+      paints: ["storyTitle", "storyText"]
+      enter: 1
+      exit: 0
+      keyframes: [{ at: 0, opacity: 0, offsetY: 60, scale: 0.96 }, { at: 0.4, opacity: 1, offsetY: 0, scale: 1 }, { at: 0.8, opacity: 1, offsetY: 0 }, { at: 1, opacity: 0.25, offsetY: -30 }]
+    }
+    listens {
+      Page.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_RESIZE -> RASM_RESIZE
+    }
+  }
+
+  trait Enter = PresenceAtom.traits.RasmPresence {
+    config {
+      order: ["bar", "barBrand", "barCta", "eyebrow", "display", "lede", "heroPrimary", "heroSecondary"]
+      staggerMs: 60
+      onView: [{ anchor: "pillars", order: ["pillarsTitle", "p1", "p1Title", "p1Body", "p2", "p2Title", "p2Body", "p3", "p3Title", "p3Body"] }, { anchor: "rows", order: ["rowsTitle", "rowsLede"] }, { anchor: "cta", order: ["ctaCard", "ctaTitle", "ctaText", "ctaBtn"] }]
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      Page.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
+  config {
+    preset : string = "hearth"
+      @label "Theme"
+      @description "The std-rasm-theme preset the page wears, one of its family presets for a landing."
+      @tier "presentation"
+    sections : [RasmChild] = [{ id: "bar", size: "fixed", main: 72 }, { id: "hero", size: "fixed", main: 640 }, { id: "pillars", size: "fixed", main: 520 }, { id: "rows", size: "fixed", main: 720 }, { id: "story", size: "fixed", main: 560 }, { id: "cta", size: "fixed", main: 440 }, { id: "footer", size: "fixed", main: 120 }]
+      @label "Sections"
+      @description "The page from the top, as the root stack's children: bar first, then any of hero, pillars, rows, story, cta and footer in the order and heights wanted; a section left out is never placed or painted."
+      @tier "presentation"
+    emblemStops : [RasmMorphStop] = [{ anchor: "hero", d: "M50 6 L94 50 L50 94 L6 50 Z" }, { anchor: "pillars", d: "M50 4 L61 39 L96 39 L68 61 L79 96 L50 74 L21 96 L32 61 L4 39 L39 39 Z" }, { anchor: "rows", d: "M10 10 L90 10 L90 90 L10 90 Z" }, { anchor: "story", d: "M50 4 C76 4 96 24 96 50 C96 76 76 96 50 96 C24 96 4 76 4 50 C4 24 24 4 50 4 Z" }, { anchor: "cta", d: "M50 6 L94 50 L50 94 L6 50 Z" }]
+      @label "Emblem stops"
+      @description "The emblem's outline per section, in page order, each an SVG path in a 100-unit square with one subpath; the emblem blends between them as the page scrolls."
+      @tier "presentation"
+    barLink : boolean = false
+      @label "Bar action is a link"
+      @description "On, the bar's action navigates to barHref."
+      @tier "presentation"
+    barHref : string = "/"
+      @label "Bar action address"
+      @description "Where the bar's action navigates."
+      @tier "presentation"
+    primaryLink : boolean = false
+      @label "Primary action is a link"
+      @description "On, the primary action navigates to primaryHref."
+      @tier "presentation"
+    primaryHref : string = "/"
+      @label "Primary action address"
+      @description "Where the primary action navigates."
+      @tier "presentation"
+    secondaryLink : boolean = false
+      @label "Secondary action is a link"
+      @description "On, the secondary action navigates to secondaryHref."
+      @tier "presentation"
+    secondaryHref : string = "/"
+      @label "Secondary action address"
+      @description "Where the secondary action navigates."
+      @tier "presentation"
+    ctaLink : boolean = false
+      @label "Call to action is a link"
+      @description "On, the call to action navigates to ctaHref."
+      @tier "presentation"
+    ctaHref : string = "/"
+      @label "Call to action address"
+      @description "Where the call to action navigates."
+      @tier "presentation"
+  }
+
+  page "/landing" as RasmLandingPage -> Theme, Surface, Focus, Page, Bar, Hero, HeroBody, HeroBtns, Pillars, PillarsBody, PillarRow, P1, P2, P3, Rows, RowsBody, Story, StoryBody, Cta, CtaBody, CtaCard, Footer, BarBrand, Eyebrow, Display, Lede, PillarsTitle, P1Title, P1Body, P2Title, P2Body, P3Title, P3Body, RowsTitle, RowsLede, StoryTitle, StoryText, CtaTitle, CtaText, FootBrand, FootNote, BarCta, HeroPrimary, HeroSecondary, CtaBtn, Emblem, HeroLift, StoryArrive, Enter
+}

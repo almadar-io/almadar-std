@@ -1,0 +1,188 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-morph.lolo",
+ "trait": "RasmMorph",
+ "cases": [
+  {
+   "id": "the-outline-morphs-through-its-stops-at-the-scroll-where-each-anchor-meets-the-focus-line",
+   "config": {
+    "id": "hero",
+    "box": 100,
+    "focus": 0.5,
+    "stops": [
+     {
+      "anchor": "s1",
+      "d": "M0 0 L100 0 L100 100 L0 100 Z"
+     },
+     {
+      "anchor": "s2",
+      "d": "M50 0 L100 100 L50 100 L0 100 Z"
+     },
+     {
+      "anchor": "s3",
+      "d": "M0 0 L100 0 L100 100 L0 100 Z"
+     }
+    ]
+   },
+   "entity": {
+    "id": "m",
+    "viewH": 400,
+    "looks": {
+     "morph/default/idle": {
+      "fill": "#ff0000"
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "hero",
+        "rect": {
+         "x": 10,
+         "y": 20,
+         "w": 200,
+         "h": 200
+        }
+       },
+       {
+        "id": "s1",
+        "rect": {
+         "x": 0,
+         "y": 200,
+         "w": 400,
+         "h": 400
+        }
+       },
+       {
+        "id": "s2",
+        "rect": {
+         "x": 0,
+         "y": 600,
+         "w": 400,
+         "h": 400
+        }
+       },
+       {
+        "id": "s3",
+        "rect": {
+         "x": 0,
+         "y": 1400,
+         "w": 400,
+         "h": 400
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MORPH_PAINT"
+       },
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "hero",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "hero",
+           "shape": "path",
+           "position": {
+            "x": 10,
+            "y": 20,
+            "z": 0
+           },
+           "d": "M0 0 L100 0 L100 100 L0 100 Z",
+           "scale": 2,
+           "fill": "#ff0000",
+           "hit": false,
+           "animation": {
+            "clock": "scroll",
+            "from": 0,
+            "to": 1200,
+            "keyframes": [
+             {
+              "at": 0,
+              "d": "M0 0 L100 0 L100 100 L0 100 Z"
+             },
+             {
+              "at": 0.3333333333333333,
+              "d": "M50 0 L100 100 L50 100 L0 100 Z"
+             },
+             {
+              "at": 1,
+              "d": "M0 0 L100 0 L100 100 L0 100 Z"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-nothing-is-painted-until-every-anchor-is-placed",
+   "config": {
+    "id": "hero",
+    "stops": [
+     {
+      "anchor": "s1",
+      "d": "M0 0 L100 0 L100 100 L0 100 Z"
+     },
+     {
+      "anchor": "s2",
+      "d": "M50 0 L100 100 L50 100 L0 100 Z"
+     }
+    ]
+   },
+   "entity": {
+    "id": "m",
+    "viewH": 400
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "hero",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "s1",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

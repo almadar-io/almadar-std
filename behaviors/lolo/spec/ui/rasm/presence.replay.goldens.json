@@ -74,6 +74,145 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-on-view-group-enters-once-when-its-anchor-scrolls-past-the-view-line",
+   "config": {
+    "order": [],
+    "staggerMs": 40,
+    "viewAt": 0.85,
+    "onView": [
+     {
+      "anchor": "s2",
+      "order": [
+       "a",
+       "b"
+      ]
+     }
+    ]
+   },
+   "entity": {
+    "id": "p",
+    "viewH": 800,
+    "anchors": {
+     "s2": {
+      "x": 0,
+      "y": 1200,
+      "w": 400,
+      "h": 600
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PAGE_SCROLLED",
+     "payload": {
+      "offset": 100,
+      "max": 2000
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_ENTER"
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_PAGE_SCROLLED",
+     "payload": {
+      "offset": 600,
+      "max": 2000
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "played": [
+        "s2"
+       ]
+      },
+      "emits": [
+       {
+        "event": "RASM_ENTER",
+        "payload": {
+         "order": [
+          "a",
+          "b"
+         ],
+         "staggerMs": 40
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_PAGE_SCROLLED",
+     "payload": {
+      "offset": 700,
+      "max": 2000
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_ENTER"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-on-view-group-already-in-view-enters-when-its-anchor-is-placed",
+   "config": {
+    "order": [],
+    "staggerMs": 40,
+    "onView": [
+     {
+      "anchor": "s1",
+      "order": [
+       "h"
+      ]
+     }
+    ]
+   },
+   "entity": {
+    "id": "p",
+    "viewH": 800
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "s1",
+        "rect": {
+         "x": 0,
+         "y": 100,
+         "w": 400,
+         "h": 600
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_ENTER",
+        "payload": {
+         "order": [
+          "h"
+         ],
+         "staggerMs": 40
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }
