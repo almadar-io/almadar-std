@@ -169,7 +169,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/mapValues': {
     module: 'object',
     category: 'std-object',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Transform all values',
@@ -186,7 +186,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/mapKeys': {
     module: 'object',
     category: 'std-object',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Transform all keys.',
@@ -203,7 +203,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/filter': {
     module: 'object',
     category: 'std-object',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Filter entries by predicate',

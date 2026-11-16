@@ -30,7 +30,7 @@ export const XML_OPERATORS: Record<string, StdOperatorMeta> = {
   'xml/parse': {
     module: 'xml',
     category: 'std-codec',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 3,
     description: 'Parse XML text into a value of the declared shape (the second argument names a type): namespaces are ignored by local name, an attribute is the field "@name" (declare it in the shape as a quoted field, \`{ "@href" : string }\`, and read it with \`(object/get @x (quote "@href"))\`), a repeated child element is a list (a field the shape declares as a list is one even with a single child), an element with no attributes or children is its text (whitespace collapsed, trimmed), other elements are objects with "#text" for their own text; malformed XML is an evaluation error, a null input is null',

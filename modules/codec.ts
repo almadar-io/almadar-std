@@ -127,7 +127,7 @@ export const HASH_OPERATORS: Record<string, StdOperatorMeta> = {
   'hash/md5-credential': {
     module: 'hash',
     category: 'std-codec',
-    evaluation: 'form',
+    evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
     description: 'MD5 (RFC 1321) of a credential\'s value followed by a UTF-8 suffix, as lower-case hex or standard base64: the first step of a challenge login that hashes the password with the user name, whose password never becomes a program value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel',
@@ -146,7 +146,7 @@ export const CREDENTIAL_VALUE_OPERATORS: Record<string, StdOperatorMeta> = {
   'credential/byte-length': {
     module: 'credential',
     category: 'std-codec',
-    evaluation: 'form',
+    evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
     description: 'The length in UTF-8 bytes of a credential\'s value, or of the value after the encode (base64, uri or form, as an os/send segment encode) when one is given, so a program can frame a wire message around a credential segment the host fills in (an os/send segment) without ever holding the value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel',
@@ -164,7 +164,7 @@ export const HMAC_OPERATORS: Record<string, StdOperatorMeta> = {
   'hmac/sha': {
     module: 'hmac',
     category: 'std-codec',
-    evaluation: 'form',
+    evaluation: 'strict',
     minArity: 5,
     maxArity: 7,
     description:
@@ -336,7 +336,7 @@ export const ECDSA_OPERATORS: Record<string, StdOperatorMeta> = {
   'ecdsa/p256-sign': {
     module: 'ecdsa',
     category: 'std-codec',
-    evaluation: 'form',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Sign a message with ECDSA over P-256 and SHA-256 (FIPS 186-4 section 6.4.1) using the deterministic nonce of RFC 6979 and constant-time scalar arithmetic; the signature is 64 raw bytes r||s, what JWS ES256 and VAPID need. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it. The result is null when the credential is not held or is not a P-256 key. Runs only in the kernel.',
@@ -368,7 +368,7 @@ export const ECDSA_OPERATORS: Record<string, StdOperatorMeta> = {
   'ecdsa/p384-sign': {
     module: 'ecdsa',
     category: 'std-codec',
-    evaluation: 'form',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Sign a message with ECDSA over P-384 and SHA-384 (FIPS 186-4 section 6.4.1) using the deterministic nonce of RFC 6979; the signature is 96 raw bytes r||s, what JWS ES384 needs. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it. The result is null when the credential is not held or is not a P-384 key. Runs only in the kernel.',
@@ -402,7 +402,7 @@ export const ED25519_OPERATORS: Record<string, StdOperatorMeta> = {
   'ed25519/sign': {
     module: 'ed25519',
     category: 'std-codec',
-    evaluation: 'form',
+    evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
     description: 'Sign a message with Ed25519 (RFC 8032, deterministic, 64 bytes). The key argument is a credential slot: a secret-typed @config knob naming the credential that holds the 32-byte seed as standard padded base64. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it. The result is null when the credential is not held or is not such a seed. Runs only in the kernel.',

@@ -138,7 +138,8 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
   'prob/sample': {
     module: 'prob',
     category: 'std-prob',
-    evaluation: 'form',
+    evaluation: 'site',
+    lazyOperands: [1],
     minArity: 2,
     maxArity: 2,
     description: 'Evaluate an expression n times and collect results',

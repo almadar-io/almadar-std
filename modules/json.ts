@@ -96,7 +96,7 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
   'tree/fold': {
     module: 'json',
     category: 'std-json',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 3,
     maxArity: 4,
     description: 'The structural bottom-up fold over a value of a recursive type (the third argument names it). The children of a node are its fields whose declared type is the type itself, a list of it or a Map of it, read from the type, never from names or the value\'s shape; a union node is read through the variant it belongs to. The step is called once per node with (node childResults), childResults holding one entry per child field present, in its position: a field holds the child\'s result, a list the list of results, a map the map of results; a leaf gets {}. Every call works on a strict subterm of a finite value, so the fold terminates. An absent value folds to null',

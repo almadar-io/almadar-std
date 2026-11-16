@@ -366,7 +366,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/reject': {
     module: 'array',
     category: 'std-array',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Remove elements matching predicate (returns same array element type as input)',
@@ -421,7 +421,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/pmap': {
     module: 'array',
     category: 'std-array',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Transform each element like array/map, evaluating elements in parallel (rayon on native hosts, sequential on wasm and no_std with identical results); the result keeps input order. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.',
@@ -439,7 +439,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/preduce': {
     module: 'array',
     category: 'std-array',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 3,
     maxArity: 3,
     description: 'Reduce like array/reduce with a fixed grouping so the result is the same parallel or sequential: the array is split into chunks of 1024 elements, each chunk is folded left to right starting from its first element, then the chunk results are folded left to right starting from init; an empty array answers init. The reducer should therefore be associative with init as its identity. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.',
@@ -492,7 +492,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/count': {
     module: 'array',
     category: 'std-array',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 1,
     maxArity: 2,
     description: 'Count elements (optionally matching predicate)',
@@ -571,7 +571,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/groupBy': {
     module: 'array',
     category: 'std-array',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Group elements by the text of a field or of a key function; an item whose key is missing, null or not text is an error',
@@ -586,7 +586,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/partition': {
     module: 'array',
     category: 'std-array',
-    evaluation: 'form',
+    evaluation: 'site',
     minArity: 2,
     maxArity: 2,
     description: 'Split array by predicate into [matches, nonMatches]',
