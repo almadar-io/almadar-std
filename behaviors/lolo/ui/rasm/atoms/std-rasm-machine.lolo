@@ -21,7 +21,7 @@ type DescribedStateMachine = { states : [DescribedState]!, transitions : [Descri
 type MachineGlyphs = Map string string
 type DescribedMachine = { stateMachine : DescribedStateMachine!, glyphs : MachineGlyphs }
 type DescribedSubject = { machine : DescribedMachine! }
-type MachineSeg = { event : string!, guarded : boolean!, heads : [string]! }
+type MachineSeg = { event : string!, guarded : boolean!, heads : [string]!, notes : [string]! }
 type MachineGroup = { id : string!, from : string!, to : string!, segs : [MachineSeg]! }
 type LayoutPoint = { x : number!, y : number! }
 type LayoutNode = { id : string!, label : string!, width : number!, height : number! }
@@ -79,7 +79,8 @@ orbital RasmMachineOrbital {
                         (let ((arms (array/filter @mine (fn t (= @t.event @ev)))))
                           (let ((arm (default (array/nth @arms 0) @none)))
                             { event: @ev, guarded: (array/some @arms (fn a (!= @a.guard null))),
-                              heads: (array/map (default @arm.effects []) (fn fx (default (as (array/nth (json/nodes @fx) 1) string) ""))) })))) })))))))))
+                              heads: (array/map (default @arm.effects []) (fn fx (default (as (array/nth (json/nodes @fx) 1) string) ""))),
+                              notes: (array/map (default @arm.effects []) (fn fx (str/trim (str/concat (default (as (array/nth (json/nodes @fx) 1) string) "") " " (default (as (array/nth (json/nodes @fx) 2) string) ""))))) })))) })))))))))
         (set @entity.states ?result.machine.stateMachine.states)
         (set @entity.glyphs (default ?result.machine.glyphs {}))
         (set @entity.active (let ((ini (array/find ?result.machine.stateMachine.states (fn s (= @s.isInitial true))))) (if (= @ini null) "" @ini.name)))
@@ -235,9 +236,9 @@ orbital RasmMachineOrbital {
       RASM_ACCESS -> showing when (not (and (= ?action "activate") (str/startsWith ?target (str/concat @config.id "-ev-"))))
       MACHINE_PAINT -> showing when (= @entity.rect null)
       MACHINE_PAINT -> showing when (!= @entity.rect null)
-        (let ((r @entity.rect) (lw (math/max 1 @entity.layoutW)) (lh @entity.layoutH))
-          (let ((s (math/min @config.maxScale (/ @r.w @lw))))
-            (let ((ox (+ @r.x (/ (- @r.w (* @lw @s)) 2))) (oy @r.y) (rtl (= @entity.direction "rtl")) (h (math/ceil (* @lh @s))))
+        (let ((r @entity.rect) (lw (math/max 1 @entity.layoutW)) (lh @entity.layoutH) (strip (if @config.showEffects (+ 30 (* 24 (array/reduce @entity.groups 0 (fn (m g) (array/reduce @g.segs @m (fn (m2 sg) (math/max @m2 (array/len @sg.notes)))))))) 0)))
+          (let ((s (if (and (= @config.fit "both") (> @r.h 0) (> @lh 0)) (math/min @config.maxScale (/ @r.w @lw) (/ (math/max 1 (- @r.h @strip)) @lh)) (math/min @config.maxScale (/ @r.w @lw)))))
+            (let ((ox (+ @r.x (/ (- @r.w (* @lw @s)) 2))) (oy @r.y) (rtl (= @entity.direction "rtl")) (h (+ (math/ceil (* @lh @s)) @strip)))
               (do
                 (when (!= @h @entity.extentH) (do (set @entity.extentH @h) (emit RASM_EXTENT { n: ?n, id: @config.id, w: @r.w, h: @h })))
                 (emit MACHINE_DRAW { s: @s, ox: @ox, oy: @oy, rtl: @rtl })))))
@@ -279,7 +280,27 @@ orbital RasmMachineOrbital {
                 texts: (if (= @entity.active "") @noTexts (let ((an (array/find @entity.nodes (fn n (= @n.id @entity.active)))))
                   (if (= @an null) @noTexts
                     (let ((nowT : [RasmText] [{ id: (str/concat @config.id "-now"), key: @config.nowLabel, x: (if @rtl (+ (+ @ox (* @s (if @rtl (- @lw (+ @an.x @an.width)) (+ @an.x @an.width)))) (* 12 @s)) (- (+ @ox (* @s (if @rtl (- @lw (+ @an.x @an.width)) (+ @an.x @an.width)))) (* 12 @s))), y: (- (+ @oy (* @s @an.y)) (* 9 @s)), z: (+ @config.z 3), align: (if @rtl "left" "right"), baseline: "middle", color: @badge.textColor, font: @badge.font, role: "status" }])) @nowT))))
-                nodes: (array/concat [{ type: draw-group, id: (str/concat @config.id "-g"), position: { x: @ox, y: @oy, z: @config.z }, scale: @s, items: (array/concat
+                nodes: (array/concat (if (or (not @config.showEffects) (= @firedG null) (= @fm 0)) @nothing
+                    (let ((fs (array/find @firedG.segs (fn sg (= @sg.event @entity.fired))))
+                          (tx (+ @ox 10)) (ty (+ @oy (* @s @entity.layoutH) 18)) (row 24) (b @config.beatMs) (t0 (* 0.8 @dur)))
+                      (if (= @fs null) @nothing
+                        (array/concat
+                          [{ type: draw-text, id: (str/concat @config.id "-fx-head"), text: @entity.fired, anchor: "top-left", position: { x: (if @rtl (- (+ @ox (* @s @lw)) 10) @tx), y: @ty, z: (+ @config.z 2) }, align: (if @rtl "right" "left"), baseline: "middle", color: @eLit.textColor, font: @eLit.font, hit: false,
+                             animation: (if @entity.reduced null { durationMs: @t0, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 0.8, opacity: 0 }, { at: 1, opacity: 1 }] }) }
+                           { type: draw-shape, id: (str/concat @config.id "-fx-rail"), shape: "rect", anchor: "top-left", position: { x: (if @rtl (- (+ @ox (* @s @lw)) 16) (+ @tx 5)), y: (+ @ty 10), z: (+ @config.z 1) }, width: 1.5, height: (math/max 0 (- (* @row (array/len @fs.notes)) 4)), fill: @wLit.stroke, opacity: 0.55, hit: false,
+                             animation: (if @entity.reduced null { durationMs: @t0, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 0.8, opacity: 0 }, { at: 1, opacity: 0.55 }] }) }]
+                          (array/flatten (array/map (array/range 0 (array/len @fs.notes)) (fn j
+                            (let ((note (default (array/nth @fs.notes @j) ""))
+                                  (cx (if @rtl (- (+ @ox (* @s @lw)) 15.25) (+ @tx 5.75)))
+                                  (cy (+ @ty (* @row (+ @j 1))))
+                                  (d (+ @t0 (* (+ @j 1) @b))))
+                              (let ((a0 (/ (- @d @b) @d)) (a1 (/ (- @d (* 0.55 @b)) @d)))
+                                [{ type: draw-shape, id: (str/concat @config.id "-fx-ring-" @j), shape: "ellipse", anchor: "top-left", position: { x: @cx, y: @cy, z: (+ @config.z 1) }, radiusX: 5, radiusY: 5, fill: "", stroke: @wLit.stroke, strokeWidth: 1.5, opacity: 0, hit: false,
+                                   animation: (if @entity.reduced null { durationMs: @d, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0, radiusX: 5, radiusY: 5 }, { at: @a0, opacity: 0, radiusX: 5, radiusY: 5 }, { at: (+ @a0 0.001), opacity: 0.9, radiusX: 5, radiusY: 5 }, { at: 1, opacity: 0, radiusX: 18, radiusY: 18 }] }) }
+                                 { type: draw-shape, id: (str/concat @config.id "-fx-dot-" @j), shape: "ellipse", anchor: "top-left", position: { x: @cx, y: @cy, z: (+ @config.z 2) }, radiusX: 4.5, radiusY: 4.5, fill: @wLit.stroke, opacity: 1, hit: false,
+                                   animation: (if @entity.reduced null { durationMs: @d, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0, radiusX: 1, radiusY: 1 }, { at: @a0, opacity: 0, radiusX: 1, radiusY: 1 }, { at: @a1, opacity: 1, radiusX: 7, radiusY: 7 }, { at: 1, opacity: 1, radiusX: 4.5, radiusY: 4.5 }] }) }
+                                 { type: draw-text, id: (str/concat @config.id "-fx-note-" @j), text: @note, anchor: "top-left", position: { x: (if @rtl (- @cx 14) (+ @cx 14)), y: @cy, z: (+ @config.z 2) }, align: (if @rtl "right" "left"), baseline: "middle", color: @eIdle.textColor, font: @eIdle.font, hit: false,
+                                   animation: (if @entity.reduced null { durationMs: @d, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 6 }, { at: @a0, opacity: 0, offsetY: 6 }, { at: 1, opacity: 1, offsetY: 0 }] }) }]))))))))) [{ type: draw-group, id: (str/concat @config.id "-g"), position: { x: @ox, y: @oy, z: @config.z }, scale: @s, items: (array/concat
                   (array/flatten (array/map @entity.edges (fn e
                     (let ((g (array/find @entity.groups (fn g (= @g.id @e.id)))))
                       (let ((isLit (= @e.id @firedId)) (isNext (and (!= @g null) (= @g.from @entity.active))))
@@ -500,6 +521,14 @@ orbital RasmMachineOrbital {
       maxScale : number = 1.25
         @label "Largest scale"
         @description "The largest scale the layout is drawn at; it shrinks to fit the placed width."
+        @tier "presentation"
+      showEffects : boolean = false
+        @label "Show effects firing"
+        @description "On, a strip under the machine names the event that just fired and lists that transition's effects (operator and first argument) on a rail, each igniting one beat after the last, after the token arrives; it stays until the next move, and its room is reserved in the height."
+        @tier "presentation"
+      fit : "width" | "both" = "width"
+        @label "Fit"
+        @description "width shrinks the layout to the placed width and reports the height it needs; both also shrinks it to the placed height, for a parent that fixes the height."
         @tier "presentation"
       stateHeight : number = 44
         @label "State height"

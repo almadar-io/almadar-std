@@ -18,6 +18,7 @@ type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmK
 type RasmReveal = { startMs : number!, perGlyphMs : number!, durationMs : number!, offsetY : number }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, reveal : RasmReveal?, locale : string?, maxWidth : number? }
 type RasmTarget = { id : string!, fragments : [string]! }
+type RasmTransition = { durationMs : number!, distance : number!, staggerMs : number!, owners : [string]!, still : [string]! }
 type RasmPaintEntry = { id : string!, z : number!, nodes : [node]!, texts : [RasmText]! }
 
 orbital RasmSurfaceOrbital {
@@ -33,6 +34,10 @@ orbital RasmSurfaceOrbital {
     root : RasmRect @description "The rect handed to the root child." = { x: 0, y: 0, w: 720, h: 520 }
     dir : "ltr" | "rtl" @description "The reading direction the canvas reported from the page locale." = "ltr"
     hidden : [string] @description "The paint ids RASM_VISIBLE hid: their paints are kept and not drawn." = []
+    leaving : [string] @description "The paint ids the last transitioning RASM_VISIBLE hid: drawn once more while they fade and slide out." = []
+    entering : [string] @description "The paint ids the last transitioning RASM_VISIBLE showed: drawn fading and sliding in." = []
+    movedMs : number @description "The epoch-ms instant the last RASM_VISIBLE arrived: the transition's start." = 0
+    moveSign : number @description "1 when content travels toward the reading start (forward), -1 backward; flipped under rtl." = 1
     repaints : number @description "Counts repaints, so each repaint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -104,6 +109,12 @@ orbital RasmSurfaceOrbital {
       RASM_PAINT -> dirty
         (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
       RASM_VISIBLE -> dirty
+        (let ((moves (and (> @config.transition.durationMs 0) (array/includes @config.transition.owners ?owner))) (in (array/filter ?shown (fn h (and (array/includes @entity.hidden @h) (not (array/includes @config.transition.still @h)))))) (out (array/filter ?hidden (fn h (not (or (array/includes @entity.hidden @h) (array/includes @config.transition.still @h)))))))
+          (do
+            (set @entity.entering (if (and @moves (> (array/len @out) 0)) @in []))
+            (set @entity.leaving (if (and @moves (> (array/len @in) 0)) @out []))
+            (set @entity.movedMs (time/epoch-ms @now))
+            (set @entity.moveSign (* (if (= ?forward false) -1 1) (if (= @entity.dir "rtl") -1 1)))))
         (set @entity.hidden (array/concat (array/filter @entity.hidden (fn h (not (array/includes ?shown @h)))) (array/filter ?hidden (fn h (not (array/includes @entity.hidden @h))))))
       SURFACE_REPAINT -> ready
         (render-ui main {
@@ -131,7 +142,7 @@ orbital RasmSurfaceOrbital {
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
           keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e { id: @e.id, items: (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) })))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m @m.items))))))
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) }))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m @m.items))))))
         })
       POINTER_DOWN -> ready
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
@@ -235,6 +246,12 @@ orbital RasmSurfaceOrbital {
       RASM_PAINT -> dirty
         (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
       RASM_VISIBLE -> dirty
+        (let ((moves (and (> @config.transition.durationMs 0) (array/includes @config.transition.owners ?owner))) (in (array/filter ?shown (fn h (and (array/includes @entity.hidden @h) (not (array/includes @config.transition.still @h)))))) (out (array/filter ?hidden (fn h (not (or (array/includes @entity.hidden @h) (array/includes @config.transition.still @h)))))))
+          (do
+            (set @entity.entering (if (and @moves (> (array/len @out) 0)) @in []))
+            (set @entity.leaving (if (and @moves (> (array/len @in) 0)) @out []))
+            (set @entity.movedMs (time/epoch-ms @now))
+            (set @entity.moveSign (* (if (= ?forward false) -1 1) (if (= @entity.dir "rtl") -1 1)))))
         (set @entity.hidden (array/concat (array/filter @entity.hidden (fn h (not (array/includes ?shown @h)))) (array/filter ?hidden (fn h (not (array/includes @entity.hidden @h))))))
       SURFACE_REPAINT -> ready
         (render-ui main {
@@ -262,7 +279,7 @@ orbital RasmSurfaceOrbital {
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
           keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e { id: @e.id, items: (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) })))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m @m.items))))))
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) }))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil @entity.viewH)) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m @m.items))))))
         })
       POINTER_DOWN -> dirty
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
@@ -398,8 +415,8 @@ orbital RasmSurfaceOrbital {
         @description "Store the looks, paint the ground and place the root."
       RASM_PAINT { id : string!  z : number!  nodes : [node]!  texts : [RasmText]  n : number }
         @description "Keep one control's nodes and its catalog-keyed texts at its z and repaint; each text is painted in the active locale."
-      RASM_VISIBLE { owner : string!  shown : [string]!  hidden : [string]! }
-        @description "Stop drawing the paints of the hidden ids and draw the shown ids again; the paints are kept."
+      RASM_VISIBLE { owner : string!  shown : [string]!  hidden : [string]!  forward : boolean }
+        @description "Stop drawing the paints of the hidden ids and draw the shown ids again; the paints are kept. When the owner is listed in `transition.owners` and the call swaps shown content for hidden content, the hidden ids fade and slide out and the shown ids fade and slide in, one after another, toward the reading start (or away from it when forward is false)."
       RASM_RESIZE { width : number!  height : number! }
         @description "Re-place the root from the new size."
       RASM_EXTENT { id : string!  w : number!  h : number!  n : number }
@@ -486,6 +503,10 @@ orbital RasmSurfaceOrbital {
       align : "stretch" | "center" = "stretch"
         @label "Align"
         @description "Stretch gives the root the surface width minus the margin; center gives it its rootRect width (capped to the surface minus the margin) centred, and with fill on its rootRect height centred too."
+        @tier "presentation"
+      transition : RasmTransition = { durationMs: 0, distance: 0, staggerMs: 0, owners: [], still: [] }
+        @label "Content transition"
+        @description "How content swapped by RASM_VISIBLE moves: the duration of the fade and slide, the slide distance in px, the delay between one arriving paint and the next, the owners whose calls transition, and the paint ids that always swap in place (a marker that changes with the content). A duration of 0 swaps at once."
         @tier "presentation"
       targets : [RasmTarget] = []
         @label "Render targets"

@@ -1,6 +1,6 @@
 app std-rasm-presence [
   version: "1.0.0",
-  description: "std-rasm-presence — the Rasm entry choreography. On INIT it emits RASM_ENTER { order, staggerMs }: every control whose id is in the order paints with an entry animation staggered by its index."
+  description: "std-rasm-presence — the Rasm entry choreography. On INIT it emits RASM_ENTER { order, staggerMs }: every control whose id is in the order paints with an entry animation staggered by its index. RASM_PRESENCE_PLAY { order } plays the choreography again for the ids it names, for a page that swaps one set of content for another."
 ]
 
 orbital RasmPresenceOrbital {
@@ -16,11 +16,15 @@ orbital RasmPresenceOrbital {
         (emit RASM_ENTER { order: @config.order, staggerMs: @config.staggerMs })
       RASM_BOOT -> ready
         (emit RASM_ENTER { order: @config.order, staggerMs: @config.staggerMs })
+      RASM_PRESENCE_PLAY -> ready
+        (emit RASM_ENTER { order: ?order, staggerMs: @config.staggerMs })
     }
 
     listens {
       RASM_BOOT { }
         @description "The surface mounted: start the entry choreography."
+      RASM_PRESENCE_PLAY { order : [string]! }
+        @description "Play the entry choreography again for these control ids, in this order; controls outside it rest in place."
     }
 
     emits {

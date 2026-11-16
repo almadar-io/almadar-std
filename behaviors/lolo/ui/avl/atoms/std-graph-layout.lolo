@@ -11,6 +11,7 @@ type LayoutEdge = { id : string!, source : string!, target : string!, label : st
 type LayoutPlacedNode = { id : string!, label : string!, width : number!, height : number!, x : number!, y : number!, rank : number! }
 type LayoutRoutedEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number!, points : [LayoutPoint]!, labelX : number!, labelY : number!, reversed : boolean! }
 type LayoutDirectedEdge = { id : string!, source : string!, target : string!, start : string!, end : string!, reversed : boolean! }
+type LayoutSpine = { placed : [LayoutPlacedNode]!, routed : [LayoutRoutedEdge]!, width : number!, height : number! }
 type LayoutReach = Map string [string]
 type LayoutNumbers = Map string number
 
@@ -36,6 +37,7 @@ orbital GraphLayoutOrbital {
     bands : [number] = []
     width : number = 0
     height : number = 0
+    spine : LayoutSpine = { placed: [], routed: [], width: 0, height: 0 }
   }
 
   trait GraphLayout -> LayoutRun [client] {
@@ -57,6 +59,96 @@ orbital GraphLayoutOrbital {
           (array/some ?edges (fn e (or (not (array/some ?nodes (fn n (= @n.id @e.source)))) (not (array/some ?nodes (fn n (= @n.id @e.target))))))))
         (emit LAYOUT_REJECTED { reason: "missing-endpoint", ids: (array/map (array/filter ?edges (fn e (or (not (array/some ?nodes (fn n (= @n.id @e.source)))) (not (array/some ?nodes (fn n (= @n.id @e.target))))))) (fn e @e.id)) })
       LAYOUT_REQUEST -> ready when (and
+          (= @config.routing "spine")
+          (array/every ?nodes (fn n (and (!= @n.id "") (> @n.width 0) (> @n.height 0))))
+          (array/every ?edges (fn e (and (!= @e.id "") (>= @e.labelWidth 0) (>= @e.labelHeight 0))))
+          (= (array/len ?nodes) (array/len (array/unique (array/map ?nodes (fn n @n.id)))))
+          (= (array/len ?edges) (array/len (array/unique (array/map ?edges (fn e @e.id)))))
+          (array/every ?edges (fn e (and (array/some ?nodes (fn n (= @n.id @e.source))) (array/some ?nodes (fn n (= @n.id @e.target)))))))
+        (set @entity.nodes ?nodes)
+        (set @entity.edges ?edges)
+        (set @entity.spine
+          (let ((ids (array/map ?nodes (fn n @n.id)))
+                (g (* 2 @config.edgeGap))
+                (loop (* 3 @config.edgeGap))
+                (colW (default (array/max (array/map ?nodes (fn n (math/ceil @n.width)))) 0))
+                (ws (array/map ?nodes (fn n (math/ceil @n.width))))
+                (hs (array/map ?nodes (fn n (math/ceil @n.height))))
+                (eids (array/map ?edges (fn o @o.id))))
+            (let ((info (array/map ?edges (fn e
+                    (let ((si (array/indexOf @ids @e.source)) (ti (array/indexOf @ids @e.target)))
+                      { id: @e.id, s: @si, t: @ti, lw: (math/ceil @e.labelWidth), lh: (math/ceil @e.labelHeight), a: (math/min @si @ti), b: (math/max @si @ti), span: (math/abs (- @ti @si)),
+                        kind: (if (= @si @ti) "self"
+                                (if (and (= @ti (+ @si 1)) (= (array/findIndex ?edges (fn o (and (= @o.source @e.source) (= @o.target @e.target)))) (array/indexOf @eids @e.id))) "spine"
+                                  (if (< @ti @si) "left" "right"))) })))))
+              (let ((ys (object/get (array/reduce ?nodes { y: @config.padding, out: [] } (fn (acc n)
+                          (let ((i (array/len (object/get @acc "out"))))
+                            (let ((sp (array/find @info (fn f (and (= @f.kind "spine") (= @f.s @i))))))
+                              { y: (+ (object/get @acc "y") (math/ceil @n.height) (* 2 @config.rankGap) (if (= @sp null) 0 @sp.lh)),
+                                out: (array/append (object/get @acc "out") (object/get @acc "y")) })))) "out"))
+                    (left (array/reduce (array/sort (array/filter @info (fn f (= @f.kind "left"))) "span" "asc") { lanes: [], pick: {} } (fn (acc f)
+                        (let ((lanes (object/get @acc "lanes")))
+                          (let ((hit (array/findIndex @lanes (fn L (array/every @L (fn iv (or (<= @iv.b @f.a) (>= @iv.a @f.b))))))))
+                            (let ((k (if (< @hit 0) (array/len @lanes) @hit)))
+                              { lanes: (if (< @hit 0) (array/append @lanes [@f]) (array/map (array/range 0 (array/len @lanes)) (fn j (if (= @j @k) (array/append (default (array/nth @lanes @j) []) @f) (default (array/nth @lanes @j) []))))),
+                                pick: (object/set (object/get @acc "pick") @f.id @k) }))))))
+                    (right (array/reduce (array/sort (array/filter @info (fn f (= @f.kind "right"))) "span" "asc") { lanes: [], pick: {} } (fn (acc f)
+                        (let ((lanes (object/get @acc "lanes")))
+                          (let ((hit (array/findIndex @lanes (fn L (array/every @L (fn iv (or (<= @iv.b @f.a) (>= @iv.a @f.b))))))))
+                            (let ((k (if (< @hit 0) (array/len @lanes) @hit)))
+                              { lanes: (if (< @hit 0) (array/append @lanes [@f]) (array/map (array/range 0 (array/len @lanes)) (fn j (if (= @j @k) (array/append (default (array/nth @lanes @j) []) @f) (default (array/nth @lanes @j) []))))),
+                                pick: (object/set (object/get @acc "pick") @f.id @k) })))))))
+                (let ((leftOff (object/get (array/reduce (object/get @left "lanes") { x: @g, out: [] } (fn (acc L)
+                        (let ((w (default (array/max (array/map @L (fn f @f.lw))) 0)))
+                          { x: (+ (object/get @acc "x") @w @g), out: (array/append (object/get @acc "out") (+ (object/get @acc "x") (math/floor (/ @w 2)))) }))) "out"))
+                      (rightOff (object/get (array/reduce (object/get @right "lanes") { x: @g, out: [] } (fn (acc L)
+                        (let ((w (default (array/max (array/map @L (fn f @f.lw))) 0)))
+                          { x: (+ (object/get @acc "x") @w @g), out: (array/append (object/get @acc "out") (+ (object/get @acc "x") (math/floor (/ @w 2)))) }))) "out"))
+                      (leftW (array/reduce (object/get @left "lanes") 0 (fn (sum L) (+ @sum @g (default (array/max (array/map @L (fn f @f.lw))) 0)))))
+                      (rightW (array/reduce (object/get @right "lanes") 0 (fn (sum L) (+ @sum @g (default (array/max (array/map @L (fn f @f.lw))) 0)))))
+                      (selfW (array/reduce (array/filter @info (fn f (= @f.kind "self"))) 0 (fn (m f) (math/max @m (+ @loop @config.edgeGap @f.lw))))))
+                  (let ((colLeft (+ @config.padding @leftW (if (> @leftW 0) @g 0))))
+                    (let ((cx (+ @colLeft (math/floor (/ @colW 2))))
+                          (colRight (+ @colLeft @colW))
+                          (last (- (array/len ?nodes) 1)))
+                      (let ((laneBase (+ @colRight @selfW)))
+                        { width: (+ @laneBase @rightW (if (> @rightW 0) @g 0) @config.padding),
+                          height: (+ (default (array/nth @ys @last) 0) (default (array/nth @hs @last) 0) @config.padding),
+                          placed: (let ((p0 : [LayoutPlacedNode] [])) (array/reduce ?nodes @p0 (fn (acc n) (let ((i (array/len @acc))) (array/append @acc { id: @n.id, label: @n.label, width: (math/ceil @n.width), height: (math/ceil @n.height), x: (- @cx (math/floor (/ (math/ceil @n.width) 2))), y: (default (array/nth @ys @i) 0), rank: @i }))))),
+                          routed: (array/map ?edges (fn e
+                            (let ((f (array/find @info (fn o (= @o.id @e.id)))))
+                              (let ((sy (default (array/nth @ys @f.s) 0)) (ty (default (array/nth @ys @f.t) 0)))
+                                (let ((sw (default (array/nth @ws @f.s) 0)) (sh (default (array/nth @hs @f.s) 0)) (tw (default (array/nth @ws @f.t) 0)) (th (default (array/nth @hs @f.t) 0)))
+                                  (if (= @f.kind "spine")
+                                    { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @f.lw, labelHeight: @f.lh, reversed: false,
+                                      points: [{ x: @cx, y: (+ @sy @sh) }, { x: @cx, y: @ty }],
+                                      labelX: (- @cx (math/floor (/ @f.lw 2))), labelY: (+ @sy @sh @config.rankGap) }
+                                    (if (= @f.kind "self")
+                                      (let ((xr (+ (- @cx (math/floor (/ @sw 2))) @sw)))
+                                        { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @f.lw, labelHeight: @f.lh, reversed: false,
+                                          points: [{ x: @xr, y: (+ @sy (math/floor (* @sh 0.3))) }, { x: (+ @xr @loop), y: (+ @sy (math/floor (* @sh 0.3))) }, { x: (+ @xr @loop), y: (+ @sy (math/floor (* @sh 0.7))) }, { x: @xr, y: (+ @sy (math/floor (* @sh 0.7))) }],
+                                          labelX: (+ @xr @loop @config.edgeGap), labelY: (+ @sy (math/floor (/ (- @sh @f.lh) 2))) })
+                                      (if (= @f.kind "left")
+                                        (let ((lk (math/max 0 (array/findIndex (object/get @left "lanes") (fn L (array/some @L (fn m (= @m.id @e.id))))))))
+                                         (let ((lx (- @colLeft (default (array/nth @leftOff @lk) 0)))
+                                              (py (- (+ @sy (math/floor (* @sh 0.35))) (* @lk @config.portGap)))
+                                              (qy (+ @ty (math/floor (* @th 0.65)) (* @lk @config.portGap))))
+                                          { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @f.lw, labelHeight: @f.lh, reversed: false,
+                                            points: [{ x: (- @cx (math/floor (/ @sw 2))), y: @py }, { x: @lx, y: @py }, { x: @lx, y: @qy }, { x: (- @cx (math/floor (/ @tw 2))), y: @qy }],
+                                            labelX: (- @lx (math/floor (/ @f.lw 2))), labelY: (- (math/floor (/ (+ @py @qy) 2)) (math/floor (/ @f.lh 2))) }))
+                                        (let ((rx (+ @laneBase (default (array/nth @rightOff (math/max 0 (array/findIndex (object/get @right "lanes") (fn L (array/some @L (fn m (= @m.id @e.id))))))) 0)))
+                                              (py (+ @sy (math/floor (* @sh 0.85))))
+                                              (qy (+ @ty (math/floor (* @th 0.15)))))
+                                          { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @f.lw, labelHeight: @f.lh, reversed: false,
+                                            points: [{ x: (+ (- @cx (math/floor (/ @sw 2))) @sw), y: @py }, { x: @rx, y: @py }, { x: @rx, y: @qy }, { x: (+ (- @cx (math/floor (/ @tw 2))) @tw), y: @qy }],
+                                            labelX: (- @rx (math/floor (/ @f.lw 2))), labelY: (- (math/floor (/ (+ @py @qy) 2)) (math/floor (/ @f.lh 2))) }))))))))) }))))))))
+        (set @entity.placed @entity.spine.placed)
+        (set @entity.routed @entity.spine.routed)
+        (set @entity.width @entity.spine.width)
+        (set @entity.height @entity.spine.height)
+        (emit LAYOUT_READY { nodes: @entity.placed, edges: @entity.routed, width: @entity.width, height: @entity.height })
+      LAYOUT_REQUEST -> ready when (and
+          (!= @config.routing "spine")
           (array/every ?nodes (fn n (and (!= @n.id "") (> @n.width 0) (> @n.height 0))))
           (array/every ?edges (fn e (and (!= @e.id "") (>= @e.labelWidth 0) (>= @e.labelHeight 0))))
           (= (array/len ?nodes) (array/len (array/unique (array/map ?nodes (fn n @n.id)))))
@@ -183,10 +275,10 @@ orbital GraphLayoutOrbital {
       edgeGap : number = 2
       padding : number = 2
       crossingSweeps : number = 4
-      routing : "lanes" | "direct" = lanes
-        @description "lanes routes every edge through its own exterior lane with its label beside the lane; direct sends the first adjacent forward edge of each rank straight across a band below that rank with its label on the band, and every other edge through a lane with its label centred on the lane."
+      routing : "lanes" | "direct" | "spine" = lanes
+        @description "spine is for a small graph read top to bottom: the nodes stand in one column in the order given, the first edge from each node to the next runs straight down with its label on it, a self loop is a small loop on the node's right with its label beside it, an edge going back up takes a lane on the left and an edge skipping ahead a lane on the right, each with its label centred on its lane, and lanes whose spans do not overlap share one column; it always lays down the page and ignores direction. lanes routes every edge through its own exterior lane with its label beside the lane; direct sends the first adjacent forward edge of each rank straight across a band below that rank with its label on the band, and every other edge through a lane with its label centred on the lane."
       portGap : number = 1
-        @description "With direct routing, the step between edge stubs in a rank's channels."
+        @description "With direct routing, the step between edge stubs in a rank's channels; with spine, the step between the stubs of successive left lanes where they meet a node."
     }
 
     listens {

@@ -285,9 +285,9 @@ orbital FirestoreOrbital {
         @description "How many times a write transaction that Firestore aborts (contention) is repeated from its read."
         @synonyms "contention retries"
         @tier "infra"
-      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement"], combinators: ["all", "any"], compareOps: ["==", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["string", "number", "boolean", "date"] }, { operator: "<=", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">=", valueKinds: ["string", "number", "boolean", "date"] }], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true, nearest: true, indexes: "deploy" }
+      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement"], combinators: ["all", "any"], compareOps: ["==", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["string", "number", "boolean", "date"] }, { operator: "<=", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">=", valueKinds: ["string", "number", "boolean", "date"] }], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true, nearest: true, indexes: "deploy", memberLimit: 30 }
         @label "Query capabilities"
-        @description "What query Firestore runs: == and range comparisons, member, hasElement, all, and an any over one field."
+        @description "What query Firestore runs: == and range comparisons, member (at most 30 values, declared as memberLimit so the kernel asks a larger one in parts), hasElement, all, and an any over one field."
         @synonyms "pushdown capabilities"
         @tier "infra"
       writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: true }

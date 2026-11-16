@@ -1,12 +1,14 @@
 app std-semantic-index [
   version: "1.0.0",
-  description: "std-semantic-index — meaning search over the vectors stored on graph rows. SEMANTIC_INDEX embeds each indexed row from a config recipe (ordered parts of name, description, numbers and lists, each with its label) through std-llm and stores the vector and the embedded text on the row; it re-embeds on every call, so a caller indexes after every write. SEMANTIC_SEARCH embeds a query and answers the nearest rows by cosine, optionally pre-filtered by graph and node type, dropping hits below the search floor. SEMANTIC_CANONICAL looks each item up among the rows of other graphs and adopts the best match when its cosine reaches the canonical threshold. SEMANTIC_PAIRS embeds texts and answers every pair at or above the pair floor. A text longer than the piece length is split at word boundaries into pieces, each piece is embedded and the text keeps the mean of its pieces' vectors, so no part of a long text is dropped; the piece length is the pieceChars knob. The embedding provider, model and origin are std-llm knobs set on the composed trait. One request runs at a time; a request that arrives meanwhile is refused with SEMANTIC_REJECTED.",
+  description: "std-semantic-index — meaning search over the vectors stored on graph rows. SEMANTIC_INDEX embeds each indexed row from a config recipe (ordered parts of name, description, numbers and lists, each with its label) through std-llm and stores the vector and the embedded text on the row; it re-embeds on every call, so a caller indexes after every write. SEMANTIC_SEARCH embeds a query and answers the nearest rows by cosine, optionally pre-filtered by graph and node type, dropping hits below the search floor. SEMANTIC_CANONICAL looks each item up among the rows of other graphs and adopts the best match when its cosine reaches the canonical threshold. SEMANTIC_PAIRS embeds the texts that come without a vector (an item may carry the vector it was embedded with, so a caller that keeps vectors embeds only new or changed texts) and answers every pair at or above the pair floor, with the vectors it made. A text longer than the piece length is split at word boundaries into pieces, each piece is embedded and the text keeps the mean of its pieces' vectors, so no part of a long text is dropped; the piece length is the pieceChars knob. The embedding provider, model and origin are std-llm knobs set on the composed trait. One request runs at a time; a request that arrives meanwhile is refused with SEMANTIC_REJECTED.",
   net: { "127.0.0.1:1234": [tcp] }
 ]
 
 type SemanticItem = { id : string!, graphId : string, nodeType : string!, name : string, texts : Map string string, numbers : Map string number, lists : Map string [string] }
 type SemanticItems = [SemanticItem]
-type SemanticTextItem = { id : string!, text : string! }
+type SemanticTextItem = { id : string!, text : string!, vector : [number]? }
+type SemanticVector = { id : string!, vector : [number]! }
+type SemanticVectors = [SemanticVector]
 type SemanticTextItems = [SemanticTextItem]
 type SemanticHit = { id : string!, graphId : string!, nodeId : string!, nodeType : string!, name : string!, score : number! }
 type SemanticHits = [SemanticHit]
@@ -70,6 +72,7 @@ orbital SemanticIndexOrbital {
     semItems : [SemanticItem] @intrinsic = []
     semSkipped : [string] @intrinsic = []
     semTexts : [SemanticTextItem] @intrinsic = []
+    semPairItems : [SemanticTextItem] @intrinsic = []
     semQueryVector : [number] @intrinsic
     semVectors : [[number]] @intrinsic = []
     semCursor : number @intrinsic = 0
@@ -87,6 +90,7 @@ orbital SemanticIndexOrbital {
     items : [SemanticItem] @description "The items of an index or canonical request." @synonyms "rows to embed"
     skipped : [string] @description "The ids an index request skipped." @synonyms "skipped ids"
     texts : [SemanticTextItem] @description "The texts being embedded, in order." @synonyms "embedded texts"
+    pairItems : [SemanticTextItem] @description "Every item of a pairs request in its order, those that came with their vector included." @synonyms "pair items" = []
     pieces : [number] @description "How many pieces each text was split into, in text order; empty on a row written before pieces existed, which means one piece per text." @synonyms "piece counts" = []
     query : string @description "The query of a search." @synonyms "search text" = ""
     k : number @description "How many rows a search wants." @synonyms "top k" = 0
@@ -219,12 +223,18 @@ orbital SemanticIndexOrbital {
         (emit SemanticStage)
 
       SEMANTIC_PAIRS -> idle when (< (array/len ?items) 2)
-        (emit SEMANTIC_PAIRS_RESULT { pairs: [], key: ?key })
-      SEMANTIC_PAIRS -> working when (>= (array/len ?items) 2)
+        (emit SEMANTIC_PAIRS_RESULT { pairs: [], vectors: [], key: ?key })
+      SEMANTIC_PAIRS -> working when (and (>= (array/len ?items) 2) (array/every ?items (fn it (!= (object/get @it vector null) null))))
+        (set @entity.semOp "pairs")
+        (set @entity.semKey ?key)
+        (set @entity.semPairItems ?items)
+        (emit SemanticPairsReady { embedded: [] })
+      SEMANTIC_PAIRS -> working when (and (>= (array/len ?items) 2) (array/some ?items (fn it (= (object/get @it vector null) null))))
         (set @entity.semOp "pairs")
         (set @entity.semKey ?key)
         (set @entity.semPhase "embed")
-        (set @entity.semTexts ?items)
+        (set @entity.semPairItems ?items)
+        (set @entity.semTexts (array/filter ?items (fn it (= (object/get @it vector null) null))))
         (emit SemanticStage)
 
       SemanticEmbedded -> loadingPending
@@ -252,6 +262,7 @@ orbital SemanticIndexOrbital {
         (set @entity.semItems (let ((noSemanticItems : SemanticItems [])) (object/get (array/first ?data) items @noSemanticItems)))
         (set @entity.semSkipped (let ((noSemanticStrings : SemanticStrings [])) (object/get (array/first ?data) skipped @noSemanticStrings)))
         (set @entity.semTexts (let ((noSemanticTextItems : SemanticTextItems [])) (object/get (array/first ?data) texts @noSemanticTextItems)))
+        (set @entity.semPairItems (let ((noSemanticTextItems : SemanticTextItems [])) (object/get (array/first ?data) pairItems @noSemanticTextItems)))
         (set @entity.semQuery (object/get (array/first ?data) query ""))
         (set @entity.semK (object/get (array/first ?data) k 0))
         (set @entity.semGraphIds (let ((noSemanticStrings : SemanticStrings [])) (object/get (array/first ?data) graphIds @noSemanticStrings)))
@@ -316,7 +327,7 @@ orbital SemanticIndexOrbital {
                               (if (<= (+ (str/len @cur) 1 (str/len @w)) @config.pieceChars)
                                 (array/append (array/dropLast @acc 1) (str/concat @cur " " @w))
                                 (array/append @acc @w)))))))))))))
-        (persist create SemanticPending { id: @entity.semKey, op: @entity.semOp, items: @entity.semItems, skipped: @entity.semSkipped, texts: @entity.semTexts, pieces: (array/map @entity.semPieceLists (fn p (array/len @p))), query: @entity.semQuery, k: @entity.semK, graphIds: @entity.semGraphIds, nodeTypes: @entity.semNodeTypes, anyGraph: @entity.semAnyGraph, anyType: @entity.semAnyType } { emit: { success: SemanticStaged, failure: SemanticPendingFailed } })
+        (persist create SemanticPending { id: @entity.semKey, op: @entity.semOp, items: @entity.semItems, skipped: @entity.semSkipped, texts: @entity.semTexts, pairItems: @entity.semPairItems, pieces: (array/map @entity.semPieceLists (fn p (array/len @p))), query: @entity.semQuery, k: @entity.semK, graphIds: @entity.semGraphIds, nodeTypes: @entity.semNodeTypes, anyGraph: @entity.semAnyGraph, anyType: @entity.semAnyType } { emit: { success: SemanticStaged, failure: SemanticPendingFailed } })
       SemanticStaged -> idle
         (emit LLM_EMBED { texts: (array/flatten @entity.semPieceLists), key: (as ?id CallKey) })
       SemanticPendingFailed -> idle when (= ?code "duplicate-id")
@@ -367,16 +378,20 @@ orbital SemanticIndexOrbital {
           emit: { success: SemanticFetched, failure: SemanticStoreFailed }
         })
 
-      SemanticResume -> idle when (and (= @entity.semPhase "embed") (= @entity.semOp "pairs") (= (array/len ?embeddings) (array/len @entity.semTexts)))
-        (emit SEMANTIC_PAIRS_RESULT {
-          key: @entity.semKey,
-          pairs: (array/flatten
-            (array/map (array/range 0 (array/len ?embeddings))
-              (fn i (array/flatten (array/map (array/range (+ @i 1) (array/len ?embeddings))
-                (fn j (let ((c (array/cosine (default (array/nth ?embeddings @i) []) (default (if (>= @j 0) (array/nth ?embeddings @j) null) []))))
-                  (if (== @c null) []
-                    (if (>= @c @config.pairFloor) [{ a: (object/get (default (array/nth @entity.semTexts @i) {}) id ""), b: (object/get (default (if (>= @j 0) (array/nth @entity.semTexts @j) null) {}) id ""), score: (default @c 0) }] [])))))))))
-        })
+      SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "pairs") (= (array/len ?embeddings) (array/len @entity.semTexts)))
+        (emit SemanticPairsReady { embedded: (array/map (array/range 0 (array/len @entity.semTexts)) (fn i { id: (object/get (default (array/nth @entity.semTexts @i) {}) id ""), vector: (default (array/nth ?embeddings @i) []) })) })
+      SemanticPairsReady -> idle
+        (let ((vecs (array/map @entity.semPairItems (fn it (let ((given (object/get @it vector null))) (if (!= @given null) @given (object/get (default (array/find ?embedded (fn e (= (object/get @e id "") (object/get @it id "")))) {}) vector [])))))))
+          (emit SEMANTIC_PAIRS_RESULT {
+            key: @entity.semKey,
+            vectors: ?embedded,
+            pairs: (array/flatten
+              (array/map (array/range 0 (array/len @vecs))
+                (fn i (array/flatten (array/map (array/range (+ @i 1) (array/len @vecs))
+                  (fn j (let ((c (array/cosine (default (array/nth @vecs @i) []) (default (if (>= @j 0) (array/nth @vecs @j) null) []))))
+                    (if (== @c null) []
+                      (if (>= @c @config.pairFloor) [{ a: (object/get (default (array/nth @entity.semPairItems @i) {}) id ""), b: (object/get (default (if (>= @j 0) (array/nth @entity.semPairItems @j) null) {}) id ""), score: (default @c 0) }] [])))))))))
+          }))
 
       SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "canonical") (= (array/len ?embeddings) (array/len @entity.semTexts)))
         (set @entity.semPhase "canonical")
@@ -461,9 +476,10 @@ orbital SemanticIndexOrbital {
         @tier "domain"
       SEMANTIC_PAIRS_RESULT -> external {
         pairs : [SemanticPair]!
+        vectors : [SemanticVector]!
         key : string
       }
-        @description "Every pair of the given texts whose cosine reaches the pair floor."
+        @description "Every pair of the given texts whose cosine reaches the pair floor, and the vectors of the texts that came without one, for the caller to keep."
         @synonyms "similar pairs, similarity matrix"
         @tier "domain"
       SEMANTIC_FAILED -> external {
@@ -482,6 +498,7 @@ orbital SemanticIndexOrbital {
         @synonyms "refused, duplicate key, stale reply"
         @tier "domain"
       SemanticStage
+      SemanticPairsReady { embedded : [SemanticVector]! }
       SemanticStaged {
         id : string!
         texts : [SemanticTextItem]
@@ -524,6 +541,7 @@ orbital SemanticIndexOrbital {
         model : string
       }
       SemanticStage
+      SemanticPairsReady { embedded : [SemanticVector]! }
       SemanticStaged {
         id : string!
         texts : [SemanticTextItem]
@@ -572,7 +590,7 @@ orbital SemanticIndexOrbital {
         items : [SemanticTextItem]!
         key : CallKey!
       }
-        @description "Embed the texts and answer every pair whose cosine reaches the pair floor; nothing is stored."
+        @description "Embed the texts that come without a vector and answer every pair whose cosine reaches the pair floor; an item that carries its vector is not embedded again. Nothing is stored."
         @synonyms "pairwise similarity, similar paths"
     }
 
