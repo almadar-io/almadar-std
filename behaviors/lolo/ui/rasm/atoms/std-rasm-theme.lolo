@@ -17,6 +17,7 @@ type RasmKeyLight = { color : string!, intensity : number!, position : [number]!
 type RasmLighting = { ambient : RasmLight!, directional : RasmKeyLight!, hemisphere : RasmLight! }
 type RasmLook = { lighting : RasmLighting, inset : RasmInset, fill : string, stroke : string, strokeWidth : number, strokeDash : [number], corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
 type RasmEntry = { enterMs : number!, keyframes : [RasmEntryKey]! }
+type RasmSpaceStep = { tight : number!, stack : number!, group : number!, scale : number!, measure : number! }
 type RasmBreakpoint = { name : "phone" | "tablet" | "desktop" | "wide"!, min : number! }
 type RasmStyle = { looks : Map string RasmLook!, layout : RasmLayout!, motion : RasmMotion!, breakpointLooks : Map string (Map string RasmLook) }
 
@@ -74,14 +75,22 @@ orbital RasmThemeOrbital {
         (emit THEME_ANNOUNCE { restyle: false })
       RASM_BREAKPOINT -> ready when (not (and @entity.isStyle (!= ?name @entity.breakpoint)))
         (set @entity.breakpoint ?name)
+        (emit SPACE_ANNOUNCE)
       THEME_ANNOUNCE -> ready when (not @entity.isStyle)
         (emit RASM_THEME { name: @entity.active, looks: (object/get @config.presets @entity.active {}), breakpoints: @config.breakpoints })
+        (emit SPACE_ANNOUNCE)
       THEME_ANNOUNCE -> ready when @entity.isStyle
         (let ((style (object/get @config.styles @entity.active null)))
           (do
             (emit RASM_THEME { name: @entity.active, looks: (array/reduce [(object/get @config.breakpointLooks @entity.breakpoint {}), (object/get (default @style.breakpointLooks {}) @entity.breakpoint {})] (object/merge @config.base @style.looks) (fn acc layer (array/reduce (object/keys @layer) @acc (fn a k (object/set @a @k (object/merge (object/get @a @k {}) (object/get @layer @k {}))))))), breakpoints: @config.breakpoints })
             (when ?restyle
-              (emit RASM_STYLE { name: @entity.active, layout: @style.layout, motion: (let ((s (object/get @config.signatures @style.motion.signature null))) (if (= @s null) @style.motion (object/merge @style.motion { enterMs: @s.enterMs, keyframes: @s.keyframes }))) }))))
+              (emit RASM_STYLE { name: @entity.active, layout: @style.layout, motion: (let ((s (object/get @config.signatures @style.motion.signature null))) (if (= @s null) @style.motion (object/merge @style.motion { enterMs: @s.enterMs, keyframes: @s.keyframes }))) }))
+            (emit SPACE_ANNOUNCE)))
+      SPACE_ANNOUNCE -> ready
+        (let ((step : RasmSpaceStep? (object/get @config.space (if (= @entity.breakpoint "") "desktop" @entity.breakpoint) (object/get @config.space "desktop" null)))
+              (style (if @entity.isStyle (object/get @config.styles @entity.active null) null)))
+          (when (!= @step null)
+            (emit RASM_SPACE { space: { tight: @step.tight, stack: @step.stack, group: @step.group, gutter: (math/round (* @step.scale (if (= @style null) @config.gutter @style.layout.gutter))), section: (math/round (* @step.scale (if (= @style null) @config.section @style.layout.sectionGap))), measure: @step.measure } })))
     }
 
     emits {
@@ -90,6 +99,14 @@ orbital RasmThemeOrbital {
       }
         @description "Announce the active preset or style: its looks (and, when restyle is on, a style layout and motion)."
         @tier "internal"
+      SPACE_ANNOUNCE -> internal
+        @description "Announce the spacing scale for the current breakpoint."
+        @tier "internal"
+      RASM_SPACE -> external {
+        space : Map string number!
+      }
+        @description "The spacing scale for the current breakpoint, in px: tight, stack and group from the space table, gutter and section the active style's gutter and sectionGap (a preset's the gutter and section knobs) times the breakpoint's scale, and measure, the widest a contained content column runs (0 for none). Announced with every look announcement and on every breakpoint; layout atoms take their gaps and padding from it by step name."
+        @tier "primary"
       RASM_THEME -> external {
         name : string!
         looks : Map string RasmLook!
@@ -309,6 +326,18 @@ orbital RasmThemeOrbital {
       }
         @label "Base looks"
         @description "Every look a style starts from, in theme palette names (background, card, foreground, primary, border, …) and the theme families (display, body, mono), which the canvas resolves from the program's theme. A style replaces only the looks it names."
+        @tier "presentation"
+      space : Map string RasmSpaceStep = { phone: { tight: 8, stack: 12, group: 24, scale: 0.45, measure: 0 }, tablet: { tight: 8, stack: 16, group: 28, scale: 0.7, measure: 0 }, desktop: { tight: 8, stack: 16, group: 32, scale: 1, measure: 1160 }, wide: { tight: 8, stack: 20, group: 40, scale: 1, measure: 1240 } }
+        @label "Spacing scale"
+        @description "The spacing steps by breakpoint name, on the 4/8 grid: tight (inside a group), stack (between the lines of a block), group (between groups), scale (what the style's gutter and sectionGap are multiplied by) and measure (the widest a contained content column runs, 0 for full width). A breakpoint with no entry uses desktop."
+        @tier "presentation"
+      gutter : number = 24
+        @label "Preset gutter"
+        @description "The gutter a preset (which has no style layout) announces at scale 1."
+        @tier "presentation"
+      section : number = 96
+        @label "Preset section gap"
+        @description "The section spacing a preset announces at scale 1."
         @tier "presentation"
       breakpoints : [RasmBreakpoint] = [{ name: "phone", min: 0 }, { name: "tablet", min: 640 }, { name: "desktop", min: 1024 }, { name: "wide", min: 1440 }]
         @label "Breakpoints"

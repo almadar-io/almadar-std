@@ -1238,10 +1238,21 @@
         {
           "trait": "LocalLlm",
           "event": "LLM_CHAT_SEND",
-          "payload": { "job": "not a job" },
+          "payload": {
+            "job": "not a job"
+          },
           "expect": {
-            "emits": [ { "event": "LLM_FAILED", "payload": { "code": "INVALID_JOB" } } ],
-            "neverEmits": [ "LLM_CHAT_DISPATCH" ]
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": "INVALID_JOB"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CHAT_DISPATCH"
+            ]
           }
         }
       ]
@@ -1252,10 +1263,23 @@
         {
           "trait": "LocalLlm",
           "event": "LLM_CHAT_ERROR",
-          "payload": { "job": "not a job", "message": "boom" },
+          "payload": {
+            "job": "not a job",
+            "message": "boom"
+          },
           "expect": {
-            "emits": [ { "event": "LLM_FAILED", "payload": { "code": "INVALID_JOB", "message": "boom" } } ],
-            "neverEmits": [ "LLM_CHAT_SEND" ]
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": "INVALID_JOB",
+                  "message": "boom"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CHAT_SEND"
+            ]
           }
         }
       ]
@@ -1266,8 +1290,97 @@
         {
           "trait": "LocalLlm",
           "event": "LLM_CHAT_SEND",
-          "payload": { "job": "{\"stream\": false, \"action\": \"generate\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"qwen\", \"temperature\": 0.7, \"maxTokens\": 64}" },
-          "expect": { "emits": [ { "event": "LLM_CHAT_DISPATCH" } ], "neverEmits": [ "LLM_FAILED" ] }
+          "payload": {
+            "job": "{\"stream\": false, \"action\": \"generate\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"qwen\", \"temperature\": 0.7, \"maxTokens\": 64}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_CHAT_DISPATCH"
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-provider-chunk-with-null-fields-is-announced-as-a-text-delta",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\": true, \"action\": \"generate\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"deepseek-v4-flash\", \"temperature\": 0, \"maxTokens\": 0, \"callKey\": \"r9\"}",
+            "data": "{\"id\":\"1660760b\",\"object\":\"chat.completion.chunk\",\"created\":1794939753,\"model\":\"deepseek-flash\",\"system_fingerprint\":\"bc19\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_GENERATE_DELTA",
+                "payload": {
+                  "key": "r9",
+                  "delta": "Hello"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reasoning-content-chunk-is-announced-as-a-reasoning-delta",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\": true, \"action\": \"generate\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"deepseek-v4-flash\", \"temperature\": 0, \"maxTokens\": 0, \"callKey\": \"r9\"}",
+            "data": "{\"id\":\"1660760b\",\"object\":\"chat.completion.chunk\",\"created\":1794939753,\"model\":\"deepseek-flash\",\"system_fingerprint\":\"bc19\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"We\"},\"logprobs\":null,\"finish_reason\":null}]}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_REASONING_DELTA",
+                "payload": {
+                  "key": "r9",
+                  "delta": "We"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_GENERATE_DELTA"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-streamed-wire-chunk-becomes-a-text-delta-under-the-callers-key",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_WIRE_STREAM",
+          "payload": {
+            "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"s\\\",\\\"user\\\":\\\"u\\\",\\\"base\\\":\\\"u\\\",\\\"model\\\":\\\"deepseek-v4-flash\\\",\\\"temperature\\\":0.3,\\\"maxTokens\\\":0,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"r7\\\",\\\"images\\\":[],\\\"stream\\\":true}\"}",
+            "data": "{\"id\":\"18355b54\",\"object\":\"chat.completion.chunk\",\"created\":1794940711,\"model\":\"deepseek-flash\",\"system_fingerprint\":\"bc19\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\"},\"logprobs\":null,\"finish_reason\":null}]}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_CHAT_STREAM_MSG"
+              },
+              {
+                "event": "LLM_GENERATE_DELTA",
+                "payload": {
+                  "key": "r7",
+                  "delta": "Hi"
+                }
+              }
+            ]
+          }
         }
       ]
     }

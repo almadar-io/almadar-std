@@ -1,0 +1,156 @@
+{
+  "atom": "connect/organisms/std-concept-icon.lolo",
+  "trait": "ConceptIconResolver",
+  "note": "std-concept-icon ConceptIconResolver answers a label's brand icon with its SVG markup: a cached icon with its markup answers at once, a cached icon kept before the markup was stored is fetched again, and a fetched body is answered and kept.",
+  "cases": [
+    {
+      "id": "a-cached-icon-with-its-markup-answers-at-once",
+      "steps": [
+        {
+          "event": "CONCEPT_ICON_CACHE_LOADED",
+          "from": "caching",
+          "entity": {
+            "id": "l",
+            "key": "i:rust",
+            "term": "Rust"
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "i:rust",
+                "label": "Rust",
+                "icon": "devicon:rust",
+                "tone": "themed",
+                "svg": "<svg/>",
+                "fetchedAt": 1
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CONCEPT_ICON_RESULT",
+                "payload": {
+                  "icon": "devicon:rust",
+                  "tone": "themed",
+                  "svg": "<svg/>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cached-icon-without-markup-fetches-its-body-again",
+      "steps": [
+        {
+          "event": "CONCEPT_ICON_CACHE_LOADED",
+          "from": "caching",
+          "entity": {
+            "id": "l",
+            "key": "i:rust",
+            "term": "Rust"
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "i:rust",
+                "label": "Rust",
+                "icon": "devicon:rust",
+                "tone": "themed",
+                "fetchedAt": 1
+              }
+            ]
+          },
+          "expect": {
+            "state": "bodying",
+            "entity": {
+              "iconId": "devicon:rust"
+            },
+            "emits": [
+              {
+                "event": "ICONIFY_GET_ICON_BODY",
+                "payload": {
+                  "iconId": "devicon:rust"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CONCEPT_ICON_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-cached-miss-answers-no-icon",
+      "steps": [
+        {
+          "event": "CONCEPT_ICON_CACHE_LOADED",
+          "from": "caching",
+          "entity": {
+            "id": "l",
+            "key": "i:x",
+            "term": "X"
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "i:x",
+                "label": "X",
+                "fetchedAt": 1
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CONCEPT_ICON_RESULT",
+                "payload": {
+                  "icon": "",
+                  "tone": "none",
+                  "svg": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-fetched-body-is-kept-with-the-icon",
+      "steps": [
+        {
+          "event": "CONCEPT_ICON_BODIED",
+          "from": "bodying",
+          "entity": {
+            "id": "l",
+            "key": "i:rust",
+            "term": "Rust",
+            "iconId": "devicon:rust"
+          },
+          "payload": {
+            "body": "<path fill=\"currentColor\"/>",
+            "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\"/></svg>"
+          },
+          "expect": {
+            "state": "storing",
+            "entity": {
+              "resultIcon": "devicon:rust",
+              "resultSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\"/></svg>",
+              "resultTone": "themed"
+            },
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

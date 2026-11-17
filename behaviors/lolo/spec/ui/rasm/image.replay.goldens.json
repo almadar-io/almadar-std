@@ -136,11 +136,12 @@
       ]
     },
     {
-      "id": "the-announced-style-treatment-picks-the-image-look",
+      "id": "art-follows-the-announced-style-treatment",
       "config": {
         "id": "hero-art",
         "url": "https://images.test/a.jpg",
-        "z": 2
+        "z": 2,
+        "kind": "art"
       },
       "entity": {
         "id": "i",
@@ -1485,6 +1486,152 @@
                 }
               }
             ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "hero-art",
+                  "z": 2,
+                  "texts": [],
+                  "nodes": [
+                    {
+                      "type": "draw-group",
+                      "id": "hero-art:source",
+                      "position": {
+                        "x": 10,
+                        "y": 20,
+                        "z": 2
+                      },
+                      "target": {
+                        "id": "hero-art:target",
+                        "width": 300,
+                        "height": 200
+                      },
+                      "items": [
+                        {
+                          "type": "draw-sprite",
+                          "id": "hero-art:photo",
+                          "asset": {
+                            "url": "https://images.test/a.jpg"
+                          },
+                          "fit": "cover",
+                          "anchor": "top-left",
+                          "position": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                          },
+                          "width": 300,
+                          "height": 200
+                        }
+                      ]
+                    },
+                    {
+                      "type": "draw-shape",
+                      "id": "hero-art",
+                      "shape": "rect",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 10,
+                        "y": 20,
+                        "z": 2
+                      },
+                      "width": 300.4,
+                      "height": 200,
+                      "fill": "primary",
+                      "material": {
+                        "wgsl": "NONE",
+                        "params": [
+                          0,
+                          0,
+                          0,
+                          0
+                        ],
+                        "live": false,
+                        "targets": [
+                          "hero-art:target"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-photo-ignores-the-style-treatment-and-shows-as-taken",
+      "config": {
+        "id": "hero-art",
+        "url": "https://images.test/a.jpg",
+        "z": 2,
+        "kind": "photo"
+      },
+      "entity": {
+        "id": "i",
+        "looks": {
+          "image/none/idle": {
+            "fill": "primary",
+            "material": {
+              "wgsl": "NONE",
+              "params": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "live": false
+            }
+          },
+          "image/riso/idle": {
+            "fill": "primary",
+            "material": {
+              "wgsl": "NONE",
+              "params": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "live": false
+            }
+          }
+        },
+        "url": "https://images.test/a.jpg",
+        "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 300.4,
+          "h": 200
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_STYLE",
+          "payload": {
+            "name": "risograph",
+            "layout": {
+              "hero": "split",
+              "columns": 12,
+              "asymmetry": 0,
+              "ornament": "none",
+              "align": "start",
+              "imageTreatment": "riso",
+              "sectionGap": 96,
+              "gutter": 48
+            },
+            "motion": {
+              "signature": "print-pass",
+              "stiffness": 180,
+              "damping": 18,
+              "stagger": 70
+            }
           },
           "expect": {
             "state": "ready",

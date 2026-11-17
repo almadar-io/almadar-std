@@ -15,6 +15,7 @@ orbital ConceptIconOrbital {
     iconId : string = ""
     resultIcon : string = ""
     resultTone : string = "none"
+    resultSvg : string @description "The icon's SVG markup, kept so a page can draw it without asking Iconify." = ""
   }
 
   entity ConceptIconCache [persistent: concept-icons] {
@@ -24,6 +25,7 @@ orbital ConceptIconOrbital {
     label : string!
     icon : string
     tone : string
+    svg : string @description "The icon's SVG markup as Iconify served it."
     fetchedAt : number!
   }
 
@@ -52,10 +54,13 @@ orbital ConceptIconOrbital {
         (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
       CONCEPT_ICON_CACHE_FAILED -> idle
         (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: ?error })
-      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (!= (default (object/get (array/first ?data) icon "") "") ""))
-        (emit CONCEPT_ICON_RESULT { icon: (object/get (array/first ?data) icon ""), tone: (object/get (array/first ?data) tone "none") })
+      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (!= (default (object/get (array/first ?data) icon "") "") "") (!= (default (object/get (array/first ?data) svg "") "") ""))
+        (emit CONCEPT_ICON_RESULT { icon: (default (object/get (array/first ?data) icon "") ""), tone: (default (object/get (array/first ?data) tone "none") "none"), svg: (default (object/get (array/first ?data) svg "") "") })
+      CONCEPT_ICON_CACHE_LOADED -> bodying when (and (> (array/len ?data) 0) (!= (default (object/get (array/first ?data) icon "") "") "") (= (default (object/get (array/first ?data) svg "") "") ""))
+        (set @entity.iconId (default (object/get (array/first ?data) icon "") ""))
+        (emit ICONIFY_GET_ICON_BODY { iconId: @entity.iconId })
       CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (= (default (object/get (array/first ?data) icon "") "") ""))
-        (emit CONCEPT_ICON_RESULT { icon: "", tone: "none" })
+        (emit CONCEPT_ICON_RESULT { icon: "", tone: "none", svg: "" })
       CONCEPT_ICON_CACHE_LOADED -> probing when (and (= (array/len ?data) 0) (!= @entity.slug ""))
         (set @entity.iconId (str/concat "devicon:" @entity.slug))
         (emit ICONIFY_SVG_EXISTS { path: (str/concat "devicon/" @entity.slug ".svg") })
@@ -83,7 +88,8 @@ orbital ConceptIconOrbital {
       CONCEPT_ICON_SEARCHED -> storing when (= (array/len ?icons) 0)
         (set @entity.resultIcon "")
         (set @entity.resultTone "none")
-        (persist create ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: @now } {
+        (set @entity.resultSvg "")
+        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: @now } {
           emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
         })
     }
@@ -95,11 +101,13 @@ orbital ConceptIconOrbital {
       CONCEPT_ICON_BODIED -> storing when (= ?body null)
         (set @entity.resultIcon "")
         (set @entity.resultTone "none")
-        (persist create ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: @now } {
+        (set @entity.resultSvg "")
+        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: @now } {
           emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
         })
       CONCEPT_ICON_BODIED -> storing when (not (= ?body null))
         (set @entity.resultIcon @entity.iconId)
+        (set @entity.resultSvg (default ?svg ""))
         (set @entity.fills (array/filter (array/drop (str/split ?body "#") 1) (fn s
           (and (>= (str/len @s) 6)
             (array/every (array/map (array/range 6) (fn n (str/slice @s @n (+ @n 1)))) (fn c (str/includes "0123456789abcdefABCDEF" @c)))
@@ -108,7 +116,7 @@ orbital ConceptIconOrbital {
           (if (str/includes (str/lower ?body) "currentcolor") "themed"
             (if (= (array/len @entity.fills) 0) "dark"
               (if (>= (/ (array/reduce @entity.fills 0 (fn acc s (+ @acc (+ (+ (* 0.299 (str/to-number (str/concat "0x" (str/slice @s 0 2)))) (* 0.587 (str/to-number (str/concat "0x" (str/slice @s 2 4))))) (* 0.114 (str/to-number (str/concat "0x" (str/slice @s 4 6)))))))) (array/len @entity.fills)) 170) "light" "dark"))))
-        (persist create ConceptIconCache { id: @entity.key, label: @entity.term, icon: @entity.iconId, tone: @entity.resultTone, fetchedAt: @now } {
+        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, icon: @entity.iconId, tone: @entity.resultTone, svg: @entity.resultSvg, fetchedAt: @now } {
           emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
         })
     }
@@ -118,7 +126,7 @@ orbital ConceptIconOrbital {
       CONCEPT_ICON -> storing
         (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
       CONCEPT_ICON_STORED -> idle
-        (emit CONCEPT_ICON_RESULT { icon: @entity.resultIcon, tone: @entity.resultTone })
+        (emit CONCEPT_ICON_RESULT { icon: @entity.resultIcon, tone: @entity.resultTone, svg: @entity.resultSvg })
       CONCEPT_ICON_STORE_FAILED -> idle
         (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: ?error })
     }
@@ -127,8 +135,9 @@ orbital ConceptIconOrbital {
       CONCEPT_ICON_RESULT -> external {
         icon : string!
         tone : string!
+        svg : string!
       }
-        @description "The concept's brand icon id (prefix:name) and tone: themed (uses currentColor), dark, light, or none with an empty icon when no icon exists for the label."
+        @description "The concept's brand icon id (prefix:name), its SVG markup, and tone: themed (uses currentColor), dark, light, or none with an empty icon and markup when no icon exists for the label."
         @synonyms "concept icon, brand icon, icon for topic, topic logo"
         @tier "primary"
       CONCEPT_ICON_FAILED -> external {
@@ -193,6 +202,7 @@ orbital ConceptIconOrbital {
       ConceptIconApi.ICONIFY_ICON_BODY_RESULT -> CONCEPT_ICON_BODIED
       CONCEPT_ICON_BODIED {
         body : string
+        svg : string
       }
     }
   }

@@ -6,7 +6,7 @@ app std-mock-seed-marks [
 ;; @capabilities "mock seed marks store present, program already composes std-mock-seed, seed once, dev personas composition text for the identity entity"
 
 type MarksField = { name : string, values : [string]? }
-type MarksEntity = { collection : string, identity : boolean?, fields : [MarksField]? }
+type MarksEntity = { name : string?, collection : string, identity : boolean?, fields : [MarksField]? }
 type MarksTransition = { event : string }
 type MarksMachine = { transitions : [MarksTransition] }
 type MarksTrait = { stateMachine : MarksMachine? }
@@ -39,6 +39,7 @@ orbital MockSeedMarksOrbital {
                     personasCollection: @collection,
                     personasSignIn: (if (= @collection "") "" @spec),
                     defaultRole: (if (= @identity null) "" @spec),
+                    identityEntity: (if (= @identity null) "" (object/get @identity "name" "")),
                     personaTrait: (if @handled @handler (if (= @collection "") "" "DevPersonas")),
                     personas: (if (= @collection "") "" (str/concat "uses Personas from \"std/behaviors/std-dev-personas\"\norbital DevLogin = Personas.orbitals.DevPersonasOrbital {\n  entity DevPersona [persistent: " @collection "]\n  traits { DevPersonas { config { autoSignIn: " (json/stringify @spec) " } } }\n}\n"))
                   }))))))
@@ -51,9 +52,10 @@ orbital MockSeedMarksOrbital {
         personasCollection : string!
         personasSignIn : string!
         defaultRole : string!
+        identityEntity : string!
         personaTrait : string!
       }
-        @description "Whether the asked program already declares the mock-seed marks store, the first declared value of its [identity] entity's role field (`defaultRole`, the role a catalog guest is signed in as by default, empty without one), the trait that signs a session in as a persona (`personaTrait`: the program's own trait that handles PERSONA_ACT_AS, else the composed DevPersonas, else empty), and the .lolo text that composes std-dev-personas onto the program's [identity] entity (its `uses` and `orbital DevLogin`, no app header): linked to a DevPersona entity over the identity entity's collection, signing the session in as the first declared value of the identity entity's role field (an ALMADAR_PERSONA spec: an identity row id, else a role). Empty when the program declares no identity entity or a trait of it already handles PERSONA_ACT_AS. personasCollection and personasSignIn are the two facts the text is built from (the identity entity's collection and the autoSignIn spec), empty with it, for a host that composes the resolved std-dev-personas itself instead of reading text (a guest opens resolved programs only)."
+        @description "Whether the asked program already declares the mock-seed marks store, the first declared value of its [identity] entity's role field (`defaultRole`, the role a catalog guest is signed in as by default, empty without one), the name of its [identity] entity (`identityEntity`, so a mock guest can seed its people before any page that needs a signed-in viewer opens; empty without one), the trait that signs a session in as a persona (`personaTrait`: the program's own trait that handles PERSONA_ACT_AS, else the composed DevPersonas, else empty), and the .lolo text that composes std-dev-personas onto the program's [identity] entity (its `uses` and `orbital DevLogin`, no app header): linked to a DevPersona entity over the identity entity's collection, signing the session in as the first declared value of the identity entity's role field (an ALMADAR_PERSONA spec: an identity row id, else a role). Empty when the program declares no identity entity or a trait of it already handles PERSONA_ACT_AS. personasCollection and personasSignIn are the two facts the text is built from (the identity entity's collection and the autoSignIn spec), empty with it, for a host that composes the resolved std-dev-personas itself instead of reading text (a guest opens resolved programs only)."
         @synonyms "program already seeds, marks store present"
         @tier "primary"
     }

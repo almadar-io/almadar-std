@@ -1553,7 +1553,8 @@
       "personasCollection": "",
       "personasSignIn": "",
       "defaultRole": "",
-      "personaTrait": ""
+      "personaTrait": "",
+      "identityEntity": ""
      },
      "entity": {
       "id": "g",
@@ -1646,7 +1647,8 @@
       "personasCollection": "",
       "personasSignIn": "",
       "defaultRole": "",
-      "personaTrait": ""
+      "personaTrait": "",
+      "identityEntity": ""
      },
      "entity": {
       "id": "g",
@@ -2686,7 +2688,8 @@
       "personasCollection": "team_members",
       "personasSignIn": "owner",
       "defaultRole": "owner",
-      "personaTrait": ""
+      "personaTrait": "",
+      "identityEntity": ""
      }
     }
    ],
@@ -2728,7 +2731,8 @@
       "personasCollection": "",
       "personasSignIn": "",
       "defaultRole": "",
-      "personaTrait": ""
+      "personaTrait": "",
+      "identityEntity": ""
      }
     }
    ],
@@ -3603,7 +3607,8 @@
       "personasCollection": "",
       "personasSignIn": "",
       "defaultRole": "",
-      "personaTrait": ""
+      "personaTrait": "",
+      "identityEntity": ""
      },
      "entity": {
       "id": "g",
@@ -12526,7 +12531,7 @@
    "note": "the guest asked to sign in: the stage shows a button, and the Google sign-in runs on its click so the browser does not block the popup; control: control-an-embedded-paint-is-never-shown-as-a-root (no request, no button)"
   },
   {
-   "id": "stage-a-sign-in-request-asks-before-signing-in",
+   "id": "stage-a-sign-in-request-asks-the-host-session-and-shows-the-button-when-there-is-none",
    "steps": [
     {
      "trait": "GuestStage",
@@ -12545,14 +12550,12 @@
       "state": "idle",
       "effects": [
        {
-        "type": "set",
-        "arg0": "@entity.guestSignInAsked"
-       },
-       {
-        "type": "emit",
-        "arg0": "GUEST_SHOWN"
+        "type": "auth/sign-in"
        }
-      ]
+      ],
+      "entity": {
+       "guestSignInAsked": true
+      }
      }
     }
    ],
@@ -16095,6 +16098,396 @@
       "neverEmits": [
        "GUEST_LOST"
       ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-mock-guest-seeds-its-identity-entity-before-its-first-persona-ask",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PERSONAS_ASK",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSeeded": true,
+      "guestIdentityEntity": "Person",
+      "guestIdentitySeeded": false
+     },
+     "from": "live",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestIdentitySeeded": true
+      },
+      "effects": [
+       {
+        "type": "program/dispatch"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-mock-guest-whose-identity-is-seeded-asks-its-personas-at-once",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PERSONAS_ASK",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSeeded": true,
+      "guestIdentityEntity": "Person",
+      "guestIdentitySeeded": true
+     },
+     "from": "live",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestIdentitySeeded": true
+      },
+      "effects": [
+       {
+        "type": "program/dispatch"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-guest-with-no-identity-entity-asks-its-personas-at-once",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PERSONAS_ASK",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSeeded": true,
+      "guestIdentityEntity": "",
+      "guestIdentitySeeded": false
+     },
+     "from": "live",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestIdentitySeeded": false
+      },
+      "effects": [
+       {
+        "type": "program/dispatch"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-identity-seed-answer-asks-the-personas",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_IDENTITY_SEEDED",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSeeded": true,
+      "guestIdentityEntity": "Person",
+      "guestIdentitySeeded": true
+     },
+     "from": "live",
+     "payload": {
+      "result": {
+       "emitted": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_PERSONAS_ASK"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-failed-identity-seed-says-so-and-still-asks-the-personas",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_IDENTITY_SEED_FAILED",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSeeded": true,
+      "guestIdentityEntity": "Person",
+      "guestIdentitySeeded": true
+     },
+     "from": "live",
+     "payload": {
+      "error": "the seed refused"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_NOTICE",
+        "payload": {
+         "message": "the seed refused"
+        }
+       },
+       {
+        "event": "GUEST_PERSONAS_ASK"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-seed-marks-answer-keeps-the-identity-entity",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_SEED_MARKED",
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestSeed": {
+       "name": "std-mock-page-seed",
+       "orbitals": []
+      }
+     },
+     "from": "opening",
+     "payload": {
+      "marked": false,
+      "personas": "",
+      "personasCollection": "",
+      "personasSignIn": "",
+      "defaultRole": "",
+      "identityEntity": "Person",
+      "personaTrait": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "entity": {
+       "guestIdentityEntity": "Person"
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-page-that-needs-a-signed-in-viewer-asks-the-host-for-its-session-first",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_SIGN_IN",
+     "entity": {
+      "id": "s",
+      "guestHandle": "guest-1",
+      "guestRoute": "/",
+      "guestSignInAsked": false,
+      "guestSignedIn": false
+     },
+     "from": "idle",
+     "payload": {
+      "guest": "guest-1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "auth/sign-in"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-host-with-no-signed-in-viewer-shows-the-sign-in-button",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_SESSION_MISSING",
+     "entity": {
+      "id": "s",
+      "guestHandle": "guest-1",
+      "guestRoute": "/",
+      "guestSignInAsked": false,
+      "guestSignedIn": false
+     },
+     "from": "idle",
+     "payload": {
+      "error": "No viewer is signed in to this host",
+      "kind": "denied"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestSignInAsked": true
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-split-views-refusal-keeps-its-return-route-and-asks-the-host-session",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_VIEW_SIGN_IN",
+     "entity": {
+      "id": "s",
+      "guestHandle": "guest-1",
+      "guestRoute": "/",
+      "guestSignInAsked": false,
+      "guestSignedIn": false
+     },
+     "from": "idle",
+     "payload": {
+      "guest": "guest-1",
+      "returnTo": "/time"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestRoute": "/time"
+      },
+      "effects": [
+       {
+        "type": "auth/sign-in"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-mock-start-route-refused-before-the-persona-signs-in-is-kept-quietly",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_FOLLOWED",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestReturnTo": ""
+     },
+     "from": "live",
+     "payload": {
+      "result": {
+       "rendered": [],
+       "outcomes": [],
+       "page": [],
+       "route": "",
+       "access": {
+        "verdict": "denied",
+        "returnTo": "/projects"
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestReturnTo": "/projects"
+      },
+      "neverEmits": [
+       "GUEST_NOTICE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-split-mock-guest-opens-its-kept-start-route-once-the-persona-signs-in",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PERSONA_ACTED",
+     "from": "live",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestReturnTo": "/projects",
+      "guestViewer": ""
+     },
+     "payload": {
+      "result": {
+       "emitted": [
+        {
+         "event": "PERSONA_SIGNED_IN",
+         "payload": {
+          "subject": "u1"
+         }
+        }
+       ],
+       "outcomes": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestReturnTo": "",
+       "guestPersona": "u1"
+      }
      }
     }
    ],

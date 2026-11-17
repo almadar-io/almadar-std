@@ -52,6 +52,8 @@ orbital LlmKnobsFixtureOrbital {
       CacheLlm.LLM_CHAT_WIRE -> WIRE_SEEN
       PlainLlm.LLM_CHAT_WIRE -> WIRE_SEEN
       OnLlm.LLM_CHAT_WIRE -> WIRE_SEEN
+      DeepseekOffLlm.LLM_CHAT_WIRE -> WIRE_SEEN
+      DeepseekDefaultLlm.LLM_CHAT_WIRE -> WIRE_SEEN
       KnobLlm.LLM_CHAT_WIRE_CANCEL -> WIRE_CANCEL_SEEN
       ANSWERED {
         content : string!
@@ -146,6 +148,21 @@ orbital LlmKnobsFixtureOrbital {
     }
   }
 
+  trait DeepseekOffLlm = Llm.traits.LlmClient {
+    config {
+      provider: deepseek
+      model: "deepseek-v4-flash"
+      reasoning: off
+    }
+  }
+
+  trait DeepseekDefaultLlm = Llm.traits.LlmClient {
+    config {
+      provider: deepseek
+      model: "deepseek-v4-flash"
+    }
+  }
+
   trait CapLlm = Llm.traits.LlmClient {
     config {
       provider: openrouter
@@ -155,5 +172,5 @@ orbital LlmKnobsFixtureOrbital {
     }
   }
 
-  page boot as LlmKnobsFixturePage -> KnobDriver, KnobLlm, KnobDelay, CacheLlm, PlainLlm, OnLlm, CapLlm
+  page boot as LlmKnobsFixturePage -> KnobDriver, KnobLlm, KnobDelay, CacheLlm, PlainLlm, OnLlm, CapLlm, DeepseekOffLlm, DeepseekDefaultLlm
 }

@@ -56,8 +56,12 @@ orbital IconifyOrbital {
       ICONIFY_GET_ICON_BODY -> idle when (or (< (array/len (str/split @payload.iconId ":")) 2) (= (array/nth (str/split @payload.iconId ":") 0) "") (= (array/nth (str/split @payload.iconId ":") 1) ""))
         (emit ICONIFY_ICON_BODY_RESULT {})
       ICONIFY_REPLIED -> idle when (and (= (array/nth (str/split @payload.key "|") 0) "body") (>= @payload.status 200) (< @payload.status 300))
-        (let ((sets (default (json/parse (default (bytes/to-string @payload.body) "") IconifyIconSet) {})) (name (default (array/nth (str/split (default (array/nth (str/split @payload.key "|") 1) "") ":") 1) "")) (found (default (object/get (object/get (object/get @sets icons {}) @name {}) body null) (object/get (object/get (object/get @sets aliases {}) @name {}) body null))))
-          (if (= @found null) (emit ICONIFY_ICON_BODY_RESULT {}) (emit ICONIFY_ICON_BODY_RESULT { body: (default @found "") })))
+        (let ((sets (default (json/parse (default (bytes/to-string @payload.body) "") IconifyIconSet) {})) (name (default (array/nth (str/split (default (array/nth (str/split @payload.key "|") 1) "") ":") 1) "")))
+          (let ((icon (default (object/get (object/get @sets icons {}) @name null) (object/get (object/get @sets aliases {}) @name null))))
+            (if (= @icon null)
+              (emit ICONIFY_ICON_BODY_RESULT {})
+              (let ((body (default (object/get @icon body "") "")) (w (default (object/get @icon width null) (default (object/get @sets width null) 16))) (h (default (object/get @icon height null) (default (object/get @sets height null) 16))))
+                (emit ICONIFY_ICON_BODY_RESULT { body: @body, svg: (str/concat "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " @w " " @h "\">" @body "</svg>") })))))
       ICONIFY_REPLIED -> idle when (and (= (array/nth (str/split @payload.key "|") 0) "body") (or (< @payload.status 200) (>= @payload.status 300)))
         (emit ICONIFY_ICON_BODY_RESULT {})
       ICONIFY_FAILED -> idle when (= (array/nth (str/split @payload.key "|") 0) "body")
@@ -79,8 +83,9 @@ orbital IconifyOrbital {
         @tier "primary"
       ICONIFY_ICON_BODY_RESULT -> external {
         body : string
+        svg : string
       }
-        @description "The SVG body of the requested icon id, resolved through the set's aliases when the icon itself is absent; absent when the id is malformed, unknown or the call failed."
+        @description "The SVG body of the requested icon id, resolved through the set's aliases when the icon itself is absent, and the whole SVG (the body in an svg element sized by the icon's width and height, else the set's, else 16); both absent when the id is malformed, unknown or the call failed."
         @synonyms "icon svg body, icon markup, resolved icon"
         @tier "primary"
       ICONIFY_HTTP_SEND {

@@ -368,6 +368,98 @@
           }
         }
       ]
+    },
+    {
+      "id": "a program with an identity entity names it, so a mock guest can seed it before any page opens",
+      "steps": [
+        {
+          "trait": "MarksCheck",
+          "from": "ready",
+          "event": "MARKS_CHECK",
+          "payload": {
+            "program": {
+              "name": "a",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Person",
+                    "collection": "people",
+                    "identity": true,
+                    "fields": [
+                      {
+                        "name": "role",
+                        "values": [
+                          "owner",
+                          "member"
+                        ]
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": []
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "m"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "MARKS_CHECKED",
+                "payload": {
+                  "identityEntity": "Person",
+                  "defaultRole": "owner"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a program without an identity entity names none",
+      "steps": [
+        {
+          "trait": "MarksCheck",
+          "from": "ready",
+          "event": "MARKS_CHECK",
+          "payload": {
+            "program": {
+              "name": "a",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Note",
+                    "collection": "notes"
+                  },
+                  "auxiliaryEntities": []
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "m"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "MARKS_CHECKED",
+                "payload": {
+                  "identityEntity": "",
+                  "defaultRole": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
