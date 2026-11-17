@@ -1,0 +1,61 @@
+{
+ "atom": "store/atoms/std-social-graph.lolo",
+ "trait": "SocialPresence",
+ "cases": [
+  {
+   "id": "a-rejected-touch-echoes-the-askers-key",
+   "steps": [
+    {
+     "event": "SOCIAL_TOUCH",
+     "payload": { "memberId": "m1", "nodeKey": "bad", "askKey": "m1|k1" },
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_REJECTED", "payload": { "reason": "bad-node-key", "askKey": "m1|k1" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unkeyed-rejected-touch-gets-the-responders-own-key",
+   "steps": [
+    {
+     "event": "SOCIAL_TOUCH",
+     "payload": { "memberId": "m1", "nodeKey": "bad" },
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_REJECTED", "payload": { "reason": "bad-node-key", "askKey": "social-m1-1" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-recorded-presence-echoes-the-askers-key",
+   "entity": { "id": "n", "reqAskKey": "m1|k2" },
+   "steps": [
+    {
+     "from": "touching",
+     "event": "PresenceStored",
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_TOUCHED", "payload": { "askKey": "m1|k2" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-presence-step-echoes-the-askers-key",
+   "entity": { "id": "n", "reqAskKey": "m1|k3" },
+   "steps": [
+    {
+     "from": "touching",
+     "event": "PeerFailed",
+     "payload": { "error": "store down" },
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_FAILED", "payload": { "error": "store down", "askKey": "m1|k3" } } ]
+     }
+    }
+   ]
+  }
+ ]
+}

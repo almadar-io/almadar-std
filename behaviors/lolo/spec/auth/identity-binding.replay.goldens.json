@@ -97,7 +97,8 @@
          "subject": "",
          "email": "",
          "name": "",
-         "created": false
+         "created": false,
+         "emailVerified": false
         }
        ]
       }
@@ -123,7 +124,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      },
      {
       "requestId": 8,
@@ -135,7 +137,8 @@
       "subject": "u2",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -169,7 +172,8 @@
          "subject": "u1",
          "email": "",
          "name": "",
-         "created": false
+         "created": false,
+         "emailVerified": false
         }
        ]
       }
@@ -195,7 +199,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -222,7 +227,8 @@
          "subject": "u1",
          "email": "",
          "name": "",
-         "created": false
+         "created": false,
+         "emailVerified": false
         }
        ]
       }
@@ -248,7 +254,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      },
      {
       "requestId": 8,
@@ -260,7 +267,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -304,7 +312,8 @@
       "subject": "",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -347,7 +356,8 @@
       "subject": "",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -394,7 +404,8 @@
       "subject": "",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -437,7 +448,8 @@
       "subject": "",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -481,7 +493,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -531,7 +544,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -574,7 +588,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": true
+      "created": true,
+      "emailVerified": false
      }
     ]
    },
@@ -619,7 +634,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -650,7 +666,7 @@
    ]
   },
   {
-   "id": "a row that could not be written refuses every ask waiting on one",
+   "id": "a failed first-row write verifies its asks again, so a row a parallel ask wrote signs them in",
    "config": {
     "createIdentity": true,
     "identityEntity": "Identity"
@@ -667,7 +683,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      },
      {
       "requestId": 8,
@@ -679,7 +696,8 @@
       "subject": "u2",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -691,25 +709,25 @@
      },
      "expect": {
       "fired": true,
+      "neverEmits": [
+       "IDENTITY_REFUSED"
+      ],
       "emits": [
        {
-        "event": "IDENTITY_REFUSED",
+        "event": "BEARER_VERIFY",
         "payload": {
          "requestId": 7,
-         "reason": "identity-store"
+         "authorization": "Bearer a.b.c"
         }
        },
        {
-        "event": "IDENTITY_REFUSED",
+        "event": "BEARER_VERIFY",
         "payload": {
          "requestId": 8,
-         "reason": "identity-store"
+         "authorization": "Bearer a.b.c"
         }
        }
-      ],
-      "entity": {
-       "asks": []
-      }
+      ]
      }
     }
    ]
@@ -732,7 +750,8 @@
       "subject": "u1",
       "email": "",
       "name": "",
-      "created": false
+      "created": false,
+      "emailVerified": false
      }
     ]
    },
@@ -799,7 +818,8 @@
          "subject": "",
          "email": "",
          "name": "",
-         "created": false
+         "created": false,
+         "emailVerified": false
         }
        ]
       }
@@ -884,6 +904,622 @@
          "id": "u1",
          "email": "u1@example.com",
          "name": "U One"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a first sign-in on a listed domain writes the row with that domain role",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "mighty-krulz.si",
+      "role": "reviewer"
+     },
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ]
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "ana@mighty-krulz.si",
+      "name": "U One",
+      "created": false,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "SIGN_OUT_ASKED",
+       "IDENTITY_REFUSED"
+      ],
+      "emits": [
+       {
+        "event": "CREATE_ROW",
+        "payload": {
+         "subject": "u1",
+         "email": "ana@mighty-krulz.si",
+         "name": "U One",
+         "role": "reviewer"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a listed domain matches whatever its letter case",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "mighty-krulz.si",
+      "role": "reviewer"
+     },
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ]
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "Osama@Almadar.IO",
+      "name": "U One",
+      "created": false,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "SIGN_OUT_ASKED"
+      ],
+      "emits": [
+       {
+        "event": "CREATE_ROW",
+        "payload": {
+         "subject": "u1",
+         "email": "Osama@Almadar.IO",
+         "name": "U One",
+         "role": "owner"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a first sign-in on an unlisted domain is refused identity-domain and writes no row",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "mighty-krulz.si",
+      "role": "reviewer"
+     },
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ]
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "someone@gmail.com",
+      "name": "U One",
+      "created": false,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "CREATE_ROW",
+       "IDENTITY_BOUND"
+      ],
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-domain"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a domain that only ends with a listed one is refused",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "mighty-krulz.si",
+      "role": "reviewer"
+     },
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ]
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "x@evil-mighty-krulz.si",
+      "name": "U One",
+      "created": false,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "CREATE_ROW"
+      ],
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-domain"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL an email with no at sign is refused when domains are listed",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "mighty-krulz.si",
+      "role": "reviewer"
+     },
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ]
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "mighty-krulz.si",
+      "name": "U One",
+      "created": false,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "CREATE_ROW"
+      ],
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-domain"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the first row carries the role the create names",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRole": "learner"
+   },
+   "steps": [
+    {
+     "event": "CREATE_ROW",
+     "payload": {
+      "subject": "u1",
+      "email": "u1@mighty-krulz.si",
+      "name": "U One",
+      "role": "reviewer"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "IDENTITY_CREATED",
+        "payload": {
+         "id": "u1",
+         "email": "u1@mighty-krulz.si",
+         "name": "U One",
+         "role": "reviewer"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL an unverified email on a listed domain is refused identity-unverified-email",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "mighty-krulz.si",
+      "role": "reviewer"
+     },
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ]
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "fake@almadar.io",
+      "name": "F",
+      "created": false,
+      "emailVerified": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "CREATE_ROW"
+      ],
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-unverified-email"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unlisted domain falls back to createRole when one is declared",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ],
+    "createRole": "reviewer"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "someone@gmail.com",
+      "name": "U One",
+      "created": false,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "SIGN_OUT_ASKED",
+       "IDENTITY_REFUSED"
+      ],
+      "emits": [
+       {
+        "event": "CREATE_ROW",
+        "payload": {
+         "subject": "u1",
+         "email": "someone@gmail.com",
+         "name": "U One",
+         "role": "reviewer"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a listed domain still takes its rule over the fallback",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ],
+    "createRole": "reviewer"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "osama@almadar.io",
+      "name": "U One",
+      "created": false,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "SIGN_OUT_ASKED"
+      ],
+      "emits": [
+       {
+        "event": "CREATE_ROW",
+        "payload": {
+         "subject": "u1",
+         "email": "osama@almadar.io",
+         "name": "U One",
+         "role": "owner"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL an unverified email on a listed domain is refused even with a fallback",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRoles": [
+     {
+      "domain": "almadar.io",
+      "role": "owner"
+     }
+    ],
+    "createRole": "reviewer"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "fake@almadar.io",
+      "name": "U One",
+      "created": false,
+      "emailVerified": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "CREATE_ROW"
+      ],
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-unverified-email"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL after a failed write a second no-identity is refused and writes nothing",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRole": "reviewer"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "u1@gmail.com",
+      "name": "U",
+      "created": true,
+      "emailVerified": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "CREATE_ROW"
+      ],
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-no-identity"
         }
        }
       ]

@@ -1,9 +1,10 @@
 app std-identity-binding [
   version: "3.0.0",
-  description: "std-identity-binding — the one owner of a sign-in (docs/Almadar_Orbital_Core.md §11). It runs in the program session only. BEARER_PRESENT { requestId, authorization, clientId, self? } is the ask every consumer makes (the dispatch route, the ticket mint, a guest session, a persona); it answers exactly one outcome per ask: IDENTITY_BOUND { requestId }, IDENTITY_ANONYMOUS { requestId }, IDENTITY_REFUSED { requestId, reason } or IDENTITY_SESSION_ENDED { requestId }. It asks its composed std-bearer-verify once (BEARER_VERIFY), in the program session, so one key cache serves the whole program; the verdict arrives as BEARER_VERIFIED { verified } or as ANONYMOUS_SEEN, REFUSED_SEEN or KEY_SEEN (an API key makes no Verified). A verified credential is bound to the named viewer's session with (identity/sign-in verified clientId) and every other verdict signs that session out with (identity/sign-out clientId), so the session the request runs in is signed in or out again on every request (a bearer header is stateless); with self true the ask binds the session the step runs in instead (no session named). The outcome of a sign-in or sign-out is matched to its ask by the session it names. An ask naming no client session is anonymous when it carries no header and refused no-client-session when it does. A sign-in that answers no-identity with createIdentity on persists a row of identityEntity (id the subject, email and name from the claims, createRole when set) and verifies again once; a create that fails refuses every ask still waiting on a row, identity-store; any other sign-in failure is refused identity-<kind>; an API key is refused api-key-identity; an ended session answers IDENTITY_SESSION_ENDED. The role is only ever the identity row's."
+  description: "std-identity-binding — the one owner of a sign-in (docs/Almadar_Orbital_Core.md §11). It runs in the program session only. BEARER_PRESENT { requestId, authorization, clientId, self? } is the ask every consumer makes (the dispatch route, the ticket mint, a guest session, a persona); it answers exactly one outcome per ask: IDENTITY_BOUND { requestId }, IDENTITY_ANONYMOUS { requestId }, IDENTITY_REFUSED { requestId, reason } or IDENTITY_SESSION_ENDED { requestId }. It asks its composed std-bearer-verify once (BEARER_VERIFY), in the program session, so one key cache serves the whole program; the verdict arrives as BEARER_VERIFIED { verified } or as ANONYMOUS_SEEN, REFUSED_SEEN or KEY_SEEN (an API key makes no Verified). A verified credential is bound to the named viewer's session with (identity/sign-in verified clientId) and every other verdict signs that session out with (identity/sign-out clientId), so the session the request runs in is signed in or out again on every request (a bearer header is stateless); with self true the ask binds the session the step runs in instead (no session named). The outcome of a sign-in or sign-out is matched to its ask by the session it names. An ask naming no client session is anonymous when it carries no header and refused no-client-session when it does. A sign-in that answers no-identity with createIdentity on persists a row of identityEntity (id the subject, email and name from the claims, createRole when set) and verifies again once; a create that fails (a parallel ask of the same subject may have written the row) verifies every ask waiting on a row once more, and an ask that again finds no row is refused identity-no-identity, never creating twice; any other sign-in failure is refused identity-<kind>; an API key is refused api-key-identity; an ended session answers IDENTITY_SESSION_ENDED. The role is only ever the identity row's."
 ]
-type SignInStage = "verifying" | "signing" | "signing-out" | "creating" | "created" | "failed"
-type SignInAsk = { requestId : number!, session : string!, self : boolean!, authorization : string!, stage : SignInStage!, reason : string!, subject : string!, email : string!, name : string!, created : boolean! }
+type CreateRoleRule = { domain : string!, role : string! }
+type SignInStage = "verifying" | "signing" | "signing-out" | "creating" | "created"
+type SignInAsk = { requestId : number!, session : string!, self : boolean!, authorization : string!, stage : SignInStage!, reason : string!, subject : string!, email : string!, name : string!, created : boolean!, emailVerified : boolean! }
 
 orbital IdentityBindingOrbital {
   entity IdentityRow [persistent: viewer_rows] {
@@ -32,16 +33,16 @@ orbital IdentityBindingOrbital {
       BEARER_PRESENT -> idle when (and (not (default @payload.self false)) (= (default @payload.clientId "") "") (!= (default @payload.authorization "") ""))
         (emit IDENTITY_REFUSED { requestId: (default @payload.requestId 0), reason: "no-client-session" })
       BEARER_PRESENT -> idle when (or (default @payload.self false) (!= (default @payload.clientId "") ""))
-        (set @entity.asks (array/append @entity.asks { requestId: (default @payload.requestId 0), session: (if (default @payload.self false) "" (default @payload.clientId "")), self: (default @payload.self false), authorization: (default @payload.authorization ""), stage: "verifying", reason: "", subject: "", email: "", name: "", created: false }))
+        (set @entity.asks (array/append @entity.asks { requestId: (default @payload.requestId 0), session: (if (default @payload.self false) "" (default @payload.clientId "")), self: (default @payload.self false), authorization: (default @payload.authorization ""), stage: "verifying", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false }))
         (emit BEARER_VERIFY { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") })
 
       BEARER_VERIFIED -> idle when (array/some @entity.asks (fn a (and (= @a.requestId @payload.requestId) (= @a.stage "verifying") (not @a.self))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.requestId @payload.requestId) (= @x.stage "verifying")))) { requestId: 0, session: "", self: false, authorization: "", stage: "verifying", reason: "", subject: "", email: "", name: "", created: false })))
+        (let ((a (default (array/find @entity.asks (fn x (and (= @x.requestId @payload.requestId) (= @x.stage "verifying")))) { requestId: 0, session: "", self: false, authorization: "", stage: "verifying", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
-            (set @entity.asks (array/map @entity.asks (fn x (if (= @x.requestId @a.requestId) (object/merge @x { stage: "signing", subject: @payload.verified.subject, email: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "email"))))) (if (= @f null) "" (default (as @f.value string) ""))), name: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "name"))))) (if (= @f null) "" (default (as @f.value string) ""))) }) @x))))
+            (set @entity.asks (array/map @entity.asks (fn x (if (= @x.requestId @a.requestId) (object/merge @x { stage: "signing", subject: @payload.verified.subject, email: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "email"))))) (if (= @f null) "" (default (as @f.value string) ""))), name: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "name"))))) (if (= @f null) "" (default (as @f.value string) ""))), emailVerified: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "email_verified"))))) (if (= @f null) false (default (as @f.value boolean) false))) }) @x))))
             (identity/sign-in @payload.verified @a.session { emit: { success: IDENTITY_SIGNED_IN, failure: IDENTITY_SIGN_IN_FAILED } })))
       BEARER_VERIFIED -> idle when (array/some @entity.asks (fn a (and (= @a.requestId @payload.requestId) (= @a.stage "verifying") @a.self)))
-        (set @entity.asks (array/map @entity.asks (fn x (if (and (= @x.requestId @payload.requestId) (= @x.stage "verifying")) (object/merge @x { stage: "signing", subject: @payload.verified.subject, email: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "email"))))) (if (= @f null) "" (default (as @f.value string) ""))), name: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "name"))))) (if (= @f null) "" (default (as @f.value string) ""))) }) @x))))
+        (set @entity.asks (array/map @entity.asks (fn x (if (and (= @x.requestId @payload.requestId) (= @x.stage "verifying")) (object/merge @x { stage: "signing", subject: @payload.verified.subject, email: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "email"))))) (if (= @f null) "" (default (as @f.value string) ""))), name: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "name"))))) (if (= @f null) "" (default (as @f.value string) ""))), emailVerified: (let ((f (array/find @payload.verified.claims (fn c (= @c.name "email_verified"))))) (if (= @f null) false (default (as @f.value boolean) false))) }) @x))))
         (identity/sign-in @payload.verified { emit: { success: IDENTITY_SIGNED_IN, failure: IDENTITY_SIGN_IN_FAILED } })
       BEARER_VERIFIED -> idle when (not (array/some @entity.asks (fn a (and (= @a.requestId @payload.requestId) (= @a.stage "verifying")))))
 
@@ -56,7 +57,7 @@ orbital IdentityBindingOrbital {
       KEY_SEEN -> idle when (not (array/some @entity.asks (fn a (and (= @a.requestId @payload.requestId) (= @a.stage "verifying")))))
 
       SIGN_OUT_ASKED -> idle when (array/some @entity.asks (fn a (and (= @a.requestId @payload.requestId) (not @a.self))))
-        (let ((a (default (array/find @entity.asks (fn x (= @x.requestId @payload.requestId))) { requestId: 0, session: "", self: false, authorization: "", stage: "verifying", reason: "", subject: "", email: "", name: "", created: false })))
+        (let ((a (default (array/find @entity.asks (fn x (= @x.requestId @payload.requestId))) { requestId: 0, session: "", self: false, authorization: "", stage: "verifying", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/map @entity.asks (fn x (if (= @x.requestId @a.requestId) (object/merge @x { stage: "signing-out", reason: @payload.reason }) @x))))
             (identity/sign-out @a.session { emit: { success: IDENTITY_SIGNED_OUT, failure: IDENTITY_SIGN_OUT_FAILED } })))
@@ -65,29 +66,29 @@ orbital IdentityBindingOrbital {
         (identity/sign-out { emit: { success: IDENTITY_SIGNED_OUT, failure: IDENTITY_SIGN_OUT_FAILED } })
 
       IDENTITY_SIGNED_IN -> idle when (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing"))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false })))
+        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/filter @entity.asks (fn x (!= @x.requestId @a.requestId))))
             (emit IDENTITY_BOUND { requestId: @a.requestId, subject: (default @payload.subject "") })))
       IDENTITY_SIGNED_IN -> idle when (not (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
 
       IDENTITY_SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "session-ended") (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false })))
+        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/filter @entity.asks (fn x (!= @x.requestId @a.requestId))))
             (emit IDENTITY_SESSION_ENDED { requestId: @a.requestId })))
-      IDENTITY_SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "no-identity") @config.createIdentity (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing") (not @a.created)))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false })))
+      IDENTITY_SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "no-identity") @config.createIdentity (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing") (not @a.created) (or (= (array/len @config.createRoles) 0) (and @a.emailVerified (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (and (!= @config.createRole "") (not (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain))))))))))))
+        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/map @entity.asks (fn x (if (= @x.requestId @a.requestId) (object/merge @x { stage: "creating" }) @x))))
-            (emit CREATE_ROW { subject: @a.subject, email: @a.email, name: @a.name })))
-      IDENTITY_SIGN_IN_FAILED -> idle when (and (not (= (default @payload.kind "") "session-ended")) (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing") (not @a.created)))))) (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false })))
-          (emit SIGN_OUT_ASKED { requestId: @a.requestId, reason: (str/concat "identity-" (default @payload.kind "")) }))
+            (emit CREATE_ROW { subject: @a.subject, email: @a.email, name: @a.name, role: (let ((rule (array/find @config.createRoles (fn r (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (if (= @rule null) @config.createRole @rule.role)) })))
+      IDENTITY_SIGN_IN_FAILED -> idle when (and (not (= (default @payload.kind "") "session-ended")) (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing") (not @a.created) (or (= (array/len @config.createRoles) 0) (and @a.emailVerified (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (and (!= @config.createRole "") (not (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain))))))))))))) (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
+        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
+          (emit SIGN_OUT_ASKED { requestId: @a.requestId, reason: (if (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @a.created) (not (or (= (array/len @config.createRoles) 0) (and @a.emailVerified (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (and (!= @config.createRole "") (not (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))))))) (if (and (> (array/len @config.createRoles) 0) (not @a.emailVerified) (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) "identity-unverified-email" "identity-domain") (str/concat "identity-" (default @payload.kind ""))) }))
       IDENTITY_SIGN_IN_FAILED -> idle when (not (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
 
       IDENTITY_SIGNED_OUT -> idle when (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing-out"))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing-out")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing-out", reason: "", subject: "", email: "", name: "", created: false })))
+        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing-out")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing-out", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/filter @entity.asks (fn x (!= @x.requestId @a.requestId))))
             (if (= @a.reason "")
@@ -95,7 +96,7 @@ orbital IdentityBindingOrbital {
               (emit IDENTITY_REFUSED { requestId: @a.requestId, reason: @a.reason }))))
       IDENTITY_SIGNED_OUT -> idle when (not (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing-out")))))
       IDENTITY_SIGN_OUT_FAILED -> idle when (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing-out"))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing-out")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing-out", reason: "", subject: "", email: "", name: "", created: false })))
+        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing-out")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing-out", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/filter @entity.asks (fn x (!= @x.requestId @a.requestId))))
             (if (= (default @payload.kind "") "session-ended")
@@ -104,16 +105,16 @@ orbital IdentityBindingOrbital {
       IDENTITY_SIGN_OUT_FAILED -> idle when (not (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing-out")))))
 
       CREATE_ROW -> idle
-        (persist create @config.identityEntity (if (= @config.createRole "") { id: @payload.subject, email: @payload.email, name: @payload.name } { id: @payload.subject, email: @payload.email, name: @payload.name, role: @config.createRole }) { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })
+        (persist create @config.identityEntity (let ((role (if (= (default @payload.role "") "") @config.createRole @payload.role))) (if (= @role "") { id: @payload.subject, email: @payload.email, name: @payload.name } { id: @payload.subject, email: @payload.email, name: @payload.name, role: @role })) { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })
       IDENTITY_CREATED -> idle
-        (set @entity.asks (array/map @entity.asks (fn x (if (and (= @x.stage "creating") (= @x.subject (default @payload.id ""))) (object/merge @x { stage: "created", created: true }) @x))))
+        (set @entity.asks (array/map @entity.asks (fn x (if (and (= @x.stage "creating") (= @x.subject (default @payload.id ""))) (object/merge @x { stage: "created", created: true, emailVerified: false }) @x))))
         (emit REVERIFY_DRAIN { })
       IDENTITY_CREATE_FAILED -> idle
-        (set @entity.asks (array/map @entity.asks (fn x (if (= @x.stage "creating") (object/merge @x { stage: "failed" }) @x))))
-        (emit REFUSE_DRAIN { })
+        (set @entity.asks (array/map @entity.asks (fn x (if (= @x.stage "creating") (object/merge @x { stage: "created", created: true }) @x))))
+        (emit REVERIFY_DRAIN { })
 
       REVERIFY_DRAIN -> idle when (array/some @entity.asks (fn x (= @x.stage "created")))
-        (let ((a (default (array/find @entity.asks (fn x (= @x.stage "created"))) { requestId: 0, session: "", self: false, authorization: "", stage: "created", reason: "", subject: "", email: "", name: "", created: true })))
+        (let ((a (default (array/find @entity.asks (fn x (= @x.stage "created"))) { requestId: 0, session: "", self: false, authorization: "", stage: "created", reason: "", subject: "", email: "", name: "", created: true, emailVerified: false })))
           (do
             (set @entity.asks (array/map @entity.asks (fn x (if (= @x.requestId @a.requestId) (object/merge @x { stage: "verifying" }) @x))))
             (emit BEARER_VERIFY { requestId: @a.requestId, authorization: @a.authorization })
@@ -121,15 +122,6 @@ orbital IdentityBindingOrbital {
       REVERIFY_DRAIN -> idle when (not (array/some @entity.asks (fn x (= @x.stage "created"))))
       REVERIFY_NEXT -> idle
         (emit REVERIFY_DRAIN { })
-      REFUSE_DRAIN -> idle when (array/some @entity.asks (fn x (= @x.stage "failed")))
-        (let ((a (default (array/find @entity.asks (fn x (= @x.stage "failed"))) { requestId: 0, session: "", self: false, authorization: "", stage: "failed", reason: "", subject: "", email: "", name: "", created: false })))
-          (do
-            (set @entity.asks (array/filter @entity.asks (fn x (!= @x.requestId @a.requestId))))
-            (emit IDENTITY_REFUSED { requestId: @a.requestId, reason: "identity-store" })
-            (emit REFUSE_NEXT { })))
-      REFUSE_DRAIN -> idle when (not (array/some @entity.asks (fn x (= @x.stage "failed"))))
-      REFUSE_NEXT -> idle
-        (emit REFUSE_DRAIN { })
     }
 
     emits {
@@ -201,6 +193,7 @@ orbital IdentityBindingOrbital {
         subject : string!
         email : string!
         name : string!
+        role : string
       }
         @description "Internal: write the first identity row of a verified subject (createIdentity)."
         @tier "internal"
@@ -217,14 +210,8 @@ orbital IdentityBindingOrbital {
       REVERIFY_DRAIN { }
         @description "Internal: verify again, one at a time, every ask whose subject's first row was just written."
         @tier "internal"
-      REFUSE_DRAIN { }
-        @description "Internal: refuse, one at a time, every ask whose identity row could not be written."
-        @tier "internal"
       REVERIFY_NEXT { }
         @description "Internal: the next turn of REVERIFY_DRAIN."
-        @tier "internal"
-      REFUSE_NEXT { }
-        @description "Internal: the next turn of REFUSE_DRAIN."
         @tier "internal"
     }
 
@@ -270,6 +257,11 @@ orbital IdentityBindingOrbital {
         @label "Role of a first identity row"
         @description "The role written on the row createIdentity makes. Empty writes no role, so the new person holds none until someone gives them one; a role named here is held by everyone who signs in for the first time."
         @synonyms "default role, first role"
+        @tier "policy"
+      createRoles : [CreateRoleRule] = []
+        @label "Roles of a first identity row by email domain"
+        @description "When it lists any rule, createIdentity writes a first row only for a verified email whose domain (the text after the @, any letter case) equals a rule's domain, with that rule's role; a listed domain also needs the token's email_verified claim true, else identity-unverified-email (an email-and-password account proves no ownership of its address). Any other first sign-in gets createRole when createRole names one, and is refused identity-domain when it does not. Empty, createRole applies to every first sign-in."
+        @synonyms "allowed email domains, domain roles, sign-in domain allow-list"
         @tier "policy"
     }
   }

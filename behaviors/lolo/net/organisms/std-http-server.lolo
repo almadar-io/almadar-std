@@ -5,6 +5,7 @@ app std-http-server [
   net: { "127.0.0.1:3000": [listen], "127.0.0.1", env PORT: [listen], "www.googleapis.com:443": [tcp] },
   description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-boot-gate reads the declared environment at boot and asks std-boot-env-check what keeps it from working in production: under NODE_ENV=production a problem refuses the boot (BOOT_REFUSED, the listener never starts), elsewhere it only warns (BOOT_WARNED); the missing-credential lines of the host's boot check are not asked yet, no operator hands the credential catalog or store to a program. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED; once the gate has heard that and a cleared check it answers BOOT_CLEARED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). std-live-feed then subscribes the opened stream to the host's live broadcast (a keyed program/live for the ticket's viewer and the ?clientId= tab) and writes each item as a { type: bus, event, payload?, source, timestamp } frame, so a change made in one tab reaches the others; the stream's close cancels the subscription. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path (std-bearer-verify over the native jws/verify operator); neither falls back. Each dispatch request's bearer is presented to its own client session by std-identity-binding (a program/dispatch of CREDENTIAL_PRESENTED, so jws/verify and identity/sign-in run in that session and the request event then runs with @user the identity row; no bearer signs that session out), with the identityEntity and createIdentity knobs. The program session never signs in. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; POST /api/hooks/:name delivers the body and headers to the program's inbound handler of that name through program/dispatch { inbound } and answers the handler's { status, body }."
 ]
+type ServerCreateRoleRule = { domain : string!, role : string! }
 uses Spec from "almadar-std/server"
 uses H1 from "std/behaviors/std-http1"
 uses Policy from "std/behaviors/std-http-policy"
@@ -111,6 +112,11 @@ orbital HttpServerOrbital {
       @label "Role of a first identity row"
       @description "The role written on the row createIdentity makes; empty writes none. A role named here is held by everyone who signs in for the first time."
       @synonyms "default role, first role"
+      @tier "policy"
+    createRoles : [ServerCreateRoleRule] = []
+      @label "Roles of a first identity row by email domain"
+      @description "When it lists any rule, a first sign-in on a listed domain (verified email) gets that rule's role; any other first sign-in gets createRole when it names one, else is refused identity-domain. Empty, createRole applies to every first sign-in."
+      @synonyms "allowed email domains, domain roles, sign-in domain allow-list"
       @tier "policy"
   }
 
@@ -272,6 +278,7 @@ orbital HttpServerOrbital {
       identityEntity: @config.identityEntity
       createIdentity: @config.createIdentity
       createRole: @config.createRole
+      createRoles: @config.createRoles
     }
     listens {
       ServerDispatch.IDENTITY_REQUIRED -> BEARER_PRESENT

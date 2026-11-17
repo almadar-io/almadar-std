@@ -1,6 +1,6 @@
 app std-feed-ranking [
   version: "1.0.0",
-  description: "std-feed-ranking — pages a ranked feed from candidates the caller supplies. FEED_RANK sorts the due items (most overdue first), the frontier (unlearned, every prerequisite learned enough, by tier then sequence then name) and the explore items into three buckets, lifts the neighbours of liked items, skips hidden and already-served items, interleaves the buckets by the mix and answers one page with a cursor for the next."
+  description: "std-feed-ranking — pages a ranked feed from candidates the caller supplies; an optional call `key` on FEED_RANK comes back on FEED_RANKED and FEED_REJECTED (empty when none was sent). FEED_RANK sorts the due items (most overdue first), the frontier (unlearned, every prerequisite learned enough, by tier then sequence then name) and the explore items into three buckets, lifts the neighbours of liked items, skips hidden and already-served items, interleaves the buckets by the mix and answers one page with a cursor for the next."
 ]
 type FeedStrings = [string]
 type FeedCandidate = { key : string, name : string, tier : number, sequence : number, level : number, dueAt : instant?, prerequisites : [string], neighbours : [string], liked : boolean, hidden : boolean, lastSeen : instant? }
@@ -31,6 +31,7 @@ orbital FeedRankingOrbital {
               (let ((decoded (if (= @raw null) null (json/parse @raw FeedCursor))))
                 (let ((cursorOk (or (= ?cursor null) (!= @decoded null))))
                 (emit FeedPrepared {
+                  key: (if (= ?key null) "" ?key)
                   reason: (if (not (and (= @limit (math/floor @limit)) (>= @limit @config.limitMin) (<= @limit @config.limitMax))) "bad-limit" (if (or (< (object/get @mix review 0) 0) (< (object/get @mix frontier 0) 0) (< (object/get @mix explore 0) 0)) "bad-mix" (if @cursorOk "" "bad-cursor")))
                   candidates: ?candidates
                   explore: (if (= ?explore null) [] ?explore)
@@ -40,7 +41,7 @@ orbital FeedRankingOrbital {
                   asOf: (if (= @decoded null) @now (object/get @decoded asOf @now))
                 }))))))
       FeedPrepared -> idle when (!= ?reason "")
-        (emit FEED_REJECTED { reason: ?reason })
+        (emit FEED_REJECTED { reason: ?reason, key: ?key })
       FeedPrepared -> idle when (= ?reason "")
         (let ((noStrs : FeedStrings []) (noPicks : FeedPicks []))
           (let ((liftedKeys (array/unique (array/flatten (array/map (array/filter ?candidates (fn c (object/get @c liked false))) (fn c (object/get @c neighbours @noStrs))))))
@@ -86,6 +87,7 @@ orbital FeedRankingOrbital {
                                     e: (+ @e0 @ne)
                                   }))))))))))
                 (emit FEED_RANKED {
+                  key: ?key
                   picks: (object/get @run picks @noPicks)
                   nextCursor: (if (or (< (object/get @run r 0) (array/len @revList)) (< (object/get @run f 0) (array/len @frList)) (< (object/get @run e 0) (array/len @offered)))
                     (str/replaceAll (str/replaceAll (str/replaceAll (base64/encode (str/concat "{\"seen\":" (json/stringify (array/concat ?seen (array/map (object/get @run picks @noPicks) (fn p (object/get @p key ""))))) ",\"asOf\":\"" ?asOf "\"}")) "+" "-") "/" "_") "=" "")
@@ -94,6 +96,7 @@ orbital FeedRankingOrbital {
 
     emits {
       FEED_RANKED -> external {
+        key : string
         picks : [FeedPick]!
         nextCursor : string?
       }
@@ -101,12 +104,14 @@ orbital FeedRankingOrbital {
         @synonyms "feed page, ranked items, next cards"
         @tier "primary"
       FEED_REJECTED -> external {
+        key : string
         reason : string!
       }
         @description "The request was refused: bad-limit, bad-mix or bad-cursor."
         @synonyms "feed refused, invalid cursor"
         @tier "primary"
       FeedPrepared {
+        key : string!
         reason : string!
         candidates : [FeedCandidate]!
         explore : [FeedExploreItem]!
@@ -120,6 +125,7 @@ orbital FeedRankingOrbital {
 
     listens {
       FEED_RANK -> input {
+        key : string?
         candidates : [FeedCandidate]!
         explore : [FeedExploreItem]?
         limit : number?
@@ -130,6 +136,7 @@ orbital FeedRankingOrbital {
         @synonyms "rank feed, next page, build feed"
         @tier "domain"
       FeedPrepared {
+        key : string!
         reason : string!
         candidates : [FeedCandidate]!
         explore : [FeedExploreItem]!

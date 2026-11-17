@@ -64,6 +64,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-grid': { description: 'Tile/cell coordinate operations', target: ['ts', 'rust'] },
     'std-anim': { description: 'Sprite animation helpers', target: ['ts', 'rust'] },
     'std-ease': { description: 'Easing and interpolation curves', target: ['ts', 'rust'] },
+    'std-color': { description: 'CSS colour contrast and luminance (WCAG 2.2)', target: ['ts', 'rust'] },
     'std-noise': { description: 'Coherent noise (procedural gen)', target: ['ts', 'rust'] },
     'std-path': { description: 'Grid pathfinding', target: ['ts', 'rust'] },
 };

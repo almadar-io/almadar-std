@@ -1,0 +1,21 @@
+app lint-contrast-spec [
+  version: "1.0.0",
+  description: "Design contract for the `orb lint contrast <file>` command, the WCAG 2.2 AA rule for Rasm looks: every style of a std-rasm-theme trait is checked against the installed theme named after it (light colors, then dark), text at 4.5 (3.0 large), control edges at 3.0, text under 13px flagged. One finding per failure (status 500, exit 1). Clean answers `lint contrast: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
+
+orbital LintContrastSpec {
+  expects trait OrbLintContrast {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintContrastCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintContrast, OrbLintContrastCli
+}

@@ -1,0 +1,49 @@
+{
+ "atom": "../ui/core/atoms/std-board.lolo",
+ "trait": "BoardItemBoard",
+ "cases": [
+  {
+   "id": "moving-a-card-writes-the-field-the-board-groups-by",
+   "config": { "groupByField": "status" },
+   "entity": { "id": "b" },
+   "steps": [
+    { "from": "viewing_board", "event": "MOVE_CARD", "payload": { "id": "c1", "targetGroup": "done" },
+      "expect": { "state": "viewing_board", "effects": [ { "type": "persist", "arg0": "update", "arg1": "BoardView", "arg2": ["object/set", { "id": "@payload.id" }, "status", "@payload.targetGroup"] } ] } }
+   ]
+  },
+  {
+   "id": "control-default-grouping-still-writes-stage",
+   "entity": { "id": "b" },
+   "steps": [
+    { "from": "viewing_board", "event": "MOVE_CARD", "payload": { "id": "c1", "targetGroup": "done" },
+      "expect": { "state": "viewing_board", "effects": [ { "type": "persist", "arg0": "update", "arg1": "BoardView", "arg2": ["object/set", { "id": "@payload.id" }, "stage", "@payload.targetGroup"] } ] } }
+   ]
+  },
+  {
+   "id": "the-open-card-move-also-writes-the-grouping-field",
+   "config": { "groupByField": "status" },
+   "entity": { "id": "b" },
+   "steps": [
+    { "from": "viewing_card", "event": "MOVE_CARD", "payload": { "id": "c1", "targetGroup": "review" },
+      "expect": { "state": "loading", "effects": [ { "type": "persist", "arg0": "update", "arg1": "BoardView", "arg2": ["object/set", { "id": "@payload.id" }, "status", "@payload.targetGroup"] } ] } }
+   ]
+  },
+  {
+   "id": "control-no-match-field-leaves-the-fetch-unfiltered",
+   "entity": { "id": "b" },
+   "steps": [
+    { "from": "viewing_board", "event": "INIT", "payload": {},
+      "expect": { "state": "loading", "effects": [ { "type": "fetch", "arg0": "BoardView", "arg1": { "emit": { "failure": "BoardItemsLoadFailed", "success": "BoardItemsLoaded" }, "include": [], "limit": 500, "filter": ["and", ["or", ["not", ["validate/required", "@config.matchField"]], ["=", ["object/get", "@entity", "@config.matchField"], ""]], ["and", ["or", ["not", ["validate/required", "@config.scopeField"]], ["=", ["object/get", "@entity", "@config.scopeField"], "@user.id"]], ["or", ["not", ["validate/required", "@config.parentField"]], ["=", ["object/get", "@entity", "@config.parentField"], ["default", "@payload.id", ""]]]]] } } ] } }
+   ]
+  },
+  {
+   "id": "match-field-narrows-the-board-fetch",
+   "config": { "matchField": "parentTaskId", "matchValue": "" },
+   "entity": { "id": "b" },
+   "steps": [
+    { "from": "viewing_board", "event": "INIT", "payload": {},
+      "expect": { "state": "loading", "effects": [ { "type": "fetch", "arg0": "BoardView", "arg1": { "emit": { "failure": "BoardItemsLoadFailed", "success": "BoardItemsLoaded" }, "include": [], "limit": 500, "filter": ["and", ["or", ["not", ["validate/required", "parentTaskId"]], ["=", ["object/get", "@entity", "parentTaskId"], ""]], ["and", ["or", ["not", ["validate/required", "@config.scopeField"]], ["=", ["object/get", "@entity", "@config.scopeField"], "@user.id"]], ["or", ["not", ["validate/required", "@config.parentField"]], ["=", ["object/get", "@entity", "@config.parentField"], ["default", "@payload.id", ""]]]]] } } ] } }
+   ]
+  }
+ ]
+}

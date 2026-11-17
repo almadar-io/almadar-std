@@ -1,0 +1,95 @@
+{
+  "atom": "store/atoms/std-feed-ranking.lolo",
+  "trait": "FeedRanker",
+  "note": "std-feed-ranking: an optional call key on FEED_RANK comes back on the answer, so a keyed asker hears it on its own row.",
+  "cases": [
+    {
+      "id": "a-keyed-ask-gets-its-key-back-on-the-refusal",
+      "config": {},
+      "steps": [
+        {
+          "event": "FEED_RANK",
+          "from": "idle",
+          "entity": {
+            "id": "r"
+          },
+          "payload": {
+            "key": "row-1",
+            "candidates": [],
+            "limit": 0
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "FEED_REJECTED",
+                "payload": {
+                  "reason": "bad-limit",
+                  "key": "row-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unkeyed-ask-gets-an-empty-key",
+      "config": {},
+      "steps": [
+        {
+          "event": "FEED_RANK",
+          "from": "idle",
+          "entity": {
+            "id": "r"
+          },
+          "payload": {
+            "candidates": [],
+            "limit": 0
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "FEED_REJECTED",
+                "payload": {
+                  "reason": "bad-limit",
+                  "key": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-keyed-ask-gets-its-key-back-on-the-page",
+      "config": {},
+      "steps": [
+        {
+          "event": "FEED_RANK",
+          "from": "idle",
+          "entity": {
+            "id": "r"
+          },
+          "payload": {
+            "key": "row-1",
+            "candidates": []
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "FEED_RANKED",
+                "payload": {
+                  "key": "row-1",
+                  "picks": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

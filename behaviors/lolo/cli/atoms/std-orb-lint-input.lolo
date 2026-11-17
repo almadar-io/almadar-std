@@ -39,7 +39,7 @@ type LazyChild = { orbital : string!, program : LintProgram! }
 type ResolvedProgram = { program : LintProgram!, lazy : [LazyChild]! }
 type PackText = { name : string!, text : string! }
 type PackMeta = { code : string! }
-type CoreLanguageBlock = { componentMapping : string, patterns : string, programTypes : string, bindingRules : string, vocabulary : string, uiVocabulary : string, services : string }
+type CoreLanguageBlock = { componentMapping : string, patterns : string, programTypes : string, bindingRules : string, vocabulary : string, uiVocabulary : string, services : string, themes : string }
 type CoreManifest = { orbLanguage : CoreLanguageBlock? }
 type ComponentMappingEntry = { component : string! }
 type StdLanguageBlock = { operators : string }
@@ -114,6 +114,18 @@ type BindingRule = { allowed : [string]! }
 type BindingRulesFile = { guard : BindingRule!, effect : BindingRule!, tick : BindingRule! }
 type VocabularyFile = { fieldTypes : [string]!, reservedCliWords : [string]! }
 type UiVocabularyFile = { slots : [string]!, itemActionBaseProps : [string]!, lucideIcons : [string]!, themeKeys : [string]!, deliveryRoots : [string]!, eventSourceKeys : [string]! }
+type ThemeColors = { colors : Map string string }
+type ThemeVariants = { dark : ThemeColors }
+type ThemeFile = { tokens : ThemeColors!, variants : ThemeVariants }
+type ThemePalette = { light : Map string string!, dark : Map string string! }
+type ThemeSite = { oi : number!, ti : number!, names : [string]! }
+type ThemeProbeMap = Map string LintValue?
+type ThemeProbeKnob = { default : LintValue? }
+type ThemeProbeSource = { behavior : string }
+type ThemeProbeTrait = { sourceBehavior : ThemeProbeSource, config : Map string ThemeProbeKnob }
+type ThemeProbeOrbital = { traits : [ThemeProbeTrait] }
+type ThemeProbeProgram = { name : string, orbitals : [ThemeProbeOrbital] }
+type ThemeSiteRef = { oi : number!, ti : number! }
 type ComponentMappingFile = { mappings : Map string ComponentMappingEntry! }
 type HostVal = string | number | boolean | [HostVal?] | Map string HostVal?
 type HostIntRange = { arg : number!, min : number!, max : number! }
@@ -153,6 +165,11 @@ orbital OrbLintInputOrbital {
     vocabFile : string = ""
     uiVocabFile : string = ""
     servicesFile : string = ""
+    themesDir : string = ""
+    themeQueue : [string] = []
+    themePalettes : Map string ThemePalette = {}
+    themeUnread : [string] = []
+    themeSites : [ThemeSite] = []
     progTypes : ProgTypeFile = {}
     guardSigils : [string] = []
     effectSigils : [string] = []
@@ -354,7 +371,7 @@ orbital OrbLintInputOrbital {
       LINT_CORE_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (if (= @text null) true (let ((m (json/parse @text CoreManifest))) (if (= @m null) true (= (object/get (object/get @m "orbLanguage" {}) "componentMapping" "") "")))))
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: (let ((text (bytes/to-string @payload.data))) (if (= @text null) "the installed @almadar/core package.json is not valid text" (let ((m (json/parse @text CoreManifest))) (if (= @m null) "the installed @almadar/core package.json is not valid JSON" "the installed @almadar/core declares no orbLanguage.componentMapping")))) })
       LINT_CORE_MANIFEST -> reading when (let ((text (bytes/to-string @payload.data))) (if (= @text null) false (let ((m (json/parse @text CoreManifest))) (if (= @m null) false (!= (object/get (object/get @m "orbLanguage" {}) "componentMapping" "") "")))))
-        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core package.json is not valid text" }) (let ((m (json/parse @text CoreManifest))) (if (= @m null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core package.json is not valid JSON" }) (let ((blk (object/get @m "orbLanguage" {}))) (do (set @entity.patternsFile (object/get @blk "patterns" "")) (set @entity.typesFile (object/get @blk "programTypes" "")) (set @entity.rulesFile (object/get @blk "bindingRules" "")) (set @entity.vocabFile (object/get @blk "vocabulary" "")) (set @entity.uiVocabFile (object/get @blk "uiVocabulary" "")) (set @entity.servicesFile (object/get @blk "services" "")) (emit LINT_FACTS_READ { }) (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot (object/get @blk "componentMapping" "")))) { key: "lint-input-components" emit: { success: LINT_MAPPING_READ, failure: LINT_FILE_UNREAD } })))))))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core package.json is not valid text" }) (let ((m (json/parse @text CoreManifest))) (if (= @m null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core package.json is not valid JSON" }) (let ((blk (object/get @m "orbLanguage" {}))) (do (set @entity.patternsFile (object/get @blk "patterns" "")) (set @entity.typesFile (object/get @blk "programTypes" "")) (set @entity.rulesFile (object/get @blk "bindingRules" "")) (set @entity.vocabFile (object/get @blk "vocabulary" "")) (set @entity.uiVocabFile (object/get @blk "uiVocabulary" "")) (set @entity.servicesFile (object/get @blk "services" "")) (set @entity.themesDir (object/get @blk "themes" "")) (emit LINT_FACTS_READ { }) (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot (object/get @blk "componentMapping" "")))) { key: "lint-input-components" emit: { success: LINT_MAPPING_READ, failure: LINT_FILE_UNREAD } })))))))
       LINT_MAPPING_READ -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text ComponentMappingFile) null)))
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: (if (= (bytes/to-string @payload.data) null) "the installed @almadar/core component mapping is not valid text" "the installed @almadar/core component mapping is not a component mapping") })
       LINT_MAPPING_READ -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text ComponentMappingFile) null)))
@@ -515,11 +532,10 @@ orbital OrbLintInputOrbital {
         (set @entity.siteRoutes (let ((prog @payload.result.program)) (array/filter (array/unique (array/concat (array/flatten (array/map @prog.orbitals (fn o (array/map (default @o.pages []) (fn pg (default @pg.path "")))))) (array/map (default @prog.lazyPages []) (fn l @l.path)))) (fn r (!= @r "")))))
         (set @entity.pendingProgram (object/get @payload.result "program"))
         (set @entity.factsWaiting true)
-      LINT_PROGRAM_READ -> ready when @entity.factsDone
+      LINT_PROGRAM_READ -> reading when @entity.factsDone
         (set @entity.lazy (object/get @payload.result "lazy" []))
         (set @entity.siteRoutes (let ((prog @payload.result.program)) (array/filter (array/unique (array/concat (array/flatten (array/map @prog.orbitals (fn o (array/map (default @o.pages []) (fn pg (default @pg.path "")))))) (array/map (default @prog.lazyPages []) (fn l @l.path)))) (fn r (!= @r "")))))
-        (emit LINT_LAZY { orbitals: (array/map (object/get @payload.result "lazy" []) (fn c (object/get @c "orbital"))) })
-        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get @payload.result "program"), scope: "" })
+        (emit LINT_THEMES_READ { program: (object/get @payload.result "program") })
       LINT_FACTS_READ -> reading when (or (= @entity.typesFile "") (= @entity.rulesFile "") (= @entity.vocabFile ""))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core declares no orbLanguage.programTypes, bindingRules or vocabulary" })
       LINT_FACTS_READ -> reading when (and (!= @entity.typesFile "") (!= @entity.rulesFile "") (!= @entity.vocabFile ""))
@@ -552,9 +568,48 @@ orbital OrbLintInputOrbital {
       LINT_FACTS_FAILED -> reading
         (emit LINT_LANGUAGE_FACTS_UNREAD { error: @payload.error })
         (emit LINT_FACTS_DONE { })
-      LINT_FACTS_DONE -> ready when @entity.factsWaiting
+      LINT_FACTS_DONE -> reading when @entity.factsWaiting
         (set @entity.factsDone true)
         (set @entity.factsWaiting false)
+        (let ((pp @entity.pendingProgram)) (if (= @pp null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the program was not read" }) (emit LINT_THEMES_READ { program: @pp })))
+      LINT_THEMES_READ -> reading
+        (set @entity.pendingProgram @payload.program)
+        (let ((pg : ThemeProbeProgram (default (as @payload.program ThemeProbeProgram) { name: "", orbitals: [] })) (nk : ThemeProbeKnob { default: null }))
+          (let ((orbs : [ThemeProbeOrbital] (object/get @pg "orbitals" [])) (atomSelf (= (object/get @pg "name" "") "std-rasm-theme")))
+            (let ((sites : [ThemeSite] (array/filter (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+                    (let ((o : ThemeProbeOrbital (default (array/nth @orbs @oi) { traits: [] })))
+                      (let ((trs : [ThemeProbeTrait] (object/get @o "traits" [])))
+                        (array/map (array/range 0 (array/len @trs)) (fn ti
+                          (let ((td : ThemeProbeTrait (default (array/nth @trs @ti) { sourceBehavior: { behavior: "" }, config: {} })))
+                            (let ((kn : ThemeProbeKnob (object/get (object/get @td "config" {}) "styles" @nk)))
+                              (let ((row : ThemeSite { oi: @oi, ti: @ti, names: (if (or (= (object/get (object/get @td "sourceBehavior" { behavior: "" }) "behavior" "") "std/behaviors/std-rasm-theme") (and @atomSelf (object/has (object/get @td "config" {}) "styles"))) (object/keys (default (as (object/get @kn "default") ThemeProbeMap) {})) (array/filter [""] (fn x false))) })) @row)))))))))) (fn s (> (array/len (object/get @s "names")) 0)))))
+              (do
+                (set @entity.themeSites @sites)
+                (set @entity.themePalettes {})
+                (set @entity.themeUnread (array/filter [""] (fn x false)))
+                (set @entity.themeQueue (array/unique (array/flatten (array/map @sites (fn s (object/get @s "names"))))))
+                (emit LINT_THEME_NEXT { })))))
+      LINT_THEME_NEXT -> reading when (and (> (array/len @entity.themeQueue) 0) (!= @entity.themesDir ""))
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.themesDir (str/concat (default (array/first @entity.themeQueue) "") ".json")))) { key: "lint-input-theme" emit: { success: LINT_THEME_FILE, failure: LINT_THEME_FAILED } })
+      LINT_THEME_NEXT -> reading when (and (> (array/len @entity.themeQueue) 0) (= @entity.themesDir ""))
+        (emit LINT_THEME_FAILED { error: "the installed @almadar/core declares no orbLanguage.themes" })
+      LINT_THEME_NEXT -> reading when (= (array/len @entity.themeQueue) 0)
+        (emit LINT_THEMES_DONE { })
+      LINT_THEME_FILE -> reading
+        (let ((text (bytes/to-string @payload.data)))
+          (if (= @text null) (emit LINT_THEME_FAILED { error: "the theme file is not valid text" })
+            (let ((tf (json/parse @text ThemeFile)))
+              (if (= @tf null) (emit LINT_THEME_FAILED { error: "the theme file is not a theme" })
+                (do
+                  (set @entity.themePalettes (object/set @entity.themePalettes (default (array/first @entity.themeQueue) "") { light: (object/get (object/get @tf "tokens" {}) "colors" {}), dark: (object/get (object/get (object/get @tf "variants" {}) "dark" {}) "colors" {}) }))
+                  (set @entity.themeQueue (array/slice @entity.themeQueue 1))
+                  (emit LINT_THEME_NEXT { }))))))
+      LINT_THEME_FAILED -> reading
+        (set @entity.themeUnread (array/append @entity.themeUnread (default (array/first @entity.themeQueue) "")))
+        (set @entity.themeQueue (array/slice @entity.themeQueue 1))
+        (emit LINT_THEME_NEXT { })
+      LINT_THEMES_DONE -> ready
+        (emit LINT_THEME_PALETTES { palettes: @entity.themePalettes, sites: (array/map @entity.themeSites (fn s { oi: (object/get @s "oi"), ti: (object/get @s "ti") })), unread: @entity.themeUnread })
         (emit LINT_LAZY { orbitals: (array/map @entity.lazy (fn c (object/get @c "orbital"))) })
         (let ((pp @entity.pendingProgram)) (if (= @pp null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the program was not read" }) (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: @pp, scope: "" })))
       LINT_FACTS_DONE -> reading when (not @entity.factsWaiting)
@@ -704,6 +759,24 @@ orbital OrbLintInputOrbital {
         @tier "internal"
       LINT_MAPPING_READ { data : bytes! }
         @description "The installed @almadar/core component mapping read."
+        @tier "internal"
+      LINT_THEME_PALETTES -> external { palettes : Map string ThemePalette!  sites : [ThemeSiteRef]!  unread : [string]! }
+        @description "The installed @almadar/core theme palettes (orbLanguage.themes) for every style that a std-rasm-theme trait of the program declares, each as its light colors and its dark variant colors, with the traits that declare them (orbital and trait index) and the style names whose theme file could not be read; sent before LINT_INPUT of the root program."
+        @tier "internal"
+      LINT_THEMES_READ { program : LintProgram! }
+        @description "Internal: read the theme palettes the program's std-rasm-theme traits name."
+        @tier "internal"
+      LINT_THEME_NEXT { }
+        @description "Internal: read the next queued theme file."
+        @tier "internal"
+      LINT_THEME_FILE { data : bytes! }
+        @description "One installed @almadar/core theme file read."
+        @tier "internal"
+      LINT_THEME_FAILED { error : string! }
+        @description "Internal: a theme file could not be read."
+        @tier "internal"
+      LINT_THEMES_DONE { }
+        @description "Internal: every theme palette was read or recorded unread."
         @tier "internal"
       LINT_LAZY -> external { orbitals : [string]! }
         @description "The resolved program's lazy children, by orbital, in the order LINT_CHILD_REQUEST indexes them."

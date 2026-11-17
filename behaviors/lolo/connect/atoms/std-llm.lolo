@@ -139,11 +139,12 @@ orbital LlmOrbital {
           message: (str/concat "Param 'items' must be a list with distinct ids; '"
             (default (array/find (array/map @payload.items (fn it @it.id)) (fn id (> (array/count (array/map @payload.items (fn it @it.id)) (fn x (= @x @id))) 1))) "")
             "' appears twice")
+          key: (default @payload.key "")
         })
       LLM_CLASSIFY_MANY -> idle when (and (= (array/len @payload.categories) 0) (= (array/len (array/unique (array/map @payload.items (fn it @it.id)))) (array/len @payload.items)))
-        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category" })
+        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (default @payload.key "") })
       LLM_CLASSIFY_MANY -> idle when (and (> (array/len @payload.categories) 0) (= (array/len @payload.items) 0))
-        (emit LLM_CLASSIFY_MANY_RESULT { verdicts: [] })
+        (emit LLM_CLASSIFY_MANY_RESULT { verdicts: [], key: (default @payload.key "") })
       LLM_CLASSIFY_MANY -> idle when (and (> (array/len @payload.categories) 0) (> (array/len @payload.items) 0) (= (array/len (array/unique (array/map @payload.items (fn it @it.id)))) (array/len @payload.items)))
         (emit LLM_CHAT_SEND {
           job: (json/stringify {
@@ -257,7 +258,7 @@ orbital LlmOrbital {
         (fetch LlmCacheRow { id: (object/get (default (json/parse (array/first @entity.cacheQueue) LlmJob) {}) ck ""), emit: { success: LLM_CACHE_LOADED, failure: LLM_CACHE_ABSENT } })
       LLM_CACHE_NEXT -> idle when (= (array/len @entity.cacheQueue) 0)
       LLM_CACHE_LOADED -> idle when (and (> (array/len @entity.cacheQueue) 0) (< (time/diff @now @payload.data.storedAt "ms") @config.cacheTtlMs) (= (object/get (default (json/parse (array/first @entity.cacheQueue) LlmJob) {}) action "") "generate"))
-        (emit LLM_GENERATE_RESULT { content: @payload.data.result, usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } })
+        (emit LLM_GENERATE_RESULT { content: @payload.data.result, usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 }, key: (object/get (default (json/parse (array/first @entity.cacheQueue) LlmJob) {}) callKey "") })
         (set @entity.cacheQueue (array/drop @entity.cacheQueue 1))
         (emit LLM_CACHE_NEXT {})
       LLM_CACHE_LOADED -> idle when (and (> (array/len @entity.cacheQueue) 0) (< (time/diff @now @payload.data.storedAt "ms") @config.cacheTtlMs) (!= (object/get (default (json/parse (array/first @entity.cacheQueue) LlmJob) {}) action "") "generate"))
@@ -490,11 +491,11 @@ orbital LlmOrbital {
           (or (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "generate")
               (>= (object/get (default (json/parse @payload.job LlmJob) {}) attempt 0) 2)
               (str/includes (str/lower @payload.message) "rate limit") (str/includes (str/lower @payload.message) "429") (str/includes (str/lower @payload.message) "quota exceeded")))
-        (emit LLM_FAILED { code: "", message: @payload.message })
+        (emit LLM_FAILED { code: "", message: @payload.message, key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "") })
       LLM_CHAT_ERROR -> idle when (and (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classifyMany")
           (or (>= (object/get (default (json/parse @payload.job LlmJob) {}) attempt 0) 2)
               (str/includes (str/lower @payload.message) "rate limit") (str/includes (str/lower @payload.message) "429") (str/includes (str/lower @payload.message) "quota exceeded")))
-        (emit LLM_FAILED { code: "SERVICE_ERROR", message: (str/concat "The model's reply could not be read as verdicts: " @payload.message) })
+        (emit LLM_FAILED { code: "SERVICE_ERROR", message: (str/concat "The model's reply could not be read as verdicts: " @payload.message), key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "") })
       LLM_CHAT_ERROR -> idle when (and (!= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "generate")
           (< (object/get (default (json/parse @payload.job LlmJob) {}) attempt 0) 2)
           (not (str/includes (str/lower @payload.message) "rate limit")) (not (str/includes (str/lower @payload.message) "429")) (not (str/includes (str/lower @payload.message) "quota exceeded")))
@@ -516,7 +517,8 @@ orbital LlmOrbital {
             promptTokens: (if (= @payload.inputTokens null) 0 @payload.inputTokens),
             completionTokens: (if (= @payload.outputTokens null) 0 @payload.outputTokens),
             totalTokens: (+ (if (= @payload.inputTokens null) 0 @payload.inputTokens) (if (= @payload.outputTokens null) 0 @payload.outputTokens))
-          }
+          },
+          key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "")
         })
         (emit LLM_USAGE_REPORTED {
           provider: @config.provider,
@@ -628,18 +630,20 @@ orbital LlmOrbital {
         (emit LLM_CLASSIFY_RESULT {
           category: (object/get (default (json/parse @payload.json ClassificationReply) {}) category ""),
           confidence: (object/get (default (json/parse @payload.json ClassificationReply) {}) confidence 0),
-          reasoning: (object/get (default (json/parse @payload.json ClassificationReply) {}) reasoning "")
+          reasoning: (object/get (default (json/parse @payload.json ClassificationReply) {}) reasoning ""),
+          key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "")
         })
         (when (!= (object/get (default (json/parse @payload.job LlmJob) {}) ck "") "")
           (emit LLM_CACHE_STORE { key: (object/get (default (json/parse @payload.job LlmJob) {}) ck ""), result: @payload.json }))
       LLM_CHAT_CHECKED -> idle when (and (= @payload.issues "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "extract"))
-        (emit LLM_EXTRACT_RESULT { json: @payload.json })
+        (emit LLM_EXTRACT_RESULT { json: @payload.json, key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "") })
         (when (!= (object/get (default (json/parse @payload.job LlmJob) {}) ck "") "")
           (emit LLM_CACHE_STORE { key: (object/get (default (json/parse @payload.job LlmJob) {}) ck ""), result: @payload.json }))
       LLM_CHAT_CHECKED -> idle when (and (= @payload.issues "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "summarize"))
         (emit LLM_SUMMARIZE_RESULT {
           summary: (object/get (default (json/parse @payload.json SummaryReply) {}) summary ""),
-          keyPoints: (object/get (default (json/parse @payload.json SummaryReply) {}) keyPoints [])
+          keyPoints: (object/get (default (json/parse @payload.json SummaryReply) {}) keyPoints []),
+          key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "")
         })
       LLM_CHAT_CHECKED -> idle when (and (= @payload.issues "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classifyMany"))
         (let ((ids (object/get (default (json/parse @payload.job LlmJob) {}) itemIds [])) (vs (object/get (default (json/parse @payload.json VerdictsReply) {}) verdicts [])))
@@ -654,13 +658,14 @@ orbital LlmOrbital {
                     (if (> (array/len @missing) 0) (str/concat "The model gave no verdict for " (str/join @missing ", ")) ""))
                 })))))
       LLM_CHAT_VERDICTS -> idle when (!= @payload.problem "")
-        (emit LLM_FAILED { code: "SERVICE_ERROR", message: @payload.problem })
+        (emit LLM_FAILED { code: "SERVICE_ERROR", message: @payload.problem, key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "") })
       LLM_CHAT_VERDICTS -> idle when (= @payload.problem "")
         (let ((ids (object/get (default (json/parse @payload.job LlmJob) {}) itemIds [])) (vs (object/get (default (json/parse @payload.json VerdictsReply) {}) verdicts [])))
           (emit LLM_CLASSIFY_MANY_RESULT {
             verdicts: (array/map @ids (fn (itemId index) (let ((k @index))
               (let ((v (array/find @vs (fn x (= (object/get @x id "") (str/concat (+ @k 1) ""))))))
-                { id: @itemId, category: (if (validate/required @v) (object/get @v category "") ""), confidence: (if (validate/required @v) (object/get @v confidence 0) 0), reasoning: (if (validate/required @v) (object/get @v reasoning "") "") }))))
+                { id: @itemId, category: (if (validate/required @v) (object/get @v category "") ""), confidence: (if (validate/required @v) (object/get @v confidence 0) 0), reasoning: (if (validate/required @v) (object/get @v reasoning "") "") })))),
+            key: (object/get (default (json/parse @payload.job LlmJob) {}) callKey "")
           }))
         (when (!= (object/get (default (json/parse @payload.job LlmJob) {}) ck "") "")
           (emit LLM_CACHE_STORE { key: (object/get (default (json/parse @payload.job LlmJob) {}) ck ""), result: @payload.json }))
@@ -738,7 +743,7 @@ orbital LlmOrbital {
             "\n]")
         })
       LLM_CALL_TOOLS -> idle when (and (not (and (!= @payload.maxSteps null) (or (<= @payload.maxSteps 0) (!= (math/mod @payload.maxSteps 1) 0)))) (> (array/count @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) 0))
-        (emit LLM_FAILED { code: "", message: (str/concat "call-tools: tool name '" (object/get (default (array/find @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) {}) name "") "' is not a valid tool name (letters, digits, _ and -, at most 64)") })
+        (emit LLM_FAILED { code: "", message: (str/concat "call-tools: tool name '" (object/get (default (array/find @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) {}) name "") "' is not a valid tool name (letters, digits, _ and -, at most 64)"), key: (default @payload.key "") })
       LLM_CALL_TOOLS -> idle when (and (not (and (!= @payload.maxSteps null) (or (<= @payload.maxSteps 0) (!= (math/mod @payload.maxSteps 1) 0)))) (not (> (array/count @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) 0)))
         (emit LLM_TOOLS_SEND {
           session: (json/stringify {
@@ -757,7 +762,7 @@ orbital LlmOrbital {
         })
 
       LLM_TOOLS_SEND -> idle when (let ((s (json/parse @payload.session ToolsSession))) (>= @s.usage.modelCalls @s.maxSteps))
-        (emit LLM_FAILED { code: "", message: (let ((s (json/parse @payload.session ToolsSession))) (str/concat "call-tools: no reply after " @s.maxSteps " model calls")) })
+        (emit LLM_FAILED { code: "", message: (let ((s (json/parse @payload.session ToolsSession))) (str/concat "call-tools: no reply after " @s.maxSteps " model calls")), key: (object/get (default (json/parse @payload.session ToolsSession) {}) key "") })
       LLM_TOOLS_SEND -> idle when (let ((s (json/parse @payload.session ToolsSession))) (< @s.usage.modelCalls @s.maxSteps))
         (emit LLM_TOOLS_DISPATCH {
           session: (json/stringify (object/set (default (json/parse @payload.session ToolsSession) {}) startedAt (time/now))),
@@ -824,20 +829,20 @@ orbital LlmOrbital {
 
       LLM_TOOLS_UNREACHABLE -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: (if (= @payload.kind "timeout") "timeout" ""), message: (if (= @payload.kind "timeout") "LLMClient.callWithTools timed out" "fetch failed") })
+        (emit LLM_FAILED { code: (if (= @payload.kind "timeout") "timeout" ""), message: (if (= @payload.kind "timeout") "LLMClient.callWithTools timed out" "fetch failed"), key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
 
       LLM_TOOLS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: "", message: (str/concat "LLMClient.callWithTools: " @config.provider " returned " @payload.status " " (match @payload.status (400 "Bad Request") (401 "Unauthorized") (402 "Payment Required") (403 "Forbidden") (404 "Not Found") (405 "Method Not Allowed") (408 "Request Timeout") (409 "Conflict") (413 "Payload Too Large") (422 "Unprocessable Entity") (429 "Too Many Requests") (500 "Internal Server Error") (501 "Not Implemented") (502 "Bad Gateway") (503 "Service Unavailable") (504 "Gateway Timeout") (_ "")) ": " @payload.body) })
+        (emit LLM_FAILED { code: "", message: (str/concat "LLMClient.callWithTools: " @config.provider " returned " @payload.status " " (match @payload.status (400 "Bad Request") (401 "Unauthorized") (402 "Payment Required") (403 "Forbidden") (404 "Not Found") (405 "Method Not Allowed") (408 "Request Timeout") (409 "Conflict") (413 "Payload Too Large") (422 "Unprocessable Entity") (429 "Too Many Requests") (500 "Internal Server Error") (501 "Not Implemented") (502 "Bad Gateway") (503 "Service Unavailable") (504 "Gateway Timeout") (_ "")) ": " @payload.body), key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
       LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: "", message: (str/concat "parseChatCompletionResponse: not valid JSON: " (str/slice @payload.body 0 400)) })
+        (emit LLM_FAILED { code: "", message: (str/concat "parseChatCompletionResponse: not valid JSON: " (str/slice @payload.body 0 400)), key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
       LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (!= @config.provider "anthropic") (not (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content)))))))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: "", message: (str/concat "parseChatCompletionResponse: response did not match expected shape: " (str/slice @payload.body 0 400)) })
+        (emit LLM_FAILED { code: "", message: (str/concat "parseChatCompletionResponse: response did not match expected shape: " (str/slice @payload.body 0 400)), key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
       LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (!= @config.provider "anthropic") (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content))))) (= (array/len (object/get (default (json/parse @payload.body ToolsReply) {}) choices [])) 0))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: "", message: "LLMClient.callWithTools: no choices in response" })
+        (emit LLM_FAILED { code: "", message: "LLMClient.callWithTools: no choices in response", key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
       LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (!= @config.provider "anthropic") (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content))))) (> (array/len (object/get (default (json/parse @payload.body ToolsReply) {}) choices [])) 0))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_TOOLS_TURN {
@@ -883,7 +888,7 @@ orbital LlmOrbital {
         })
       LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @config.provider "anthropic") (= (json/parse @payload.body AnthropicToolsReply) null))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: "", message: (str/concat "parseAnthropicToolsResponse: response did not match expected shape: " (str/slice @payload.body 0 400)) })
+        (emit LLM_FAILED { code: "", message: (str/concat "parseAnthropicToolsResponse: response did not match expected shape: " (str/slice @payload.body 0 400)), key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
       LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @config.provider "anthropic") (!= (json/parse @payload.body AnthropicToolsReply) null))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_TOOLS_TURN {
@@ -932,13 +937,14 @@ orbital LlmOrbital {
 
       LLM_TOOLS_TURN -> idle when (and (= (object/get (default (json/parse @payload.session ToolsSession) {}) finish "") "length") (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
-        (emit LLM_FAILED { code: "output-cut", message: "The model's reply was cut off at the output cap before it finished" })
+        (emit LLM_FAILED { code: "output-cut", message: "The model's reply was cut off at the output cap before it finished", key: (object/get (default (json/parse @payload.session ToolsSession) {}) key "") })
       LLM_TOOLS_TURN -> idle when (and (!= (object/get (default (json/parse @payload.session ToolsSession) {}) finish "") "length") (= (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
         (emit LLM_CALL_TOOLS_RESULT {
           reply: (let ((lm (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}))) (if (= (object/get @lm content null) null) "" (object/get @lm content ""))),
           steps: (object/get (default (json/parse @payload.session ToolsSession) {}) steps []),
-          usage: (object/get (default (json/parse @payload.session ToolsSession) {}) usage { promptTokens: 0, completionTokens: 0, totalTokens: 0, modelCalls: 0 })
+          usage: (object/get (default (json/parse @payload.session ToolsSession) {}) usage { promptTokens: 0, completionTokens: 0, totalTokens: 0, modelCalls: 0 }),
+          key: (object/get (default (json/parse @payload.session ToolsSession) {}) key "")
         })
       LLM_TOOLS_TURN -> idle when (and (!= (object/get (default (json/parse @payload.session ToolsSession) {}) finish "") "length") (> (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
@@ -952,7 +958,7 @@ orbital LlmOrbital {
             (let ((calls (object/get (default (array/last @s.messages) {}) tool_calls [])))
               (or (!= (array/len @payload.results) (array/len @calls))
                   (not (array/every @calls (fn c (= (array/count @payload.results (fn r (= @r.id @c.id))) 1))))))))
-        (emit LLM_FAILED { code: "", message: "call-tools: the answer does not match the tool calls of the last model turn" })
+        (emit LLM_FAILED { code: "", message: "call-tools: the answer does not match the tool calls of the last model turn", key: (object/get (default (json/parse @payload.session ToolsSession) {}) key "") })
       LLM_TOOLS_ANSWERED -> idle when (and (!= (json/parse @payload.session ToolsSession) null)
           (let ((s (json/parse @payload.session ToolsSession)))
             (let ((calls (object/get (default (array/last @s.messages) {}) tool_calls [])))
@@ -1109,6 +1115,7 @@ orbital LlmOrbital {
       LLM_GENERATE_RESULT -> external {
         content : string!
         usage : { promptTokens : number!, completionTokens : number!, totalTokens : number! }!
+        key : string
       }
         @description "The generated text and its token usage; the usage is zero when the provider reports none."
         @synonyms "completion, model reply, generated text"
@@ -1142,12 +1149,14 @@ orbital LlmOrbital {
         category : string!
         confidence : number!
         reasoning : string!
+        key : string
       }
         @description "The declared category the model chose for the text, its confidence from 0 to 1 and its reasoning."
         @synonyms "classification, label, category verdict"
         @tier "primary"
       LLM_CLASSIFY_MANY_RESULT -> external {
         verdicts : [{ id : string!, category : string!, confidence : number!, reasoning : string! }]!
+        key : string
       }
         @description "One verdict per item, under the caller's id, with a declared category, a confidence from 0 to 1 and the model's reasoning for it."
         @synonyms "batch classification, many labels, verdicts"
@@ -1155,6 +1164,7 @@ orbital LlmOrbital {
       LLM_SUMMARIZE_RESULT -> external {
         summary : string!
         keyPoints : [string]!
+        key : string
       }
         @description "A summary of the text and its key points."
         @synonyms "summary, digest, key points"
@@ -1177,6 +1187,7 @@ orbital LlmOrbital {
         @tier "primary"
       LLM_EXTRACT_RESULT -> external {
         json : string!
+        key : string
       }
         @description "The JSON text the model extracted, for the caller to read with json/parse under its own shape."
         @synonyms "extracted data, structured data, parsed fields"
@@ -1185,6 +1196,7 @@ orbital LlmOrbital {
         reply : string!
         steps : [LlmStep]!
         usage : ToolsUsage!
+        key : string
       }
         @description "The model's final reply, every step of the run (each model call, each tool call and its answer) and the tokens used."
         @synonyms "agent reply, tool loop answer"

@@ -1,0 +1,187 @@
+{
+ "atom": "dev/atoms/std-review-pins.lolo",
+ "trait": "ReviewPinsBoard",
+ "note": "Reviewers pin feedback and questions on a live view: a dropped pin waits for its text, an empty text writes nothing, a written pin is announced once, and only a new route repaints.",
+ "cases": [
+  {
+   "id": "opening a subject reads its pins",
+   "steps": [
+    {
+     "event": "REVIEW_OPEN",
+     "payload": {
+      "subject": "project-friday-m1-1/1.1.0",
+      "route": "/"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_READ"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a written pin is announced with its subject and route",
+   "entity": {
+    "viewSubject": "project-friday-m1-1/1.1.0",
+    "viewRoute": "/projects",
+    "rows": [],
+    "draftOpen": true,
+    "draftX": 12,
+    "draftY": 40,
+    "draftKind": "question",
+    "draftBody": "Why two rates?"
+   },
+   "steps": [
+    {
+     "event": "DRAFT_SAVE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PIN_WRITTEN"
+       },
+       {
+        "event": "PIN_LEFT",
+        "payload": {
+         "subject": "project-friday-m1-1/1.1.0",
+         "route": "/projects"
+        }
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "CONTROL an empty comment writes nothing",
+   "entity": {
+    "viewSubject": "project-friday-m1-1/1.1.0",
+    "viewRoute": "/projects",
+    "rows": [],
+    "draftOpen": true,
+    "draftBody": "   "
+   },
+   "steps": [
+    {
+     "event": "DRAFT_SAVE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "PIN_WRITTEN",
+       "PIN_LEFT"
+      ],
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "a new route repaints",
+   "entity": {
+    "viewSubject": "project-friday-m1-1/1.1.0",
+    "viewRoute": "/projects",
+    "rows": []
+   },
+   "steps": [
+    {
+     "event": "ROUTE_SEEN",
+     "payload": {
+      "route": "/tasks"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "CONTROL the same route does not repaint",
+   "entity": {
+    "viewSubject": "project-friday-m1-1/1.1.0",
+    "viewRoute": "/projects",
+    "rows": []
+   },
+   "steps": [
+    {
+     "event": "ROUTE_SEEN",
+     "payload": {
+      "route": "/projects"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "PINS_PAINT"
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "a reply with text is written",
+   "entity": {
+    "viewSubject": "project-friday-m1-1/1.1.0",
+    "viewRoute": "/projects",
+    "rows": [],
+    "activeId": "p1",
+    "replyBody": "Yes"
+   },
+   "steps": [
+    {
+     "event": "REPLY_SAVE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "REPLY_WRITTEN"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a reply with no pin open writes nothing",
+   "entity": {
+    "viewSubject": "project-friday-m1-1/1.1.0",
+    "viewRoute": "/projects",
+    "rows": [],
+    "activeId": "",
+    "replyBody": "Yes"
+   },
+   "steps": [
+    {
+     "event": "REPLY_SAVE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "REPLY_WRITTEN"
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  }
+ ]
+}

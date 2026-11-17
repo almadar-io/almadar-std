@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-16T11:17:05.634Z",
+  "generated": "2026-11-17T05:24:44.675Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -281,6 +281,13 @@
     },
     "std-ease": {
       "description": "Easing and interpolation curves",
+      "target": [
+        "ts",
+        "rust"
+      ]
+    },
+    "std-color": {
+      "description": "CSS colour contrast and luminance (WCAG 2.2)",
       "target": [
         "ts",
         "rust"
@@ -7943,6 +7950,85 @@
       ],
       "examples": [
         "(cancel-call @entity.id)"
+      ],
+      "docsSource": "generated"
+    },
+    "color/composite": {
+      "category": "std-color",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "string",
+      "description": "A CSS colour (may be translucent) painted over an opaque backdrop, as #rrggbb with channels rounded half up; malformed colour or translucent backdrop is an error",
+      "module": "color",
+      "visual": {
+        "form": "block"
+      },
+      "evaluation": "strict",
+      "params": [
+        {
+          "name": "top",
+          "type": "string",
+          "description": "CSS colour string (may be translucent)"
+        },
+        {
+          "name": "backdrop",
+          "type": "string",
+          "description": "CSS colour string (must be opaque)"
+        }
+      ],
+      "examples": [
+        "(color/composite \"rgba(0,0,0,0.5)\" \"#ffffff\") // => \"#808080\""
+      ],
+      "docsSource": "generated"
+    },
+    "color/contrast": {
+      "category": "std-color",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "WCAG 2.2 contrast ratio (lighter+0.05)/(darker+0.05), 1 to 21, order-free; a translucent first colour is composited over the second, which must be opaque; malformed colour is an error",
+      "module": "color",
+      "visual": {
+        "form": "block"
+      },
+      "evaluation": "strict",
+      "params": [
+        {
+          "name": "a",
+          "type": "string",
+          "description": "CSS colour string (foreground; may be translucent)"
+        },
+        {
+          "name": "b",
+          "type": "string",
+          "description": "CSS colour string (backdrop; must be opaque)"
+        }
+      ],
+      "examples": [
+        "(color/contrast \"#000000\" \"#ffffff\") // => 21"
+      ],
+      "docsSource": "generated"
+    },
+    "color/luminance": {
+      "category": "std-color",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "WCAG 2.2 relative luminance of a CSS colour, 0 (black) to 1 (white); malformed colour is an error",
+      "module": "color",
+      "visual": {
+        "form": "block"
+      },
+      "evaluation": "strict",
+      "params": [
+        {
+          "name": "color",
+          "type": "string",
+          "description": "CSS colour string"
+        }
+      ],
+      "examples": [
+        "(color/luminance \"#ffffff\") // => 1"
       ],
       "docsSource": "generated"
     },

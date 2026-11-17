@@ -735,7 +735,16 @@ orbital HttpClientOrbital {
 
       HC_ADVANCE -> reading when (and (= @entity.stage "chunk-size") (< (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0) 0))
         (emit HC_WANT {})
-      HC_ADVANCE -> reading when (and (= @entity.stage "chunk-size") (>= (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0) 0))
+      HC_ADVANCE -> reading when (and (= @entity.stage "chunk-size") (= @entity.stream "none") (let ((end (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0))) (and (>= @end 0) (validate/pattern (str/lower (str/trim (default (array/first (str/split (default (bytes/to-string (bytes/slice @entity.buf 0 @end)) "") ";")) ""))) @config.chunkSizePattern) (let ((size (array/reduce (str/split (str/lower (str/trim (default (array/first (str/split (default (bytes/to-string (bytes/slice @entity.buf 0 @end)) "") ";")) ""))) "") 0 (fn acc ch (+ (* @acc 16) (array/indexOf (str/split @config.hexDigits "") @ch)))))) (and (>= (+ @entity.total @size) 0) (<= (+ @entity.total @size) @config.maxBody) (>= (bytes/length @entity.buf) (+ (+ @end 4) @size)) (bytes/equals (bytes/slice @entity.buf (+ (+ @end 2) @size) (+ (+ @end 4) @size)) (bytes/from-string "\r\n")))))))
+        (let ((end (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0)))
+          (let ((size (array/reduce (str/split (str/lower (str/trim (default (array/first (str/split (default (bytes/to-string (bytes/slice @entity.buf 0 @end)) "") ";")) ""))) "") 0 (fn acc ch (+ (* @acc 16) (array/indexOf (str/split @config.hexDigits "") @ch))))))
+            (do
+              (set @entity.parts (array/append @entity.parts (bytes/slice @entity.buf (+ @end 2) (+ (+ @end 2) @size))))
+              (set @entity.total (+ @entity.total @size))
+              (set @entity.buf (bytes/slice @entity.buf (+ (+ @end 4) @size)))
+              (set @entity.stage (if (= @size 0) "done" "chunk-size"))
+              (emit HC_ADVANCE { n: (+ @entity.total (bytes/length @entity.buf)) }))))
+      HC_ADVANCE -> reading when (and (= @entity.stage "chunk-size") (>= (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0) 0) (not (and (= @entity.stream "none") (let ((end (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0))) (and (>= @end 0) (validate/pattern (str/lower (str/trim (default (array/first (str/split (default (bytes/to-string (bytes/slice @entity.buf 0 @end)) "") ";")) ""))) @config.chunkSizePattern) (let ((size (array/reduce (str/split (str/lower (str/trim (default (array/first (str/split (default (bytes/to-string (bytes/slice @entity.buf 0 @end)) "") ";")) ""))) "") 0 (fn acc ch (+ (* @acc 16) (array/indexOf (str/split @config.hexDigits "") @ch)))))) (and (>= (+ @entity.total @size) 0) (<= (+ @entity.total @size) @config.maxBody) (>= (bytes/length @entity.buf) (+ (+ @end 4) @size)) (bytes/equals (bytes/slice @entity.buf (+ (+ @end 2) @size) (+ (+ @end 4) @size)) (bytes/from-string "\r\n")))))))))
         (emit HC_SIZE { end: (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0) })
       HC_SIZE -> reading when (not (let ((line (bytes/to-string (bytes/slice @entity.buf 0 @payload.end)))) (and (!= @line null) (validate/pattern (str/lower (str/trim (default (array/first (str/split @line ";")) ""))) @config.chunkSizePattern))))
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })

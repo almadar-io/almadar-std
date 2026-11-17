@@ -1,6 +1,6 @@
 app std-rasm-text [
   version: "0.1.0",
-  description: "std-rasm-text — the Rasm kit's paragraph. Once it has a rect wider than zero and looks it paints one measured, wrapping draw-text in the text/<intent>/idle look, so its parent stack can size it from RASM_MEASURED. RASM_ENTER plays its entry choreography. With fit shrink the paragraph steps its font size down until it fits its placed rect; with reveal type it types out glyph by glyph."
+  description: "std-rasm-text — the Rasm kit's paragraph. Once it has a rect wider than zero and looks it paints one measured, wrapping draw-text in the text/<intent>/idle look, so its parent stack can size it from RASM_MEASURED. RASM_ENTER plays its entry choreography. A title, display or poster paragraph is a heading node (level 1 for display and poster, 2 for title, or `headingLevel`). With `maxChars` the paragraph is capped at that many average characters wide. A look whose `backing` is `plate` paints a rounded rect of its fill, padded 8px, behind the paragraph. With fit shrink the paragraph steps its font size down until it fits its placed rect; with reveal type it types out glyph by glyph."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -11,10 +11,11 @@ type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmReveal = { startMs : number!, perGlyphMs : number!, durationMs : number! }
-type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, reveal : RasmReveal?, height : number?, fit : "none" | "shrink"?, minSize : number?, rotate : number?, vertical : boolean?, pivotX : number?, pivotY : number? }
+type RasmHalo = { color : string!, width : number! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, level : number?, animation : RasmAnimation?, reveal : RasmReveal?, height : number?, fit : "none" | "shrink"?, minSize : number?, rotate : number?, vertical : boolean?, pivotX : number?, pivotY : number?, halo : RasmHalo? }
 type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
-type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
 
 type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
 type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
@@ -69,7 +70,7 @@ orbital RasmTextOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       TEXT_PAINT -> ready
-        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [(object/merge (object/merge (object/merge { id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {})) (if (= @config.fit "shrink") { height: @r.h, fit: "shrink", minSize: @config.minSize } {})) (if (= @config.reveal "type") { reveal: { startMs: (if (> @entity.enteredMs 0) @entity.enteredMs @entity.placedMs), perGlyphMs: @config.revealMs, durationMs: @config.revealMs } } {}))] })))))
+        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @l.backing "plate") [{ type: draw-shape, id: (str/concat @config.id ":plate"), shape: "rect", anchor: "top-left", position: { x: (- @r.x 8), y: (- @r.y 8), z: @config.z }, width: (+ @r.w 16), height: (+ @r.h 16), fill: @l.fill, corners: { radius: [6, 6, 6, 6], kind: "round" }, hit: false }] []), texts: [(object/merge (object/merge (object/merge (object/merge { id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: (if (> @config.maxChars 0) (math/min @r.w (* (* @config.maxChars 0.5) (default (str/to-number (str/replace (default (array/find (str/split (default @l.font "") " ") (fn q (str/includes @q "px"))) "") "px" "")) 16))) @r.w), wrap: true, align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: (if (array/includes ["poster", "display", "title"] @config.intent) "heading" "text"), level: (if (array/includes ["poster", "display", "title"] @config.intent) (if (> @config.headingLevel 0) @config.headingLevel (if (= @config.intent "title") 2 1)) null), animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {})) (if (= @config.fit "shrink") { height: @r.h, fit: "shrink", minSize: @config.minSize } {})) (if (= @config.reveal "type") { reveal: { startMs: (if (> @entity.enteredMs 0) @entity.enteredMs @entity.placedMs), perGlyphMs: @config.revealMs, durationMs: @config.revealMs } } {})) (if (= @l.backing "halo") { halo: { color: (default @l.fill ""), width: 4 } } {}))] })))))
     }
 
     emits {
@@ -112,9 +113,9 @@ orbital RasmTextOrbital {
         @label "Text"
         @description "The catalog key of the paragraph."
         @tier "presentation"
-      intent : "display" | "title" | "card" | "eyebrow" | "body" | "poster" | "numeral" | "caption" | "label" | "quote" = "body"
+      intent : "display" | "title" | "card" | "eyebrow" | "body" | "poster" | "numeral" | "caption" | "label" | "quote" | "inverse" = "body"
         @label "Intent"
-        @description "Selects the look text/<intent>/idle. display and eyebrow are the landing headline and the line above it; card is a title inside a card; poster is oversized display type, numeral a large figure, caption a small line under a picture, label a short tag, quote a pulled quotation."
+        @description "Selects the look text/<intent>/idle. display and eyebrow are the landing headline and the line above it; card is a title inside a card; poster is oversized display type, numeral a large figure, caption a small line under a picture, label a short tag, quote a pulled quotation, inverse a line set on a primary-filled shape (a ticket stub, a band) in the primary foreground colour."
         @tier "presentation"
       vertical : boolean = false
         @label "Vertical"
@@ -139,6 +140,14 @@ orbital RasmTextOrbital {
       revealMs : number = 40
         @label "Reveal step"
         @description "With reveal type, the ms between one glyph and the next; each glyph also takes this long to settle in."
+        @tier "presentation"
+      maxChars : number = 0
+        @label "Measure"
+        @description "With a value above 0, the paragraph is no wider than about maxChars x 0.5 x its font size in px (the width of that many average characters), so a long line keeps a readable measure; 0 leaves the paragraph the width of its placed rect."
+        @tier "presentation"
+      headingLevel : number = 0
+        @label "Heading level"
+        @description "The heading level 1 to 6 a poster, display or title paragraph announces to assistive technology. 0 takes the intent's own level: poster and display 1, title 2. Other intents are plain text and announce no heading."
         @tier "presentation"
       z : number = 0
         @label "Z"

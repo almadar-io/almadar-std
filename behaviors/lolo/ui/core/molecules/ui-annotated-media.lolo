@@ -1,7 +1,7 @@
 app ui-annotated-media [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "An image or video reviewers comment on in place: numbered pins sit where each comment was left, and a click on the media asks for a new one at that spot (and, for video, at that second). — UI factory (1:1 with the @almadar/ui annotated-media pattern)."
+  description: "An image, a video or a live piece of content reviewers comment on in place: numbered pins sit where each comment was left, and a click on the media asks for a new one at that spot (and, for video, at that second). — UI factory (1:1 with the @almadar/ui annotated-media pattern)."
 ]
 ;; @capabilities "review an image, comment on a design, pin feedback, markup, annotate a video at a timestamp, proofing"
 ;; @pattern "annotated-media"
@@ -26,6 +26,7 @@ orbital AnnotatedMediaOrbital {
       INIT -> idle
         (render-ui main {
           src: @config.src
+          children: @config.children
           mediaType: @config.mediaType
           title: @config.title
           pins: @config.pins
@@ -56,11 +57,11 @@ orbital AnnotatedMediaOrbital {
     config {
       src : string = ""
         @label "Media URL"
-        @description "Image or video URL"
+        @description "Image or video URL (unused for content)"
         @tier "presentation"
-      mediaType : "image" | "video" = image
+      mediaType : "image" | "video" | "content" = image
         @label "Media type"
-        @description "What the URL is"
+        @description "What is annotated: an image or video at the URL, or the live content passed as children"
         @tier "presentation"
       title : string = ""
         @label "Title"
@@ -76,7 +77,7 @@ orbital AnnotatedMediaOrbital {
         @tier "presentation"
       placing : boolean = true
         @label "Place pins on click"
-        @description "Whether a click on the media places a new pin"
+        @description "Whether a click on the media places a new pin; for content, the content is only interactive while this is off"
         @tier "presentation"
       placeEvent : event = ""
         @label "Place event"
@@ -89,6 +90,10 @@ orbital AnnotatedMediaOrbital {
       className : string = ""
         @label "Class name"
         @description "Additional class names"
+        @tier "presentation"
+      children : node
+        @label "Content"
+        @description "The live content to annotate when mediaType is content"
         @tier "presentation"
     }
   }

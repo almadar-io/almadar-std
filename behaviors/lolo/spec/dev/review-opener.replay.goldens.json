@@ -1,0 +1,230 @@
+{
+ "atom": "dev/atoms/std-review-pins.lolo",
+ "trait": "ReviewOpener",
+ "note": "A review link opens the behavior its row names; the version it passes scopes the pins, so each version keeps its history.",
+ "cases": [
+  {
+   "id": "the current version opens with its own subject",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {
+      "name": "project-friday",
+      "version": "1.1.0"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "REVIEW_REFUSED"
+      ],
+      "emits": [
+       {
+        "event": "REVIEW_OPEN",
+        "payload": {
+         "subject": "project-friday/1.1.0",
+         "route": "/projects"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an earlier version opens the same behavior under its own subject",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {
+      "name": "project-friday",
+      "version": "1.0.0"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "REVIEW_REFUSED"
+      ],
+      "emits": [
+       {
+        "event": "REVIEW_OPEN",
+        "payload": {
+         "subject": "project-friday/1.0.0",
+         "route": "/projects"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL an unknown review name is refused",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {
+      "name": "other",
+      "version": "1.1.0"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "REVIEW_OPEN",
+       "LOAD_BEHAVIOR"
+      ],
+      "emits": [
+       {
+        "event": "REVIEW_REFUSED",
+        "payload": {
+         "title": "This review is not known",
+         "message": "other 1.1.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a link with no version is refused",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {
+      "name": "project-friday",
+      "version": ""
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "REVIEW_OPEN"
+      ],
+      "emits": [
+       {
+        "event": "REVIEW_REFUSED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a listed tree without the behavior is refused",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "entity": {
+    "wanted": "almadar-behaviors/project-friday-m1-1",
+    "leaves": []
+   },
+   "steps": [
+    {
+     "event": "TREE_LISTED",
+     "payload": {
+      "data": []
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LOAD_BEHAVIOR"
+      ],
+      "emits": [
+       {
+        "event": "REVIEW_REFUSED",
+        "payload": {
+         "title": "The reviewed behavior is not installed",
+         "message": "almadar-behaviors/project-friday-m1-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a listed tree with nothing wanted loads nothing",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "entity": {
+    "wanted": "",
+    "leaves": []
+   },
+   "steps": [
+    {
+     "event": "TREE_LISTED",
+     "payload": {
+      "data": []
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LOAD_BEHAVIOR",
+       "REVIEW_REFUSED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

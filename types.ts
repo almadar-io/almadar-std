@@ -48,6 +48,7 @@ export const OPERATOR_CATEGORIES = [
   'std-grid',
   'std-anim',
   'std-ease',
+  'std-color',
   'std-noise',
   'std-path',
   // Substrate categories (Almadar_Rabit_LOLO_Plan.md Phase 3)
@@ -279,6 +280,7 @@ export const STD_MODULES = [
   'grid',
   'anim',
   'ease',
+  'color',
   'noise',
   'path',
   // Substrate modules (Almadar_Rabit_LOLO_Plan.md Phase 3)
@@ -343,6 +345,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-grid',
   'std-anim',
   'std-ease',
+  'std-color',
   'std-noise',
   'std-path',
   // Substrate categories (Almadar_Rabit_LOLO_Plan.md Phase 3)

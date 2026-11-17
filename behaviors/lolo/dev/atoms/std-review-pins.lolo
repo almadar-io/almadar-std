@@ -1,0 +1,431 @@
+app std-review-pins [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-review-pins — reviewers leave feedback and questions pinned on a live view. ReviewPinsBoard wraps the trait its contentTrait knob names in the annotated-media pattern's content mode: the view stays usable, and with Comment mode on a click drops a numbered pin at that spot (x and y as percentages of the view) on the route the view shows. A pin is one ReviewPin row: the subject it belongs to (REVIEW_OPEN { subject } names it, for example a review name and its version), the route, x, y, its kind (feedback or question), the text, its author (the signed-in viewer) and whether it is open or resolved; a reply is a row whose parentId names its pin. ROUTE_SEEN { route } tells the board which route the view is on, so only that route's pins are drawn. The side panel lists the route's pins (resolved ones only when shown), opens one with its replies, takes a reply, and resolves or reopens it. The atom states no access policy of its own: the composing program declares who may read and write ReviewPin rows."
+]
+;; @capabilities "pin feedback on a live app, review comments on a prototype, client questions on a page, design review pins, annotate a running screen"
+
+type ReviewPinRow = { id : string!, subject : string!, route : string!, x : number!, y : number!, kind : "feedback" | "question"!, body : string!, authorId : string!, authorName : string!, status : "open" | "resolved"!, parentId : string!, createdAt : string! }
+type ReviewLink = { name : string!, version : string!, behavior : string!, label : string!, route : string! }
+type ReviewLeaf = { package : string!, topic : string!, behavior : string!, kind : string!, value : behavior! }
+type ReviewMediaPin = { id : string!, x : number, y : number, time : number, label : string, resolved : boolean }
+
+orbital ReviewPinsOrbital {
+  entity ReviewPin [persistent: review_pins] {
+    @create none "A substrate atom: the composing program decides who may leave a pin, so this atom states no creator of its own."
+    @read none "A substrate atom: the composing program scopes who reads the pins of a subject."
+    id : string!
+    subject : string! @description "What the pin is about, as REVIEW_OPEN named it (for example a behavior and its version)." @synonyms "review subject, prototype, version"
+    route : string! @description "The route of the reviewed view the pin was left on." @synonyms "page, screen, path" = ""
+    x : number! @description "Horizontal position of the pin, as a percentage of the view's width." = 0
+    y : number! @description "Vertical position of the pin, as a percentage of the view's height." = 0
+    kind : "feedback" | "question"! @description "Whether the pin is feedback or a question." @synonyms "type, category" = feedback
+    body : string! @description "The text the reviewer wrote." @synonyms "comment, text, message" = ""
+    authorId : string! @description "The signed-in viewer who wrote it." @synonyms "author, reviewer, user id" = ""
+    authorName : string! @description "The author's display name." @synonyms "author name, reviewer name" = ""
+    status : "open" | "resolved"! @description "Whether the pin still needs an answer." @synonyms "state, resolved" = open
+    parentId : string! @description "The pin a reply answers; empty on a pin itself." @synonyms "thread, reply to" = ""
+    createdAt : string! @description "When it was written." = ""
+    rows : [ReviewPinRow] @intrinsic @description "The subject's pins and replies, as last read." = []
+    viewSubject : string @intrinsic @description "The subject the board shows." = ""
+    viewRoute : string @intrinsic @description "The route the reviewed view is on." = ""
+    placing : boolean @intrinsic @description "Comment mode: a click on the view drops a pin." = false
+    showResolved : boolean @intrinsic @description "Whether resolved pins are listed and drawn." = false
+    draftOpen : boolean @intrinsic @description "A dropped pin waits for its text." = false
+    draftX : number @intrinsic = 0
+    draftY : number @intrinsic = 0
+    draftKind : "feedback" | "question" @intrinsic = feedback
+    draftBody : string @intrinsic = ""
+    activeId : string @intrinsic @description "The pin opened in the side panel; empty lists the pins." = ""
+    replyBody : string @intrinsic = ""
+    problem : string @intrinsic @description "The last read or write that failed, shown in the panel." = ""
+  }
+
+  trait ReviewPinsBoard -> @rebindable ReviewPin {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      REVIEW_REFUSED -> idle
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: [{ type: alert, variant: error, title: ?title, message: ?message }, { type: button, variant: secondary, icon: list, label: @config.indexLabel, action: REVIEWS_SHOW }] }] })
+      REVIEWS_SHOW -> idle
+        (navigate "/review")
+      REVIEW_OPEN -> ready
+        (set @entity.viewSubject ?subject)
+        (set @entity.viewRoute (default ?route ""))
+        (fetch ReviewPin { filter: (= (object/get @entity subject) ?subject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
+    }
+
+    state ready {
+      INIT -> ready
+        (emit PINS_PAINT {})
+      REVIEW_OPEN -> ready
+        (set @entity.viewSubject ?subject)
+        (set @entity.viewRoute (default ?route @entity.viewRoute))
+        (set @entity.activeId "")
+        (fetch ReviewPin { filter: (= (object/get @entity subject) ?subject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
+      ROUTE_SEEN -> ready when (= ?route @entity.viewRoute)
+      ROUTE_SEEN -> ready when (!= ?route @entity.viewRoute)
+        (set @entity.viewRoute ?route)
+        (set @entity.activeId "")
+        (set @entity.draftOpen false)
+        (emit PINS_PAINT {})
+      PINS_READ -> ready
+        (set @entity.rows ?data)
+        (set @entity.problem "")
+        (emit PINS_PAINT {})
+      PINS_READ_FAILED -> ready
+        (set @entity.problem ?error)
+        (emit PINS_PAINT {})
+      PLACE_TOGGLE -> ready
+        (set @entity.placing (not @entity.placing))
+        (emit PINS_PAINT {})
+      RESOLVED_TOGGLE -> ready
+        (set @entity.showResolved (not @entity.showResolved))
+        (emit PINS_PAINT {})
+      PIN_PLACE -> ready
+        (set @entity.draftOpen true)
+        (set @entity.draftX ?x)
+        (set @entity.draftY ?y)
+        (set @entity.draftBody "")
+        (set @entity.draftKind feedback)
+        (set @entity.activeId "")
+        (emit PINS_PAINT {})
+      DRAFT_KIND -> ready
+        (set @entity.draftKind ?value)
+        (emit PINS_PAINT {})
+      DRAFT_BODY -> ready
+        (set @entity.draftBody ?value)
+      DRAFT_CANCEL -> ready
+        (set @entity.draftOpen false)
+        (emit PINS_PAINT {})
+      DRAFT_SAVE -> ready when (= (str/trim @entity.draftBody) "")
+        (set @entity.problem @config.emptyText)
+        (emit PINS_PAINT {})
+      DRAFT_SAVE -> ready when (!= (str/trim @entity.draftBody) "")
+        (persist create ReviewPin { subject: @entity.viewSubject, route: @entity.viewRoute, x: @entity.draftX, y: @entity.draftY, kind: @entity.draftKind, body: (str/trim @entity.draftBody), authorId: @user.id, authorName: (default @user.name ""), status: open, parentId: "", createdAt: (str/concat "" @now) } { emit: { success: PIN_WRITTEN, failure: PIN_WRITE_FAILED } })
+      PIN_WRITTEN -> ready
+        (set @entity.draftOpen false)
+        (set @entity.draftBody "")
+        (set @entity.placing false)
+        (emit PIN_LEFT { id: ?id, subject: @entity.viewSubject, route: @entity.viewRoute })
+        (fetch ReviewPin { filter: (= (object/get @entity subject) @entity.viewSubject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
+      PIN_WRITE_FAILED -> ready
+        (set @entity.problem ?error)
+        (emit PINS_PAINT {})
+      PIN_SELECT -> ready
+        (set @entity.activeId ?id)
+        (set @entity.draftOpen false)
+        (set @entity.replyBody "")
+        (emit PINS_PAINT {})
+      PIN_CLOSE -> ready
+        (set @entity.activeId "")
+        (emit PINS_PAINT {})
+      REPLY_BODY -> ready
+        (set @entity.replyBody ?value)
+      REPLY_SAVE -> ready when (or (= @entity.activeId "") (= (str/trim @entity.replyBody) ""))
+      REPLY_SAVE -> ready when (and (!= @entity.activeId "") (!= (str/trim @entity.replyBody) ""))
+        (persist create ReviewPin { subject: @entity.viewSubject, route: @entity.viewRoute, x: 0, y: 0, kind: feedback, body: (str/trim @entity.replyBody), authorId: @user.id, authorName: (default @user.name ""), status: open, parentId: @entity.activeId, createdAt: (str/concat "" @now) } { emit: { success: REPLY_WRITTEN, failure: PIN_WRITE_FAILED } })
+      REPLY_WRITTEN -> ready
+        (set @entity.replyBody "")
+        (fetch ReviewPin { filter: (= (object/get @entity subject) @entity.viewSubject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
+      PIN_STATUS -> ready
+        (persist update ReviewPin { id: ?id, status: ?status } { emit: { success: STATUS_WRITTEN, failure: PIN_WRITE_FAILED } })
+      STATUS_WRITTEN -> ready
+        (fetch ReviewPin { filter: (= (object/get @entity subject) @entity.viewSubject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
+
+      PINS_PAINT -> ready
+        (let ((pins (array/filter @entity.rows (fn p (and (= @p.parentId "") (= @p.route @entity.viewRoute) (or @entity.showResolved (= @p.status "open"))))))
+              (active (array/find @entity.rows (fn p (= @p.id @entity.activeId)))))
+          (render-ui main { type: stack, direction: horizontal, gap: none, className: "h-full min-h-0 w-full", children: [
+            { type: annotated-media, mediaType: content, children: @config.contentTrait, title: @config.title, pins: (array/map @pins (fn p { id: @p.id, x: @p.x, y: @p.y, time: 0, label: @p.body, resolved: (= @p.status "resolved") })), activePinId: @entity.activeId, placing: @entity.placing, placeEvent: PIN_PLACE, pinSelectEvent: PIN_SELECT, className: "flex-1 min-w-0 h-full overflow-auto" },
+            { type: stack, direction: vertical, gap: sm, className: "w-80 shrink-0 h-full overflow-y-auto border-l p-3", children: [
+              { type: stack, direction: horizontal, gap: xs, align: center, children: [
+                { type: button, label: (if @entity.placing @config.placingLabel @config.placeLabel), icon: message-square-plus, variant: (if @entity.placing primary secondary), size: sm, action: PLACE_TOGGLE },
+                { type: button, label: (if @entity.showResolved @config.hideResolvedLabel @config.showResolvedLabel), variant: ghost, size: sm, action: RESOLVED_TOGGLE }
+              ] },
+              { type: typography, variant: caption, color: muted, content: (if @entity.placing @config.placingHint @config.idleHint) },
+              { type: alert, variant: error, message: @entity.problem, className: (if (= @entity.problem "") hidden "") },
+              (if @entity.draftOpen
+                { type: stack, direction: vertical, gap: sm, children: [
+                  { type: typography, variant: h4, content: @config.newPinTitle },
+                  { type: select, aria-label: @config.kindLabel, value: @entity.draftKind, action: DRAFT_KIND, options: [{ value: feedback, label: @config.feedbackLabel }, { value: question, label: @config.questionLabel }] },
+                  { type: textarea, aria-label: @config.bodyLabel, placeholder: @config.bodyPlaceholder, value: @entity.draftBody, onChange: DRAFT_BODY },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, label: @config.saveLabel, icon: send, variant: primary, size: sm, action: DRAFT_SAVE },
+                    { type: button, label: @config.cancelLabel, variant: secondary, size: sm, action: DRAFT_CANCEL }
+                  ] }
+                ] }
+                (if (= @active null)
+                  { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body2, color: muted, content: @config.emptyListText, className: (if (= (array/len @pins) 0) "" hidden) },
+                    { type: stack, direction: vertical, gap: xs, children: (array/map @pins (fn p { type: button, variant: ghost, size: sm, className: "justify-start text-left", label: (str/concat (if (= @p.kind "question") "? " "• ") @p.authorName ": " @p.body), action: PIN_SELECT, actionPayload: { id: @p.id } })) }
+                  ] }
+                  { type: stack, direction: vertical, gap: sm, children: (array/concat
+                    [{ type: stack, direction: horizontal, gap: xs, align: center, children: [
+                        { type: button, label: @config.backLabel, icon: arrow-left, variant: ghost, size: sm, action: PIN_CLOSE },
+                        { type: badge, label: (if (= @active.kind "question") @config.questionLabel @config.feedbackLabel) },
+                        { type: badge, label: (if (= @active.status "resolved") @config.resolvedLabel @config.openLabel) }
+                      ] },
+                     { type: typography, variant: caption, color: muted, content: @active.authorName },
+                     { type: typography, variant: body1, content: @active.body }]
+                    (array/map (array/filter @entity.rows (fn r (= @r.parentId @active.id))) (fn r { type: stack, direction: vertical, gap: none, className: "border-l-2 pl-2", children: [{ type: typography, variant: caption, color: muted, content: @r.authorName }, { type: typography, variant: body2, content: @r.body }] }))
+                    [{ type: textarea, aria-label: @config.replyLabel, placeholder: @config.replyPlaceholder, value: @entity.replyBody, onChange: REPLY_BODY },
+                     { type: stack, direction: horizontal, gap: sm, children: [
+                       { type: button, label: @config.replyLabel, icon: reply, variant: primary, size: sm, action: REPLY_SAVE },
+                       { type: button, label: (if (= @active.status "resolved") @config.reopenLabel @config.resolveLabel), icon: (if (= @active.status "resolved") rotate-ccw check), variant: secondary, size: sm, action: PIN_STATUS, actionPayload: { id: @active.id, status: (if (= @active.status "resolved") open resolved) } }
+                     ] }]) }))
+            ] }
+          ] }))
+    }
+
+    emits {
+      PINS_PAINT
+        @description "Internal: draw the view with the current route's pins and the side panel."
+        @tier "internal"
+      PINS_READ
+        @tier "internal"
+      PINS_READ_FAILED
+        @tier "internal"
+      PIN_WRITTEN
+        @tier "internal"
+      REPLY_WRITTEN
+        @tier "internal"
+      STATUS_WRITTEN
+        @tier "internal"
+      PIN_WRITE_FAILED
+        @tier "internal"
+      PIN_LEFT -> external {
+        id : string!
+        subject : string!
+        route : string!
+      }
+        @description "A reviewer left a new pin on the subject's route."
+        @tier "essential"
+    }
+
+    listens {
+      ReviewOpener.REVIEW_OPEN -> REVIEW_OPEN
+      ReviewOpener.REVIEW_REFUSED -> REVIEW_REFUSED
+      REVIEW_REFUSED {
+        title : string!
+        message : string!
+      }
+      REVIEWS_SHOW { }
+      REVIEW_OPEN {
+        subject : string!
+        route : string
+      }
+        @description "Show the pins of this subject; route is the view's first route."
+      ROUTE_SEEN {
+        route : string!
+      }
+        @description "The reviewed view is on this route now."
+      PIN_PLACE {
+        x : number!
+        y : number!
+        time : number!
+      }
+      PIN_SELECT {
+        id : string!
+      }
+      DRAFT_KIND {
+        value : "feedback" | "question"!
+      }
+      DRAFT_BODY {
+        value : string!
+      }
+      REPLY_BODY {
+        value : string!
+      }
+      PIN_STATUS {
+        id : string!
+        status : "open" | "resolved"!
+      }
+      PINS_READ {
+        data : [ReviewPinRow]!
+      }
+      PINS_READ_FAILED {
+        error : string!
+      }
+      PIN_WRITTEN {
+        id : string!
+      }
+      PIN_WRITE_FAILED {
+        error : string!
+      }
+    }
+
+    config {
+      pinLimit : number = 1000
+        @label "Most pins read"
+        @description "The most pins and replies of one subject the board reads."
+        @tier "policy"
+      contentTrait : trait
+        @label "Reviewed view"
+        @description "The trait whose view reviewers pin feedback on."
+        @tier "domain"
+      indexLabel : string = "All reviews"
+        @tier "presentation"
+      title : string = "Reviewed view"
+        @label "Title"
+        @description "Accessible name of the reviewed view."
+        @tier "presentation"
+      placeLabel : string = "Comment"
+        @tier "presentation"
+      placingLabel : string = "Commenting…"
+        @tier "presentation"
+      idleHint : string = "Use the app as usual. Press Comment, then click where your feedback or question belongs."
+        @tier "presentation"
+      placingHint : string = "Click anywhere on the page to drop a pin."
+        @tier "presentation"
+      showResolvedLabel : string = "Show resolved"
+        @tier "presentation"
+      hideResolvedLabel : string = "Hide resolved"
+        @tier "presentation"
+      newPinTitle : string = "New comment"
+        @tier "presentation"
+      kindLabel : string = "Kind"
+        @tier "presentation"
+      feedbackLabel : string = "Feedback"
+        @tier "presentation"
+      questionLabel : string = "Question"
+        @tier "presentation"
+      bodyLabel : string = "Comment"
+        @tier "presentation"
+      bodyPlaceholder : string = "What should change, or what would you like to ask?"
+        @tier "presentation"
+      saveLabel : string = "Save"
+        @tier "presentation"
+      cancelLabel : string = "Cancel"
+        @tier "presentation"
+      emptyText : string = "Write something before saving."
+        @tier "presentation"
+      emptyListText : string = "No comments on this page yet."
+        @tier "presentation"
+      backLabel : string = "All comments"
+        @tier "presentation"
+      openLabel : string = "Open"
+        @tier "presentation"
+      resolvedLabel : string = "Resolved"
+        @tier "presentation"
+      resolveLabel : string = "Resolve"
+        @tier "presentation"
+      reopenLabel : string = "Reopen"
+        @tier "presentation"
+      replyLabel : string = "Reply"
+        @tier "presentation"
+      replyPlaceholder : string = "Write a reply…"
+        @tier "presentation"
+    }
+  }
+
+  entity ReviewOpenerView [runtime] {
+    id : string!
+    wanted : string @description "The behavior the review link names, until the catalog lists it." = ""
+    leaves : [ReviewLeaf] @description "The catalog tree, as last listed." = []
+  }
+
+  trait ReviewOpener -> ReviewOpenerView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (or (= (default ?version "") "") (not (array/some @config.reviews (fn r (= @r.name (default ?name ""))))))
+        (emit REVIEW_REFUSED { title: @config.unknownTitle, message: (str/concat (default ?name "") " " (default ?version "")) })
+      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (= @r.name (default ?name "")))))
+        (let ((link (array/find @config.reviews (fn r (= @r.name ?name)))))
+          (do
+            (emit REVIEW_OPEN { subject: (str/concat @link.name "/" ?version), route: @link.route })
+            (if (array/some @entity.leaves (fn l (= @l.behavior @link.behavior)))
+              (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior @link.behavior)))))
+                (do
+                  (set @entity.wanted "")
+                  (emit LOAD_BEHAVIOR { behavior: @leaf.behavior, value: @leaf.value })))
+              (set @entity.wanted @link.behavior))))
+      TREE_LISTED -> idle when (and (!= @entity.wanted "") (array/some ?data (fn l (= @l.behavior @entity.wanted))))
+        (set @entity.leaves ?data)
+        (let ((leaf (array/find ?data (fn l (= @l.behavior @entity.wanted)))))
+          (do
+            (set @entity.wanted "")
+            (emit LOAD_BEHAVIOR { behavior: @leaf.behavior, value: @leaf.value })))
+      TREE_LISTED -> idle when (and (!= @entity.wanted "") (not (array/some ?data (fn l (= @l.behavior @entity.wanted)))))
+        (set @entity.leaves ?data)
+        (emit REVIEW_REFUSED { title: @config.missingTitle, message: @entity.wanted })
+        (set @entity.wanted "")
+      TREE_LISTED -> idle when (= @entity.wanted "")
+        (set @entity.leaves ?data)
+    }
+
+    emits {
+      REVIEW_OPEN -> external {
+        subject : string!
+        route : string!
+      }
+        @description "A review link was opened: its subject is the name and the version the link passes, so each version keeps its own pins."
+      LOAD_BEHAVIOR -> external {
+        behavior : string!
+        value : behavior!
+      }
+        @description "Ask the loader for the behavior of the review link, as the catalog lists it."
+      REVIEW_REFUSED -> external {
+        title : string!
+        message : string!
+      }
+        @description "The review link names no review row, or its behavior is not installed."
+    }
+
+    listens {
+      INIT {
+        name : string
+        version : string
+      }
+        @description "The review page mounted with the name and version of the link."
+      TREE_LISTED {
+        data : [ReviewLeaf]!
+      }
+        @description "The catalog listed its tree."
+    }
+
+    config {
+      reviews : [ReviewLink] = []
+        @label "Review links"
+        @description "The reviews this program serves: /review/<name>/<version> opens the behavior the row of that name names, starting on its route, and the pins are kept under <name>/<version>, so every version keeps its own review history. version on the row is the current version the review list links to. A name no row lists is refused."
+        @tier "domain"
+      unknownTitle : string = "This review is not known"
+        @tier "presentation"
+      missingTitle : string = "The reviewed behavior is not installed"
+        @tier "presentation"
+    }
+  }
+
+  trait ReviewIndex -> ReviewOpenerView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, weight: bold, content: @config.title }]
+          (array/map @config.reviews (fn r { type: button, variant: secondary, className: "justify-start", label: (str/concat @r.label " · " @r.version), icon: message-square, action: REVIEW_GO, actionPayload: { path: (str/concat "/review/" @r.name "/" @r.version) } }))) }] })
+      REVIEW_GO -> idle
+        (navigate ?path)
+    }
+
+    listens {
+      REVIEW_GO {
+        path : string!
+      }
+    }
+
+    config {
+      reviews : [ReviewLink] = []
+        @label "Review links"
+        @description "The review links listed."
+        @tier "domain"
+      title : string = "Reviews"
+        @tier "presentation"
+    }
+  }
+
+  page "/review/:name/:version" as ReviewPage -> ReviewOpener, ReviewPinsBoard
+  page "/review" as ReviewIndexPage -> ReviewIndex
+}

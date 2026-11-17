@@ -1,0 +1,61 @@
+{
+ "atom": "store/atoms/std-social-graph.lolo",
+ "trait": "SocialConnections",
+ "cases": [
+  {
+   "id": "an-empty-send-is-rejected-under-the-askers-key",
+   "steps": [
+    {
+     "event": "SOCIAL_SEND",
+     "payload": { "memberId": "m1", "connectionId": "c1", "content": " ", "askKey": "m1|s1" },
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_CONNECTION_REJECTED", "payload": { "reason": "content-required", "askKey": "m1|s1" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unkeyed-empty-send-gets-the-responders-own-key",
+   "steps": [
+    {
+     "event": "SOCIAL_SEND",
+     "payload": { "memberId": "m1", "connectionId": "c1", "content": " " },
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_CONNECTION_REJECTED", "payload": { "reason": "content-required", "askKey": "social-m1-1" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-stored-badge-choice-echoes-the-askers-key",
+   "entity": { "id": "n", "reqConnection": "c1", "reqAskKey": "m1|b1" },
+   "steps": [
+    {
+     "from": "saving",
+     "event": "BadgeStored",
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_BADGE_SET", "payload": { "connectionId": "c1", "askKey": "m1|b1" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-connection-step-echoes-the-askers-key",
+   "entity": { "id": "n", "reqAskKey": "m1|f1" },
+   "steps": [
+    {
+     "from": "loadingConn",
+     "event": "ConnFailed",
+     "payload": { "error": "store down" },
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "SOCIAL_CONNECTION_FAILED", "payload": { "error": "store down", "askKey": "m1|f1" } } ]
+     }
+    }
+   ]
+  }
+ ]
+}

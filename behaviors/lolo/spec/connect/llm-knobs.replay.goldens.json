@@ -1484,6 +1484,593 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-classify-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CHECKED",
+     "payload": {
+      "job": "{\"action\":\"classify\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"k1\"}",
+      "json": "{\"category\":\"a\",\"confidence\":0.9,\"reasoning\":\"r\"}",
+      "issues": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY_RESULT",
+        "payload": {
+         "category": "a",
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-extract-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CHECKED",
+     "payload": {
+      "job": "{\"action\":\"extract\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"k1\"}",
+      "json": "{\"a\":1}",
+      "issues": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}",
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-summarize-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CHECKED",
+     "payload": {
+      "job": "{\"action\":\"summarize\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"k1\"}",
+      "json": "{\"summary\":\"s\",\"keyPoints\":[]}",
+      "issues": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SUMMARIZE_RESULT",
+        "payload": {
+         "summary": "s",
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-classify-many-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_VERDICTS",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"k1\"}",
+      "json": "{\"verdicts\":[{\"id\":\"1\",\"category\":\"a\",\"confidence\":0.8,\"reasoning\":\"b\"}]}",
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY_MANY_RESULT",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-generate-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CONTENT",
+     "payload": {
+      "job": "{\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"k1\"}",
+      "content": "hello",
+      "inputTokens": 1,
+      "outputTokens": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_GENERATE_RESULT",
+        "payload": {
+         "content": "hello",
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-generate-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_ERROR",
+     "payload": {
+      "job": "{\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"k1\"}",
+      "message": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "message": "boom",
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-classify-many-failure-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_VERDICTS",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"k1\"}",
+      "json": "{}",
+      "problem": "p"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "message": "p",
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-call-tools-answers-under-its-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_TOOLS_TURN",
+     "payload": {
+      "session": "{\"key\":\"k1\",\"model\":\"m\",\"userPrompt\":\"u\",\"maxSteps\":8,\"tools\":[],\"messages\":[{\"role\":\"assistant\",\"content\":\"done\"}],\"steps\":[{\"type\":\"llm_response\",\"content\":\"done\",\"llm\":{\"service\":\"llm\",\"provider\":\"p\",\"model\":\"m\",\"systemPrompt\":\"\",\"userPrompt\":\"u\",\"durationMs\":1},\"timestamp\":\"2023-11-14T00:00:00.000Z\"}],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1},\"finish\":\"stop\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS_RESULT",
+        "payload": {
+         "reply": "done",
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-classify-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CHECKED",
+     "payload": {
+      "job": "{\"action\":\"classify\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"category\":\"a\",\"confidence\":0.9,\"reasoning\":\"r\"}",
+      "issues": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY_RESULT",
+        "payload": {
+         "category": "a",
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-extract-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CHECKED",
+     "payload": {
+      "job": "{\"action\":\"extract\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"a\":1}",
+      "issues": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}",
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-summarize-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CHECKED",
+     "payload": {
+      "job": "{\"action\":\"summarize\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"summary\":\"s\",\"keyPoints\":[]}",
+      "issues": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SUMMARIZE_RESULT",
+        "payload": {
+         "summary": "s",
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-classify-many-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_VERDICTS",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"verdicts\":[{\"id\":\"1\",\"category\":\"a\",\"confidence\":0.8,\"reasoning\":\"b\"}]}",
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY_MANY_RESULT",
+        "payload": {
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-generate-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_CONTENT",
+     "payload": {
+      "job": "{\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "content": "hello",
+      "inputTokens": 1,
+      "outputTokens": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_GENERATE_RESULT",
+        "payload": {
+         "content": "hello",
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-failed-generate-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_ERROR",
+     "payload": {
+      "job": "{\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "message": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "message": "boom",
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-classify-many-failure-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_VERDICTS",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{}",
+      "problem": "p"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "message": "p",
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-call-tools-with-no-key-answers-an-empty-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_TOOLS_TURN",
+     "payload": {
+      "session": "{\"key\":\"\",\"model\":\"m\",\"userPrompt\":\"u\",\"maxSteps\":8,\"tools\":[],\"messages\":[{\"role\":\"assistant\",\"content\":\"done\"}],\"steps\":[{\"type\":\"llm_response\",\"content\":\"done\",\"llm\":{\"service\":\"llm\",\"provider\":\"p\",\"model\":\"m\",\"systemPrompt\":\"\",\"userPrompt\":\"u\",\"durationMs\":1},\"timestamp\":\"2023-11-14T00:00:00.000Z\"}],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1},\"finish\":\"stop\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS_RESULT",
+        "payload": {
+         "reply": "done",
+         "key": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-classify-many-and-an-invalid-one-answer-under-the-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CLASSIFY_MANY",
+     "payload": {
+      "items": [],
+      "categories": [
+       "a"
+      ],
+      "key": "k2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY_MANY_RESULT",
+        "payload": {
+         "verdicts": [],
+         "key": "k2"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CLASSIFY_MANY",
+     "payload": {
+      "items": [
+       {
+        "id": "x",
+        "text": "t"
+       }
+      ],
+      "categories": [],
+      "key": "k3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "code": "VALIDATION_ERROR",
+         "key": "k3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-tool-failure-answers-under-the-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_TOOLS_SEND",
+     "payload": {
+      "session": "{\"key\":\"k4\",\"model\":\"m\",\"userPrompt\":\"u\",\"maxSteps\":1,\"tools\":[],\"messages\":[],\"steps\":[],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "key": "k4"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cache-hit-answers-the-result-under-the-call-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_STORE",
+     "payload": {
+      "key": "979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee",
+      "result": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0,
+      "key": "k5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}",
+         "key": "k5"
+        }
+       }
+      ]
+     },
+     "now": 1700604799999
+    }
+   ]
   }
  ]
 }
