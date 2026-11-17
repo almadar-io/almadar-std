@@ -34,6 +34,7 @@ orbital RasmTextOrbital {
     enterIndex : number @description "This text's position in the RASM_ENTER order, -1 when it is not in it." = -1
     enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
     placedMs : number @description "The epoch-ms instant this text was first placed, 0 before it; the typed reveal starts here when the text has no entry." = 0
+    key : MessageKey? @description "The catalog key RASM_TEXT_KEY gave this text, null while the configured text shows." = null
     staggerMs : number = 70
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
@@ -61,6 +62,11 @@ orbital RasmTextOrbital {
         (set @entity.placedMs (if (= @entity.placedMs 0) (time/epoch-ms @now) @entity.placedMs))
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
+      RASM_TEXT_KEY -> ready when (= ?id @config.id)
+        (set @entity.key ?key)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TEXT_PAINT { n: @entity.paints })
+      RASM_TEXT_KEY -> ready when (!= ?id @config.id)
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
       RASM_ENTER -> ready
         (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
@@ -70,7 +76,7 @@ orbital RasmTextOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       TEXT_PAINT -> ready
-        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @l.backing "plate") [{ type: draw-shape, id: (str/concat @config.id ":plate"), shape: "rect", anchor: "top-left", position: { x: (- @r.x 8), y: (- @r.y 8), z: @config.z }, width: (+ @r.w 16), height: (+ @r.h 16), fill: @l.fill, corners: { radius: [6, 6, 6, 6], kind: "round" }, hit: false }] []), texts: [(object/merge (object/merge (object/merge (object/merge { id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: (if (> @config.maxChars 0) (math/min @r.w (* (* @config.maxChars 0.5) (default (str/to-number (str/replace (default (array/find (str/split (default @l.font "") " ") (fn q (str/includes @q "px"))) "") "px" "")) 16))) @r.w), wrap: true, align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: (if (array/includes ["poster", "display", "title"] @config.intent) "heading" "text"), level: (if (array/includes ["poster", "display", "title"] @config.intent) (if (> @config.headingLevel 0) @config.headingLevel (if (= @config.intent "title") 2 1)) null), animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {})) (if (= @config.fit "shrink") { height: @r.h, fit: "shrink", minSize: @config.minSize } {})) (if (= @config.reveal "type") { reveal: { startMs: (if (> @entity.enteredMs 0) @entity.enteredMs @entity.placedMs), perGlyphMs: @config.revealMs, durationMs: @config.revealMs } } {})) (if (= @l.backing "halo") { halo: { color: (default @l.fill ""), width: 4 } } {}))] })))))
+        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @l.backing "plate") [{ type: draw-shape, id: (str/concat @config.id ":plate"), shape: "rect", anchor: "top-left", position: { x: (- @r.x 8), y: (- @r.y 8), z: @config.z }, width: (+ @r.w 16), height: (+ @r.h 16), fill: @l.fill, corners: { radius: [6, 6, 6, 6], kind: "round" }, hit: false }] []), texts: [(object/merge (object/merge (object/merge (object/merge { id: @config.id, key: (default @entity.key @config.text), x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: (if (> @config.maxChars 0) (math/min @r.w (* (* @config.maxChars 0.5) (default (str/to-number (str/replace (default (array/find (str/split (default @l.font "") " ") (fn q (str/includes @q "px"))) "") "px" "")) 16))) @r.w), wrap: true, align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: (if (array/includes ["poster", "display", "title"] @config.intent) "heading" "text"), level: (if (array/includes ["poster", "display", "title"] @config.intent) (if (> @config.headingLevel 0) @config.headingLevel (if (= @config.intent "title") 2 1)) null), animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {})) (if (and (= @config.fit "shrink") (> @r.h 0)) { height: @r.h, fit: "shrink", minSize: @config.minSize } {})) (if (= @config.reveal "type") { reveal: { startMs: (if (> @entity.enteredMs 0) @entity.enteredMs @entity.placedMs), perGlyphMs: @config.revealMs, durationMs: @config.revealMs } } {})) (if (= @l.backing "halo") { halo: { color: (default @l.fill ""), width: 4 } } {}))] })))))
     }
 
     emits {
@@ -98,6 +104,8 @@ orbital RasmTextOrbital {
         @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
+      RASM_TEXT_KEY { id : string!  key : MessageKey! }
+        @description "Show this catalog key in place of the configured text when the id is this text's, and repaint."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this text's rect when it is placed and repaint."
       RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }

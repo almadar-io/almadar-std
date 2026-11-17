@@ -1,0 +1,42 @@
+{
+  "atom": "ui/core/atoms/std-app-layout.lolo",
+  "trait": "AppLayout",
+  "note": "the account menu Sign out is the circuit own (SIGNED_OUT, then (auth/sign-out)); replay cannot run the client host ask, so the arm is asserted to fire here and its emit and effect are checked with orb test --execute",
+  "cases": [
+    {
+      "id": "sign-out-announces-signed-out-and-ends-the-session",
+      "steps": [
+        {
+          "event": "SIGN_OUT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "composing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-search-signs-nobody-out",
+      "steps": [
+        {
+          "event": "SEARCH_PICKED",
+          "payload": {
+            "value": "x"
+          },
+          "expect": {
+            "state": "composing",
+            "emits": [
+              {
+                "event": "LAYOUT_SEARCH"
+              }
+            ],
+            "neverEmits": [
+              "SIGNED_OUT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

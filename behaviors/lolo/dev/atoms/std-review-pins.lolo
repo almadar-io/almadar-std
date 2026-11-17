@@ -31,7 +31,7 @@ orbital ReviewPinsOrbital {
     viewRoute : string @intrinsic @description "The route the reviewed view is on." = ""
     placing : boolean @intrinsic @description "Comment mode: a click on the view drops a pin." = false
     showResolved : boolean @intrinsic @description "Whether resolved pins are listed and drawn." = false
-    panelOpen : boolean @intrinsic @description "Whether the comment panel beside the view is open; closed leaves a slim strip that opens it." = true
+    panelOpen : boolean @intrinsic @description "Whether the comment drawer over the view is open; closed leaves a slim strip that opens it." = false
     draftOpen : boolean @intrinsic @description "A dropped pin waits for its text." = false
     draftX : number @intrinsic = 0
     draftY : number @intrinsic = 0
@@ -145,11 +145,11 @@ orbital ReviewPinsOrbital {
               (active (array/find @entity.rows (fn p (= @p.id @entity.activeId)))))
           (render-ui main { type: stack, direction: horizontal, gap: none, className: "h-full min-h-0 w-full", children: [
             { type: annotated-media, mediaType: content, children: @config.contentTrait, title: @config.title, pins: (array/map @pins (fn p { id: @p.id, x: @p.x, y: @p.y, time: 0, label: @p.body, resolved: (= @p.status "resolved") })), activePinId: @entity.activeId, placing: @entity.placing, placeEvent: PIN_PLACE, pinSelectEvent: PIN_SELECT, className: "flex-1 min-w-0 h-full overflow-auto" },
-            { type: stack, direction: vertical, gap: sm, align: center, className: (if @entity.panelOpen "hidden" "w-12 shrink-0 h-full border-l py-3"), children: [
+            { type: stack, direction: vertical, gap: sm, align: center, className: "w-12 shrink-0 h-full border-l py-3", children: [
               { type: button, icon: message-square, variant: ghost, size: sm, aria-label: @config.showPanelLabel, action: PANEL_TOGGLE },
               { type: typography, variant: caption, color: muted, content: (str/concat "" (array/len @pins)) }
             ] },
-            { type: stack, direction: vertical, gap: sm, className: (if @entity.panelOpen "w-72 shrink-0 h-full overflow-y-auto border-l p-3" "hidden"), children: [
+            { type: drawer, isOpen: @entity.panelOpen, modal: false, position: right, width: "min(320px, 90vw)", title: @config.panelTitle, closeEvent: PANEL_TOGGLE, children: [{ type: stack, direction: vertical, gap: sm, children: [
               { type: stack, direction: horizontal, gap: xs, align: center, children: [
                 { type: button, icon: panel-right-close, variant: ghost, size: sm, aria-label: @config.hidePanelLabel, action: PANEL_TOGGLE },
                 { type: button, label: (if @entity.placing @config.placingLabel @config.placeLabel), icon: message-square-plus, variant: (if @entity.placing primary secondary), size: sm, action: PLACE_TOGGLE },
@@ -186,7 +186,7 @@ orbital ReviewPinsOrbital {
                        { type: button, label: @config.replyLabel, icon: reply, variant: primary, size: sm, action: REPLY_SAVE },
                        { type: button, label: (if (= @active.status "resolved") @config.reopenLabel @config.resolveLabel), icon: (if (= @active.status "resolved") rotate-ccw check), variant: secondary, size: sm, action: PIN_STATUS, actionPayload: { id: @active.id, status: (if (= @active.status "resolved") open resolved) } }
                      ] }]) }))
-            ] }
+            ] }] }
           ] }))
     }
 
@@ -281,6 +281,8 @@ orbital ReviewPinsOrbital {
         @tier "presentation"
       showPanelLabel : string = "Show comments"
         @tier "presentation"
+      panelTitle : string = "Comments"
+        @tier "presentation"
       hidePanelLabel : string = "Hide comments"
         @tier "presentation"
       title : string = "Reviewed view"
@@ -340,6 +342,7 @@ orbital ReviewPinsOrbital {
     id : string!
     wanted : string @description "The behavior the review link names, until the catalog lists it." = ""
     leaves : [ReviewLeaf] @description "The catalog tree, as last listed." = []
+    listed : boolean @description "Whether the catalog has listed its tree at least once." = false
   }
 
   trait ReviewOpener -> ReviewOpenerView [client] {
@@ -358,19 +361,24 @@ orbital ReviewPinsOrbital {
                 (do
                   (set @entity.wanted "")
                   (emit LOAD_BEHAVIOR { behavior: @leaf.behavior, value: @leaf.value })))
-              (set @entity.wanted @link.behavior))))
+              (if @entity.listed
+                (emit REVIEW_REFUSED { title: @config.missingTitle, message: @link.behavior })
+                (set @entity.wanted @link.behavior)))))
       TREE_LISTED -> idle when (and (!= @entity.wanted "") (array/some ?data (fn l (= @l.behavior @entity.wanted))))
         (set @entity.leaves ?data)
+        (set @entity.listed true)
         (let ((leaf (array/find ?data (fn l (= @l.behavior @entity.wanted)))))
           (do
             (set @entity.wanted "")
             (emit LOAD_BEHAVIOR { behavior: @leaf.behavior, value: @leaf.value })))
       TREE_LISTED -> idle when (and (!= @entity.wanted "") (not (array/some ?data (fn l (= @l.behavior @entity.wanted)))))
         (set @entity.leaves ?data)
+        (set @entity.listed true)
         (emit REVIEW_REFUSED { title: @config.missingTitle, message: @entity.wanted })
         (set @entity.wanted "")
       TREE_LISTED -> idle when (= @entity.wanted "")
         (set @entity.leaves ?data)
+        (set @entity.listed true)
     }
 
     emits {

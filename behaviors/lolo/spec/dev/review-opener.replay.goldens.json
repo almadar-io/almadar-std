@@ -239,6 +239,84 @@
      }
     }
    ]
+  },
+  {
+   "id": "a link opened after an empty tree was listed is refused at once",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "entity": {
+    "wanted": "",
+    "leaves": [],
+    "listed": true
+   },
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {
+      "name": "project-friday",
+      "version": "1.1.0"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LOAD_BEHAVIOR"
+      ],
+      "emits": [
+       {
+        "event": "REVIEW_REFUSED",
+        "payload": {
+         "title": "The reviewed behavior is not installed",
+         "message": "almadar-behaviors/project-friday-m1-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a link opened before any tree waits for it",
+   "config": {
+    "reviews": [
+     {
+      "name": "project-friday",
+      "version": "1.1.0",
+      "behavior": "almadar-behaviors/project-friday-m1-1",
+      "label": "Project Friday",
+      "route": "/projects"
+     }
+    ]
+   },
+   "entity": {
+    "wanted": "",
+    "leaves": [],
+    "listed": false
+   },
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {
+      "name": "project-friday",
+      "version": "1.1.0"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LOAD_BEHAVIOR",
+       "REVIEW_REFUSED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

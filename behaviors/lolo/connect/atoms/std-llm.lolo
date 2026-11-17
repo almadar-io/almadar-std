@@ -161,6 +161,8 @@ orbital LlmOrbital {
           })
         })
 
+      LLM_CHAT_SEND -> idle when (= (json/parse @payload.job LlmJob) null)
+        (emit LLM_FAILED { code: "INVALID_JOB", message: "The chat job is not a valid LlmJob", key: "" })
       LLM_CHAT_SEND -> idle when (and @config.cache
           (array/includes ["extract" "classify" "classifyMany" "generate"] (object/get (default (json/parse @payload.job LlmJob) {}) action ""))
           (= (object/get (default (json/parse @payload.job LlmJob) {}) temperature 1) 0)
@@ -487,6 +489,8 @@ orbital LlmOrbital {
               (str/concat @payload.message "\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/" @code "/\n")))
         })
 
+      LLM_CHAT_ERROR -> idle when (= (json/parse @payload.job LlmJob) null)
+        (emit LLM_FAILED { code: "INVALID_JOB", message: @payload.message, key: "" })
       LLM_CHAT_ERROR -> idle when (and (!= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classifyMany")
           (or (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "generate")
               (>= (object/get (default (json/parse @payload.job LlmJob) {}) attempt 0) 2)
@@ -1002,6 +1006,8 @@ orbital LlmOrbital {
             callKey: (if (object/has @payload "key") @payload.key "")
           })
         })
+      LLM_EMBED_SEND -> idle when (= (json/parse @payload.job EmbedJob) null)
+        (emit LLM_FAILED { code: "INVALID_JOB", message: "The embed job is not a valid EmbedJob", key: "" })
       LLM_EMBED_SEND -> idle when (> (object/get (default (json/parse @payload.job EmbedJob) {}) delayMs 0) 0)
         (set @entity.embedWaiting (array/append @entity.embedWaiting @payload.job))
         (emit LLM_EMBED_WAIT { delayMs: (object/get (default (json/parse @payload.job EmbedJob) {}) delayMs 0) })
@@ -1091,6 +1097,8 @@ orbital LlmOrbital {
           action: "embed",
           inputTokens: (object/get (object/get (default (json/parse @payload.body EmbedReply) {}) usage {}) prompt_tokens 0)
         })
+      LLM_EMBED_ERROR -> idle when (= (json/parse @payload.job EmbedJob) null)
+        (emit LLM_FAILED { code: "INVALID_JOB", message: @payload.message, key: "" })
       LLM_EMBED_ERROR -> idle when (or (str/includes (str/lower @payload.message) "context length") (str/includes (str/lower @payload.message) "maximum input length") (str/includes (str/lower @payload.message) "reduce the length of the input") (str/includes (str/lower @payload.message) "input_tokens"))
         (emit LLM_FAILED { code: "", message: @payload.message, key: (object/get (default (json/parse @payload.job EmbedJob) {}) callKey "") })
       LLM_EMBED_ERROR -> idle when (and (= @payload.status 429) (>= (object/get (default (json/parse @payload.job EmbedJob) {}) limited 0) 3)

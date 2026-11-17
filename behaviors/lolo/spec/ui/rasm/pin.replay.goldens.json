@@ -1,0 +1,292 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-pin.lolo",
+ "trait": "RasmPin",
+ "cases": [
+  {
+   "id": "ltr-pins-the-child-to-the-right-edge",
+   "config": {
+    "anchor": "page",
+    "child": "bar",
+    "width": 300,
+    "height": 48,
+    "margin": 12
+   },
+   "entity": {
+    "id": "p"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "page",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1280,
+         "h": 800
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "bar",
+           "rect": {
+            "x": 968,
+            "y": 12,
+            "w": 300,
+            "h": 48
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rtl-pins-the-child-to-the-left-edge",
+   "config": {
+    "anchor": "page",
+    "child": "bar",
+    "width": 300,
+    "height": 48,
+    "margin": 12
+   },
+   "entity": {
+    "id": "p",
+    "dir": "rtl"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "page",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1280,
+         "h": 800
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "bar",
+           "rect": {
+            "x": 12,
+            "y": 12,
+            "w": 300,
+            "h": 48
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-direction-change-places-again-from-the-stored-rect",
+   "config": {
+    "anchor": "page",
+    "child": "bar",
+    "width": 300,
+    "height": 48,
+    "margin": 12
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1280,
+     "h": 800
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "rtl"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "bar",
+           "rect": {
+            "x": 12,
+            "y": 12,
+            "w": 300,
+            "h": 48
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-narrow-anchor-narrows-the-child",
+   "config": {
+    "anchor": "page",
+    "child": "bar",
+    "width": 300,
+    "height": 48,
+    "margin": 12
+   },
+   "entity": {
+    "id": "p"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "page",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 320,
+         "h": 800
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "bar",
+           "rect": {
+            "x": 12,
+            "y": 12,
+            "w": 296,
+            "h": 48
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-anchor-places-nothing",
+   "config": {
+    "anchor": "page",
+    "child": "bar",
+    "width": 300,
+    "height": 48,
+    "margin": 12
+   },
+   "entity": {
+    "id": "p"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "other",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1280,
+         "h": 800
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PLACE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-disabled-places-nothing",
+   "config": {
+    "anchor": "page",
+    "child": "bar",
+    "enabled": false,
+    "width": 300,
+    "height": 48,
+    "margin": 12
+   },
+   "entity": {
+    "id": "p"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "page",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1280,
+         "h": 800
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PLACE"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

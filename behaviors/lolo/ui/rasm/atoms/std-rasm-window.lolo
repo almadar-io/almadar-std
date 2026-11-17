@@ -30,6 +30,7 @@ orbital RasmWindowOrbital {
     staggerMs : number = 70
     variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    bodyH : number @description "The height the child in the body slot reported by RASM_EXTENT, -1 until it did." = -1
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -71,10 +72,16 @@ orbital RasmWindowOrbital {
         (set @entity.staggerMs ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit WINDOW_PAINT { n: @entity.paints })
+      RASM_EXTENT -> ready when (and (= ?id (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot)) (!= ?h @entity.bodyH))
+        (set @entity.bodyH ?h)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit WINDOW_LAYOUT { n: @entity.layouts })
+      RASM_EXTENT -> ready when (not (and (= ?id (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot)) (!= ?h @entity.bodyH)))
       WINDOW_LAYOUT -> ready when (= @entity.rect null)
       WINDOW_PAINT -> ready when (= @entity.rect null)
       WINDOW_LAYOUT -> ready when (!= @entity.rect null)
         (emit RASM_PLACE { n: ?n, placed: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (bar (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.titleBar)) @config.titleBar)) (rtl (= @entity.dir "rtl")) (rot @entity.rotate) (fr (object/get @entity.looks "window/frame/idle" null))) (let ((n (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "none") 0 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controlCount)) @config.controlCount))) (leftSide (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "left") (not @rtl) @rtl)) (inset (+ (if (= @fr null) 0 (default @fr.strokeWidth 0)) 6)) (cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2)))) (let ((ctw (math/max 8 (if (<= @n 0) 0 (+ (* @n (+ (- @bar 8) 4)) 4)))) (co (math/cos @rot)) (si (math/sin @rot))) (let ((raw [{ id: (if (= @config.titleSlot "") (str/concat @config.id ":title") @config.titleSlot), x: (if @leftSide (+ @r.x @ctw) (+ @r.x 8)), y: @r.y, w: (math/max 0 (- @r.w (+ 8 @ctw))), h: @bar }, { id: (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot), x: (+ @r.x @inset), y: (+ (+ @r.y @bar) @inset), w: (math/max 0 (- @r.w (* 2 @inset))), h: (math/max 0 (- (- @r.h @bar) (* 2 @inset))) }])) (array/map @raw (fn s (let ((dx (- (+ @s.x (/ @s.w 2)) @cx)) (dy (- (+ @s.y (/ @s.h 2)) @cy))) { id: @s.id, rotate: @rot, rect: { x: (- (+ @cx (- (* @dx @co) (* @dy @si))) (/ @s.w 2)), y: (- (+ @cy (+ (* @dx @si) (* @dy @co))) (/ @s.h 2)), w: @s.w, h: @s.h } }))))))) })
+        (emit RASM_EXTENT { n: ?n, id: @config.id, w: @entity.rect.w, h: (if (< @entity.bodyH 0) @entity.rect.h (+ (+ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.titleBar)) @config.titleBar) (* 2 (+ (let ((fr (object/get @entity.looks "window/frame/idle" null))) (if (= @fr null) 0 (default @fr.strokeWidth 0))) 6))) @entity.bodyH)) })
       WINDOW_PAINT -> ready when (!= @entity.rect null)
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (none : [node] []) (fr (object/get @entity.looks "window/frame/idle" null)) (tb (object/get @entity.looks "window/titlebar/idle" null)) (ct (object/get @entity.looks "window/control/idle" null)) (rtl (= @entity.dir "rtl")) (rot @entity.rotate) (idx @entity.enterIndex) (stag @entity.staggerMs) (bar (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.titleBar)) @config.titleBar)))
           (let ((cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (n (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "none") 0 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controlCount)) @config.controlCount))) (leftSide (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "left") (not @rtl) @rtl)) (entry (+ 520 (* @idx @stag))) (cs (- @bar 8)))
@@ -114,6 +121,14 @@ orbital RasmWindowOrbital {
       }
         @description "The chrome's nodes at its z; a non-zero rotation wraps them in a group turned about the rect centre."
         @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The window's content height after each layout: the title bar, the frame inset on both sides and the height the body slot's child reported by RASM_EXTENT; the rect's height until the body reports. A parent stack or grid measures the window by it and grows."
+        @tier "primary"
     }
 
     listens {
@@ -125,6 +140,8 @@ orbital RasmWindowOrbital {
         @description "Store the looks and repaint."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this node's rect and rotation when its own id is placed, then place the slots; a placement for any other id is ignored."
+      RASM_EXTENT { id : string!  w : number!  h : number!  n : number }
+        @description "The height a slot's child needs: the body (and for a ticket the stub) slot's child reports it, and the node reports its own content height again."
       RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
         @description "Play the entry choreography on the chrome when this node's id is in the order."
     }

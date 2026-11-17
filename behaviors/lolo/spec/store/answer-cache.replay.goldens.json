@@ -1,0 +1,57 @@
+{
+ "atom": "store/atoms/std-answer-cache.lolo",
+ "trait": "AnswerCache",
+ "note": "stale-while-revalidate in the browser: an ask reads the kept answer and shows it unless the host's answer to that key already came; the host's answer is kept; sign-out empties the store",
+ "cases": [
+  {
+   "id": "an-ask-reads-the-answer-kept-under-its-key",
+   "steps": [
+    { "event": "ASKED", "payload": { "key": "|Grid|LIST_LOADED" }, "expect": { "state": "idle", "effects": [{ "type": "kv/get" }] } }
+   ]
+  },
+  {
+   "id": "a-kept-answer-is-shown-as-the-answer",
+   "steps": [
+    { "event": "ASKED", "payload": { "key": "k1" }, "expect": { "state": "idle" } },
+    { "event": "CACHE_READ", "payload": { "found": true, "key": "k1", "value": { "key": "k1" } }, "expect": { "state": "idle", "emits": [{ "event": "CACHED_ANSWER", "payload": { "key": "k1" } }] } }
+   ]
+  },
+  {
+   "id": "a-kept-answer-read-after-the-hosts-answer-is-not-shown",
+   "steps": [
+    { "event": "ASKED", "payload": { "key": "k1" }, "expect": { "state": "idle" } },
+    { "event": "ANSWERED", "payload": { "key": "k1" }, "expect": { "state": "idle", "effects": [{ "type": "kv/put" }] } },
+    { "event": "CACHE_READ", "payload": { "found": true, "key": "k1", "value": { "key": "k1" } }, "expect": { "state": "idle", "neverEmits": ["CACHED_ANSWER"] } }
+   ]
+  },
+  {
+   "id": "control-another-keys-answer-does-not-hold-back-this-keys-kept-answer",
+   "steps": [
+    { "event": "ASKED", "payload": { "key": "k1" }, "expect": { "state": "idle" } },
+    { "event": "ANSWERED", "payload": { "key": "k2" }, "expect": { "state": "idle" } },
+    { "event": "CACHE_READ", "payload": { "found": true, "key": "k1", "value": { "key": "k1" } }, "expect": { "state": "idle", "emits": [{ "event": "CACHED_ANSWER", "payload": { "key": "k1" } }] } }
+   ]
+  },
+  {
+   "id": "a-miss-shows-nothing",
+   "steps": [
+    { "event": "ASKED", "payload": { "key": "k1" }, "expect": { "state": "idle" } },
+    { "event": "CACHE_READ", "payload": { "found": false, "key": "k1" }, "expect": { "state": "idle", "neverEmits": ["CACHED_ANSWER"] } },
+    { "event": "CACHE_MISSED", "payload": { "error": "unavailable", "kind": "unsupported" }, "expect": { "state": "idle", "neverEmits": ["CACHED_ANSWER"] } }
+   ]
+  },
+  {
+   "id": "sign-out-empties-the-store",
+   "steps": [
+    { "event": "CLEAR", "payload": {}, "expect": { "state": "idle", "effects": [{ "type": "kv/scan" }] } },
+    { "event": "CACHE_LISTED", "payload": { "entries": [{ "key": "k1", "value": { "key": "k1" } }, { "key": "k2", "value": { "key": "k2" } }] }, "expect": { "state": "idle", "effects": [{ "type": "kv/batch" }] } }
+   ]
+  },
+  {
+   "id": "control-an-empty-store-has-nothing-to-delete",
+   "steps": [
+    { "event": "CACHE_LISTED", "payload": { "entries": [] }, "expect": { "state": "idle", "neverEmits": ["CACHED_ANSWER"] } }
+   ]
+  }
+ ]
+}

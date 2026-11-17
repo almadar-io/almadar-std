@@ -1231,6 +1231,45 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-chat-send-with-an-unreadable-job-fails-and-sends-nothing",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_SEND",
+          "payload": { "job": "not a job" },
+          "expect": {
+            "emits": [ { "event": "LLM_FAILED", "payload": { "code": "INVALID_JOB" } } ],
+            "neverEmits": [ "LLM_CHAT_DISPATCH" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-chat-error-with-an-unreadable-job-fails-and-never-retries",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_ERROR",
+          "payload": { "job": "not a job", "message": "boom" },
+          "expect": {
+            "emits": [ { "event": "LLM_FAILED", "payload": { "code": "INVALID_JOB", "message": "boom" } } ],
+            "neverEmits": [ "LLM_CHAT_SEND" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-valid-job-still-dispatches",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_SEND",
+          "payload": { "job": "{\"stream\": false, \"action\": \"generate\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"qwen\", \"temperature\": 0.7, \"maxTokens\": 64}" },
+          "expect": { "emits": [ { "event": "LLM_CHAT_DISPATCH" } ], "neverEmits": [ "LLM_FAILED" ] }
+        }
+      ]
     }
   ]
 }

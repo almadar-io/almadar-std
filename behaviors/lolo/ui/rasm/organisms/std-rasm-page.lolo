@@ -1,5 +1,6 @@
 app std-rasm-page [
   version: "0.1.0",
+  locales: [en, ar, sl],
   description: "std-rasm-page — the page shell for a composed Rasm page and nothing else: a Theme (std-rasm-theme, knobs preset and style), a Surface that scrolls inside itself (pageScroll on), a Focus, and a root Page stack whose children are the `sections` knob. It has no bar, hero, cards, emblem or text. A program extends the orbital RasmPage (`orbital MyPage = Shell.orbitals.RasmPage { ... }`), sets `sections`, and adds its own traits from the kit (grids, texts, images, materials, pressables, presence, scrub, ribbon, window, ticket, balloon), each wiring its `listens` to Theme.RASM_THEME, Theme.RASM_STYLE, Surface.RASM_DIRECTION, Surface.RASM_RESIZE as it needs and to its parent's RASM_PLACE, and wires every grid, stack and section atom it adds with `Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT` when it declares breakpoint variants (variantBy breakpoint) (the Theme and the root Page stack here already do), and adds orbital-level routes `X.RASM_PAINT -> Surface.RASM_PAINT` for every painting trait and `X.RASM_EXTENT -> Page.RASM_EXTENT` for every stack whose height the page measures; pressables join focus through `Focus` config order."
 ]
 
@@ -10,6 +11,11 @@ uses ThemeAtom from "std/behaviors/std-rasm-theme"
 uses SurfaceAtom from "std/behaviors/std-rasm-surface"
 uses StackAtom from "std/behaviors/std-rasm-stack"
 uses FocusAtom from "std/behaviors/std-rasm-focus"
+uses CycleAtom from "std/behaviors/std-rasm-theme-cycle"
+uses PinAtom from "std/behaviors/std-rasm-pin"
+uses TextAtom from "std/behaviors/std-rasm-text"
+uses PresenceAtom from "std/behaviors/std-rasm-presence"
+uses PressAtom from "std/behaviors/std-rasm-pressable"
 
 orbital RasmPage {
   entity RasmPageView [runtime] {
@@ -24,6 +30,7 @@ orbital RasmPage {
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
+      Cycle.RASM_THEME_SET -> RASM_THEME_SET
     }
   }
 
@@ -36,7 +43,7 @@ orbital RasmPage {
       rootRect: { x: 0, y: 0, w: 1280, h: 800 }
       fill: true
       pageScroll: true
-      fixed: @config.fixed
+      fixed: (array/concat @config.fixed (let ((ids : [string] (if @config.switcher ["themeBar", "themePrev", "themeLabel", "themeNext"] []))) @ids))
       scrollReportMs: 120
       margin: 0
     }
@@ -44,11 +51,19 @@ orbital RasmPage {
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_RESIZE -> RASM_RESIZE
       Page.RASM_EXTENT -> RASM_EXTENT
+      ThemeBar.RASM_EXTENT -> RASM_EXTENT
       Page.RASM_PAINT -> RASM_PAINT
+      ThemeBar.RASM_PAINT -> RASM_PAINT
+      ThemePrev.RASM_PAINT -> RASM_PAINT
+      ThemeNext.RASM_PAINT -> RASM_PAINT
+      ThemeLabel.RASM_PAINT -> RASM_PAINT
     }
   }
 
   trait Focus = FocusAtom.traits.RasmFocus {
+    config {
+      order: (let ((ids : [string] (if @config.switcher ["themePrev", "themeNext"] []))) @ids)
+    }
     listens {
       Surface.RASM_KEY -> RASM_KEY
       Surface.RASM_ACCESS -> RASM_ACCESS
@@ -65,6 +80,7 @@ orbital RasmPage {
       look: ""
       z: 1
       children: @config.sections
+      lead: (if @config.switcher 72 0)
       variantBy: breakpoint
       variants: @config.sectionVariants
     }
@@ -75,6 +91,132 @@ orbital RasmPage {
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       Surface.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
+    }
+  }
+
+  trait Cycle = CycleAtom.traits.RasmThemeCycle {
+    config {
+      labelId: "themeLabel"
+      themes: ["aqua-light", "arabesque-light", "art-deco-light", "art-nouveau-light", "atelier-light", "bauhaus-light", "bloomberg-dense-dark", "blueprint-dark", "clay-light", "comic-light", "constructivist-light", "corporate-light", "cyberpunk-dark", "frutiger-aero-light", "gazette-light", "glass-light", "gothic-light", "ink-wash-light", "kawaii-light", "kiosk-light", "linear-clean-dark", "luxury-light", "mac-classic-light", "material-light", "memphis-light", "mid-century-light", "minimalist-light", "mudcloth-light", "neon-dark", "neumorphic-light", "newsprint-light", "notion-editorial-light", "pixel-dark", "prism-light", "retro-light", "risograph-light", "scandi-light", "sketch-light", "solarpunk-light", "steampunk-light", "swiss-light", "terminal-dark", "ukiyo-e-light", "vaporwave-light", "victorian-light", "wabi-sabi-light", "win95-light", "wireframe-light", "zine-light"]
+      styles: ["aqua", "arabesque", "art-deco", "art-nouveau", "atelier", "bauhaus", "bloomberg-dense", "blueprint", "clay", "comic", "constructivist", "corporate", "cyberpunk", "frutiger-aero", "gazette", "glass", "gothic", "ink-wash", "kawaii", "kiosk", "linear-clean", "luxury", "mac-classic", "material", "memphis", "mid-century", "minimalist", "mudcloth", "neon", "neumorphic", "newsprint", "notion-editorial", "pixel", "prism", "retro", "risograph", "scandi", "sketch", "solarpunk", "steampunk", "swiss", "terminal", "ukiyo-e", "vaporwave", "victorian", "wabi-sabi", "win95", "wireframe", "zine"]
+      labels: ["theme.aqua", "theme.arabesque", "theme.art-deco", "theme.art-nouveau", "theme.atelier", "theme.bauhaus", "theme.bloomberg-dense", "theme.blueprint", "theme.clay", "theme.comic", "theme.constructivist", "theme.corporate", "theme.cyberpunk", "theme.frutiger-aero", "theme.gazette", "theme.glass", "theme.gothic", "theme.ink-wash", "theme.kawaii", "theme.kiosk", "theme.linear-clean", "theme.luxury", "theme.mac-classic", "theme.material", "theme.memphis", "theme.mid-century", "theme.minimalist", "theme.mudcloth", "theme.neon", "theme.neumorphic", "theme.newsprint", "theme.notion-editorial", "theme.pixel", "theme.prism", "theme.retro", "theme.risograph", "theme.scandi", "theme.sketch", "theme.solarpunk", "theme.steampunk", "theme.swiss", "theme.terminal", "theme.ukiyo-e", "theme.vaporwave", "theme.victorian", "theme.wabi-sabi", "theme.win95", "theme.wireframe", "theme.zine"]
+      start: @config.switcherStart
+      refused: "theme.refused"
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      ThemePrev.RASM_THEME_PREV -> RASM_THEME_PREV
+      ThemeNext.RASM_THEME_NEXT -> RASM_THEME_NEXT
+    }
+  }
+
+  trait ThemeEnter = PresenceAtom.traits.RasmPresence {
+    config {
+      order: ["themeBar", "themePrev", "themeLabel", "themeNext"]
+      staggerMs: 60
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_STYLE -> RASM_STYLE
+      Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      Page.RASM_PLACE -> RASM_PLACE
+    }
+  }
+
+  trait Pin = PinAtom.traits.RasmPin {
+    config {
+      anchor: "page"
+      child: "themeBar"
+      enabled: @config.switcher
+      width: 300
+      height: 48
+      margin: 12
+    }
+    listens {
+      Surface.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+
+  trait ThemeBar = StackAtom.traits.RasmStack {
+    config {
+      id: "themeBar"
+      axis: horizontal
+      gap: 6
+      padding: 6
+      look: "panel/surface/idle"
+      z: 50
+      children: [{ id: "themePrev", size: "fixed", main: 36 }, { id: "themeLabel", size: "fill" }, { id: "themeNext", size: "fixed", main: 36 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Pin.RASM_PLACE -> RASM_PLACE
+      ThemeEnter.RASM_ENTER -> RASM_ENTER
+    }
+  }
+
+  trait ThemePrev = PressAtom.traits.RasmPressable {
+    config {
+      id: "themePrev"
+      label: "theme.prev"
+      intent: secondary
+      icon: "M15 6 L9 12 L15 18"
+      iconRtl: "M9 6 L15 12 L9 18"
+      iconOnly: true
+      action: RASM_THEME_PREV
+      order: 900
+      z: 51
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      ThemeBar.RASM_PLACE -> RASM_PLACE
+      ThemeEnter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
+  trait ThemeNext = PressAtom.traits.RasmPressable {
+    config {
+      id: "themeNext"
+      label: "theme.next"
+      intent: secondary
+      icon: "M9 6 L15 12 L9 18"
+      iconRtl: "M15 6 L9 12 L15 18"
+      iconOnly: true
+      action: RASM_THEME_NEXT
+      order: 901
+      z: 51
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      ThemeBar.RASM_PLACE -> RASM_PLACE
+      ThemeEnter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
+  trait ThemeLabel = TextAtom.traits.RasmText {
+    config {
+      id: "themeLabel"
+      intent: label
+      fit: shrink
+      minSize: 10
+      z: 51
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      ThemeBar.RASM_PLACE -> RASM_PLACE
+      Cycle.RASM_TEXT_KEY -> RASM_TEXT_KEY
+      ThemeEnter.RASM_ENTER -> RASM_ENTER
     }
   }
 
@@ -95,11 +237,19 @@ orbital RasmPage {
       @label "Section variants"
       @description "The page's sections at a smaller breakpoint, by breakpoint name (phone, tablet): a shape whose children list the sections with their heights there, replacing `sections` while that breakpoint is current (a missing name takes the next smaller declared one, desktop and wide keep `sections`, which is the desktop composition)."
       @tier "presentation"
+    switcher : boolean = false
+      @label "Theme switcher"
+      @description "On, a small panel pinned to the top corner at the reading end (right under ltr, left under rtl) steps the page through the art directions the Cycle trait lists (one per Rasm style that has a theme file: its program theme key, style and catalog label; a composing program must declare these theme keys in its `themes` list) with previous and next buttons and shows the current entry's label; each step switches the viewer's theme and the Rasm style together."
+      @tier "presentation"
+    switcherStart : string = ""
+      @label "Switcher start"
+      @description "The style of the art direction the page starts in."
+      @tier "presentation"
     fixed : [string] = []
       @label "Fixed ids"
       @description "The paint ids that stay in place while the page scrolls, such as a bar."
       @tier "presentation"
   }
 
-  page "/page" as RasmPageRoute -> Theme, Surface, Focus, Page
+  page "/page" as RasmPageRoute -> Theme, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel
 }

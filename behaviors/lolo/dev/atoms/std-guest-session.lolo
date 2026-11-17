@@ -84,7 +84,7 @@ type GuestHostAsk = { trait : string!, op : string!, ask : string! }
 type GuestMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
 type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, hostAsks : [GuestHostAsk]?, client : GuestProgram? }
 type GuestJson = string | number | boolean | [GuestJson?] | Map string GuestJson?
-type GuestLegBody = { event : string, targetTrait : string, entityId : string, payload : GuestJson, clientId : string, locale : string, traits : [GuestJson], mount : [GuestJson], unmount : [string], route : string, delivery : GuestJson, dispatchLog : GuestJson, framesSince : number }
+type GuestLegBody = { event : string, targetTrait : string, entityId : string, payload : GuestJson, clientId : string, locale : string, traits : [GuestJson], mount : [GuestJson], unmount : [string], route : string, crumb : string, entityByTrait : GuestJson, delivery : GuestJson, dispatchLog : GuestJson, framesSince : number }
 type GuestLegAnswer = { leg : string!, response : string?, error : string? }
 type GuestLazyAnswer = { file : string!, program : SExpr?, error : string? }
 type GuestLazyPage = { file : string!, program : SExpr! }
@@ -602,6 +602,8 @@ orbital GuestSessionOrbital {
             mount: (object/get @b "mount" []),
             unmount: (object/get @b "unmount" []),
             route: (object/get @b "route" ""),
+            crumb: (object/get @b "crumb" ""),
+            entityByTrait: (object/get @b "entityByTrait" {}),
             clientId: (object/get @b "clientId" ""),
             locale: (object/get @b "locale" ""),
             delivery: (object/get @b "delivery" {}),
@@ -622,6 +624,8 @@ orbital GuestSessionOrbital {
             mount: (object/get @b "mount" []),
             unmount: (object/get @b "unmount" []),
             route: (object/get @b "route" ""),
+            crumb: (object/get @b "crumb" ""),
+            entityByTrait: (object/get @b "entityByTrait" {}),
             clientId: (object/get @b "clientId" ""),
             locale: (object/get @b "locale" ""),
             delivery: (object/get @b "delivery" {}),

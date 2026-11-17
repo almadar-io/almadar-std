@@ -52,6 +52,7 @@ orbital AppLayoutOrbital {
             sidebarContent: @config.sidebarTrait
             headerActions: @config.headerTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            onSignOut: "SIGN_OUT",
             userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
             user: (if (validate/required @config.viewerName) { avatar: @config.viewerAvatar, email: @config.viewerEmail, name: @config.viewerName } null)
@@ -93,6 +94,7 @@ orbital AppLayoutOrbital {
             sidebarContent: @config.sidebarTrait
             headerActions: @config.headerTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            onSignOut: "SIGN_OUT",
             userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
             user: (if (validate/required @config.viewerName) { avatar: @config.viewerAvatar, email: @config.viewerEmail, name: @config.viewerName } null)
@@ -105,9 +107,16 @@ orbital AppLayoutOrbital {
         (emit LAYOUT_SEARCH { value: (default ?value "") })
       NOTIFY_PICKED -> composing
         (emit NOTIFY_CLICK { })
+      SIGN_OUT -> composing
+        (emit SIGNED_OUT { })
+        (auth/sign-out)
     }
 
     emits {
+      SIGNED_OUT -> external {
+      }
+        @description "The viewer chose Sign out in the account menu, before the session ends: what the browser keeps for that viewer is cleared on it."
+        @tier "domain"
       LAYOUT_SEARCH -> external {
         value : string
       }

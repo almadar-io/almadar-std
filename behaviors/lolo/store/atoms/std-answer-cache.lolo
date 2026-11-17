@@ -1,0 +1,78 @@
+app std-answer-cache [
+  version: "1.0.0",
+  description: "std-answer-cache — the browser's last answer to a keyed ask, shown at once while the host answers again (stale-while-revalidate). Composed beside an asker, it hears the ask (ASKED { key }) and the host's answer (ANSWERED, the answer's own payload with its key). On an ask it reads the answer last kept under that key from the kv store (config.store, IndexedDB in a browser) and, when one is kept and no newer answer to that key has arrived meanwhile, emits it as CACHED_ANSWER, which the call site names as the answer event so the asker paints it as it would the host's. The host's answer still arrives, is painted over it, and is kept for the next visit. The store is emptied on config.clearOn (sign-out), so one browser never shows a viewer another viewer's answers. A kv failure is a miss: it never blocks or fails the ask.",
+  kv: { answers: [read, write] }
+]
+
+type KeyedAnswer = { key : string }
+
+orbital AnswerCacheOrbital {
+  entity AnswerCacheRun [runtime] {
+    id : string!
+    fresh : [string] @description "Keys whose host answer arrived since they were last asked: a kept answer read after it is older, so it is not shown." = []
+  }
+
+  trait AnswerCache (a : Type = KeyedAnswer) -> @rebindable AnswerCacheRun [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ASKED -> idle when (validate/string ?key)
+        (set @entity.fresh (array/filter @entity.fresh (fn k (!= @k ?key))))
+        (kv/get @config.store ?key { emit: { success: CACHE_READ, failure: CACHE_MISSED, key: ?key } })
+      ASKED -> idle when (not (validate/string ?key))
+      CACHE_READ -> idle when (and ?found (not (array/includes @entity.fresh ?key)))
+        (emit CACHED_ANSWER ?value)
+      CACHE_READ -> idle when (not (and ?found (not (array/includes @entity.fresh ?key))))
+      CACHE_MISSED -> idle
+      ANSWERED -> idle when (validate/string ?key)
+        (set @entity.fresh (array/append (array/filter @entity.fresh (fn k (!= @k ?key))) ?key))
+        (kv/put @config.store ?key @payload { emit: { success: CACHE_KEPT, failure: CACHE_MISSED } })
+      ANSWERED -> idle when (not (validate/string ?key))
+      CACHE_KEPT -> idle
+      CLEAR -> idle
+        (kv/scan @config.store "" { emit: { success: CACHE_LISTED, failure: CACHE_MISSED } })
+      CACHE_LISTED -> idle when (> (array/len ?entries) 0)
+        (kv/batch @config.store (array/map ?entries (fn e { op: "delete", key: (object/get @e key "") })) { emit: { success: CACHE_KEPT, failure: CACHE_MISSED } })
+      CACHE_LISTED -> idle when (= (array/len ?entries) 0)
+    }
+
+    config {
+      store : string = "answers"
+        @label "Store"
+        @description "The kv store the answers are kept in, declared in the app's kv grant."
+    }
+
+    emits {
+      CACHED_ANSWER -> external { ...a }
+        @description "The answer last kept under the asked key; the call site names it as the answer event the asker hears."
+        @tier "primary"
+    }
+
+    listens {
+      ASKED {
+        key : string
+      }
+        @description "An ask the asker sent; the call site maps the asker's ask event here."
+      ANSWERED { ...a }
+        @description "The host's answer, with its key; the call site maps the answer event here."
+      CLEAR {
+      }
+        @description "Empty the store: the call site maps the sign-out event here."
+      CACHE_READ {
+        found : boolean!
+        value : a
+        key : string
+      }
+      CACHE_MISSED {
+        error : string
+        kind : string
+      }
+      CACHE_KEPT {
+      }
+      CACHE_LISTED {
+        entries : [{ key : string!, value : a }]!
+      }
+    }
+  }
+}

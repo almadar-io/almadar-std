@@ -1,0 +1,387 @@
+{
+ "atom": "ui/rasm/theme-cycle-example.lolo",
+ "trait": "ThemeCycleExampleRasmThemeCycle",
+ "cases": [
+  {
+   "id": "next-runs-theme-set-for-the-next-entry-and-announces-its-style",
+   "entity": {
+    "id": "c",
+    "index": 0,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 1,
+       "pending": -1,
+       "problem": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_THEME_SET",
+        "payload": {
+         "name": "memphis"
+        }
+       },
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.memphis"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-wraps-from-the-last-entry-to-the-first",
+   "entity": {
+    "id": "c",
+    "index": 3,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 0,
+       "pending": -1,
+       "problem": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_THEME_SET",
+        "payload": {
+         "name": "gazette"
+        }
+       },
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.gazette"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "prev-runs-theme-set-for-the-previous-entry",
+   "entity": {
+    "id": "c",
+    "index": 1,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_PREV",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 0,
+       "pending": -1,
+       "problem": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_THEME_SET",
+        "payload": {
+         "name": "gazette"
+        }
+       },
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.gazette"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "select-goes-to-the-entry-at-the-index",
+   "entity": {
+    "id": "c",
+    "index": 0,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_SELECT",
+     "payload": {
+      "index": 2
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 2,
+       "pending": -1,
+       "problem": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_THEME_SET",
+        "payload": {
+         "name": "neon"
+        }
+       },
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.neon"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-select-out-of-range-asks-nothing",
+   "entity": {
+    "id": "c",
+    "index": 0,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_SELECT",
+     "payload": {
+      "index": 9
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [],
+      "entity": {
+       "pending": -1,
+       "index": 0
+      },
+      "neverEmits": [
+       "RASM_THEME_SET",
+       "RASM_TEXT_KEY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "prev-wraps-to-the-last-entry-whose-theme-the-app-does-not-declare-it-is-refused-and-keeps-the-index-and-the-style",
+   "entity": {
+    "id": "c",
+    "index": 0,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_PREV",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 0,
+       "pending": -1
+      },
+      "neverEmits": [
+       "RASM_THEME_SET"
+      ],
+      "emits": [
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.refused"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bound-theme-moves-the-index-and-announces-the-style-and-label",
+   "entity": {
+    "id": "c",
+    "index": 0,
+    "pending": 1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_BOUND",
+     "payload": {
+      "theme": "memphis-light"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 1,
+       "pending": -1,
+       "problem": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_THEME_SET",
+        "payload": {
+         "name": "memphis"
+        }
+       },
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.memphis"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-refused-theme-keeps-the-index-and-the-style-and-shows-the-refusal",
+   "entity": {
+    "id": "c",
+    "index": 0,
+    "pending": 1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_REFUSED",
+     "payload": {
+      "error": "not declared",
+      "kind": "undeclared-theme"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 0,
+       "pending": -1,
+       "problem": "undeclared-theme: not declared"
+      },
+      "neverEmits": [
+       "RASM_THEME_SET"
+      ],
+      "emits": [
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.refused"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-bound-theme-nobody-asked-for-announces-nothing",
+   "entity": {
+    "id": "c",
+    "index": 0,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME_BOUND",
+     "payload": {
+      "theme": "memphis-light"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 0
+      },
+      "neverEmits": [
+       "RASM_THEME_SET",
+       "RASM_TEXT_KEY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "boot-announces-the-label-of-the-starting-entry",
+   "entity": {
+    "id": "c",
+    "index": 1,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_BOOT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_TEXT_KEY",
+        "payload": {
+         "id": "themeLabel",
+         "key": "theme-cycle-example:theme.memphis"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-starts-at-the-entry-with-the-start-style",
+   "entity": {
+    "id": "c",
+    "index": 2,
+    "pending": -1,
+    "problem": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 0
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

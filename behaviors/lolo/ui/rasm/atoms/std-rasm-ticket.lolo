@@ -29,6 +29,8 @@ orbital RasmTicketOrbital {
     staggerMs : number = 70
     variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    bodyH : number @description "The height the child in the body slot reported by RASM_EXTENT, -1 until it did." = -1
+    stubH : number @description "The height the child in the stub slot reported by RASM_EXTENT, -1 until it did." = -1
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -70,10 +72,20 @@ orbital RasmTicketOrbital {
         (set @entity.staggerMs ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit TICKET_PAINT { n: @entity.paints })
+      RASM_EXTENT -> ready when (and (= ?id (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot)) (!= ?h @entity.bodyH))
+        (set @entity.bodyH ?h)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit TICKET_LAYOUT { n: @entity.layouts })
+      RASM_EXTENT -> ready when (and (= ?id (if (= @config.stubSlot "") (str/concat @config.id ":stub") @config.stubSlot)) (!= ?h @entity.stubH))
+        (set @entity.stubH ?h)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit TICKET_LAYOUT { n: @entity.layouts })
+      RASM_EXTENT -> ready when (not (or (and (= ?id (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot)) (!= ?h @entity.bodyH)) (and (= ?id (if (= @config.stubSlot "") (str/concat @config.id ":stub") @config.stubSlot)) (!= ?h @entity.stubH))))
       TICKET_LAYOUT -> ready when (= @entity.rect null)
       TICKET_PAINT -> ready when (= @entity.rect null)
       TICKET_LAYOUT -> ready when (!= @entity.rect null)
         (emit RASM_PLACE { n: ?n, placed: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (rot @entity.rotate) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (vert (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.axis)) @config.axis) "vertical")) (sg (if (= @entity.dir "rtl") -1 1))) (let ((cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (co (math/cos @rot)) (si (math/sin @rot)) (stubW (* @r.w (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub))) (stubH (* @r.h (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub)))) (let ((hx (if (> @sg 0) (- (+ @r.x @r.w) @stubW) (+ @r.x @stubW)))) (let ((raw [{ id: (if (= @config.stubSlot "") (str/concat @config.id ":stub") @config.stubSlot), x: (if @vert (+ @r.x @pad) (+ (if (> @sg 0) @hx @r.x) @pad)), y: (if @vert (+ (- (+ @r.y @r.h) @stubH) @pad) (+ @r.y @pad)), w: (math/max 0 (- (if @vert @r.w @stubW) (* 2 @pad))), h: (math/max 0 (- (if @vert @stubH @r.h) (* 2 @pad))) }, { id: (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot), x: (if @vert (+ @r.x @pad) (+ (if (> @sg 0) @r.x @hx) @pad)), y: (+ @r.y @pad), w: (math/max 0 (- (if @vert @r.w (- @r.w @stubW)) (* 2 @pad))), h: (math/max 0 (- (if @vert (- @r.h @stubH) @r.h) (* 2 @pad))) }])) (array/map @raw (fn s (let ((dx (- (+ @s.x (/ @s.w 2)) @cx)) (dy (- (+ @s.y (/ @s.h 2)) @cy))) { id: @s.id, rotate: @rot, rect: { x: (- (+ @cx (- (* @dx @co) (* @dy @si))) (/ @s.w 2)), y: (- (+ @cy (+ (* @dx @si) (* @dy @co))) (/ @s.h 2)), w: @s.w, h: @s.h } }))))))) })
+        (emit RASM_EXTENT { n: ?n, id: @config.id, w: @entity.rect.w, h: (if (and (< @entity.bodyH 0) (< @entity.stubH 0)) @entity.rect.h (let ((bn (+ (math/max 0 @entity.bodyH) (* 2 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)))) (sn (+ (math/max 0 @entity.stubH) (* 2 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding))))) (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.axis)) @config.axis) "vertical") (math/max (/ @bn (math/max 0.01 (- 1 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub)))) (/ @sn (math/max 0.01 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub)))) (math/max @bn @sn)))) })
       TICKET_PAINT -> ready when (!= @entity.rect null)
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (none : [node] []) (bd (object/get @entity.looks "ticket/body/idle" null)) (pf (object/get @entity.looks "ticket/perforation/idle" null)) (st (object/get @entity.looks "ticket/stub/idle" null)) (rot @entity.rotate) (idx @entity.enterIndex) (stag @entity.staggerMs) (n (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.notch)) @config.notch)) (vert (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.axis)) @config.axis) "vertical")) (sg (if (= @entity.dir "rtl") -1 1)))
           (let ((cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (entry (+ 520 (* @idx @stag))) (x2 (+ @r.x @r.w)) (y2 (+ @r.y @r.h)) (hx (if (> @sg 0) (- (+ @r.x @r.w) (* @r.w (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub))) (+ @r.x (* @r.w (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub))))) (vy (- (+ @r.y @r.h) (* @r.h (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stub)) @config.stub)))))
@@ -113,6 +125,14 @@ orbital RasmTicketOrbital {
       }
         @description "The chrome's nodes at its z; a non-zero rotation wraps them in a group turned about the rect centre."
         @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The ticket's content height after each layout: the larger the body and stub parts need (the height their slot children reported by RASM_EXTENT plus the padding, each part scaled by its share of a vertical ticket); the rect's height until a slot reports. A parent stack or grid measures the ticket by it and grows."
+        @tier "primary"
     }
 
     listens {
@@ -124,6 +144,8 @@ orbital RasmTicketOrbital {
         @description "Store the looks and repaint."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this node's rect and rotation when its own id is placed, then place the slots; a placement for any other id is ignored."
+      RASM_EXTENT { id : string!  w : number!  h : number!  n : number }
+        @description "The height a slot's child needs: the body (and for a ticket the stub) slot's child reports it, and the node reports its own content height again."
       RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
         @description "Play the entry choreography on the chrome when this node's id is in the order."
     }

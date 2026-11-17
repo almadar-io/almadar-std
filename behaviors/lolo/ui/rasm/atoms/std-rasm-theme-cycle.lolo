@@ -1,0 +1,114 @@
+app std-rasm-theme-cycle [
+  version: "0.1.0",
+  description: "std-rasm-theme-cycle — steps a Rasm landing through a declared list of art directions. Three parallel lists give each art direction its program theme key (palette and fonts), its std-rasm-theme style name and its catalog label. RASM_THEME_NEXT, RASM_THEME_PREV and RASM_THEME_SELECT { index } pick an entry (wrapping), run theme/set for its theme in the viewer's browser and, once that is bound, emit RASM_THEME_SET { name: style } and RASM_TEXT_KEY with the entry's label for the label text. A refused theme leaves the index and the style where they were and shows `refused` in the label."
+]
+
+orbital RasmThemeCycleOrbital {
+  entity RasmThemeCycleRun [runtime] {
+    id : string!
+    index : number @description "The position in `themes` of the art direction in effect." = 0
+    pending : number @description "The position a theme/set ask is in flight for, -1 when none." = -1
+    problem : string @description "Why the last theme/set was refused; empty when it was not." = ""
+  }
+
+  trait RasmThemeCycle -> RasmThemeCycleRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.index (math/max 0 (array/indexOf @config.styles @config.start)))
+      RASM_BOOT -> ready when (> (array/len @config.themes) 0)
+        (emit RASM_TEXT_KEY { id: @config.labelId, key: (let ((ls : [MessageKey] @config.labels)) (default (array/nth @ls @entity.index) @config.refused)) })
+      RASM_THEME_NEXT -> ready when (> (array/len @config.themes) 0)
+        (let ((to (math/mod (+ @entity.index 1) (array/len @config.themes))))
+          (do
+            (set @entity.pending @to)
+            (theme/set (default (array/nth @config.themes @to) "") { emit: { success: RASM_THEME_BOUND, failure: RASM_THEME_REFUSED } })))
+      RASM_THEME_NEXT -> ready when (<= (array/len @config.themes) 0)
+      RASM_THEME_PREV -> ready when (> (array/len @config.themes) 0)
+        (let ((to (math/mod (+ @entity.index (- (array/len @config.themes) 1)) (array/len @config.themes))))
+          (do
+            (set @entity.pending @to)
+            (theme/set (default (array/nth @config.themes @to) "") { emit: { success: RASM_THEME_BOUND, failure: RASM_THEME_REFUSED } })))
+      RASM_THEME_PREV -> ready when (<= (array/len @config.themes) 0)
+      RASM_THEME_SELECT -> ready when (and (>= ?index 0) (< ?index (array/len @config.themes)))
+        (do
+          (set @entity.pending ?index)
+          (theme/set (default (array/nth @config.themes ?index) "") { emit: { success: RASM_THEME_BOUND, failure: RASM_THEME_REFUSED } }))
+      RASM_THEME_SELECT -> ready when (not (and (>= ?index 0) (< ?index (array/len @config.themes))))
+      RASM_THEME_BOUND -> ready when (>= @entity.pending 0)
+        (let ((at @entity.pending))
+          (do
+            (set @entity.index @at)
+            (set @entity.pending -1)
+            (set @entity.problem "")
+            (emit RASM_THEME_SET { name: (default (array/nth @config.styles @at) "") })
+            (emit RASM_TEXT_KEY { id: @config.labelId, key: (let ((ls : [MessageKey] @config.labels)) (default (array/nth @ls @at) @config.refused)) })))
+      RASM_THEME_BOUND -> ready when (< @entity.pending 0)
+      RASM_THEME_REFUSED -> ready when (>= @entity.pending 0)
+        (do
+          (set @entity.pending -1)
+          (set @entity.problem (str/concat ?kind ": " ?error))
+          (emit RASM_TEXT_KEY { id: @config.labelId, key: @config.refused }))
+      RASM_THEME_REFUSED -> ready when (< @entity.pending 0)
+    }
+
+    emits {
+      RASM_THEME_SET -> external {
+        name : string!
+      }
+        @description "The style to wear, once its theme is bound: the entry's style name, for std-rasm-theme."
+        @tier "domain"
+      RASM_TEXT_KEY -> external {
+        id : string!
+        key : MessageKey!
+      }
+        @description "The catalog key the label text shows: the entry in effect, or `refused` after a refusal."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BOOT { width : number }
+        @description "The surface booted: announce the label of the entry in effect."
+      RASM_THEME_NEXT { }
+        @description "Step to the next entry, wrapping."
+      RASM_THEME_PREV { }
+        @description "Step to the previous entry, wrapping."
+      RASM_THEME_SELECT { index : number! }
+        @description "Go to the entry at this position."
+      RASM_THEME_BOUND { theme : string! }
+        @description "theme/set bound the theme to the viewer's session."
+      RASM_THEME_REFUSED { error : string!, kind : string! }
+        @description "theme/set refused, for example undeclared-theme."
+    }
+
+    config {
+      themes : [string] = []
+        @label "Themes"
+        @description "The program theme key of each art direction, in order: each must be declared by the app (its theme, an orbital's theme or its themes list). Parallel to styles and labels."
+        @tier "presentation"
+      styles : [string] = []
+        @label "Styles"
+        @description "The std-rasm-theme style of each art direction, in the order of themes."
+        @tier "presentation"
+      labels : [MessageKey] = []
+        @label "Labels"
+        @description "The catalog key of each art direction's label, in the order of themes."
+        @tier "presentation"
+      start : string = ""
+        @label "Start style"
+        @description "The style of the art direction the page starts in; the first when no style matches."
+        @tier "presentation"
+      labelId : string = "themeLabel"
+        @label "Label id"
+        @description "The id of the std-rasm-text that shows the current entry's label."
+        @tier "presentation"
+      refused : MessageKey
+        @label "Refused label"
+        @description "The catalog key the label shows when a theme was refused."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmThemeCycleStart -> RasmThemeCycle
+}

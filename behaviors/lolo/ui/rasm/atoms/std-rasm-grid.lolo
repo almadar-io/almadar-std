@@ -5,7 +5,8 @@ app std-rasm-grid [
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
 type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
-type RasmTrack = { size : "fixed" | "fill" | "fr"!, main : number }
+type RasmTrack = { size : "fixed" | "fill" | "fr" | "measure"!, main : number, min : number }
+type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
 type RasmGridShape = { columns : [RasmTrack], rows : [RasmTrack], gap : number, rowGap : number, padding : number, rules : "none" | "columns" | "rows" | "both", border : boolean, children : [RasmGridChild] }
 type RasmGridChild = { id : string!, col : number!, row : number!, colSpan : number, rowSpan : number, rotate : number, offsetX : number, offsetY : number }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
@@ -25,6 +26,7 @@ orbital RasmGridOrbital {
     colW : [number] @description "The column widths of the last layout in px." = []
     colAt : [number] @description "Each column's offset from the content edge in px, at the last layout." = []
     rowH : [number] @description "The row heights of the last layout in px." = []
+    measured : Map string RasmMeasureItem @description "The latest measured height of each child, by id: a child that reports RASM_EXTENT or whose text RASM_MEASURED measured." = {}
     rowAt : [number] @description "Each row's offset from the content edge in px, at the last layout." = []
     variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
@@ -56,12 +58,25 @@ orbital RasmGridOrbital {
         (set @entity.layouts (+ @entity.layouts 1))
         (emit GRID_LAYOUT { n: @entity.layouts })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_EXTENT -> ready when (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh @sh.children)))) (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h))))
+        (set @entity.measured (object/set @entity.measured ?id { id: ?id, width: ?w, height: ?h, lines: 0 }))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit GRID_LAYOUT { n: @entity.layouts })
+      RASM_EXTENT -> ready when (not (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh @sh.children)))) (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h)))))
+      RASM_MEASURED -> ready when (array/some ?items (fn it (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh @sh.children)))) (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height))))))
+        (set @entity.measured (array/reduce ?items @entity.measured (fn acc it (if (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh @sh.children)))) (fn c (= @c.id @it.id))) (object/set @acc @it.id @it) @acc))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit GRID_LAYOUT { n: @entity.layouts })
+      RASM_MEASURED -> ready when (not (array/some ?items (fn it (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh @sh.children)))) (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height)))))))
       GRID_LAYOUT -> ready when (!= @entity.rect null)
         (set @entity.colW (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (cols (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.columns)) @config.columns))) (let ((ext (- @r.w (* 2 @pad))) (fixed (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (weights (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fill") 1 (if (= @t.size "fr") (default @t.main 1) 0))))))) (let ((share (if (> @weights 0) (math/max 0 (/ (- (- @ext @fixed) (* (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap) (math/max 0 (- (array/len @cols) 1)))) @weights)) 0))) (array/map @cols (fn t (if (= @t.size "fixed") (default @t.main 0) (* @share (if (= @t.size "fr") (default @t.main 1) 1)))))))))
-        (set @entity.rowH (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (rows (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rows)) @config.rows))) (let ((ext (- @r.h (* 2 @pad))) (fixed (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (weights (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fill") 1 (if (= @t.size "fr") (default @t.main 1) 0))))))) (let ((share (if (> @weights 0) (math/max 0 (/ (- (- @ext @fixed) (* (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap) (math/max 0 (- (array/len @rows) 1)))) @weights)) 0))) (array/map @rows (fn t (if (= @t.size "fixed") (default @t.main 0) (* @share (if (= @t.size "fr") (default @t.main 1) 1)))))))))
+        (set @entity.rowH (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (rows (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rows)) @config.rows)) (leasts (array/map (array/range (array/len (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rows)) @config.rows))) (fn ri (array/reduce (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.children)) @config.children) 0 (fn a c (if (and (= @c.row @ri) (<= (default @c.rowSpan 1) 1)) (math/max @a (let ((m (object/get @entity.measured @c.id null))) (if (= @m null) 0 @m.height))) @a))))))) (let ((ext (- @r.h (* 2 @pad))) (fixed (array/reduce (array/range (array/len @rows)) 0 (fn a ri (let ((t (default (array/nth @rows @ri) { size: "fixed", main: 0 }))) (+ @a (if (= @t.size "fixed") (default @t.main 0) (if (= @t.size "measure") (default (array/nth @leasts @ri) 0) 0))))))) (weights (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fill") 1 (if (= @t.size "fr") (default @t.main 1) 0)))))))
+          (let ((avail (- (- @ext @fixed) (* (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap) (math/max 0 (- (array/len @rows) 1)))))) (let ((share (if (> @weights 0) (array/reduce (array/range (array/len @rows)) (math/max 0 (/ @avail @weights)) (fn s k (let ((held (array/reduce (array/range (array/len @rows)) { h: 0, w: 0 } (fn a ri (let ((t (default (array/nth @rows @ri) { size: "fixed", main: 0 }))) (if (and (or (= @t.size "fill") (= @t.size "fr")) (> (math/max (default @t.min 0) (default (array/nth @leasts @ri) 0)) (* @s (if (= @t.size "fill") 1 (if (= @t.size "fr") (default @t.main 1) 0))))) { h: (+ @a.h (math/max (default @t.min 0) (default (array/nth @leasts @ri) 0))), w: (+ @a.w (if (= @t.size "fill") 1 (if (= @t.size "fr") (default @t.main 1) 0))) } @a)))))) (if (> (- @weights @held.w) 0) (math/max 0 (/ (- @avail @held.h) (- @weights @held.w))) @s)))) 0)))
+            (array/map (array/range (array/len @rows)) (fn ri (let ((t (default (array/nth @rows @ri) { size: "fixed", main: 0 })) (least (default (array/nth @leasts @ri) 0))) (if (= @t.size "fixed") (default @t.main 0) (if (= @t.size "measure") @least (math/max (* @share (if (= @t.size "fr") (default @t.main 1) 1)) (math/max (default @t.min 0) @least))))))))))))
         (set @entity.colAt (let ((acc (array/reduce @entity.colW { at: 0, xs: [] } (fn a w { at: (+ (+ @a.at @w) (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap)), xs: (array/append @a.xs @a.at) })))) @acc.xs))
         (set @entity.rowAt (let ((acc (array/reduce @entity.rowH { at: 0, ys: [] } (fn a h { at: (+ (+ @a.at @h) (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap)), ys: (array/append @a.ys @a.at) })))) @acc.ys))
         (emit RASM_PLACE { n: ?n, placed: (let ((r @entity.rect) (pad (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (cols (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.columns)) @config.columns)) (rows (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rows)) @config.rows)) (colW @entity.colW) (colAt @entity.colAt) (rowH @entity.rowH) (rowAt @entity.rowAt)) (array/map (array/filter (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.children)) @config.children) (fn c (and (and (>= @c.col 0) (>= @c.row 0)) (and (<= (+ @c.col (default @c.colSpan 1)) (array/len @cols)) (<= (+ @c.row (default @c.rowSpan 1)) (array/len @rows)))))) (fn c (let ((c1 (- (+ @c.col (default @c.colSpan 1)) 1)) (r1 (- (+ @c.row (default @c.rowSpan 1)) 1))) (let ((x0 (default (array/nth @colAt @c.col) 0)) (w (- (+ (default (array/nth @colAt @c1) 0) (default (array/nth @colW @c1) 0)) (default (array/nth @colAt @c.col) 0))) (y0 (default (array/nth @rowAt @c.row) 0)) (h (- (+ (default (array/nth @rowAt @r1) 0) (default (array/nth @rowH @r1) 0)) (default (array/nth @rowAt @c.row) 0))) (dx (default @c.offsetX 0)) (dy (default @c.offsetY 0))) (object/merge { id: @c.id, rect: { x: (+ (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @w)) (+ (+ @r.x @pad) @x0)) @dx), y: (+ (+ (+ @r.y @pad) @y0) @dy), w: @w, h: @h } } (if (= (default @c.rotate 0) 0) {} { rotate: @c.rotate }))))))) })
+        (emit RASM_EXTENT { n: ?n, id: @config.id, w: @entity.rect.w, h: (let ((rows (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rows)) @config.rows)) (kids (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.children)) @config.children))) (+ (* 2 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)) (+ (* (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap) (math/max 0 (- (array/len @rows) 1))) (array/reduce (array/range (array/len @rows)) 0 (fn a ri (let ((t (default (array/nth @rows @ri) { size: "fixed", main: 0 })) (least (array/reduce @kids 0 (fn b c (if (and (= @c.row @ri) (<= (default @c.rowSpan 1) 1)) (math/max @b (let ((m (object/get @entity.measured @c.id null))) (if (= @m null) 0 @m.height))) @b))))) (+ @a (if (= @t.size "fixed") (default @t.main 0) (if (= @t.size "measure") @least (math/max (default @t.min 0) @least)))))))))) })
         (set @entity.paints (+ @entity.paints 1))
         (emit GRID_PAINT { n: @entity.paints })
       GRID_LAYOUT -> ready when (= @entity.rect null)
@@ -101,6 +116,14 @@ orbital RasmGridOrbital {
       }
         @description "The gutter hairlines and the frame at the grid's z; emitted only with rules or border on."
         @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The grid's content height after each layout: the padding, the row gaps and each row's height, a fixed row at its main, a measure row at its tallest child, a fill or fr row at the larger of its min and its tallest child. A parent stack or grid measures this grid by it and grows."
+        @tier "primary"
     }
 
     listens {
@@ -112,6 +135,10 @@ orbital RasmGridOrbital {
         @description "Store the looks and repaint the rules and border."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this grid's rect when it is placed, then place the children."
+      RASM_EXTENT { id : string!  w : number!  h : number!  n : number }
+        @description "A child's content height: a measure row is as tall as its tallest child, a fill or fr row at least that tall, and the grid lays out again when it changes."
+      RASM_MEASURED { items : [RasmMeasureItem]! }
+        @description "Canvas text measurements: a child that is a measured text sizes its row the way a child that reports RASM_EXTENT does."
     }
 
     config {
@@ -125,7 +152,7 @@ orbital RasmGridOrbital {
         @tier "presentation"
       rows : [RasmTrack] = []
         @label "Rows"
-        @description "Row tracks in order: fixed uses main px, fill shares the height left after fixed tracks and gaps equally, fr takes a share weighted by main (default 1)."
+        @description "Row tracks in order: fixed uses main px, measure is as tall as its tallest single-row child (a child that reports RASM_EXTENT or is a measured text), fill shares the height left after fixed and measure tracks and gaps equally, fr takes a share weighted by main (default 1); a fill or fr row is never shorter than its min or its tallest child."
         @tier "presentation"
       gap : number = 0
         @label "Column gap"
