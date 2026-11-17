@@ -1,0 +1,153 @@
+app std-rasm-image-cycle [
+  version: "0.1.0",
+  description: "std-rasm-image-cycle — cycles one std-rasm-image through a declared list of pictures, with a caption and a position mark that follow. Three parallel lists give the picture of each shot for a desktop, a tablet and a phone canvas; RASM_BREAKPOINT chooses the list, so a visitor gets the picture made for their width. Once a second a tick counts toward `seconds`; when it is reached the gallery steps to the next shot (wrapping) and sends RASM_IMAGE for `imageId` and RASM_TEXT_KEY for `captionId` and `markId`. RASM_GALLERY_NEXT steps at once. While the pointer is over one of the `holdOn` controls the gallery holds its shot and the count restarts when the pointer leaves."
+]
+;; @capabilities "gallery, slideshow, carousel, cycling pictures, screenshots, captions"
+
+orbital RasmImageCycleOrbital {
+  entity RasmImageCycleRun [runtime] {
+    id : string!
+    index : number @description "The position of the shot shown." = 0
+    elapsed : number @description "Seconds counted since the shot was shown." = 0
+    shape : "desktop" | "tablet" | "phone" @description "Which picture list is in use, from the last RASM_BREAKPOINT." = "desktop"
+  }
+
+  trait RasmImageCycle -> RasmImageCycleRun [client] {
+    initial: cycling
+
+    state cycling {
+      INIT -> cycling
+        (set @entity.index 0)
+        (set @entity.elapsed 0)
+        (set @entity.shape "desktop")
+      RASM_BREAKPOINT -> cycling
+        (set @entity.shape (if (= ?name "phone") "phone" (if (= ?name "tablet") "tablet" "desktop")))
+        (emit GALLERY_SHOW { index: @entity.index })
+      GALLERY_TICK -> cycling when (>= (+ @entity.elapsed 1) @config.seconds)
+        (set @entity.elapsed 0)
+        (set @entity.index (math/mod (+ @entity.index 1) (math/max 1 (array/len @config.captions))))
+        (emit GALLERY_SHOW { index: @entity.index })
+      GALLERY_TICK -> cycling when (< (+ @entity.elapsed 1) @config.seconds)
+        (set @entity.elapsed (+ @entity.elapsed 1))
+      RASM_GALLERY_NEXT -> cycling
+        (set @entity.elapsed 0)
+        (set @entity.index (math/mod (+ @entity.index 1) (math/max 1 (array/len @config.captions))))
+        (emit GALLERY_SHOW { index: @entity.index })
+      RASM_POINTER -> held when (and (= ?kind "enter") (array/includes @config.holdOn ?id))
+      RASM_POINTER -> cycling when (not (and (= ?kind "enter") (array/includes @config.holdOn ?id)))
+      GALLERY_SHOW -> cycling
+        (emit RASM_IMAGE { id: @config.imageId, url: (default (array/nth (if (= @entity.shape "phone") @config.phone (if (= @entity.shape "tablet") @config.tablet @config.desktop)) ?index) "") })
+        (emit RASM_TEXT_KEY { id: @config.captionId, key: (let ((ks : [MessageKey] @config.captions)) (default (array/nth @ks ?index) @config.empty)) })
+        (emit RASM_TEXT_KEY { id: @config.markId, key: (let ((ks : [MessageKey] @config.marks)) (default (array/nth @ks ?index) @config.empty)) })
+    }
+
+    state held {
+      INIT -> cycling
+        (set @entity.index 0)
+        (set @entity.elapsed 0)
+        (set @entity.shape "desktop")
+      RASM_BREAKPOINT -> held
+        (set @entity.shape (if (= ?name "phone") "phone" (if (= ?name "tablet") "tablet" "desktop")))
+        (emit GALLERY_SHOW { index: @entity.index })
+      RASM_GALLERY_NEXT -> held
+        (set @entity.index (math/mod (+ @entity.index 1) (math/max 1 (array/len @config.captions))))
+        (emit GALLERY_SHOW { index: @entity.index })
+      RASM_POINTER -> cycling when (and (= ?kind "leave") (array/includes @config.holdOn ?id))
+        (set @entity.elapsed 0)
+      RASM_POINTER -> held when (not (and (= ?kind "leave") (array/includes @config.holdOn ?id)))
+      GALLERY_SHOW -> held
+        (emit RASM_IMAGE { id: @config.imageId, url: (default (array/nth (if (= @entity.shape "phone") @config.phone (if (= @entity.shape "tablet") @config.tablet @config.desktop)) ?index) "") })
+        (emit RASM_TEXT_KEY { id: @config.captionId, key: (let ((ks : [MessageKey] @config.captions)) (default (array/nth @ks ?index) @config.empty)) })
+        (emit RASM_TEXT_KEY { id: @config.markId, key: (let ((ks : [MessageKey] @config.marks)) (default (array/nth @ks ?index) @config.empty)) })
+    }
+
+    ticks {
+      galleryTick every 1000ms in cycling
+        (emit GALLERY_TICK { n: 0 })
+    }
+
+    emits {
+      GALLERY_TICK -> internal {
+        n : number!
+      }
+        @description "One second passed while cycling."
+        @tier "internal"
+      GALLERY_SHOW -> internal {
+        index : number!
+      }
+        @description "Send the picture, caption and mark of the shot at this position."
+        @tier "internal"
+      RASM_IMAGE -> external {
+        id : string!
+        url : string!
+      }
+        @description "The picture the image shows: the shot's entry in the list for the canvas width."
+        @tier "primary"
+      RASM_TEXT_KEY -> external {
+        id : string!
+        key : MessageKey!
+      }
+        @description "The catalog key the caption text or the position mark shows for the shot."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "Take the canvas breakpoint: phone and tablet use their own picture list, anything wider the desktop list."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "Hold the shot while the pointer is over a `holdOn` control."
+      RASM_GALLERY_NEXT { }
+        @description "Step to the next shot at once, wrapping."
+        @synonyms "next picture, advance gallery"
+    }
+
+    config {
+      imageId : string = "gallery"
+        @label "Image id"
+        @description "The id of the std-rasm-image that shows the shots."
+        @tier "presentation"
+      captionId : string = "galleryCaption"
+        @label "Caption id"
+        @description "The id of the std-rasm-text that shows the shot's caption."
+        @tier "presentation"
+      markId : string = "galleryMark"
+        @label "Mark id"
+        @description "The id of the std-rasm-text that shows the shot's position."
+        @tier "presentation"
+      desktop : [string] = []
+        @label "Desktop pictures"
+        @description "The picture URL of each shot for a desktop or wider canvas, in order."
+        @tier "domain"
+      tablet : [string] = []
+        @label "Tablet pictures"
+        @description "The picture URL of each shot for a tablet canvas, in the order of desktop."
+        @tier "domain"
+      phone : [string] = []
+        @label "Phone pictures"
+        @description "The picture URL of each shot for a phone canvas, in the order of desktop."
+        @tier "domain"
+      captions : [MessageKey] = []
+        @label "Captions"
+        @description "The catalog key of each shot's caption, in the order of desktop; its length is the number of shots."
+        @tier "domain"
+      marks : [MessageKey] = []
+        @label "Position marks"
+        @description "The catalog key of each shot's position mark, in the order of desktop."
+        @tier "presentation"
+      empty : MessageKey
+        @label "Empty text"
+        @description "The catalog key shown when a shot has no caption or mark."
+        @tier "presentation"
+      seconds : number = 5
+        @label "Seconds per shot"
+        @description "How long each shot shows before the gallery steps."
+        @tier "presentation"
+      holdOn : [string] = []
+        @label "Hold on"
+        @description "The ids of the controls that hold the shot while the pointer is over them."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmImageCycleStart -> RasmImageCycle
+}

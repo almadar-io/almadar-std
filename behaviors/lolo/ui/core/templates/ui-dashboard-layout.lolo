@@ -47,7 +47,7 @@ orbital DashboardLayoutOrbital {
     id : string!
   }
 
-  trait DashboardLayoutRender -> @rebindable DashboardLayoutItem {
+  trait DashboardLayoutRender -> @rebindable DashboardLayoutItem [optimistic] {
     initial: idle
 
     state idle {
@@ -64,6 +64,7 @@ orbital DashboardLayoutOrbital {
           topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           fullBleed: @config.fullBleed
+          stickyHeader: @config.stickyHeader
           notifications: @config.notifications
           notificationClickEvent: @config.notificationClickEvent
           onNotificationClick: @config.onNotificationClick
@@ -143,6 +144,10 @@ orbital DashboardLayoutOrbital {
       fullBleed : boolean = false
         @label "Full Bleed"
         @description "Content fills the area edge to edge — no padding, no max width, full height (workspaces, canvases, maps)."
+        @tier "presentation"
+      stickyHeader : boolean = true
+        @label "Sticky Header"
+        @description "The top bar stays at the top while the page scrolls; false lets it scroll away with the page."
         @tier "presentation"
       notifications : [DashboardLayoutNotificationsItem] = []
         @label "Notifications"
