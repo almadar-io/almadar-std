@@ -31,6 +31,7 @@ orbital ReviewPinsOrbital {
     viewRoute : string @intrinsic @description "The route the reviewed view is on." = ""
     placing : boolean @intrinsic @description "Comment mode: a click on the view drops a pin." = false
     showResolved : boolean @intrinsic @description "Whether resolved pins are listed and drawn." = false
+    panelOpen : boolean @intrinsic @description "Whether the comment panel beside the view is open; closed leaves a slim strip that opens it." = true
     draftOpen : boolean @intrinsic @description "A dropped pin waits for its text." = false
     draftX : number @intrinsic = 0
     draftY : number @intrinsic = 0
@@ -83,7 +84,11 @@ orbital ReviewPinsOrbital {
       RESOLVED_TOGGLE -> ready
         (set @entity.showResolved (not @entity.showResolved))
         (emit PINS_PAINT {})
+      PANEL_TOGGLE -> ready
+        (set @entity.panelOpen (not @entity.panelOpen))
+        (emit PINS_PAINT {})
       PIN_PLACE -> ready
+        (set @entity.panelOpen true)
         (set @entity.draftOpen true)
         (set @entity.draftX ?x)
         (set @entity.draftY ?y)
@@ -114,6 +119,7 @@ orbital ReviewPinsOrbital {
         (set @entity.problem ?error)
         (emit PINS_PAINT {})
       PIN_SELECT -> ready
+        (set @entity.panelOpen true)
         (set @entity.activeId ?id)
         (set @entity.draftOpen false)
         (set @entity.replyBody "")
@@ -139,8 +145,13 @@ orbital ReviewPinsOrbital {
               (active (array/find @entity.rows (fn p (= @p.id @entity.activeId)))))
           (render-ui main { type: stack, direction: horizontal, gap: none, className: "h-full min-h-0 w-full", children: [
             { type: annotated-media, mediaType: content, children: @config.contentTrait, title: @config.title, pins: (array/map @pins (fn p { id: @p.id, x: @p.x, y: @p.y, time: 0, label: @p.body, resolved: (= @p.status "resolved") })), activePinId: @entity.activeId, placing: @entity.placing, placeEvent: PIN_PLACE, pinSelectEvent: PIN_SELECT, className: "flex-1 min-w-0 h-full overflow-auto" },
-            { type: stack, direction: vertical, gap: sm, className: "w-80 shrink-0 h-full overflow-y-auto border-l p-3", children: [
+            { type: stack, direction: vertical, gap: sm, align: center, className: (if @entity.panelOpen "hidden" "w-12 shrink-0 h-full border-l py-3"), children: [
+              { type: button, icon: message-square, variant: ghost, size: sm, aria-label: @config.showPanelLabel, action: PANEL_TOGGLE },
+              { type: typography, variant: caption, color: muted, content: (str/concat "" (array/len @pins)) }
+            ] },
+            { type: stack, direction: vertical, gap: sm, className: (if @entity.panelOpen "w-72 shrink-0 h-full overflow-y-auto border-l p-3" "hidden"), children: [
               { type: stack, direction: horizontal, gap: xs, align: center, children: [
+                { type: button, icon: panel-right-close, variant: ghost, size: sm, aria-label: @config.hidePanelLabel, action: PANEL_TOGGLE },
                 { type: button, label: (if @entity.placing @config.placingLabel @config.placeLabel), icon: message-square-plus, variant: (if @entity.placing primary secondary), size: sm, action: PLACE_TOGGLE },
                 { type: button, label: (if @entity.showResolved @config.hideResolvedLabel @config.showResolvedLabel), variant: ghost, size: sm, action: RESOLVED_TOGGLE }
               ] },
@@ -229,6 +240,7 @@ orbital ReviewPinsOrbital {
       PIN_SELECT {
         id : string!
       }
+      PANEL_TOGGLE { }
       DRAFT_KIND {
         value : "feedback" | "question"!
       }
@@ -266,6 +278,10 @@ orbital ReviewPinsOrbital {
         @description "The trait whose view reviewers pin feedback on."
         @tier "domain"
       indexLabel : string = "All reviews"
+        @tier "presentation"
+      showPanelLabel : string = "Show comments"
+        @tier "presentation"
+      hidePanelLabel : string = "Hide comments"
         @tier "presentation"
       title : string = "Reviewed view"
         @label "Title"
@@ -335,6 +351,7 @@ orbital ReviewPinsOrbital {
       INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (= @r.name (default ?name "")))))
         (let ((link (array/find @config.reviews (fn r (= @r.name ?name)))))
           (do
+            (emit GUEST_START_ROUTE { route: @link.route })
             (emit REVIEW_OPEN { subject: (str/concat @link.name "/" ?version), route: @link.route })
             (if (array/some @entity.leaves (fn l (= @l.behavior @link.behavior)))
               (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior @link.behavior)))))
@@ -367,6 +384,10 @@ orbital ReviewPinsOrbital {
         value : behavior!
       }
         @description "Ask the loader for the behavior of the review link, as the catalog lists it."
+      GUEST_START_ROUTE -> external {
+        route : string!
+      }
+        @description "The page of the reviewed behavior the guest opens on: the route of the review row."
       REVIEW_REFUSED -> external {
         title : string!
         message : string!

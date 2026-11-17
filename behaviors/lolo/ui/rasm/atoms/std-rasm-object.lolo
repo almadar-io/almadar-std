@@ -1,0 +1,134 @@
+app std-rasm-object [
+  version: "0.1.0",
+  description: "std-rasm-object — one lit 3D object in its placed rect, like the Orb mark. The `object` knob picks a preset from `presets`, a table of mesh primitives (box, sphere, torus, cylinder, cone, capsule) coloured in theme palette names so every style recolours it: gear, globe, coin-stack, crate, gem, ring-orbit, book, leaf, bolt, clock, tower, cube-stack. It is painted as one draw-scene3d, a transparent-background scene on a front camera, lit by the `lighting` of the look object/<intent>/idle. `motion` spin turns it slowly about its vertical axis; none leaves it still (a reduced-motion surface shows the rest pose either way). With a `label` key it announces that text as an image through a transparent keyed text; with no label, or `decorative` on, it announces nothing."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLight = { color : string!, intensity : number! }
+type RasmKeyLight = { color : string!, intensity : number!, position : [number]! }
+type RasmLighting = { ambient : RasmLight!, directional : RasmKeyLight!, hemisphere : RasmLight! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, lighting : RasmLighting }
+type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+
+orbital RasmObjectOrbital {
+  entity RasmObjectView [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave this object, null until placed." = null
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmObject -> RasmObjectView [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit OBJECT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit OBJECT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      OBJECT_PAINT -> ready
+        (let ((l (object/get @entity.looks (str/concat "object/" @config.intent "/idle") null)) (r @entity.rect) (items (object/get @config.presets @config.object null)))
+          (when (and (!= @l null) (!= @r null) (!= @items null) (> @r.w 0) (> @r.h 0))
+            (let ((side (if (> @config.size 0) @config.size (math/min @r.w @r.h))) (none : [RasmText] []))
+              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-scene3d, id: @config.id, anchor: "top-left", position: { x: (+ @r.x (/ (- @r.w @side) 2)), y: (+ @r.y (/ (- @r.h @side) 2)), z: @config.z }, width: @side, height: @side, scene: { camera: { mode: "front", zoom: 2.4, fov: 40, target: { x: 0, y: 0, z: 0.5 }, controls: false }, lighting: @l.lighting, drawables: [{ type: draw-group, id: (str/concat @config.id ":tilt"), position: { x: 0, y: 0, z: 0.5 }, rotation: @config.tilt, items: [{ type: draw-group, id: (str/concat @config.id ":turn"), position: { x: 0, y: 0, z: 0 }, animation: (if (= @config.motion "spin") { durationMs: @config.spinMs, loop: true, keyframes: [{ at: 0, rotateY: 0 }, { at: 1, rotateY: 6.2832 }] } null), items: @items }] }] }, semantic: (if (and (let ((given : MessageKey? @config.label)) (!= @given null)) (not @config.decorative)) { role: "img", labelledBy: (str/concat @config.id ":name") } null) }], texts: (let ((given : MessageKey? @config.label)) (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":name"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] @none)) }))))
+    }
+
+    emits {
+      OBJECT_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect and look."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The object as one draw-scene3d at its z; with a label also the transparent keyed text that names it."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks, whose object/<intent>/idle lighting lights the scene, and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take this object's rect when it is placed and repaint."
+    }
+
+    config {
+      id : string = "object"
+        @label "Id"
+        @description "The object's RASM_PLACE key and paint id; its accessible name text is <id>:name. A std-rasm-scrub on this id moves the object with the page scroll."
+        @tier "presentation"
+      object : "gear" | "globe" | "coin-stack" | "crate" | "gem" | "ring-orbit" | "book" | "leaf" | "bolt" | "clock" | "tower" | "cube-stack" = "cube-stack"
+        @label "Object"
+        @description "The preset drawn, a key of `presets`."
+        @tier "domain"
+      intent : "default" = "default"
+        @label "Intent"
+        @description "Selects the look object/<intent>/idle, whose lighting lights the scene."
+        @tier "presentation"
+      size : number = 0
+        @label "Size"
+        @description "The side in px of the square the scene is drawn in, centred in the placed rect; 0 takes the rect's shorter side."
+        @tier "presentation"
+      motion : "none" | "spin" = "none"
+        @label "Motion"
+        @description "none leaves the object still; spin turns it about its vertical axis, one turn every spinMs. The canvas shows the rest pose under reduced motion."
+        @tier "presentation"
+      spinMs : number = 18000
+        @label "Spin period"
+        @description "With motion spin, the ms one full turn takes."
+        @tier "presentation"
+      tilt : [number] = [0.45, -0.35, 0]
+        @label "Resting view"
+        @description "The object's resting view, radians about x, y and z: the default turns it three-quarters toward the viewer so its depth and light read; [0, 0, 0] shows it face-on."
+        @tier "presentation"
+      label : MessageKey?
+        @label "Label"
+        @description "The catalog key of the object's accessible name, announced as an image in the active locale; leave it unset for a decorative object."
+        @tier "presentation"
+      decorative : boolean = false
+        @label "Decorative"
+        @description "On, the object announces nothing even when a label is given. An object with no label is decorative either way."
+        @tier "presentation"
+      presets : Map string [node] = {
+        "gear": [{ type: draw-mesh, shape: cylinder, position: { x: 0, y: 0, z: 0 }, radius: 0.36, height: 0.18, pivot: "center", rotation: [1.5708, 0, 0], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: cylinder, position: { x: 0, y: 0.04, z: 0 }, radius: 0.2, height: 0.24, pivot: "center", rotation: [1.5708, 0, 0], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: cylinder, position: { x: 0, y: 0.06, z: 0 }, radius: 0.09, height: 0.3, pivot: "center", rotation: [1.5708, 0, 0], material: { kind: "standard", color: "accent", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: 0.41, y: 0, z: 0 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 0.0000], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: 0.3551, y: 0, z: 0.205 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 0.5236], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: 0.205, y: 0, z: 0.3551 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 1.0472], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: 0.41 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 1.5708], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: -0.205, y: 0, z: 0.3551 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 2.0944], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: -0.3551, y: 0, z: 0.205 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 2.6180], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: -0.41, y: 0, z: 0 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 3.1416], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: -0.3551, y: 0, z: -0.205 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 3.6652], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: -0.205, y: 0, z: -0.3551 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 4.1888], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: -0.41 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 4.7124], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: 0.205, y: 0, z: -0.3551 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 5.2360], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }, { type: draw-mesh, shape: box, position: { x: 0.3551, y: 0, z: -0.205 }, width: 0.14, height: 0.18, depth: 0.1, pivot: "center", rotation: [0, 0, 5.7596], material: { kind: "standard", color: "primary", metalness: 0.35, roughness: 0.4 } }],
+        "globe": [{ type: draw-mesh, shape: sphere, position: { x: 0, y: 0, z: 0 }, radius: 0.42, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: torus, position: { x: 0, y: 0, z: 0 }, radius: 0.52, tube: 0.025, pivot: "center", rotation: [1.5708, 0, 0.35], material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: torus, position: { x: 0, y: 0, z: 0 }, radius: 0.5, tube: 0.02, pivot: "center", rotation: [0, 0.9, 0], material: { kind: "standard", color: "foreground", metalness: 0.2, roughness: 0.45 } }],
+        "coin-stack": [{ type: draw-mesh, shape: cylinder, position: { x: 0, y: 0, z: -0.28 }, radius: 0.34, height: 0.11, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cylinder, position: { x: 0.04, y: 0, z: -0.14 }, radius: 0.34, height: 0.11, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cylinder, position: { x: -0.03, y: 0, z: 0 }, radius: 0.34, height: 0.11, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cylinder, position: { x: 0.03, y: 0, z: 0.14 }, radius: 0.34, height: 0.11, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cylinder, position: { x: 0, y: 0, z: 0.28 }, radius: 0.34, height: 0.11, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }],
+        "crate": [{ type: draw-group, position: { x: 0, y: 0, z: 0 }, rotation: [-0.3, 0.6, 0], items: [{ type: draw-mesh, shape: box, position: { x: 0, y: 0, z: 0 }, width: 0.68, height: 0.68, depth: 0.68, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: 0.2 }, width: 0.72, height: 0.08, depth: 0.72, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: -0.2 }, width: 0.72, height: 0.08, depth: 0.72, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }] }],
+        "gem": [{ type: draw-group, position: { x: 0, y: 0, z: 0 }, rotation: [-0.25, 0.5, 0], items: [{ type: draw-mesh, shape: cone, position: { x: 0, y: 0, z: 0.19 }, radius: 0.4, height: 0.38, segments: 6, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cone, position: { x: 0, y: 0, z: -0.19 }, radius: 0.4, height: 0.38, segments: 6, pivot: "center", rotation: [3.1416, 0, 0], material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }] }],
+        "ring-orbit": [{ type: draw-mesh, shape: sphere, position: { x: 0, y: 0, z: 0 }, radius: 0.2, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: torus, position: { x: 0, y: 0, z: 0 }, radius: 0.5, tube: 0.03, pivot: "center", rotation: [1.25, 0, 0.45], material: { kind: "standard", color: "foreground", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: torus, position: { x: 0, y: 0, z: 0 }, radius: 0.5, tube: 0.03, pivot: "center", rotation: [1.25, 0, -0.45], material: { kind: "standard", color: "foreground", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: sphere, position: { x: 0.3535, y: 0.3355, z: 0.1115 }, radius: 0.07, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: sphere, position: { x: -0.3535, y: 0.3355, z: 0.1115 }, radius: 0.07, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }],
+        "book": [{ type: draw-group, position: { x: 0, y: 0, z: 0 }, rotation: [-0.2, 0.6, 0], items: [{ type: draw-mesh, shape: box, position: { x: 0, y: 0, z: 0 }, width: 0.5, height: 0.75, depth: 0.14, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0.01, y: 0.02, z: 0 }, width: 0.46, height: 0.7, depth: 0.12, pivot: "center", material: { kind: "standard", color: "card", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: -0.26, y: 0, z: 0 }, width: 0.06, height: 0.75, depth: 0.16, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }] }],
+        "leaf": [{ type: draw-mesh, shape: capsule, position: { x: 0.1, y: 0, z: 0.08 }, radius: 0.17, height: 0.5, pivot: "center", rotation: [0, 0, -0.5], material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: capsule, position: { x: -0.17, y: 0, z: -0.02 }, radius: 0.12, height: 0.36, pivot: "center", rotation: [0, 0, 0.7], material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cylinder, position: { x: 0, y: 0, z: -0.32 }, radius: 0.025, height: 0.4, pivot: "center", material: { kind: "standard", color: "foreground", metalness: 0.2, roughness: 0.45 } }],
+        "bolt": [{ type: draw-mesh, shape: box, position: { x: 0.1, y: 0, z: 0.22 }, width: 0.2, height: 0.5, depth: 0.14, pivot: "center", rotation: [0, 0, -0.45], material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: 0 }, width: 0.44, height: 0.12, depth: 0.14, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: -0.1, y: 0, z: -0.22 }, width: 0.2, height: 0.5, depth: 0.14, pivot: "center", rotation: [0, 0, -0.45], material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }],
+        "clock": [{ type: draw-mesh, shape: torus, position: { x: 0, y: 0, z: 0 }, radius: 0.45, tube: 0.05, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cylinder, position: { x: 0, y: 0, z: 0 }, radius: 0.43, height: 0.1, pivot: "center", rotation: [1.5708, 0, 0], material: { kind: "standard", color: "card", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0.135, y: 0.07, z: 0.087 }, width: 0.035, height: 0.32, depth: 0.03, pivot: "center", rotation: [0, 0, -1], material: { kind: "standard", color: "foreground", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0.082, y: 0.07, z: -0.073 }, width: 0.05, height: 0.22, depth: 0.03, pivot: "center", rotation: [0, 0, 2.3], material: { kind: "standard", color: "foreground", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: sphere, position: { x: 0, y: 0.07, z: 0 }, radius: 0.04, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }],
+        "tower": [{ type: draw-group, position: { x: 0, y: 0, z: 0 }, rotation: [-0.15, 0.6, 0], items: [{ type: draw-mesh, shape: box, position: { x: 0, y: 0, z: -0.37 }, width: 0.55, height: 0.25, depth: 0.55, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: -0.12 }, width: 0.43, height: 0.25, depth: 0.43, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: 0.13 }, width: 0.31, height: 0.25, depth: 0.31, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: cone, position: { x: 0, y: 0, z: 0.375 }, radius: 0.24, height: 0.25, segments: 4, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }] }],
+        "cube-stack": [{ type: draw-group, position: { x: 0, y: 0, z: 0 }, rotation: [-0.25, 0.6, 0], items: [{ type: draw-mesh, shape: box, position: { x: -0.22, y: 0, z: -0.2 }, width: 0.4, height: 0.4, depth: 0.4, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0.22, y: 0, z: -0.2 }, width: 0.4, height: 0.4, depth: 0.4, pivot: "center", material: { kind: "standard", color: "accent", metalness: 0.2, roughness: 0.45 } }, { type: draw-mesh, shape: box, position: { x: 0, y: 0, z: 0.2 }, width: 0.4, height: 0.4, depth: 0.4, pivot: "center", material: { kind: "standard", color: "primary", metalness: 0.2, roughness: 0.45 } }] }]
+      }
+        @label "Presets"
+        @description "The objects: each a list of draw-mesh and draw-group nodes around the origin, about one unit tall, on the scene's height axis z, with palette-name colours (primary, accent, foreground, card). Replace or add a key to draw another object."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmObjectStart -> RasmObject
+}

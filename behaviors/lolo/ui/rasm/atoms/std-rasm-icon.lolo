@@ -1,0 +1,121 @@
+app std-rasm-icon [
+  version: "0.1.0",
+  description: "std-rasm-icon — one icon centred in its placed rect. The icon is a name `set:name` from Iconify (lucide when no set is given), fetched as the SVG https://api.iconify.design/<set>/<name>.svg and painted as a sprite recoloured to the textColor of the look icon/<intent>/idle (default, accent, inverse), so every style and theme recolours it. With a `label` key it announces that text as an image to assistive technology, through a transparent keyed text in the active locale; with no label, or `decorative` on, it is decorative and announces nothing. `mirrorRtl` flips a directional icon (an arrow, a chevron) under a right-to-left surface."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string }
+type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+
+orbital RasmIconOrbital {
+  entity RasmIconView [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave this icon, null until placed." = null
+    rotate : number @description "The rotation in radians RASM_PLACE gave this icon, 0 when none." = 0
+    dir : "ltr" | "rtl" @description "The direction the surface announced; mirrorRtl flips the icon under rtl." = "ltr"
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmIcon -> RasmIconView [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ICON_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ICON_PAINT { n: @entity.paints })
+      RASM_STYLE -> ready
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ICON_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ICON_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      ICON_PAINT -> ready
+        (let ((l (object/get @entity.looks (str/concat "icon/" @config.intent "/idle") null)) (r @entity.rect))
+          (when (and (!= @l null) (!= @r null) (> @r.w 0) (> @r.h 0))
+            (let ((parts (str/split @config.icon ":")) (side (if (> @config.size 0) @config.size (math/min @r.w @r.h))) (named (and (let ((given : MessageKey? @config.label)) (!= @given null)) (not @config.decorative))))
+              (let ((set (if (str/includes @config.icon ":") (default (array/nth @parts 0) "lucide") "lucide")) (name (if (str/includes @config.icon ":") (default (array/nth @parts 1) "") @config.icon)))
+                (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-sprite, id: @config.id, asset: { url: (str/concat "https://api.iconify.design/" @set "/" @name ".svg") }, anchor: "top-left", position: { x: (+ @r.x (/ (- @r.w @side) 2)), y: (+ @r.y (/ (- @r.h @side) 2)), z: @config.z }, width: @side, height: @side, tint: @l.textColor, flipX: (and @config.mirrorRtl (= @entity.dir "rtl")), rotation: @entity.rotate, semantic: (if @named { role: "img", labelledBy: (str/concat @config.id ":name") } null) }], texts: (let ((none : [RasmText] []) (given : MessageKey? @config.label)) (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":name"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] @none)) })))))
+    }
+
+    emits {
+      ICON_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect, direction and look."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The icon as a tinted sprite centred in its rect; with a label also the transparent keyed text that names it."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_STYLE { name : string! }
+        @description "A style was announced: repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction: under rtl a mirrorRtl icon is flipped."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take this icon's rect when it is placed and repaint."
+    }
+
+    config {
+      id : string = "icon"
+        @label "Id"
+        @description "The icon's RASM_PLACE key and paint id; its accessible name text is <id>:name."
+        @tier "presentation"
+      icon : string = "lucide:circle"
+        @label "Icon"
+        @description "The Iconify icon as set:name, for example lucide:arrow-right or mdi:home. A bare name takes the lucide set. The SVG is fetched from api.iconify.design."
+        @tier "domain"
+      size : number = 24
+        @label "Size"
+        @description "The side in px of the square the icon is drawn in, centred in the placed rect; 0 takes the rect's shorter side."
+        @tier "presentation"
+      intent : "default" | "accent" | "inverse" = "default"
+        @label "Intent"
+        @description "Selects the look icon/<intent>/idle whose textColor tints the icon: default is the foreground colour, accent the primary colour, inverse the colour set on a primary-filled shape."
+        @tier "presentation"
+      label : MessageKey?
+        @label "Label"
+        @description "The catalog key of the icon's accessible name: the icon announces it as an image in the active locale. Leave it unset for a decorative icon."
+        @tier "presentation"
+      decorative : boolean = false
+        @label "Decorative"
+        @description "On, the icon announces nothing even when a label is given. An icon with no label is decorative either way."
+        @tier "presentation"
+      mirrorRtl : boolean = false
+        @label "Mirror in RTL"
+        @description "Flip the icon horizontally while the surface reads right to left: for directional icons such as arrows and chevrons. Symmetric icons leave it off."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmIconStart -> RasmIcon
+}

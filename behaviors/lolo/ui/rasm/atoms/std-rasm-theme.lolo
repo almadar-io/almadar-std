@@ -11,7 +11,11 @@ type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
 type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
 type RasmMotion = { signature : "rise" | "print-pass" | "fan" | "glitch" | "ink-bleed" | "paper-drop" | "kinetic" | "float" | "snap"!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
-type RasmLook = { fill : string, stroke : string, strokeWidth : number, strokeDash : [number], corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLight = { color : string!, intensity : number! }
+type RasmKeyLight = { color : string!, intensity : number!, position : [number]! }
+type RasmLighting = { ambient : RasmLight!, directional : RasmKeyLight!, hemisphere : RasmLight! }
+type RasmLook = { lighting : RasmLighting, inset : RasmInset, fill : string, stroke : string, strokeWidth : number, strokeDash : [number], corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
 type RasmEntry = { enterMs : number!, keyframes : [RasmEntryKey]! }
 type RasmBreakpoint = { name : "phone" | "tablet" | "desktop" | "wide"!, min : number! }
 type RasmStyle = { looks : Map string RasmLook!, layout : RasmLayout!, motion : RasmMotion!, breakpointLooks : Map string (Map string RasmLook) }
@@ -267,6 +271,10 @@ orbital RasmThemeOrbital {
         "text/caption/idle": { textColor: "muted-foreground", font: "400 13px body" },
         "text/label/idle": { textColor: "foreground", font: "600 13px body" },
         "text/inverse/idle": { on: "pressable/primary/idle", textColor: "primary-foreground", font: "700 14px body" },
+        "icon/default/idle": { on: "surface/ground/idle", textColor: "foreground" },
+        "icon/accent/idle": { on: "surface/ground/idle", textColor: "primary" },
+        "icon/inverse/idle": { on: "pressable/primary/idle", textColor: "primary-foreground" },
+        "object/default/idle": { lighting: { ambient: { color: "#ffffff", intensity: 0.55 }, directional: { color: "#ffffff", intensity: 1.6, position: [-4, 6, 8] }, hemisphere: { color: "accent", intensity: 0.4 } } },
         "text/quote/idle": { textColor: "foreground", font: "400 34px display" },
         "grid/rule/idle": { stroke: "border", strokeWidth: 1 },
         "grid/border/idle": { stroke: "foreground", strokeWidth: 2, fill: "" },
@@ -761,6 +769,7 @@ orbital RasmThemeOrbital {
             "text/title/idle": { textColor: "foreground", font: "700 42px display", spring: { stiffness: 100, damping: 14 } },
             "text/eyebrow/idle": { textColor: "input", font: "700 13px body", spring: { stiffness: 100, damping: 14 } },
             "text/body/idle": { textColor: "muted-foreground", font: "500 18px body", spring: { stiffness: 100, damping: 14 } },
+            "icon/accent/idle": { on: "surface/ground/idle", textColor: "foreground" },
             "text/card/idle": { textColor: "card-foreground", font: "700 24px display" },
             "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [24, 24, 24, 24], kind: "round" }, shadow: { color: "rgba(93,62,110,0.22)", blur: 34 }, spring: { stiffness: 100, damping: 14 } },
             "card/surface/hovered": { fill: "card", stroke: "input", strokeWidth: 2, corners: { radius: [24, 24, 24, 24], kind: "round" }, shadow: { color: "rgba(93,62,110,0.30)", blur: 40, offsetY: 8 }, spring: { stiffness: 100, damping: 14 } },
@@ -1016,6 +1025,7 @@ orbital RasmThemeOrbital {
             "focus/ring/outer": { stroke: "background", strokeWidth: 5 },
             "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
             "text/inverse/idle": { textColor: "background", font: "700 24px display", on: "section/band/idle" },
+            "icon/inverse/idle": { textColor: "background", on: "section/band/idle" },
             "text/caption/idle": { textColor: "muted-foreground", font: "500 14px body" },
             "text/label/idle": { textColor: "foreground", font: "700 14px display" },
             "textfield/default/idle": { fill: "card", stroke: "input", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "500 16px body", spring: { stiffness: 80, damping: 14 } },
@@ -1037,7 +1047,7 @@ orbital RasmThemeOrbital {
         "gazette": {
           looks: {
             "surface/ground/idle": { fill: "background", material: { wgsl: "fn gz_h(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); } fn shade(px: Pixel) -> vec4<f32> { let l = dot(px.color.rgb, vec3<f32>(0.299, 0.587, 0.114)); let s = select(1.0, -1.0, l > 0.5); let p = px.local; let cw = px.size.x / 6.0; let fx = fract(p.x / cw); let dl = min(fx, 1.0 - fx) * cw; var d = (1.0 - smoothstep(0.4, 1.1, dl)) * 0.05; d = d + (1.0 - smoothstep(0.4, 1.1, abs(dl - 5.0))) * 0.03; let hy = fract(p.y / 760.0) * 760.0; d = d + (1.0 - smoothstep(0.4, 1.1, abs(hy - 36.0))) * 0.05 + (1.0 - smoothstep(0.4, 1.1, abs(hy - 41.0))) * 0.03; let hatch = smoothstep(0.35, 0.5, abs(fract((p.x + p.y + px.scroll * 120.0) / 3.5) - 0.5)); d = d + hatch * 0.012 * (1.0 - px.uv.y); d = d + (gz_h(floor(p)) - 0.5) * 0.03; return vec4<f32>(px.color.rgb + vec3<f32>(s * d), px.color.a); }", params: [0.0, 0.0, 0.0, 0.0], live: false } },
-            "stack/card/idle": { fill: "card", stroke: "foreground", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(20,14,6,0.10)", blur: 6 } },
+            "stack/card/idle": { fill: "card", stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(20,14,6,0.10)", blur: 6 }, inset: { stroke: "border", strokeWidth: 1, gap: 3 } },
             "stack/panel/idle": { fill: "surface", stroke: "border", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" } },
             "stack/hero/idle": { stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
             "stack/bar/idle": { fill: "background", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
@@ -1058,7 +1068,7 @@ orbital RasmThemeOrbital {
             "range/default/thumb-dragging": { stroke: "primary-foreground", textColor: "primary-foreground" },
             "range/default/thumb-hovered": { stroke: "input" },
             "range/default/thumb-idle": { stroke: "input" },
-            "card/surface/idle": { fill: "card", stroke: "foreground", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 140, damping: 24 } },
+            "card/surface/idle": { fill: "card", stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 140, damping: 24 }, inset: { stroke: "border", strokeWidth: 1, gap: 3 } },
             "card/surface/hovered": { fill: "card", stroke: "primary", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 140, damping: 24 } },
             "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 140, damping: 24 } },
             "card/surface/pressed": { fill: "muted", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 220, damping: 26 } },
@@ -1172,6 +1182,7 @@ orbital RasmThemeOrbital {
             "text/title/idle": { textColor: "foreground", font: "400 40px display" },
             "text/eyebrow/idle": { textColor: "accent", font: "600 13px body" },
             "text/body/idle": { textColor: "foreground", font: "400 17px body" },
+            "icon/accent/idle": { on: "surface/ground/idle", textColor: "foreground" },
             "text/card/idle": { textColor: "card-foreground", font: "400 22px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 1.5 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_goth(q: vec2<f32>, hw: f32, ys: f32) -> f32 { return select(abs(q.x - hw), abs(length(q - vec2<f32>(-hw, ys)) - 2.0 * hw), q.y < ys); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet hw = min(c.x * 0.8, s.y * 0.4);\nlet ys = 4.0 + 1.732 * hw;\nlet q = vec2<f32>(abs(p.x - c.x), p.y);\nlet inside = step(q.y, s.y - 4.0);\nlet arches = max(sg_line(sg_goth(q, hw, ys), 1.2), sg_line(sg_goth(q, hw * 0.72, ys), 0.7)) * inside;\nlet tref = max(sg_line(length(vec2<f32>(q.x, q.y - (ys - hw * 0.55))) - hw * 0.22, 0.8), sg_fill(length(vec2<f32>(q.x, q.y - (ys + hw * 0.5))) - 2.0));\nreturn sg_out(px, px.color.rgb, max(arches, tref));\n}\n", params: [0, 0, 0, 0], live: false } }
@@ -1198,7 +1209,7 @@ orbital RasmThemeOrbital {
             "card/header/idle": { fill: "card", corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "600 13px body", on: "card/header/idle" },
             "card/divider/idle": { stroke: "border", strokeWidth: 1 },
             "card/media/idle": { fill: "muted", corners: { radius: [0, 0, 0, 0], kind: "round" } },
-            "card/meta/idle": { textColor: "foreground", font: "400 14px body", on: "card/surface/idle" },
+            "card/meta/idle": { textColor: "muted-foreground", font: "400 14px body", on: "card/surface/idle" },
             "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" } },
             "panel/header/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "600 13px body", on: "panel/header/idle" },
             "panel/divider/idle": { stroke: "border", strokeWidth: 1 },
@@ -1444,12 +1455,13 @@ orbital RasmThemeOrbital {
             "text/body/idle": { textColor: "foreground", font: "400 17px body" },
             "text/card/idle": { textColor: "foreground", font: "400 18px display" },
             "text/inverse/idle": { textColor: "background", font: "400 16px display", on: "section/band/idle" },
+            "icon/inverse/idle": { textColor: "background", on: "section/band/idle" },
             "text/caption/idle": { textColor: "muted-foreground", font: "400 14px body" },
             "text/label/idle": { textColor: "foreground", font: "700 14px body" },
             "morph/default/idle": { fill: "foreground" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_box(p: vec2<f32>, h: vec2<f32>) -> f32 { let q = abs(p) - h; return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet ck = step(0.5, fract((floor(p.x / 2.0) + floor(p.y / 2.0)) * 0.5));\nlet box = sg_line(sg_box(p - vec2<f32>(14.0, 10.0), vec2<f32>(5.0, 5.0)), 0.7);\nlet bar = step(p.y, 20.0) * step(fract(p.y / 4.0), 0.5) * (1.0 - step(abs(p.x - 14.0), 9.0) * step(abs(p.y - 10.0), 9.0));\nlet frame = sg_line(sg_box(p - c, c - vec2<f32>(0.5, 0.5)), 0.7);\nreturn sg_out(px, px.color.rgb, max(max(frame, box), max(bar * 0.9, ck * step(22.0, p.y) * 0.7)));\n}\n", params: [0, 0, 0, 0], live: false } },
             "window/frame/idle": { fill: "background", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(0,0,0,0.6)", blur: 0, offsetX: 2, offsetY: 2 } },
-            "window/titlebar/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "700 12px display", material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n let k = step(0.5, fract(px.local.y / 4.0));\n return vec4<f32>(px.color.rgb * (1.0 - 0.28 * k), px.color.a);\n}", params: [0, 0, 0, 0], live: false } },
+            "window/titlebar/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "700 12px display", material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n let k = step(0.5, fract(px.local.y / 4.0));\n return vec4<f32>(px.color.rgb * (1.0 - 0.28 * k), px.color.a);\n}", params: [0, 0, 0, 0], live: false }, inset: { stroke: "foreground", strokeWidth: 1, gap: 3 } },
             "window/control/idle": { fill: "background", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [0, 0, 0, 0], kind: "round" } }
           },
           layout: { hero: "split", columns: 12, asymmetry: 0.15, ornament: "double-rule", align: "start", imageTreatment: "halftone", sectionGap: 96, gutter: 40 },
@@ -1683,6 +1695,7 @@ orbital RasmThemeOrbital {
             "focus/ring/outer": { stroke: "foreground", strokeWidth: 2 },
             "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
             "text/inverse/idle": { textColor: "muted-foreground", font: "600 16px mono", on: "section/band/idle" },
+            "icon/inverse/idle": { textColor: "muted-foreground", on: "section/band/idle" },
             "pressable/primary/focused": { fill: "background", stroke: "ring", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "primary", font: "400 18px display", spring: { stiffness: 150, damping: 17 } },
             "pressable/secondary/focused": { fill: "background", stroke: "ring", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "accent", font: "400 17px display", spring: { stiffness: 150, damping: 17 } },
             "textfield/default/idle": { fill: "background", stroke: "input", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "400 16px body" },
@@ -1999,6 +2012,7 @@ orbital RasmThemeOrbital {
             "text/title/idle": { textColor: "foreground", font: "400 28px display" },
             "text/eyebrow/idle": { textColor: "foreground", font: "700 13px mono" },
             "text/body/idle": { textColor: "foreground", font: "500 16px body" },
+            "icon/accent/idle": { on: "surface/ground/idle", textColor: "foreground" },
             "text/card/idle": { textColor: "card-foreground", font: "400 20px display" },
             "machine/event/lit": { textColor: "ring", font: "600 13px mono" },
             "orbit/label/active": { textColor: "ring", font: "700 18px body" },
@@ -2070,6 +2084,7 @@ orbital RasmThemeOrbital {
             "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
             "stack/bar/idle": { fill: "background", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 18, 22], kind: "round" } },
             "text/inverse/idle": { textColor: "accent-foreground", font: "700 14px body", on: "pressable/primary/idle" },
+            "icon/inverse/idle": { textColor: "accent-foreground", on: "pressable/primary/idle" },
             "pressable/primary/idle": { fill: "accent", textColor: "accent-foreground", stroke: "foreground", strokeWidth: 2, shadow: { color: "rgba(0,0,0,0.6)", blur: 0, offsetX: 3, offsetY: 3 }, corners: { radius: [18, 22, 16, 24], kind: "round" }, font: "700 18px display", spring: { stiffness: 130, damping: 11 } },
             "pressable/primary/hovered": { fill: "primary", textColor: "primary-foreground", stroke: "foreground", strokeWidth: 2.5, shadow: { color: "rgba(0,0,0,0.6)", blur: 0, offsetX: 4, offsetY: 4 }, corners: { radius: [22, 16, 24, 18], kind: "round" }, font: "700 18px display", spring: { stiffness: 130, damping: 11 } },
             "pressable/primary/pressed": { fill: "foreground", textColor: "background", stroke: "foreground", strokeWidth: 2.5, shadow: { color: "rgba(0,0,0,0.6)", blur: 0, offsetX: 1, offsetY: 1 }, corners: { radius: [16, 24, 18, 22], kind: "round" }, font: "700 18px display", spring: { stiffness: 180, damping: 13 } },
@@ -2168,9 +2183,9 @@ orbital RasmThemeOrbital {
             "pressable/primary/pressed": { fill: "primary-hover", textColor: "primary-foreground", stroke: "primary", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "600 15px body" },
             "pressable/secondary/idle": { fill: "background", textColor: "foreground", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "500 15px body" },
             "pressable/secondary/hovered": { fill: "secondary-hover", textColor: "secondary-foreground", stroke: "primary", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "500 15px body" },
-            "text/display/idle": { textColor: "foreground", font: "700 56px display" },
+            "text/display/idle": { fill: "background", textColor: "foreground", font: "700 56px display", backing: "halo" },
             "text/title/idle": { fill: "background", textColor: "foreground", font: "700 30px display", backing: "halo" },
-            "text/eyebrow/idle": { textColor: "#e0b650", font: "600 13px body" },
+            "text/eyebrow/idle": { textColor: "foreground", font: "600 13px body" },
             "text/body/idle": { textColor: "foreground", font: "400 18px body" },
             "text/card/idle": { textColor: "card-foreground", font: "700 22px display" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 2 },
@@ -2265,6 +2280,7 @@ orbital RasmThemeOrbital {
             "text/body/idle": { textColor: "foreground", font: "400 16px body" },
             "text/card/idle": { textColor: "primary", font: "700 19px mono" },
             "text/inverse/idle": { textColor: "secondary-foreground", font: "700 16px mono", on: "section/band/idle" },
+            "icon/inverse/idle": { textColor: "secondary-foreground", on: "section/band/idle" },
             "text/caption/idle": { textColor: "muted-foreground", font: "400 13px mono" },
             "text/label/idle": { textColor: "foreground", font: "600 13px mono" },
             "morph/default/idle": { fill: "primary" },
@@ -2276,8 +2292,8 @@ orbital RasmThemeOrbital {
         "ukiyo-e": {
           looks: {
             "surface/ground/idle": { fill: "background", material: { wgsl: "fn uk_h(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(12.9898, 78.233))) * 43758.5453); }\nfn shade(px: Pixel) -> vec4<f32> {\n  let indigo = vec3<f32>(0.14, 0.26, 0.45);\n  let red = vec3<f32>(0.78, 0.20, 0.16);\n  let lum = dot(px.color.rgb, vec3<f32>(0.299, 0.587, 0.114));\n  let W = 84.0;\n  let off = vec2<f32>(px.time * 3.0 + px.scroll * 60.0, 0.0);\n  let p = px.local + off;\n  let pa = p / vec2<f32>(W, W * 0.5);\n  let ca = (floor(pa) + vec2<f32>(0.5, 0.0)) * vec2<f32>(W, W * 0.5);\n  let pb = (p - vec2<f32>(W * 0.5, W * 0.25)) / vec2<f32>(W, W * 0.5);\n  let cb = (floor(pb) + vec2<f32>(0.5, 0.0)) * vec2<f32>(W, W * 0.5) + vec2<f32>(W * 0.5, W * 0.25);\n  let da = length(p - ca - vec2<f32>(0.0, W * 0.25));\n  let db = length(p - cb - vec2<f32>(0.0, W * 0.25));\n  let r = min(da, db);\n  let rings = 1.0 - smoothstep(0.0, 0.18, abs(fract(r / (W * 0.5) * 3.0) - 0.5) - 0.38);\n  let fade = smoothstep(0.0, 0.85, px.uv.y) * 0.8 + 0.2;\n  let sun = 1.0 - smoothstep(0.0, 1.5, length((px.local - vec2<f32>(px.size.x * 0.82, px.size.y * 0.16))) - 54.0);\n  let n = uk_h(floor(px.local)) - 0.5;\n  var col = mix(px.color.rgb, select(indigo, indigo * 1.6, lum < 0.5), rings * 0.09 * fade);\n  col = mix(col, red, sun * 0.10);\n  return vec4<f32>(col + n * 0.015, 1.0);\n}\n", params: [0, 0, 0, 0], live: true } },
-            "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" } },
-            "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 100, damping: 20 } },
+            "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, inset: { stroke: "border", strokeWidth: 1, gap: 4 } },
+            "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 100, damping: 20 }, inset: { stroke: "border", strokeWidth: 1, gap: 4 } },
             "card/surface/hovered": { fill: "card", stroke: "border", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "#111111", blur: 0, offsetX: 4, offsetY: 4 }, spring: { stiffness: 100, damping: 20 } },
             "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 4, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "#111111", blur: 0, offsetX: 4, offsetY: 4 }, spring: { stiffness: 100, damping: 20 } },
             "card/surface/pressed": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "#111111", blur: 0, offsetX: 1, offsetY: 1 }, spring: { stiffness: 140, damping: 22 } },
@@ -2285,7 +2301,7 @@ orbital RasmThemeOrbital {
             "card/divider/idle": { stroke: "border", strokeWidth: 2 },
             "card/media/idle": { fill: "muted", stroke: "border", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
             "card/meta/idle": { textColor: "muted-foreground", font: "400 14px body", on: "card/surface/idle" },
-            "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" } },
+            "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, inset: { stroke: "border", strokeWidth: 1, gap: 4 } },
             "panel/header/idle": { fill: "foreground", textColor: "card", font: "400 17px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, on: "panel/header/idle" },
             "panel/divider/idle": { stroke: "border", strokeWidth: 2 },
             "section/band/idle": { fill: "surface" },
@@ -2329,7 +2345,7 @@ orbital RasmThemeOrbital {
             "pressable/secondary/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "400 20px display", spring: { stiffness: 160, damping: 18 } },
             "text/display/idle": { textColor: "primary", font: "400 96px display" },
             "text/title/idle": { fill: "background", textColor: "accent", font: "400 48px display", backing: "halo" },
-            "text/eyebrow/idle": { fill: "background", textColor: "accent", font: "400 16px mono", backing: "halo" },
+            "text/eyebrow/idle": { fill: "background", textColor: "foreground", font: "400 16px mono", backing: "halo" },
             "text/label/idle": { textColor: "primary-foreground", font: "700 13px display", on: "window/titlebar/idle" },
             "text/body/idle": { textColor: "foreground", font: "400 17px body" },
             "text/card/idle": { textColor: "foreground", font: "400 26px display" },
@@ -2363,7 +2379,7 @@ orbital RasmThemeOrbital {
         },
         "victorian": {
           looks: {
-            "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "notch" }, spring: { stiffness: 190, damping: 24 } },
+            "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "notch" }, spring: { stiffness: 190, damping: 24 }, inset: { stroke: "border", strokeWidth: 1, gap: 4 } },
             "card/surface/hovered": { fill: "card", stroke: "primary", strokeWidth: 2.5, corners: { radius: [6, 6, 6, 6], kind: "notch" }, spring: { stiffness: 190, damping: 24 } },
             "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [6, 6, 6, 6], kind: "notch" }, spring: { stiffness: 190, damping: 24 } },
             "card/surface/pressed": { fill: "surface", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "notch" }, spring: { stiffness: 240, damping: 28 } },
@@ -2371,7 +2387,7 @@ orbital RasmThemeOrbital {
             "card/divider/idle": { stroke: "border", strokeWidth: 1 },
             "card/media/idle": { fill: "muted", corners: { radius: [6, 6, 0, 0], kind: "notch" } },
             "card/meta/idle": { textColor: "muted-foreground", font: "400 15px body", on: "card/surface/idle" },
-            "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "notch" } },
+            "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "notch" }, inset: { stroke: "border", strokeWidth: 1, gap: 4 } },
             "panel/header/idle": { fill: "muted", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 0, 0], kind: "notch" }, textColor: "primary", font: "700 14px display" },
             "panel/divider/idle": { stroke: "border", strokeWidth: 1.5 },
             "section/band/idle": { fill: "primary" },
@@ -2388,8 +2404,8 @@ orbital RasmThemeOrbital {
             "range/default/fill": { textColor: "primary-foreground" },
             "range/default/thumb-dragging": { textColor: "primary-foreground" },
             "surface/ground/idle": { fill: "background", material: { wgsl: "fn vc_h(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(12.9898, 78.233))) * 43758.5453); }\nfn shade(px: Pixel) -> vec4<f32> {\n  let lum = dot(px.color.rgb, vec3<f32>(0.299, 0.587, 0.114));\n  let ink = select(vec3<f32>(0.92, 0.88, 0.78), vec3<f32>(0.10, 0.07, 0.05), lum > 0.5);\n  let e = min(min(px.local.x, px.size.x - px.local.x), min(px.local.y, px.size.y - px.local.y));\n  let thick = 1.0 - smoothstep(0.0, 1.0, abs(e - 14.0) - 1.4);\n  let thin = 1.0 - smoothstep(0.0, 1.0, abs(e - 21.0) - 0.4);\n  let c = vec2<f32>(min(px.local.x, px.size.x - px.local.x), min(px.local.y, px.size.y - px.local.y));\n  let cd = abs(c.x - 30.0) + abs(c.y - 30.0);\n  let fleuron = 1.0 - smoothstep(0.0, 1.5, cd - 6.0);\n  let hatchv = abs(fract((px.local.x + px.local.y) / 5.0) - 0.5);\n  let edgeFall = smoothstep(150.0, 0.0, e);\n  let hatch = (1.0 - smoothstep(0.05, 0.2, hatchv)) * edgeFall;\n  let cross = (1.0 - smoothstep(0.05, 0.2, abs(fract((px.local.x - px.local.y) / 6.0) - 0.5))) * edgeFall * edgeFall;\n  var a = thick * 0.45 + thin * 0.30 + fleuron * 0.5 + hatch * 0.05 + cross * 0.04;\n  a = a + (vc_h(floor(px.local / 2.0)) - 0.5) * 0.02;\n  return vec4<f32>(mix(px.color.rgb, ink, clamp(a, 0.0, 0.55)), 1.0);\n}\n", params: [0, 0, 0, 0], live: true } },
-            "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [2, 2, 2, 2], kind: "round" }, shadow: { color: "rgba(0,0,0,0.20)", blur: 6 } },
-            "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [2, 2, 2, 2], kind: "round" } },
+            "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [2, 2, 2, 2], kind: "round" }, shadow: { color: "rgba(0,0,0,0.20)", blur: 6 }, inset: { stroke: "border", strokeWidth: 1, gap: 4 } },
+            "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [2, 2, 2, 2], kind: "round" }, inset: { stroke: "border", strokeWidth: 1, gap: 4 } },
             "stack/hero/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" } },
             "stack/bar/idle": { fill: "background", stroke: "border", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
             "pressable/primary/idle": { fill: "primary", textColor: "primary-foreground", stroke: "primary", strokeWidth: 2, corners: { radius: [2, 2, 2, 2], kind: "round" }, font: "600 15px body", spring: { stiffness: 190, damping: 24 } },
@@ -2495,6 +2511,7 @@ orbital RasmThemeOrbital {
             "text/title/idle": { textColor: "foreground", font: "700 34px display" },
             "text/eyebrow/idle": { textColor: "primary-foreground", font: "700 14px display" },
             "text/body/idle": { textColor: "foreground", font: "400 17px body" },
+            "icon/accent/idle": { on: "surface/ground/idle", textColor: "foreground" },
             "text/card/idle": { textColor: "card-foreground", font: "700 20px display" },
             "morph/default/idle": { fill: "primary" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_box(p: vec2<f32>, h: vec2<f32>) -> f32 { let q = abs(p) - h; return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet ck = step(0.5, fract((floor(p.x) + floor(p.y)) * 0.5)) * 0.35;\nlet wh = vec2<f32>(c.x * 0.62, c.y * 0.7);\nlet inb = sg_fill(sg_box(p - c, wh));\nlet q = p - c + wh;\nlet w2 = wh * 2.0;\nvar col = vec3<f32>(0.75, 0.75, 0.75);\ncol = mix(col, vec3<f32>(1.0, 1.0, 1.0), clamp(step(q.x, 2.0) + step(q.y, 2.0), 0.0, 1.0));\ncol = mix(col, vec3<f32>(0.3, 0.3, 0.3), clamp(step(w2.x - q.x, 2.0) + step(w2.y - q.y, 2.0), 0.0, 1.0));\nlet tb = step(3.0, q.x) * step(q.x, w2.x - 3.0) * step(3.0, q.y) * step(q.y, 19.0);\ncol = mix(col, vec3<f32>(0.0, 0.0, 0.5), tb);\nreturn sg_out(px, mix(px.color.rgb, col, inb), max(inb, ck));\n}\n", params: [0, 0, 0, 0], live: false } },
@@ -2527,6 +2544,7 @@ orbital RasmThemeOrbital {
             "text/code-type/idle": { textColor: "foreground" },
             "text/code-variable/idle": { textColor: "foreground" },
             "text/inverse/idle": { textColor: "secondary-foreground" },
+            "icon/inverse/idle": { textColor: "secondary-foreground" },
             "text/numeral/idle": { textColor: "ring" },
             "textfield/default/idle": { textColor: "card-foreground" },
             "textfield/default/hovered": { textColor: "card-foreground" },
