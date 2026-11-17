@@ -1176,7 +1176,7 @@
       ]
     },
     {
-      "id": "a-ticket-reports-its-rect-height-until-a-slot-reports",
+      "id": "a-ticket-reports-no-extent-until-a-slot-reports",
       "config": {
         "id": "t"
       },
@@ -1202,13 +1202,54 @@
           },
           "expect": {
             "state": "ready",
-            "emits": [
+            "exactEmits": [
               {
-                "event": "RASM_EXTENT",
+                "event": "TICKET_LAYOUT",
                 "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "event": "TICKET_PAINT",
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "n": 1,
+                  "placed": [
+                    {
+                      "id": "t:stub",
+                      "rotate": 0,
+                      "rect": {
+                        "x": 300,
+                        "y": 12,
+                        "w": 88.00000000000001,
+                        "h": 276
+                      }
+                    },
+                    {
+                      "id": "t:body",
+                      "rotate": 0,
+                      "rect": {
+                        "x": 12,
+                        "y": 12,
+                        "w": 264,
+                        "h": 276
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "n": 1,
                   "id": "t",
-                  "w": 400,
-                  "h": 300
+                  "z": 0,
+                  "nodes": []
                 }
               }
             ]
@@ -1402,6 +1443,140 @@
               "RASM_PLACE",
               "RASM_EXTENT"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-measured-text-in-the-body-slot-sizes-the-ticket-like-a-reported-extent",
+      "config": {
+        "id": "t"
+      },
+      "entity": {
+        "id": "t"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "t",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "t:body",
+                "width": 100,
+                "height": 100,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_EXTENT",
+                "payload": {
+                  "id": "t",
+                  "w": 400,
+                  "h": 124
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "t:stub",
+                "width": 100,
+                "height": 150,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_EXTENT",
+                "payload": {
+                  "id": "t",
+                  "w": 400,
+                  "h": 174
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-measured-text-for-another-id-leaves-the-ticket-alone",
+      "config": {
+        "id": "t"
+      },
+      "entity": {
+        "id": "t"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "t",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "elsewhere",
+                "width": 100,
+                "height": 100,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": []
           }
         }
       ]

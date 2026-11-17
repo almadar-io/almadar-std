@@ -406,7 +406,7 @@
       "now": 1700000000000
     },
     {
-      "id": "a-text-placed-at-zero-width-paints-nothing",
+      "id": "a-text-placed-at-zero-width-paints-an-empty-layer",
       "config": {
         "id": "t",
         "text": "hi",
@@ -440,8 +440,23 @@
           },
           "expect": {
             "state": "ready",
-            "neverEmits": [
-              "RASM_PAINT"
+            "exactEmits": [
+              {
+                "event": "TEXT_PAINT",
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "n": 1,
+                  "id": "t",
+                  "z": 1,
+                  "nodes": [],
+                  "texts": []
+                }
+              }
             ]
           }
         }
@@ -2140,6 +2155,242 @@
                       "animation": null
                     }
                   ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-numeral-stays-on-one-line-and-shrinks-to-its-width",
+      "config": {
+        "id": "t",
+        "text": "hi",
+        "z": 1,
+        "fit": "shrink",
+        "minSize": 14,
+        "intent": "numeral"
+      },
+      "entity": {
+        "id": "t",
+        "looks": {
+          "text/numeral/idle": {
+            "textColor": "#fff",
+            "font": "16px sans"
+          }
+        },
+        "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 200,
+          "h": 40
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "t",
+                  "z": 1,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "t",
+                      "key": "hi",
+                      "x": 10,
+                      "y": 20,
+                      "z": 1,
+                      "baseline": "top",
+                      "width": 200,
+                      "wrap": false,
+                      "align": "left",
+                      "measure": true,
+                      "color": "#fff",
+                      "font": "16px sans",
+                      "role": "text",
+                      "animation": null,
+                      "height": 40,
+                      "fit": "shrink",
+                      "minSize": 14
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-body-paragraph-wraps",
+      "config": {
+        "id": "t",
+        "text": "hi",
+        "z": 1,
+        "fit": "shrink",
+        "minSize": 14,
+        "intent": "body"
+      },
+      "entity": {
+        "id": "t",
+        "looks": {
+          "text/body/idle": {
+            "textColor": "#fff",
+            "font": "16px sans"
+          }
+        },
+        "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 200,
+          "h": 40
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "t",
+                  "z": 1,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "t",
+                      "key": "hi",
+                      "x": 10,
+                      "y": 20,
+                      "z": 1,
+                      "baseline": "top",
+                      "width": 200,
+                      "wrap": true,
+                      "align": "left",
+                      "measure": true,
+                      "color": "#fff",
+                      "font": "16px sans",
+                      "role": "text",
+                      "animation": null,
+                      "height": 40,
+                      "fit": "shrink",
+                      "minSize": 14
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-text-placed-at-zero-width-clears-its-paint",
+      "config": {
+        "id": "t",
+        "text": "hi",
+        "z": 1
+      },
+      "entity": {
+        "id": "t",
+        "looks": {
+          "text/body/idle": {
+            "textColor": "#fff",
+            "font": "16px sans"
+          }
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "t",
+                "rect": {
+                  "x": 10,
+                  "y": 20,
+                  "w": 200,
+                  "h": 40
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "t",
+                  "z": 1,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "t",
+                      "key": "hi",
+                      "x": 10,
+                      "y": 20,
+                      "z": 1,
+                      "baseline": "top",
+                      "width": 200,
+                      "wrap": true,
+                      "align": "left",
+                      "measure": true,
+                      "color": "#fff",
+                      "font": "16px sans",
+                      "role": "text",
+                      "animation": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "t",
+                "rect": {
+                  "x": 10,
+                  "y": 20,
+                  "w": 0,
+                  "h": 0
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "t",
+                  "z": 1,
+                  "nodes": [],
+                  "texts": []
                 }
               }
             ]

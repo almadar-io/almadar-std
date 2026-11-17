@@ -1627,7 +1627,7 @@
       ]
     },
     {
-      "id": "a-window-reports-its-rect-height-until-its-body-reports",
+      "id": "a-window-reports-no-extent-until-its-body-reports",
       "config": {
         "id": "w"
       },
@@ -1653,13 +1653,54 @@
           },
           "expect": {
             "state": "ready",
-            "emits": [
+            "exactEmits": [
               {
-                "event": "RASM_EXTENT",
+                "event": "WINDOW_LAYOUT",
                 "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "event": "WINDOW_PAINT",
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "n": 1,
+                  "placed": [
+                    {
+                      "id": "w:title",
+                      "rotate": 0,
+                      "rect": {
+                        "x": 8,
+                        "y": 0,
+                        "w": 316,
+                        "h": 28
+                      }
+                    },
+                    {
+                      "id": "w:body",
+                      "rotate": 0,
+                      "rect": {
+                        "x": 6,
+                        "y": 34,
+                        "w": 388,
+                        "h": 260
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "n": 1,
                   "id": "w",
-                  "w": 400,
-                  "h": 300
+                  "z": 0,
+                  "nodes": []
                 }
               }
             ]
@@ -1880,6 +1921,113 @@
               "RASM_PLACE",
               "RASM_EXTENT"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-measured-text-in-the-body-slot-sizes-the-window-like-a-reported-extent",
+      "config": {
+        "id": "w"
+      },
+      "entity": {
+        "id": "w"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "w",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "w:body",
+                "width": 100,
+                "height": 120,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_EXTENT",
+                "payload": {
+                  "id": "w",
+                  "w": 400,
+                  "h": 160
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-measured-text-for-another-id-leaves-the-window-alone",
+      "config": {
+        "id": "w"
+      },
+      "entity": {
+        "id": "w"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "w",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "elsewhere",
+                "width": 100,
+                "height": 120,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": []
           }
         }
       ]

@@ -41,7 +41,7 @@ orbital ConfirmActionOrbital {
       ;; rendering empty (post-codegen-fix) which silently looks like a
       ;; UI bug. The guard surfaces the contract: callers MUST send the
       ;; targeted row in `payload.row`.
-      REQUEST -> confirming when ?row
+      REQUEST -> confirming when (!= ?row null)
         (set @entity.pendingId ?id)
         (set @entity.name ?row.name)
         (render-ui modal {
@@ -128,7 +128,7 @@ orbital ConfirmActionOrbital {
     listens {
       REQUEST {
         id : string!
-        row : ConfirmAction
+        row : ConfirmAction?
       }
         @description "A request for confirmation before proceeding."
         @synonyms "prompt, ask, verify"

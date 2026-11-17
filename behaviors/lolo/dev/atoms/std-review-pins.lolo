@@ -343,6 +343,8 @@ orbital ReviewPinsOrbital {
     wanted : string @description "The behavior the review link names, until the catalog lists it." = ""
     leaves : [ReviewLeaf] @description "The catalog tree, as last listed." = []
     listed : boolean @description "Whether the catalog has listed its tree at least once." = false
+    openedBehavior : string @description "The behavior the review link opened, kept so a lost guest can be opened again." = ""
+    openedRoute : string @description "The route the review link opened the guest on." = ""
   }
 
   trait ReviewOpener -> ReviewOpenerView [client] {
@@ -354,6 +356,8 @@ orbital ReviewPinsOrbital {
       INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (= @r.name (default ?name "")))))
         (let ((link (array/find @config.reviews (fn r (= @r.name ?name)))))
           (do
+            (set @entity.openedBehavior @link.behavior)
+            (set @entity.openedRoute @link.route)
             (emit GUEST_START_ROUTE { route: @link.route })
             (emit REVIEW_OPEN { subject: (str/concat @link.name "/" ?version), route: @link.route })
             (if (array/some @entity.leaves (fn l (= @l.behavior @link.behavior)))
@@ -364,6 +368,12 @@ orbital ReviewPinsOrbital {
               (if @entity.listed
                 (emit REVIEW_REFUSED { title: @config.missingTitle, message: @link.behavior })
                 (set @entity.wanted @link.behavior)))))
+      REOPEN -> idle when (and (!= @entity.openedBehavior "") (array/some @entity.leaves (fn l (= @l.behavior @entity.openedBehavior))))
+        (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior @entity.openedBehavior)))))
+          (do
+            (emit GUEST_START_ROUTE { route: @entity.openedRoute })
+            (emit LOAD_BEHAVIOR { behavior: @leaf.behavior, value: @leaf.value })))
+      REOPEN -> idle when (not (and (!= @entity.openedBehavior "") (array/some @entity.leaves (fn l (= @l.behavior @entity.openedBehavior)))))
       TREE_LISTED -> idle when (and (!= @entity.wanted "") (array/some ?data (fn l (= @l.behavior @entity.wanted))))
         (set @entity.leaves ?data)
         (set @entity.listed true)
@@ -413,6 +423,10 @@ orbital ReviewPinsOrbital {
         data : [ReviewLeaf]!
       }
         @description "The catalog listed its tree."
+      REOPEN {
+        guest : string
+      }
+        @description "The open review lost its guest (the server restarted): open the same link again."
     }
 
     config {

@@ -1,0 +1,194 @@
+app std-kv-prefetch [
+  version: "1.0.0",
+  description: "std-kv-prefetch — keeps a device's copy of a list of records in its kv store (IndexedDB in a browser), fetched in the background one at a time. The call site hands it the records it wants (WANTED { items }, each an id and a version, in the order to fetch them); it fetches only those whose kept version differs (FETCH { id }), keeps each answer (FETCHED { id, value }) under its id with its version in an index, and skips a record whose fetch fails so the next WANTED retries it. A newer WANTED replaces the records still waiting; config.limit caps how many it keeps; CLEAR (sign-out) empties the store.",
+  kv: { prefetched: [read, write] }
+]
+
+type PrefetchItem = { id : string!, version : string! }
+type PrefetchIndex = { items : [PrefetchItem]! }
+type KeptRecord = { id : string }
+
+orbital KvPrefetchOrbital {
+  entity KvPrefetchRun [runtime] {
+    id : string!
+    queue : [PrefetchItem] @description "Records still to fetch, in the order the call site wants them." = []
+    known : [PrefetchItem] @description "Records kept on this device, with the version each was fetched at." = []
+    loaded : boolean @description "The index of kept records has been read from the store." = false
+    current : string @description "The record being fetched." = ""
+    currentVersion : string = ""
+  }
+
+  trait KvPrefetch (a : Type = KeptRecord) -> @rebindable KvPrefetchRun [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      WANTED -> reading when (not @entity.loaded)
+        (set @entity.queue (array/take ?items @config.limit))
+        (kv/get @config.store @config.indexKey { emit: { success: INDEX_READ, failure: INDEX_MISSED } })
+      WANTED -> ready when @entity.loaded
+        (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version "")))))))))
+        (emit PrefetchStep)
+      CLEAR -> clearing
+        (set @entity.queue [])
+        (set @entity.known [])
+        (set @entity.loaded false)
+        (kv/scan @config.store "" { emit: { success: CLEAR_LISTED, failure: CLEAR_DONE } })
+    }
+
+    state reading {
+      INIT -> reading
+      WANTED -> reading
+        (set @entity.queue (array/take ?items @config.limit))
+      INDEX_READ -> ready
+        (set @entity.known (if (and ?found (validate/required ?value)) (object/get (default ?value { items: [] }) items []) []))
+        (set @entity.loaded true)
+        (set @entity.queue (array/filter @entity.queue (fn i (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version "")))))))))
+        (emit PrefetchStep)
+      INDEX_MISSED -> ready
+        (set @entity.known [])
+        (set @entity.loaded true)
+        (emit PrefetchStep)
+      CLEAR -> clearing
+        (set @entity.queue [])
+        (set @entity.known [])
+        (set @entity.loaded false)
+        (kv/scan @config.store "" { emit: { success: CLEAR_LISTED, failure: CLEAR_DONE } })
+    }
+
+    state ready {
+      INIT -> ready
+      PrefetchStep -> fetching when (> (array/len @entity.queue) 0)
+        (set @entity.current (object/get (array/first @entity.queue) id ""))
+        (set @entity.currentVersion (object/get (array/first @entity.queue) version ""))
+        (set @entity.queue (array/drop @entity.queue 1))
+        (emit FETCH { id: @entity.current })
+      PrefetchStep -> idle when (= (array/len @entity.queue) 0)
+      WANTED -> ready
+        (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version "")))))))))
+      CLEAR -> clearing
+        (set @entity.queue [])
+        (set @entity.known [])
+        (set @entity.loaded false)
+        (kv/scan @config.store "" { emit: { success: CLEAR_LISTED, failure: CLEAR_DONE } })
+    }
+
+    state fetching {
+      INIT -> fetching
+      FETCHED -> saving when (= ?id @entity.current)
+        (kv/put @config.store ?id ?value { emit: { success: KEPT, failure: KEEP_FAILED } })
+      FETCHED -> fetching when (!= ?id @entity.current)
+      FETCH_FAILED -> ready
+        (emit PrefetchStep)
+      WANTED -> fetching
+        (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (and (!= (object/get @i id "") @entity.current) (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version ""))))))))))
+      CLEAR -> clearing
+        (set @entity.queue [])
+        (set @entity.known [])
+        (set @entity.loaded false)
+        (kv/scan @config.store "" { emit: { success: CLEAR_LISTED, failure: CLEAR_DONE } })
+    }
+
+    state saving {
+      INIT -> saving
+      KEPT -> indexing
+        (set @entity.known (array/append (array/filter @entity.known (fn k (!= (object/get @k id "") @entity.current))) { id: @entity.current, version: @entity.currentVersion }))
+        (kv/put @config.store @config.indexKey { items: @entity.known } { emit: { success: INDEX_KEPT, failure: INDEX_KEEP_FAILED } })
+      KEEP_FAILED -> ready
+        (emit PrefetchStep)
+      WANTED -> saving
+        (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (and (!= (object/get @i id "") @entity.current) (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version ""))))))))))
+      CLEAR -> clearing
+        (set @entity.queue [])
+        (set @entity.known [])
+        (set @entity.loaded false)
+        (kv/scan @config.store "" { emit: { success: CLEAR_LISTED, failure: CLEAR_DONE } })
+    }
+
+    state indexing {
+      INIT -> indexing
+      INDEX_KEPT -> ready
+        (emit PrefetchStep)
+      INDEX_KEEP_FAILED -> ready
+        (emit PrefetchStep)
+      WANTED -> indexing
+        (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version "")))))))))
+      CLEAR -> clearing
+        (set @entity.queue [])
+        (set @entity.known [])
+        (set @entity.loaded false)
+        (kv/scan @config.store "" { emit: { success: CLEAR_LISTED, failure: CLEAR_DONE } })
+    }
+
+    state clearing {
+      INIT -> clearing
+      CLEAR_LISTED -> idle when (> (array/len ?entries) 0)
+        (kv/batch @config.store (array/map ?entries (fn e { op: "delete", key: (object/get @e key "") })) { emit: { success: CLEAR_DONE, failure: CLEAR_DONE } })
+      CLEAR_LISTED -> idle when (= (array/len ?entries) 0)
+      CLEAR_DONE -> idle
+    }
+
+    config {
+      store : string = "prefetched"
+        @label "Store"
+        @description "The kv store the records and their index are kept in, declared in the app's kv grant."
+      indexKey : string = "__index"
+        @label "Index key"
+        @description "The key the list of kept records and their versions is kept under; no record id may equal it."
+      limit : number = 100000
+        @label "Most records"
+        @description "Most records kept on the device: the first this many of the wanted list, in the call site's order."
+        @tier "policy"
+    }
+
+    emits {
+      FETCH -> external { id : string! }
+        @description "Fetch one record; the call site maps it to its ask and answers with FETCHED or FETCH_FAILED."
+        @tier "primary"
+      PrefetchStep
+    }
+
+    listens {
+      WANTED {
+        items : [PrefetchItem]!
+      }
+        @description "The records the device should keep, each an id and a version, in the order to fetch them."
+      FETCHED {
+        id : string!
+        value : a
+      }
+        @description "A fetched record, under the id it was fetched for."
+      FETCH_FAILED {
+      }
+        @description "The record could not be fetched; it is skipped until the next WANTED."
+      CLEAR {
+      }
+        @description "Empty the store: the call site maps the sign-out event here."
+      INDEX_READ {
+        found : boolean!
+        value : PrefetchIndex
+      }
+      INDEX_MISSED {
+        error : string
+        kind : string
+      }
+      KEPT {
+      }
+      KEEP_FAILED {
+        error : string
+        kind : string
+      }
+      INDEX_KEPT {
+      }
+      INDEX_KEEP_FAILED {
+        error : string
+        kind : string
+      }
+      CLEAR_LISTED {
+        entries : [{ key : string!, value : a }]!
+      }
+      CLEAR_DONE {
+      }
+    }
+  }
+}

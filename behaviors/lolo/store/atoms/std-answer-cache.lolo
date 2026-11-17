@@ -19,7 +19,7 @@ orbital AnswerCacheOrbital {
       INIT -> idle
       ASKED -> idle when (validate/string ?key)
         (set @entity.fresh (array/filter @entity.fresh (fn k (!= @k ?key))))
-        (kv/get @config.store ?key { emit: { success: CACHE_READ, failure: CACHE_MISSED, key: ?key } })
+        (kv/get @config.store ?key { key: ?key, emit: { success: CACHE_READ, failure: CACHE_MISSED } })
       ASKED -> idle when (not (validate/string ?key))
       CACHE_READ -> idle when (and ?found (not (array/includes @entity.fresh ?key)))
         (emit CACHED_ANSWER ?value)

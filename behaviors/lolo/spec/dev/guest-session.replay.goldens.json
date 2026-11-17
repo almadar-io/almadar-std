@@ -15948,6 +15948,157 @@
      }
     }
    ]
+  },
+  {
+   "id": "split-a-leg-that-opens-another-route-records-it-and-says-so",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LEG",
+     "payload": {
+      "guest": "guest-1",
+      "leg": "guest-1:0:2",
+      "orbital": "RasmPanel",
+      "body": "{\"event\":\"INIT\",\"clientId\":\"tab-1\",\"route\":\"/tasks\",\"mount\":[]}"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestPersona": "u1",
+      "guestPersonaTrait": "DevLoginDevPersonas",
+      "guestViewer": "tab-1",
+      "guestRoute": "/projects"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestRoute": "/tasks"
+      },
+      "emits": [
+       {
+        "event": "GUEST_ROUTED",
+        "payload": {
+         "guest": "guest-1",
+         "route": "/tasks"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-split-a-leg-on-the-same-route-says-nothing-new",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LEG",
+     "payload": {
+      "guest": "guest-1",
+      "leg": "guest-1:0:2",
+      "orbital": "RasmPanel",
+      "body": "{\"event\":\"INIT\",\"clientId\":\"tab-1\",\"route\":\"/projects\",\"mount\":[]}"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestPersona": "u1",
+      "guestPersonaTrait": "DevLoginDevPersonas",
+      "guestViewer": "tab-1",
+      "guestRoute": "/projects"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestRoute": "/projects"
+      },
+      "emits": []
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-leg-for-a-guest-this-server-lost-says-so-once",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LEG",
+     "payload": {
+      "guest": "guest-9",
+      "leg": "guest-9:0:1",
+      "orbital": "RasmPanel",
+      "body": "{\"event\": \"INIT\", \"clientId\": \"tab-1\", \"route\": \"/\", \"mount\": []}"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLostHandle": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_LOST",
+        "payload": {
+         "guest": "guest-9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-second-leg-for-the-same-lost-guest-says-nothing-more",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LEG",
+     "payload": {
+      "guest": "guest-9",
+      "leg": "guest-9:0:1",
+      "orbital": "RasmPanel",
+      "body": "{\"event\": \"INIT\", \"clientId\": \"tab-1\", \"route\": \"/\", \"mount\": []}"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLostHandle": "guest-9"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "neverEmits": [
+       "GUEST_LOST"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

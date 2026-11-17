@@ -1,0 +1,546 @@
+{
+  "atom": "store/atoms/std-kv-prefetch.lolo",
+  "trait": "KvPrefetch",
+  "note": "std-kv-prefetch KvPrefetch keeps a device copy of a wanted list of records: it reads its index once, fetches only records whose kept version differs, one at a time, keeps each under its id and records its version, skips a failed fetch, lets a newer wanted list replace the waiting one, and empties the store on CLEAR.",
+  "cases": [
+    {
+      "id": "the-first-wanted-list-reads-the-index-then-fetches-the-first-record",
+      "config": {},
+      "steps": [
+        {
+          "event": "WANTED",
+          "from": "idle",
+          "entity": {
+            "id": "p",
+            "loaded": false,
+            "queue": [],
+            "known": []
+          },
+          "payload": {
+            "items": [
+              {
+                "id": "a",
+                "version": "2"
+              }
+            ]
+          },
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "loaded": true,
+              "current": "a",
+              "currentVersion": "2",
+              "queue": []
+            },
+            "emits": [
+              {
+                "event": "FETCH",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-index-drops-records-already-kept-at-their-version",
+      "config": {},
+      "steps": [
+        {
+          "event": "INDEX_READ",
+          "from": "reading",
+          "entity": {
+            "id": "p",
+            "loaded": false,
+            "queue": [
+              {
+                "id": "a",
+                "version": "2"
+              },
+              {
+                "id": "b",
+                "version": "1"
+              }
+            ],
+            "known": []
+          },
+          "payload": {
+            "found": true,
+            "value": {
+              "items": [
+                {
+                  "id": "a",
+                  "version": "1"
+                },
+                {
+                  "id": "b",
+                  "version": "1"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "loaded": true,
+              "current": "a",
+              "currentVersion": "2",
+              "queue": [],
+              "known": [
+                {
+                  "id": "a",
+                  "version": "1"
+                },
+                {
+                  "id": "b",
+                  "version": "1"
+                }
+              ]
+            },
+            "emits": [
+              {
+                "event": "FETCH",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-missing-index-fetches-everything",
+      "config": {},
+      "steps": [
+        {
+          "event": "INDEX_MISSED",
+          "from": "reading",
+          "entity": {
+            "id": "p",
+            "loaded": false,
+            "queue": [
+              {
+                "id": "a",
+                "version": "2"
+              }
+            ],
+            "known": []
+          },
+          "payload": {
+            "error": "no store",
+            "kind": "unavailable"
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "loaded": true,
+              "current": "a",
+              "queue": []
+            },
+            "emits": [
+              {
+                "event": "FETCH",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-step-fetches-the-first-waiting-record",
+      "config": {},
+      "steps": [
+        {
+          "event": "PrefetchStep",
+          "from": "ready",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "queue": [
+              {
+                "id": "a",
+                "version": "2"
+              },
+              {
+                "id": "c",
+                "version": "5"
+              }
+            ],
+            "known": []
+          },
+          "payload": {},
+          "expect": {
+            "state": "fetching",
+            "entity": {
+              "current": "a",
+              "currentVersion": "2",
+              "queue": [
+                {
+                  "id": "c",
+                  "version": "5"
+                }
+              ]
+            },
+            "emits": [
+              {
+                "event": "FETCH",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-step-with-nothing-waiting-goes-idle",
+      "config": {},
+      "steps": [
+        {
+          "event": "PrefetchStep",
+          "from": "ready",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "queue": [],
+            "known": []
+          },
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "FETCH"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-fetched-record-is-kept-under-its-id",
+      "config": {},
+      "steps": [
+        {
+          "event": "FETCHED",
+          "from": "fetching",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "current": "a",
+            "currentVersion": "2",
+            "queue": [],
+            "known": []
+          },
+          "payload": {
+            "id": "a",
+            "value": {
+              "id": "a"
+            }
+          },
+          "expect": {
+            "state": "saving",
+            "effects": [
+              {
+                "type": "kv/put"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-fetched-record-for-another-id-is-not-kept",
+      "config": {},
+      "steps": [
+        {
+          "event": "FETCHED",
+          "from": "fetching",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "current": "a",
+            "currentVersion": "2",
+            "queue": [],
+            "known": []
+          },
+          "payload": {
+            "id": "z",
+            "value": {
+              "id": "z"
+            }
+          },
+          "expect": {
+            "state": "fetching",
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-kept-record-is-indexed-at-its-version",
+      "config": {},
+      "steps": [
+        {
+          "event": "KEPT",
+          "from": "saving",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "current": "a",
+            "currentVersion": "2",
+            "queue": [],
+            "known": [
+              {
+                "id": "a",
+                "version": "1"
+              },
+              {
+                "id": "b",
+                "version": "1"
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "state": "indexing",
+            "entity": {
+              "known": [
+                {
+                  "id": "b",
+                  "version": "1"
+                },
+                {
+                  "id": "a",
+                  "version": "2"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "type": "kv/put"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-fetch-is-skipped-and-not-indexed",
+      "config": {},
+      "steps": [
+        {
+          "event": "FETCH_FAILED",
+          "from": "fetching",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "current": "a",
+            "currentVersion": "2",
+            "queue": [
+              {
+                "id": "c",
+                "version": "5"
+              }
+            ],
+            "known": []
+          },
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "known": [],
+              "current": "c",
+              "queue": []
+            },
+            "emits": [
+              {
+                "event": "FETCH",
+                "payload": {
+                  "id": "c"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-newer-wanted-list-replaces-the-waiting-records-but-not-the-one-in-flight",
+      "config": {},
+      "steps": [
+        {
+          "event": "WANTED",
+          "from": "fetching",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "current": "a",
+            "currentVersion": "2",
+            "queue": [
+              {
+                "id": "c",
+                "version": "5"
+              }
+            ],
+            "known": [
+              {
+                "id": "b",
+                "version": "1"
+              }
+            ]
+          },
+          "payload": {
+            "items": [
+              {
+                "id": "a",
+                "version": "2"
+              },
+              {
+                "id": "b",
+                "version": "1"
+              },
+              {
+                "id": "d",
+                "version": "9"
+              }
+            ]
+          },
+          "expect": {
+            "state": "fetching",
+            "entity": {
+              "current": "a",
+              "queue": [
+                {
+                  "id": "d",
+                  "version": "9"
+                }
+              ]
+            },
+            "neverEmits": [
+              "FETCH"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-limit-keeps-only-the-first-wanted-records",
+      "config": {
+        "limit": 1
+      },
+      "steps": [
+        {
+          "event": "WANTED",
+          "from": "idle",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "queue": [],
+            "known": []
+          },
+          "payload": {
+            "items": [
+              {
+                "id": "a",
+                "version": "2"
+              },
+              {
+                "id": "b",
+                "version": "1"
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "current": "a",
+              "queue": []
+            },
+            "emits": [
+              {
+                "event": "FETCH",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "clear-forgets-the-index-and-lists-the-store-to-empty-it",
+      "config": {},
+      "steps": [
+        {
+          "event": "CLEAR",
+          "from": "fetching",
+          "entity": {
+            "id": "p",
+            "loaded": true,
+            "current": "a",
+            "queue": [
+              {
+                "id": "c",
+                "version": "5"
+              }
+            ],
+            "known": [
+              {
+                "id": "b",
+                "version": "1"
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "state": "clearing",
+            "entity": {
+              "loaded": false,
+              "queue": [],
+              "known": []
+            },
+            "effects": [
+              {
+                "type": "kv/scan"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-fetch-answer-after-clear-is-not-kept",
+      "config": {},
+      "steps": [
+        {
+          "event": "FETCHED",
+          "from": "idle",
+          "entity": {
+            "id": "p",
+            "loaded": false,
+            "current": "a",
+            "queue": [],
+            "known": []
+          },
+          "payload": {
+            "id": "a",
+            "value": {
+              "id": "a"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "effects": []
+          }
+        }
+      ]
+    }
+  ]
+}

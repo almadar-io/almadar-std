@@ -106,6 +106,7 @@ type GuestAnswered = { emitted : [GuestEmitted]?, outcomes : [GuestMove]? }
 
 orbital GuestSessionOrbital {
   entity GuestRun [runtime] {
+    guestLostHandle : string @description "The last guest a viewer's leg named after this server lost it (a restart): GUEST_LOST goes out once per such guest." = ""
     id : string!
     guestHandle : string = ""
     guestStartRoute : string @description "The route the next opened guest is sent to once it is open (GUEST_OPEN route); empty keeps the guest's own first page." = ""
@@ -278,6 +279,10 @@ orbital GuestSessionOrbital {
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_LEG -> idle
         (emit GUEST_LEG_DONE { guest: ?guest, leg: ?leg, error: "The guest this leg was sent to is not open" })
+        (when (and (!= ?guest "") (!= ?guest @entity.guestLostHandle))
+          (do
+            (set @entity.guestLostHandle ?guest)
+            (emit GUEST_LOST { guest: ?guest })))
       GUEST_LAZY -> idle
         (emit GUEST_LAZY_DONE { guest: ?guest, file: ?file, error: "The guest this page was asked of is not open" })
       GUEST_INPUT_SEND -> idle
@@ -590,6 +595,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
         (set @entity.guestLeg ?leg)
+        (let ((r (object/get (default (json/parse ?body GuestLegBody) {}) "route" ""))) (when (and (!= @r "") (!= @r @entity.guestRoute)) (do (set @entity.guestRoute @r) (emit GUEST_ROUTED { guest: ?guest, route: @r }))))
         (let ((b (default (json/parse ?body GuestLegBody) {})))
           (program/dispatch (str/concat ?orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" "")) (object/get @b "payload" {}) {
             guest: ?guest,
@@ -612,6 +618,7 @@ orbital GuestSessionOrbital {
           } { emit: { success: GUEST_LEG_ANSWERED, failure: GUEST_LEG_FAILED } }))
       GUEST_LEG_AGAIN -> live
         (set @entity.guestLeg ?leg)
+        (let ((r (object/get (default (json/parse ?body GuestLegBody) {}) "route" ""))) (when (and (!= @r "") (!= @r @entity.guestRoute)) (do (set @entity.guestRoute @r) (emit GUEST_ROUTED { guest: ?guest, route: @r }))))
         (let ((b (default (json/parse ?body GuestLegBody) {})))
           (program/dispatch (str/concat ?orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" "")) (object/get @b "payload" {}) {
             guest: ?guest,
@@ -836,6 +843,15 @@ orbital GuestSessionOrbital {
         moves : [GuestMove]!
       }
         @description "The transitions the guest's traits took while opening or on a step, in order."
+      GUEST_ROUTED -> external {
+        guest : string!
+        route : string!
+      }
+        @description "A split guest's viewer opened another route in its own kernel (the route its mount leg names)."
+      GUEST_LOST -> external {
+        guest : string!
+      }
+        @description "A viewer's leg named a guest this server does not hold (it restarted since): the host opens the guest again."
       GUEST_SIGN_IN -> external {
         guest : string!
       }

@@ -1375,7 +1375,7 @@
       ]
     },
     {
-      "id": "a-balloon-reports-its-rect-height-until-its-body-reports",
+      "id": "a-balloon-reports-no-extent-until-its-body-reports",
       "config": {
         "id": "b"
       },
@@ -1401,13 +1401,44 @@
           },
           "expect": {
             "state": "ready",
-            "emits": [
+            "exactEmits": [
               {
-                "event": "RASM_EXTENT",
+                "event": "BALLOON_LAYOUT",
                 "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "event": "BALLOON_PAINT",
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "n": 1,
+                  "placed": [
+                    {
+                      "id": "b:body",
+                      "rotate": 0,
+                      "rect": {
+                        "x": 12.800000000000011,
+                        "y": 12.799999999999997,
+                        "w": 374.4,
+                        "h": 252.4
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "n": 1,
                   "id": "b",
-                  "w": 400,
-                  "h": 300
+                  "z": 0,
+                  "nodes": []
                 }
               }
             ]
@@ -1681,6 +1712,117 @@
               "RASM_PLACE",
               "RASM_EXTENT"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-measured-text-in-the-body-slot-sizes-the-balloon-like-a-reported-extent",
+      "config": {
+        "id": "b",
+        "radius": 10,
+        "tail": "none"
+      },
+      "entity": {
+        "id": "b"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "b",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "b:body",
+                "width": 100,
+                "height": 100,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_EXTENT",
+                "payload": {
+                  "id": "b",
+                  "w": 400,
+                  "h": 122
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-measured-text-for-another-id-leaves-the-balloon-alone",
+      "config": {
+        "id": "b",
+        "radius": 10,
+        "tail": "none"
+      },
+      "entity": {
+        "id": "b"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "b",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "elsewhere",
+                "width": 100,
+                "height": 100,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": []
           }
         }
       ]

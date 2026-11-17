@@ -61,7 +61,7 @@ def sampler_step(P):
     mock_beh=f'(if (> {ncs} 0) {C(qs("behavior"),pick)} {C(qs("null"))})'
     lit_date=f'(if (> {ncs} 0) {pick} {mockv})'
     mock_date=dcell(qs('string'),resolve(lit_date))
-    lit_t=f'(if (> {ncs} 1) {pick} (str/concat (str/trim {mockv}) "-" @o))'
+    lit_t=f'(if (> {ncs} 1) {pick} (if (= (str/trim {mockv}) "") "" (str/concat (str/trim {mockv}) "-" @o)))'
     mock_typed=(f'(let ((lt {lit_t})) (let ((nv (if (and (array/includes ["number", "money"] @ty) {numok("@lt")}) {numv("@lt")} null))) (if (and (!= @nv null) (= (- (default @nv 0) (default @nv 0)) 0)) {C(qs("number"),"@lt","(default @nv 0)")} '
                 f'(if (and (= @ty "boolean") (array/includes ["true", "false"] @lt)) {C(qs("boolean"),"@lt")} {C(qs("string"),"@lt")}))))')
     mock_chain=(f'(if (and (> (array/len @vals) 0) (> {ncs} 0)) {res(mock_member)} (if (= @ty "behavior") {res(mock_beh)} '

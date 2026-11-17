@@ -1,6 +1,6 @@
 app std-rasm-icon [
   version: "0.1.0",
-  description: "std-rasm-icon — one icon centred in its placed rect. The icon is a name `set:name` from Iconify (lucide when no set is given), fetched as the SVG https://api.iconify.design/<set>/<name>.svg and painted as a sprite recoloured to the textColor of the look icon/<intent>/idle (default, accent, inverse), so every style and theme recolours it. With a `label` key it announces that text as an image to assistive technology, through a transparent keyed text in the active locale; with no label, or `decorative` on, it is decorative and announces nothing. `mirrorRtl` flips a directional icon (an arrow, a chevron) under a right-to-left surface."
+  description: "std-rasm-icon — one icon in its placed rect, centred or at the `align` start or end edge of the reading direction. The icon is a name `set:name` from Iconify (lucide when no set is given), fetched as the SVG https://api.iconify.design/<set>/<name>.svg and painted as a sprite recoloured to the textColor of the look icon/<intent>/idle (default, accent, inverse), so every style and theme recolours it. With a `label` key it announces that text as an image to assistive technology, through a transparent keyed text in the active locale; with no label, or `decorative` on, it is decorative and announces nothing. `mirrorRtl` flips a directional icon (an arrow, a chevron) under a right-to-left surface."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -50,7 +50,7 @@ orbital RasmIconOrbital {
           (when (and (!= @l null) (!= @r null) (> @r.w 0) (> @r.h 0))
             (let ((parts (str/split @config.icon ":")) (side (if (> @config.size 0) @config.size (math/min @r.w @r.h))) (named (and (let ((given : MessageKey? @config.label)) (!= @given null)) (not @config.decorative))))
               (let ((set (if (str/includes @config.icon ":") (default (array/nth @parts 0) "lucide") "lucide")) (name (if (str/includes @config.icon ":") (default (array/nth @parts 1) "") @config.icon)))
-                (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-sprite, id: @config.id, asset: { url: (str/concat "https://api.iconify.design/" @set "/" @name ".svg") }, anchor: "top-left", position: { x: (+ @r.x (/ (- @r.w @side) 2)), y: (+ @r.y (/ (- @r.h @side) 2)), z: @config.z }, width: @side, height: @side, tint: @l.textColor, flipX: (and @config.mirrorRtl (= @entity.dir "rtl")), rotation: @entity.rotate, semantic: (if @named { role: "img", labelledBy: (str/concat @config.id ":name") } null) }], texts: (let ((none : [RasmText] []) (given : MessageKey? @config.label)) (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":name"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] @none)) })))))
+                (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-sprite, id: @config.id, asset: { url: (str/concat "https://api.iconify.design/" @set "/" @name ".svg") }, anchor: "top-left", position: { x: (if (= @config.align "center") (+ @r.x (/ (- @r.w @side) 2)) (if (= (= @config.align "end") (!= @entity.dir "rtl")) (- (+ @r.x @r.w) @side) @r.x)), y: (+ @r.y (/ (- @r.h @side) 2)), z: @config.z }, width: @side, height: @side, tint: @l.textColor, flipX: (and @config.mirrorRtl (= @entity.dir "rtl")), rotation: @entity.rotate, semantic: (if @named { role: "img", labelledBy: (str/concat @config.id ":name") } null) }], texts: (let ((none : [RasmText] []) (given : MessageKey? @config.label)) (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":name"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] @none)) })))))
     }
 
     emits {
@@ -93,6 +93,10 @@ orbital RasmIconOrbital {
       size : number = 24
         @label "Size"
         @description "The side in px of the square the icon is drawn in, centred in the placed rect; 0 takes the rect's shorter side."
+        @tier "presentation"
+      align : "center" | "start" | "end" = "center"
+        @label "Align"
+        @description "Where the icon sits across its rect: centred, or at the start or end edge of the reading direction (end is the right edge under ltr, the left under rtl)."
         @tier "presentation"
       intent : "default" | "accent" | "inverse" = "default"
         @label "Intent"
