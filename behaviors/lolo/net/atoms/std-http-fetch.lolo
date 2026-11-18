@@ -150,7 +150,7 @@ orbital HttpFetchOrbital {
         (set @entity.dec @payload.rest)
         (emit HF_AFTER { n: (+ @entity.total (bytes/length @entity.dec)) })
       HF_FRAME_EVENT -> streaming
-        (emit HTTP_STREAM_EVENT { key: @payload.key, data: @payload.data, event: @payload.event, id: @payload.id })
+        (emit HTTP_STREAM_EVENT { key: @payload.key, data: @payload.data, event: @payload.event, id: @payload.id, seq: @payload.seq })
       HF_FRAME_FAILED -> streaming
         (os/close @entity.handle { key: "close" emit: { success: HF_CLOSED, failure: HF_CLOSED } })
         (set @entity.handle -1)
@@ -182,6 +182,7 @@ orbital HttpFetchOrbital {
         data : string!
         event : string?
         id : string?
+        seq : number?
       }
         @description "One complete frame of a streamed response (sse or jsonl)."
         @tier "primary"
@@ -308,6 +309,7 @@ orbital HttpFetchOrbital {
         data : string!
         event : string?
         id : string?
+        seq : number?
       }
       HF_DRAINED {
         rest : bytes!

@@ -72,6 +72,11 @@ orbital HttpServerOrbital {
       @description "The port the HTTP endpoint binds; the PORT environment variable replaces it at LISTEN while portFromEnv is on."
       @synonyms "listen port"
       @tier "policy"
+    origin : string = ""
+      @label "Public origin"
+      @description "The public URL browsers reach this server at, e.g. https://api.example.com/apps/notes; empty = the page's own origin."
+      @synonyms "public url, api address, server origin"
+      @tier "policy"
     portFromEnv : boolean = true
       @label "Port from environment"
       @description "At LISTEN the PORT environment variable replaces port (granted by the env PORT listen grant)."
@@ -375,5 +380,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, TicketMint, TicketTake, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp, BearerHttpFrame
+  page http { host: @config.host, port: @config.port, path: "/", origin: @config.origin } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, TicketMint, TicketTake, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp, BearerHttpFrame
 }

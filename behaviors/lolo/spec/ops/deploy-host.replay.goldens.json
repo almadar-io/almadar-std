@@ -1,0 +1,847 @@
+{
+ "atom": "ops/atoms/std-deploy-host.lolo",
+ "trait": "DeployHost",
+ "cases": [
+  {
+   "id": "app deploy reads the history, rsyncs to the next release, links, records and answers",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "idle",
+     "event": "DEPLOY_APP",
+     "payload": {
+      "app": "shop",
+      "localDir": "/w/out"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_HISTORY",
+        "payload": {
+         "artifact": "shop"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_HISTORY_DONE",
+     "payload": {
+      "artifact": "shop",
+      "deployments": [
+       {
+        "id": "shop#1",
+        "artifact": "shop",
+        "version": 1,
+        "activates": true,
+        "recordedAt": "2026-11-18T00:00:00.000Z",
+        "details": {}
+       },
+       {
+        "id": "shop#2",
+        "artifact": "shop",
+        "version": 2,
+        "activates": true,
+        "recordedAt": "2026-11-18T00:00:00.000Z",
+        "details": {}
+       }
+      ]
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_RSYNC_RUN",
+        "payload": {
+         "stage": "app-rsync",
+         "argv": [
+          "-a",
+          "--delete",
+          "-s",
+          "--mkpath",
+          "--",
+          "/w/out/",
+          "deploy@box:/srv/orb/apps/shop/releases/3/"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_RSYNC_DONE",
+     "payload": {
+      "stage": "app-rsync",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_SSH_RUN",
+        "payload": {
+         "stage": "app-link",
+         "argv": [
+          "-o",
+          "BatchMode=yes",
+          "--",
+          "deploy@box",
+          "ln -sfn '/srv/orb/apps/shop/releases/3' '/srv/orb/apps/shop/current' && { cd '/srv/orb/apps/shop/releases' && ls -1 | sort -n | head -n -3 | while read -r d; do rm -rf -- \"$d\"; done; true; }"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "app-link",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_RECORD",
+        "payload": {
+         "artifact": "shop",
+         "activates": true,
+         "details": {
+          "host": "deploy@box",
+          "releaseDir": "/srv/orb/apps/shop/releases/3"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_RECORDED",
+     "payload": {
+      "artifact": "shop",
+      "version": 3
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "APP_DEPLOYED",
+        "payload": {
+         "app": "shop",
+         "version": 3
+        }
+       }
+      ],
+      "neverEmits": [
+       "DEPLOY_FAILED",
+       "DH_RSYNC_RUN"
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failed rsync answers DEPLOY_FAILED at rsync and records nothing",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_RSYNC_DONE",
+     "payload": {
+      "stage": "app-rsync",
+      "exitCode": 23,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "rsync: connection unexpectedly closed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "app": "shop",
+         "step": "rsync",
+         "error": "rsync: connection unexpectedly closed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DH_SSH_RUN",
+       "DH_RECORD",
+       "APP_DEPLOYED"
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failed link answers DEPLOY_FAILED at link and records nothing",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "app-link",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "ln: failed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "app": "shop",
+         "step": "link",
+         "error": "ln: failed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DH_RECORD",
+       "APP_DEPLOYED"
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refused registry record answers DEPLOY_FAILED at record",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_RECORD_FAILED",
+     "payload": {
+      "artifact": "shop",
+      "code": "contended",
+      "message": "lost the race"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "app": "shop",
+         "step": "record",
+         "error": "lost the race"
+        }
+       }
+      ],
+      "neverEmits": [
+       "APP_DEPLOYED"
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a binary deploy rsyncs, swaps, restarts, passes the health check and answers BINARY_DEPLOYED",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "idle",
+     "event": "DEPLOY_BINARY",
+     "payload": {
+      "localPath": "/w/orb"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_RSYNC_RUN",
+        "payload": {
+         "stage": "bin-rsync",
+         "argv": [
+          "-a",
+          "-s",
+          "--mkpath",
+          "--",
+          "/w/orb",
+          "deploy@box:/srv/orb/bin/orb.new"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_RSYNC_DONE",
+     "payload": {
+      "stage": "bin-rsync",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_SSH_RUN",
+        "payload": {
+         "stage": "bin-swap",
+         "argv": [
+          "-o",
+          "BatchMode=yes",
+          "--",
+          "deploy@box",
+          "cd '/srv/orb/bin' && { test ! -e orb || cp -p orb orb.prev; } && mv -f orb.new orb"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "bin-swap",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_SSH_RUN",
+        "payload": {
+         "stage": "bin-restart",
+         "argv": [
+          "-o",
+          "BatchMode=yes",
+          "--",
+          "deploy@box",
+          "systemctl --user restart 'orb-central'"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "bin-restart",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_CURL_RUN",
+        "payload": {
+         "stage": "bin-health",
+         "argv": [
+          "-fsS",
+          "--max-time",
+          "10",
+          "--retry",
+          "5",
+          "--retry-delay",
+          "1",
+          "--retry-connrefused",
+          "--",
+          "http://127.0.0.1:8080/health"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_CURL_DONE",
+     "payload": {
+      "stage": "bin-health",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BINARY_DEPLOYED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "BINARY_ROLLED_BACK",
+       "DH_SSH_RUN"
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a binary deploy whose health check fails moves orb.prev back, restarts and answers BINARY_ROLLED_BACK",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_CURL_DONE",
+     "payload": {
+      "stage": "bin-health",
+      "exitCode": 22,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "curl: (22) The requested URL returned error: 503"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_SSH_RUN",
+        "payload": {
+         "stage": "bin-undo",
+         "argv": [
+          "-o",
+          "BatchMode=yes",
+          "--",
+          "deploy@box",
+          "cd '/srv/orb/bin' && mv -f orb.prev orb"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "BINARY_DEPLOYED"
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "bin-undo",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_SSH_RUN",
+        "payload": {
+         "stage": "bin-restart-prev",
+         "argv": [
+          "-o",
+          "BatchMode=yes",
+          "--",
+          "deploy@box",
+          "systemctl --user restart 'orb-central'"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb",
+      "reason": "curl: (22) The requested URL returned error: 503"
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "bin-restart-prev",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BINARY_ROLLED_BACK",
+        "payload": {
+         "error": "curl: (22) The requested URL returned error: 503"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BINARY_DEPLOYED"
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb",
+      "reason": "curl: (22) The requested URL returned error: 503"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failed binary restart is undone the same way",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "bin-restart",
+      "exitCode": 5,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "Unit orb-central.service not found."
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_SSH_RUN",
+        "payload": {
+         "stage": "bin-undo",
+         "argv": [
+          "-o",
+          "BatchMode=yes",
+          "--",
+          "deploy@box",
+          "cd '/srv/orb/bin' && mv -f orb.prev orb"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DH_CURL_RUN"
+      ]
+     },
+     "entity": {
+      "op": "binary",
+      "binDir": "/srv/orb/bin",
+      "localPath": "/w/orb"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a rollback links the earlier release then re-activates it in the registry",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "idle",
+     "event": "ROLLBACK_APP",
+     "payload": {
+      "app": "shop",
+      "version": 2
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_SSH_RUN",
+        "payload": {
+         "stage": "rollback-link",
+         "argv": [
+          "-o",
+          "BatchMode=yes",
+          "--",
+          "deploy@box",
+          "ln -sfn '/srv/orb/apps/shop/releases/2' '/srv/orb/apps/shop/current'"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_SSH_DONE",
+     "payload": {
+      "stage": "rollback-link",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DH_ROLLBACK",
+        "payload": {
+         "artifact": "shop",
+         "version": 2
+        }
+       }
+      ]
+     },
+     "entity": {
+      "op": "rollback",
+      "app": "shop",
+      "version": 2
+     }
+    },
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DH_ROLLED_BACK",
+     "payload": {
+      "artifact": "shop",
+      "version": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "APP_ROLLED_BACK",
+        "payload": {
+         "app": "shop",
+         "version": 2
+        }
+       }
+      ]
+     },
+     "entity": {
+      "op": "rollback",
+      "app": "shop",
+      "version": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "an empty host refuses the deploy before any command",
+   "config": {},
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "idle",
+     "event": "DEPLOY_APP",
+     "payload": {
+      "app": "shop",
+      "localDir": "/w/out"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "app": "shop",
+         "step": "config",
+         "error": "the host knob is empty"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DH_HISTORY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a call made while another runs is refused as busy",
+   "config": {
+    "host": "deploy@box",
+    "healthUrl": "http://127.0.0.1:8080/health"
+   },
+   "steps": [
+    {
+     "trait": "DeployHost",
+     "from": "running",
+     "event": "DEPLOY_APP",
+     "payload": {
+      "app": "other",
+      "localDir": "/w/x"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DEPLOY_FAILED",
+        "payload": {
+         "app": "other",
+         "step": "busy",
+         "error": "another deploy is in flight"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DH_HISTORY"
+      ]
+     },
+     "entity": {
+      "app": "shop",
+      "localPath": "/w/out",
+      "appDir": "/srv/orb/apps/shop",
+      "version": 3,
+      "relDir": "/srv/orb/apps/shop/releases/3",
+      "op": "app"
+     }
+    }
+   ]
+  }
+ ]
+}

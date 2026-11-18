@@ -1,0 +1,847 @@
+{
+  "atom": "cli/atoms/std-program-host.lolo",
+  "trait": "ProgramApps",
+  "note": "Host answers (program/read, open, dispatch, close) are the next step's event; with no substrate host a step's asks fail inside the step, so each step seeds its own row.",
+  "cases": [
+    {
+      "id": "first request reads the app file, then opens it, then replays the request",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k1",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_PROGRAM_READ",
+          "from": "serving",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "p",
+                "orbitals": []
+              },
+              "lazy": []
+            },
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "program/open"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_OPENED",
+          "from": "serving",
+          "payload": {
+            "result": {
+              "guest": "g1"
+            },
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "emits": [
+              {
+                "event": "APP_DRAIN",
+                "payload": {
+                  "app": "a",
+                  "guest": "g1"
+                }
+              }
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "APP_DRAIN",
+          "from": "serving",
+          "payload": {
+            "app": "a",
+            "guest": "g1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/dispatch"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "waiting": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "second request to a loaded app dispatches without reading or opening",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k2",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/dispatch"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false
+                }
+              ],
+              "waiting": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "two requests during loading both queue and both answer after one open",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k1",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": true
+                }
+              ],
+              "waiting": [
+                {
+                  "key": "k1",
+                  "app": "a",
+                  "address": "O.T.E",
+                  "payload": {},
+                  "options": {}
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k2",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": true
+                }
+              ],
+              "waiting": [
+                {
+                  "key": "k1",
+                  "app": "a",
+                  "address": "O.T.E",
+                  "payload": {},
+                  "options": {}
+                },
+                {
+                  "key": "k2",
+                  "app": "a",
+                  "address": "O.T.E",
+                  "payload": {},
+                  "options": {}
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "APP_OPENED",
+          "from": "serving",
+          "payload": {
+            "result": {
+              "guest": "g1"
+            },
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              },
+              {
+                "key": "k2",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "emits": [
+              {
+                "event": "APP_DRAIN",
+                "payload": {
+                  "app": "a",
+                  "guest": "g1"
+                }
+              }
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "APP_DRAIN",
+          "from": "serving",
+          "payload": {
+            "app": "a",
+            "guest": "g1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              },
+              {
+                "key": "k2",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/dispatch"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "waiting": [
+                {
+                  "key": "k2",
+                  "app": "a",
+                  "address": "O.T.E",
+                  "payload": {},
+                  "options": {}
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "APP_DRAIN",
+          "from": "serving",
+          "payload": {
+            "app": "a",
+            "guest": "g1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k2",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/dispatch"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "waiting": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a request for an app whose folder is missing answers failed for every queued request",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_LOAD_FAILED",
+          "from": "serving",
+          "payload": {
+            "key": "a",
+            "error": "no such file"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              },
+              {
+                "key": "k2",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "exactEmits": [
+              {
+                "event": "APP_FAIL_DRAIN"
+              },
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "error": "no such file"
+                }
+              },
+              {
+                "event": "APP_FAIL_DRAIN"
+              },
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "k2",
+                  "error": "no such file"
+                }
+              },
+              {
+                "event": "APP_FAIL_DRAIN"
+              }
+            ],
+            "entity": {
+              "apps": [],
+              "waiting": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an empty app name answers failed at once",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k1",
+            "app": "",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "exactEmits": [
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "k1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an empty appsDir answers failed at once",
+      "now": 1000,
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k1",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "exactEmits": [
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "k1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unload closes the guest and a later request loads again",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_UNLOAD",
+          "from": "serving",
+          "payload": {
+            "app": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/close"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "apps": []
+            }
+          }
+        },
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k3",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "idle sweep closes an app past idleMs and keeps one used recently",
+      "now": 1000000,
+      "config": {
+        "appsDir": "/apps",
+        "idleMs": 600000
+      },
+      "steps": [
+        {
+          "event": "APP_IDLE_SWEEP",
+          "from": "serving",
+          "payload": {
+            "swept": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "old",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false
+              },
+              {
+                "name": "new",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:16:39.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/close"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "new",
+                  "guest": "g2",
+                  "lastUsedMs": "1970-01-01T00:16:39.000Z",
+                  "loading": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

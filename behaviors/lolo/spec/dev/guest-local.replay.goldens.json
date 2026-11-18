@@ -1,0 +1,192 @@
+{
+ "atom": "dev/atoms/std-guest-session.lolo",
+ "trait": "GuestLocal",
+ "cases": [
+  {
+   "id": "runs-client-local-opens-the-guest-with-local",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_OPEN",
+     "payload": {
+      "program": {
+       "name": "x",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "l",
+      "guestHandle": "",
+      "guestPaints": []
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "emits": [
+       {
+        "event": "GUEST_CLEARED",
+        "payload": {}
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "emit"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "when"
+       },
+       {
+        "type": "program/open",
+        "arg1": {
+         "local": true,
+         "seed": "MockDataMockSeed"
+        },
+        "arg2": {
+         "emit": {
+          "success": "GUEST_OPENED",
+          "failure": "GUEST_FAILED"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "runs": "client"
+   }
+  },
+  {
+   "id": "control-runs-server-local-ignores-the-open",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_OPEN",
+     "payload": {
+      "program": {
+       "name": "x",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "l",
+      "guestHandle": "",
+      "guestPaints": []
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "neverEmits": [
+       "GUEST_CLEARED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "runs-client-a-send-reaches-dispatch-with-local",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_SEND",
+     "payload": {
+      "guest": "guest-1",
+      "address": "Counter.INC",
+      "event": "INC",
+      "payload": {}
+     },
+     "entity": {
+      "id": "l",
+      "guestHandle": "guest-1",
+      "guestPaints": []
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "effects": [
+       {
+        "type": "program/dispatch",
+        "arg0": "@payload.address",
+        "arg2": {
+         "guest": "@payload.guest",
+         "local": true,
+         "emit": {
+          "success": "GUEST_STEPPED",
+          "failure": "GUEST_STEP_FAILED"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "runs": "client"
+   }
+  },
+  {
+   "id": "runs-client-close-carries-local",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_RESET",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "guestHandle": "guest-1",
+      "guestPaints": []
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_CLEARED",
+        "payload": {}
+       }
+      ],
+      "effects": [
+       {
+        "type": "program/close",
+        "arg0": "@entity.guestHandle",
+        "arg1": {
+         "local": true,
+         "emit": {
+          "success": "GUEST_CLOSED",
+          "failure": "GUEST_CLOSE_FAILED"
+         }
+        }
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "emit"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "runs": "client"
+   }
+  }
+ ]
+}

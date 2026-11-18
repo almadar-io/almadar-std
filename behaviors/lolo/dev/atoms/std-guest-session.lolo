@@ -1,6 +1,6 @@
 app std-guest-session [
   version: "1.0.0",
-  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) resolves std-mock-page-seed as it mounts, and takes GUEST_OPEN { program, route? } (a resolved program value, closing any guest already open; a non-empty route is opened in the guest with program/navigate as soon as it is open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage. A split guest's host-run dispatches and pushed emits for its viewer (the dispatches of a GUEST_TICKED: a dispatch for this viewer, a push to this viewer as origin, or a push to the peers of another viewer) reach the stage as GUEST_DISPATCHED, and the view folds them into the viewer's kernel as host-run dispatches and pushes.",
+  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) resolves std-mock-page-seed as it mounts, and takes GUEST_OPEN { program, route? } (a resolved program value, closing any guest already open; a non-empty route is opened in the guest with program/navigate as soon as it is open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes the traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage. Knob runs (server by default, on GuestSession and GuestLocal, keep them equal): with runs client, meant only for mock integrations, GuestSession ignores GUEST_OPEN and GuestLocal (client) opens the guest inside the viewer's browser kernel with program/open local, steps it with program/dispatch, navigates it with program/navigate and closes it with program/close, each carrying local, and emits the same GUEST_PAINTS, GUEST_MOVED, GUEST_ERROR, GUEST_NOTICE and GUEST_CLEARED GuestStage paints. program/compose runs only on the server, so under runs client the caller must pass an already composed program (std-mock-page-seed composed in) with GUEST_OPEN, and its seed trait is GuestLocal seedTrait. A local guest keeps its rows in its own in-memory store; persisting them to IndexedDB across reloads is not built. A split guest's host-run dispatches and pushed emits for its viewer (the dispatches of a GUEST_TICKED: a dispatch for this viewer, a push to this viewer as origin, or a push to the peers of another viewer) reach the stage as GUEST_DISPATCHED, and the view folds them into the viewer's kernel as host-run dispatches and pushes.",
   egress: [],
   kernel: { "guest": [spawn, declared, program] },
   env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "AUTH_PROVIDER", "ALMADAR_PERSONA_OWNS", "ORB_LAUNCHPAD_HOST"],
@@ -141,6 +141,16 @@ orbital GuestSessionOrbital {
     guestIntegrations : "mock" | "live" @description "How the guest reaches real services: mock opens it with no credentials and every row in its own store, live with the opener's credentials and its declared store drivers (program/open integrations)." = mock
   }
 
+  entity GuestLocalRun [runtime] {
+    id : string!
+    guestHandle : string = ""
+    guestStartRoute : string @description "The route the next opened guest is sent to once it is open (GUEST_OPEN route); empty keeps the guest's own first page." = ""
+    guestPaints : [GuestPaint] = []
+    guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
+    guestPage : [string] @description "The traits of the page the guest shows." = []
+    guestPaintSeq : number @description "How many paints this trait has handed on, so the stage keeps the newest." = 0
+  }
+
   entity GuestStageRun [runtime] {
     id : string!
     guestSignInAsked : boolean @description "The guest asked its viewer to sign in and the stage's sign-in button has not been pressed since." = false
@@ -219,6 +229,10 @@ orbital GuestSessionOrbital {
         @label "Program port"
         @description "Give the guest the opener's program port (program/open program): its program/* and behavior/* operators are answered as they are for the opener, so a guest that reads, builds or runs programs works as it does served. The opener must hold kernel: { guest: [spawn, program] }."
         @tier "policy"
+      runs : "server" | "client" = "server"
+        @label "Where a mock guest runs"
+        @description "server: this trait opens every guest on the kernel. client: it ignores GUEST_OPEN, so GuestLocal opens the mock guest in the viewer's browser; meant only for mock integrations."
+        @tier "policy"
       split : boolean = false
         @label "Run client traits in the viewer"
         @description "Open the guest split (program/open split): the viewer's browser runs the guest's [client] traits and mounts its pages in a kernel of its own, sending each server leg as GUEST_LEG, which the guest answers as a served program's server answers an events request. Off: the guest runs every trait itself and its paints reach the viewer as GUEST_PAINTS."
@@ -241,7 +255,7 @@ orbital GuestSessionOrbital {
 
     state idle {
       INIT -> idle
-      GUEST_OPEN -> opening
+      GUEST_OPEN -> opening when (= @config.runs "server")
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (set @entity.guestStartRoute (default ?route ""))
@@ -254,6 +268,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestViewer "")
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
+      GUEST_OPEN -> idle when (= @config.runs "client")
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
@@ -280,10 +295,12 @@ orbital GuestSessionOrbital {
       GUEST_LIVE_TARGET -> idle
       GUEST_LIVE_LINKED -> idle
       GUEST_PERSONAS_ASK -> idle
-      GUEST_NAVIGATE -> idle
+      GUEST_NAVIGATE -> idle when (= @config.runs "server")
         (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
-      GUEST_SEND -> idle
+      GUEST_NAVIGATE -> idle when (= @config.runs "client")
+      GUEST_SEND -> idle when (= @config.runs "server")
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+      GUEST_SEND -> idle when (= @config.runs "client")
       GUEST_LEG -> idle
         (emit GUEST_LEG_DONE { guest: ?guest, leg: ?leg, error: "The guest this leg was sent to is not open" })
         (when (and (!= ?guest "") (!= ?guest @entity.guestLostHandle))
@@ -1627,6 +1644,11 @@ orbital GuestSessionOrbital {
 
     listens {
       GuestSession.GUEST_PAINTS -> GUEST_PAINTS
+      GuestLocal.GUEST_PAINTS -> GUEST_PAINTS
+      GuestLocal.GUEST_CLEARED -> GUEST_CLEARED
+      GuestLocal.GUEST_THEME -> GUEST_THEME
+      GuestLocal.GUEST_ERROR -> GUEST_ERROR
+      GuestLocal.GUEST_NOTICE -> GUEST_NOTICE
       GuestSession.GUEST_CLIENT -> GUEST_CLIENT
       GUEST_CLIENT {
         guest : string!
@@ -1823,5 +1845,202 @@ orbital GuestSessionOrbital {
     }
   }
 
-  page "/" as GuestSessionPage -> GuestSession, GuestOpener, GuestMarks, GuestStage
+  trait GuestLocal -> GuestLocalRun [client] {
+    config {
+      runs : "server" | "client" = "server"
+        @label "Where a mock guest runs"
+        @description "client: this trait opens the guest inside the viewer's browser kernel (program/open local) and steps it there; server: it does nothing and GuestSession opens the guest. Keep it equal to GuestSession's runs."
+        @tier "policy"
+      seedTrait : string = "MockDataMockSeed"
+        @label "Seeder trait"
+        @description "The trait of the already composed program that writes its mock rows (program/open seed)."
+        @tier "internal"
+    }
+
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      GUEST_OPEN -> opening when (= @config.runs "client")
+        (set @entity.guestPaints [])
+        (emit GUEST_CLEARED {})
+        (set @entity.guestStartRoute (default ?route ""))
+        (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
+        (program/open ?program { local: true, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_OPEN -> idle when (= @config.runs "server")
+      GUEST_RESET -> idle when (= @config.runs "client")
+        (emit GUEST_CLEARED {})
+      GUEST_RESET -> idle when (= @config.runs "server")
+      GUEST_SEND -> idle
+      GUEST_NAVIGATE -> idle
+      GUEST_OPENED -> idle
+        (program/close ?result.guest { local: true, emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+      GUEST_FAILED -> idle
+      GUEST_STEPPED -> idle
+      GUEST_STEP_FAILED -> idle
+      GUEST_NAVIGATED -> idle
+      GUEST_NAVIGATE_FAILED -> idle
+      GUEST_FOLLOWED -> idle
+      GUEST_CLOSED -> idle
+      GUEST_CLOSE_FAILED -> idle
+    }
+
+    state opening {
+      INIT -> idle
+      GUEST_OPENED -> live
+        (set @entity.guestHandle ?result.guest)
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+        (when (!= @entity.guestStartRoute "") (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute, local: true } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
+      GUEST_FAILED -> idle
+        (emit GUEST_ERROR { message: ?error })
+      GUEST_OPEN -> opening
+        (emit GUEST_CLEARED {})
+        (set @entity.guestStartRoute (default ?route ""))
+        (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
+        (program/open ?program { local: true, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_RESET -> idle
+        (emit GUEST_CLEARED {})
+      GUEST_SEND -> opening
+      GUEST_NAVIGATE -> opening
+      GUEST_STEPPED -> opening
+      GUEST_STEP_FAILED -> opening
+      GUEST_NAVIGATED -> opening
+      GUEST_NAVIGATE_FAILED -> opening
+      GUEST_FOLLOWED -> opening
+      GUEST_CLOSED -> opening
+      GUEST_CLOSE_FAILED -> opening
+    }
+
+    state live {
+      INIT -> idle
+      GUEST_OPEN -> opening
+        (program/close @entity.guestHandle { local: true, emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (set @entity.guestHandle "")
+        (set @entity.guestPaints [])
+        (emit GUEST_CLEARED {})
+        (set @entity.guestStartRoute (default ?route ""))
+        (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
+        (program/open ?program { local: true, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_SEND -> live when (= ?guest @entity.guestHandle)
+        (program/dispatch ?address ?payload { guest: ?guest, local: true, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+      GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
+      GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
+        (program/navigate { guest: ?guest, route: ?route, local: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+      GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
+      GUEST_STEPPED -> live
+        (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+      GUEST_STEP_FAILED -> live
+        (emit GUEST_NOTICE { message: ?error })
+      GUEST_NAVIGATED -> live
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+      GUEST_FOLLOWED -> live
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+      GUEST_NAVIGATE_FAILED -> live
+        (emit GUEST_NOTICE { message: ?error })
+      GUEST_FAILED -> live
+      GUEST_OPENED -> live
+      GUEST_RESET -> idle
+        (program/close @entity.guestHandle { local: true, emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (set @entity.guestHandle "")
+        (set @entity.guestPaints [])
+        (emit GUEST_CLEARED {})
+      GUEST_CLOSED -> live
+      GUEST_CLOSE_FAILED -> live
+    }
+
+    emits {
+      GUEST_PAINTS -> external {
+        guest : string!
+        route : string!
+        page : [string]!
+        paints : [GuestPaint]!
+        seq : number!
+      }
+      GUEST_MOVED -> external {
+        guest : string!
+        moves : [GuestMove]!
+      }
+      GUEST_ERROR -> external {
+        message : string!
+      }
+      GUEST_NOTICE -> external {
+        message : string!
+      }
+      GUEST_CLEARED -> external { }
+      GUEST_THEME -> external {
+        theme : GuestTheme!
+      }
+      GUEST_OPENED {
+        result : GuestOpened!
+      }
+      GUEST_FAILED {
+        error : string!
+      }
+      GUEST_STEPPED {
+        result : GuestStepped!
+      }
+      GUEST_STEP_FAILED {
+        error : string!
+      }
+      GUEST_NAVIGATED {
+        result : GuestNavigated!
+      }
+      GUEST_FOLLOWED {
+        result : GuestNavigated!
+      }
+      GUEST_NAVIGATE_FAILED {
+        error : string!
+      }
+      GUEST_CLOSED {
+        result : GuestClosed!
+      }
+      GUEST_CLOSE_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      GuestOpener.GUEST_OPEN -> GUEST_OPEN
+      GuestOpener.GUEST_RESET -> GUEST_RESET
+      GuestStage.GUEST_SEND -> GUEST_SEND
+      GuestStage.GUEST_NAVIGATE -> GUEST_NAVIGATE
+      GUEST_OPEN {
+        program : GuestProgram!
+        route : string?
+      }
+        @description "Open an already composed program as the guest in this browser, closing the one already open."
+      GUEST_RESET { }
+        @description "Close the open guest and clear the paint."
+      GUEST_SEND {
+        guest : string!
+        address : string!
+        event : event!
+        payload : @payload event?
+      }
+      GUEST_NAVIGATE {
+        guest : string!
+        route : string!
+      }
+    }
+  }
+
+  page "/" as GuestSessionPage -> GuestSession, GuestOpener, GuestMarks, GuestStage, GuestLocal
 }

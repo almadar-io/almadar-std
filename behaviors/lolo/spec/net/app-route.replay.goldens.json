@@ -1,0 +1,116 @@
+{
+  "atom": "net/atoms/std-app-route.lolo",
+  "trait": "AppRoute",
+  "note": "The HTTP door to central-host apps: REQUEST_RECEIVED records a request under the prefix, ROUTE_EXTERNAL (the router's hand-off) turns a valid events path into APP_REQUEST, and APP_ANSWERED / APP_FAILED answer it. Bodies are asserted through RESPOND.",
+  "cases": [
+    {
+      "id": "events-path-is-recorded-with-its-app-and-orbital",
+      "entity": { "pending": [] },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "REQUEST_RECEIVED",
+          "payload": { "requestId": 7, "method": "POST", "path": "/apps/shop/api/orbitals/Cart/events", "query": "", "headers": {}, "peer": "1.2.3.4:5000" },
+          "expect": { "fired": true, "neverEmits": ["RESPOND", "APP_REQUEST"] }
+        }
+      ]
+    },
+    {
+      "id": "handed-off-events-path-emits-app-request-with-the-parsed-app-and-address",
+      "entity": {
+        "pending": [
+          { "requestId": 7, "key": "7", "valid": true, "app": "shop", "orbital": "Cart", "body": "eyJldmVudCI6IkFERCIsInRhcmdldFRyYWl0IjoiQ2FydEZsb3ciLCJwYXlsb2FkIjp7InNrdSI6ImEifX0=", "responseHeaders": [] }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": { "requestId": 7, "responseHeaders": [] },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_REQUEST",
+                "payload": {
+                  "key": "7",
+                  "app": "shop",
+                  "address": "Cart.CartFlow.ADD",
+                  "payload": { "sku": "a" },
+                  "options": { "wire": true, "orbital": "Cart", "targetTrait": "CartFlow", "entityId": "", "event": "ADD", "traits": null, "mount": [], "route": "", "clientId": "", "locale": "", "delivery": {}, "dispatchLog": {}, "entityByTrait": {}, "framesSince": null }
+                }
+              }
+            ],
+            "neverEmits": ["RESPOND"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "app-answered-answers-200-with-the-result",
+      "entity": {
+        "pending": [
+          { "requestId": 7, "key": "7", "valid": true, "app": "shop", "orbital": "Cart", "body": "", "responseHeaders": [] }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "APP_ANSWERED",
+          "payload": { "key": "7", "result": { "success": true, "transitioned": true } },
+          "expect": {
+            "fired": true,
+            "emits": [
+              { "event": "RESPOND", "payload": { "requestId": 7, "status": 200 } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "app-failed-answers-502",
+      "entity": {
+        "pending": [
+          { "requestId": 7, "key": "7", "valid": true, "app": "shop", "orbital": "Cart", "body": "", "responseHeaders": [] }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "APP_FAILED",
+          "payload": { "key": "7", "error": "no app" },
+          "expect": {
+            "fired": true,
+            "emits": [
+              { "event": "RESPOND", "payload": { "requestId": 7, "status": 502 } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-bad-path-answers-404",
+      "entity": { "pending": [] },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "REQUEST_RECEIVED",
+          "payload": { "requestId": 8, "method": "POST", "path": "/apps/shop/other", "query": "", "headers": {}, "peer": "1.2.3.4:5000" },
+          "expect": { "fired": true }
+        },
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": { "requestId": 8, "responseHeaders": [] },
+          "expect": {
+            "fired": true,
+            "emits": [
+              { "event": "RESPOND", "payload": { "requestId": 8, "status": 404 } }
+            ],
+            "neverEmits": ["APP_REQUEST"]
+          }
+        }
+      ]
+    }
+  ]
+}

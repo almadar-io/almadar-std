@@ -9,6 +9,7 @@ orbital HttpFrameOrbital {
     id : string!
     ;; Each run moves the frame, so a run framing the same bytes again in one dispatch is progress, not a cycle.
     runs : number = 0
+    seq : number @description "The frames the framer has emitted, counted: each carries its number, so two frames with the same text are two deliveries (EXEC-QUEUE-4 collapses only identical payloads)." = 0
   }
 
   trait HttpFrame -> HttpFrameRun [optimistic] {
@@ -29,8 +30,9 @@ orbital HttpFrameOrbital {
         (let ((end (bytes/index-of @payload.data (bytes/from-string "\n") 0)))
           (let ((line (str/trimEnd (default (bytes/to-string (bytes/slice @payload.data 0 @end)) ""))))
             (do
-              (if (!= @line "") (emit FRAME_EVENT { key: @payload.key, data: @line, event: null, id: null }) (emit FRAME_NOOP {}))
+              (if (!= @line "") (emit FRAME_EVENT { key: @payload.key, data: @line, event: null, id: null, seq: (+ @entity.seq 1) }) (emit FRAME_NOOP {}))
               (emit FRAME_STEP { key: @payload.key, stream: @payload.stream, data: (bytes/slice @payload.data (+ @end 1)) }))))
+        (set @entity.seq (+ @entity.seq 1))
       FRAME_STEP -> ready when (and (= @payload.stream "sse") (let ((a (bytes/index-of @payload.data (bytes/from-string "\n\n") 0)) (b (bytes/index-of @payload.data (bytes/from-string "\r\n\r\n") 0))) (and (< @a 0) (< @b 0))))
         (emit FRAME_DRAINED { key: @payload.key, rest: @payload.data })
       FRAME_STEP -> ready when (and (= @payload.stream "sse") (let ((a (bytes/index-of @payload.data (bytes/from-string "\n\n") 0)) (b (bytes/index-of @payload.data (bytes/from-string "\r\n\r\n") 0))) (and (or (>= @a 0) (>= @b 0)) (== (bytes/to-string (bytes/slice @payload.data 0 (if (< @a 0) @b (if (< @b 0) @a (if (< @a @b) @a @b))))) null))))
@@ -40,14 +42,16 @@ orbital HttpFrameOrbital {
           (let ((useA (or (< @b 0) (and (>= @a 0) (< @a @b)))))
             (let ((end (if @useA @a @b)))
               (do
-                (emit FRAME_BLOCK { key: @payload.key, block: (str/replaceAll (default (bytes/to-string (bytes/slice @payload.data 0 @end)) "") "\r\n" "\n") })
+                (emit FRAME_BLOCK { key: @payload.key, seq: (+ @entity.seq 1), block: (str/replaceAll (default (bytes/to-string (bytes/slice @payload.data 0 @end)) "") "\r\n" "\n") })
                 (emit FRAME_STEP { key: @payload.key, stream: @payload.stream, data: (bytes/slice @payload.data (+ @end (if @useA 2 4))) })))))
+        (set @entity.seq (+ @entity.seq 1))
 
       FRAME_BLOCK -> ready when (let ((rows (array/filter (str/split @payload.block "\n") (fn l (and (!= @l "") (not (str/startsWith @l ":")))))))
         (array/some @rows (fn l (= (default (array/first (str/split @l ":")) "") "data"))))
         (let ((rows (array/filter (str/split @payload.block "\n") (fn l (and (!= @l "") (not (str/startsWith @l ":")))))))
           (emit FRAME_EVENT {
             key: @payload.key,
+            seq: @payload.seq,
             data: (str/join (array/map (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "data"))) (fn l (let ((v (str/join (array/drop (str/split @l ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v)))) "\n"),
             event: (let ((ev (array/last (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "event")))))) (if (== @ev null) null (let ((v (str/join (array/drop (str/split @ev ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v)))),
             id: (let ((iv (array/last (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "id")))))) (if (== @iv null) null (let ((v (str/join (array/drop (str/split @iv ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v))))
@@ -62,6 +66,7 @@ orbital HttpFrameOrbital {
         data : string!
         event : string?
         id : string?
+        seq : number!
       }
         @description "One complete frame of the stream, in order."
         @tier "primary"
@@ -88,6 +93,7 @@ orbital HttpFrameOrbital {
       FRAME_BLOCK -> internal {
         key : string!
         block : string!
+        seq : number!
       }
         @description "Internal: one event stream block to deliver."
         @tier "internal"

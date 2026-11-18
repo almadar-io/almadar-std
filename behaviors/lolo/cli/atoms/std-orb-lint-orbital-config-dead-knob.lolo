@@ -4,7 +4,7 @@ app std-orb-lint-orbital-config-dead-knob [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-orbital-config-dead-knob — the `orb lint orbital-config-dead-knob <file>` command, the port of ORB_O_CONFIG_DEAD_KNOB (composition/orbital_config.rs). It resolves the file with program/read and reports each declared program-level or orbital-level config knob that no trait publishes: a trait config field whose default (or any value nested in it), forwardedFrom or nestedForwardedFrom is exactly `@config.<knob>`, closed over orbital knobs whose forwardedFrom chains out to an app knob. Findings (status 500, exit 1) carry the Rust message and suggestion. Clean answers `lint orbital-config-dead-knob: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-orbital-config-dead-knob — the `orb lint orbital-config-dead-knob <file>` command, the port of ORB_O_CONFIG_DEAD_KNOB (composition/orbital_config.rs). It resolves the file with program/read and reports each declared program-level or orbital-level config knob that no trait publishes: a trait config field whose default (or any value nested in it), forwardedFrom or nestedForwardedFrom is exactly `@config.<knob>`, or a protocol page whose address read it (its `addressForwardedFrom`, recorded by resolution), closed over orbital knobs whose forwardedFrom chains out to an app knob. Findings (status 500, exit 1) carry the Rust message and suggestion. Clean answers `lint orbital-config-dead-knob: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-orbital-config-dead-knob"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -15,6 +15,7 @@ type DeadKnobTrait = { config : Map string DeadKnobField? }
 type DeadKnobOrbital = { name : string, config : Map string DeadKnobField?, traits : [DeadKnobTrait] }
 type DeadKnobProgram = { config : Map string DeadKnobField?, orbitals : [DeadKnobOrbital] }
 type DeadKnobLink = { name : string!, src : string! }
+type DeadKnobPage = { addressForwardedFrom : [string] }
 
 type DeadKnobAt = { path : string!, node : string! }
 type DeadKnobAtIdx = Map string [DeadKnobAt]
@@ -44,7 +45,7 @@ orbital OrbLintOrbitalConfigDeadKnobOrbital {
                 (links : [DeadKnobLink] (array/flatten (array/map @orbitals (fn orb (array/map (object/keys (object/get @orb "config" {})) (fn k { name: @k, src: (let ((fd (object/get (object/get @orb "config" {}) @k))) (if (= @fd null) "" (object/get @fd "forwardedFrom" ""))) })))))))
             (let ((declared (array/unique (array/concat (object/keys @appCfg) @orbNames)))
                   (orbLinks : [DeadKnobLink] (array/filter @links (fn o (and (str/startsWith (object/get @o "src") (quote "@config.")) (> (str/len (object/get @o "src")) 8) (not (str/includes (str/slice (object/get @o "src") 8) ".")))))))
-              (let ((toks (array/unique (array/flatten (array/map @fields (fn f (array/concat [(object/get @f "forwardedFrom" "")] (object/get @f "nestedForwardedFrom" []) (array/map (array/flatten (object/values (default (as (tree/index (object/get @f "default" null) [] { prefixes: [(quote "@config.")] }) DeadKnobAtIdx) {}))) (fn h (object/get @h "node" ""))))))))) (direct (array/filter @declared (fn k (array/includes @toks (str/concat (quote "@config.") @k))))))
+              (let ((toks (array/unique (array/concat (array/flatten (array/map @orbitals (fn orb (let ((pgs : [DeadKnobPage] (object/get @orb "pages" []))) (array/flatten (array/map @pgs (fn pg (object/get @pg "addressForwardedFrom" [])))))))) (array/flatten (array/map @fields (fn f (array/concat [(object/get @f "forwardedFrom" "")] (object/get @f "nestedForwardedFrom" []) (array/map (array/flatten (object/values (default (as (tree/index (object/get @f "default" null) [] { prefixes: [(quote "@config.")] }) DeadKnobAtIdx) {}))) (fn h (object/get @h "node" "")))))))))) (direct (array/filter @declared (fn k (array/includes @toks (str/concat (quote "@config.") @k))))))
                 (let ((published (array/reduce (array/range 0 (+ 1 (array/len @orbLinks))) @direct (fn (acc i)
                                     (array/unique (array/concat @acc (array/map (array/filter @orbLinks (fn o (array/includes @acc (object/get @o "name")))) (fn o (str/slice (object/get @o "src") 8)))))))))
                   (array/concat

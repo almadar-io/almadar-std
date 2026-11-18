@@ -1,169 +1,200 @@
 {
- "atom": "store/atoms/std-graph.lolo",
- "trait": "GraphStore",
- "cases": [
-  {
-   "id": "a-batch-that-wrote-fewer-ops-than-it-held-fails-instead-of-answering-written",
-   "entity": {
-    "id": "g:n",
-    "reqOp": "recompute",
-    "reqGraphId": "g"
-   },
-   "steps": [
+  "atom": "store/atoms/std-graph.lolo",
+  "trait": "GraphStore",
+  "cases": [
     {
-     "from": "writing",
-     "event": "GraphBatchWritten",
-     "payload": {
-      "completedCount": 0,
-      "totalCount": 3
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GRAPH_FAILED",
-        "payload": {
-         "error": "the graph write landed 0 of 3 operations",
-         "graphId": "g"
+      "id": "a-batch-that-wrote-fewer-ops-than-it-held-fails-instead-of-answering-written",
+      "entity": {
+        "id": "g:n",
+        "reqOp": "recompute",
+        "reqGraphId": "g"
+      },
+      "steps": [
+        {
+          "from": "writing",
+          "event": "GraphBatchWritten",
+          "payload": {
+            "completedCount": 0,
+            "totalCount": 3
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GRAPH_FAILED",
+                "payload": {
+                  "error": "the graph write landed 0 of 3 operations",
+                  "graphId": "g"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GRAPH_WRITTEN"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "GRAPH_WRITTEN"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-batch-that-wrote-every-op-answers-written",
-   "entity": {
-    "id": "g:n",
-    "reqOp": "recompute",
-    "reqGraphId": "g"
-   },
-   "steps": [
+    },
     {
-     "from": "writing",
-     "event": "GraphBatchWritten",
-     "payload": {
-      "completedCount": 3,
-      "totalCount": 3
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GRAPH_WRITTEN",
-        "payload": {
-         "op": "recompute",
-         "graphId": "g"
+      "id": "control-a-batch-that-wrote-every-op-answers-written",
+      "entity": {
+        "id": "g:n",
+        "reqOp": "recompute",
+        "reqGraphId": "g"
+      },
+      "steps": [
+        {
+          "from": "writing",
+          "event": "GraphBatchWritten",
+          "payload": {
+            "completedCount": 3,
+            "totalCount": 3
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GRAPH_WRITTEN",
+                "payload": {
+                  "op": "recompute",
+                  "graphId": "g"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GRAPH_FAILED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "GRAPH_FAILED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-single-row-write-answers-written",
-   "entity": {
-    "id": "g:n",
-    "reqOp": "recompute",
-    "reqGraphId": "g"
-   },
-   "steps": [
+    },
     {
-     "from": "writing",
-     "event": "GraphWritten",
-     "payload": {},
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GRAPH_WRITTEN",
-        "payload": {
-         "op": "recompute",
-         "graphId": "g"
+      "id": "control-a-single-row-write-answers-written",
+      "entity": {
+        "id": "g:n",
+        "reqOp": "recompute",
+        "reqGraphId": "g"
+      },
+      "steps": [
+        {
+          "from": "writing",
+          "event": "GraphWritten",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GRAPH_WRITTEN",
+                "payload": {
+                  "op": "recompute",
+                  "graphId": "g"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GRAPH_FAILED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "GRAPH_FAILED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-node-whose-properties-carry-an-instant-is-accepted",
-   "note": "GraphPropertyValue has an instant arm; an instant crosses the wire as ISO text or epoch ms",
-   "config": {
-    "nodeTypes": [
-     "concept"
-    ]
-   },
-   "entity": {
-    "id": "g:n"
-   },
-   "steps": [
+    },
     {
-     "from": "idle",
-     "event": "GRAPH_ADD_NODE",
-     "payload": {
-      "graphId": "g",
-      "nodeId": "n1",
-      "nodeType": "concept",
-      "name": "N",
-      "properties": {
-       "seenAt": "2026-11-07T00:00:00.000Z",
-       "seenAtMs": 1700000000000
-      }
-     },
-     "expect": {
-      "state": "writing",
-      "neverEmits": [
-       "GRAPH_REJECTED"
+      "id": "a-node-whose-properties-carry-an-instant-is-accepted",
+      "note": "GraphPropertyValue has an instant arm; an instant crosses the wire as ISO text or epoch ms",
+      "config": {
+        "nodeTypes": [
+          "concept"
+        ]
+      },
+      "entity": {
+        "id": "g:n"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GRAPH_ADD_NODE",
+          "payload": {
+            "graphId": "g",
+            "nodeId": "n1",
+            "nodeType": "concept",
+            "name": "N",
+            "properties": {
+              "seenAt": "2026-11-07T00:00:00.000Z",
+              "seenAtMs": 1700000000000
+            }
+          },
+          "expect": {
+            "state": "writing",
+            "neverEmits": [
+              "GRAPH_REJECTED"
+            ]
+          }
+        }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-node-whose-properties-carry-a-string-is-accepted",
-   "note": "control",
-   "config": {
-    "nodeTypes": [
-     "concept"
-    ]
-   },
-   "entity": {
-    "id": "g:n"
-   },
-   "steps": [
+    },
     {
-     "from": "idle",
-     "event": "GRAPH_ADD_NODE",
-     "payload": {
-      "graphId": "g",
-      "nodeId": "n1",
-      "nodeType": "concept",
-      "name": "N",
-      "properties": {
-       "seenAt": "x"
-      }
-     },
-     "expect": {
-      "state": "writing",
-      "neverEmits": [
-       "GRAPH_REJECTED"
+      "id": "control-a-node-whose-properties-carry-a-string-is-accepted",
+      "note": "control",
+      "config": {
+        "nodeTypes": [
+          "concept"
+        ]
+      },
+      "entity": {
+        "id": "g:n"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GRAPH_ADD_NODE",
+          "payload": {
+            "graphId": "g",
+            "nodeId": "n1",
+            "nodeType": "concept",
+            "name": "N",
+            "properties": {
+              "seenAt": "x"
+            }
+          },
+          "expect": {
+            "state": "writing",
+            "neverEmits": [
+              "GRAPH_REJECTED"
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "an-added-node-is-written-with-its-creation-time",
+      "config": {
+        "nodeTypes": [
+          "Concept"
+        ]
+      },
+      "entity": {
+        "id": "g:n"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GRAPH_ADD_NODE",
+          "payload": {
+            "graphId": "g",
+            "nodeId": "n1",
+            "nodeType": "Concept",
+            "name": "N"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "persist",
+                "status": "executed"
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

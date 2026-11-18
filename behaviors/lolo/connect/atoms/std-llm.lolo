@@ -365,7 +365,7 @@ orbital LlmOrbital {
             (emit LLM_FIRST_BYTE_STOP { key: @payload.key })
             (set @entity.fbArmed (array/filter @entity.fbArmed (fn r (!= @r.key @payload.key))))))
       LLM_CHAT_WIRE_STREAM -> idle
-        (emit LLM_CHAT_STREAM_MSG { data: @payload.data, key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+        (emit LLM_CHAT_STREAM_MSG { data: @payload.data, seq: @payload.seq, key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
         (when (array/some @entity.fbArmed (fn r (= @r.key @payload.key)))
           (do
             (emit LLM_FIRST_BYTE_STOP { key: @payload.key })
@@ -1329,6 +1329,7 @@ orbital LlmOrbital {
         event : string
         id : string
         key : string!
+        seq : number?
       }
         @description "Internal: one server-sent message of a streamed chat reply."
         @tier "secondary"
@@ -1585,6 +1586,7 @@ orbital LlmOrbital {
         data : string!
         event : string?
         id : string?
+        seq : number?
       }
         @description "One complete frame of a streamed reply: std-http-client HTTP_STREAM_EVENT."
       LLM_EMBED_WAITED {

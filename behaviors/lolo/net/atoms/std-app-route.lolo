@@ -1,0 +1,139 @@
+app std-app-route [
+  version: "1.0.0",
+  description: "std-app-route — the HTTP door to apps hosted by the central host (std-program-host ProgramApps). A request std-http-router handed off (its externalPrefixes name prefix) whose method is POST and whose path is <prefix><app>/api/orbitals/<Orbital>/events is an events request for the app <app>: its body is the EventRequest std-http-dispatch accepts ({ event, targetTrait, entityId, payload, clientId, locale, traits, mount, route, delivery, dispatchLog, entityByTrait, framesSince }) and it is emitted as APP_REQUEST { key, app, address, payload, options } with the address <Orbital>.<targetTrait>.<event>, the key the request id as text and the options of a wire dispatch (wire: true), for ProgramApps. APP_ANSWERED under that key answers 200 with the result, the EventResponse wire, as the JSON body; APP_FAILED answers 502 { error, code: APP_FAILED }; a body that is not JSON answers 400 text/plain; any other path under the prefix answers 404 { error, code: NOT_FOUND }. It names no app: the app is the path's.",
+]
+type AppRouteHeader = { name : string!, value : string! }
+type AppRouteJson = string | number | boolean | [AppRouteJson?] | Map string AppRouteJson?
+type AppRouteBody = { event : string, targetTrait : string, entityId : string, payload : AppRouteJson, clientId : string, locale : string, traits : [AppRouteJson], mount : [AppRouteJson], route : string, delivery : AppRouteJson, dispatchLog : AppRouteJson, entityByTrait : AppRouteJson, framesSince : number }
+type AppRoutePending = { requestId : number!, key : string!, valid : boolean!, app : string!, orbital : string!, body : bytes!, responseHeaders : [AppRouteHeader]! }
+
+orbital AppRouteOrbital {
+  entity AppRouteRun [runtime] {
+    id : string!
+    pending : [AppRoutePending] @description "App requests received and not yet answered, each with its parsed path." = []
+  }
+
+  trait AppRoute -> AppRouteRun [optimistic] {
+    initial: serving
+
+    config {
+      prefix : string = "/apps/"
+        @label "App prefix"
+        @description "A path starting with this is an app request; the router's externalPrefixes names the same prefix. What follows it is <app>/api/orbitals/<Orbital>/events."
+        @tier "infra"
+    }
+
+    state serving {
+      INIT -> serving
+
+      REQUEST_RECEIVED -> serving when (str/startsWith @payload.path @config.prefix)
+        (let ((parts (str/split (str/slice @payload.path (str/len @config.prefix)) "/")))
+          (let ((ok (and (= (str/upper @payload.method) "POST") (= (array/len @parts) 5) (!= (array/nth @parts 0) "") (= (array/nth @parts 1) "api") (= (array/nth @parts 2) "orbitals") (!= (array/nth @parts 3) "") (= (array/nth @parts 4) "events"))))
+            (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, key: (json/stringify @payload.requestId), valid: @ok, app: (if @ok (array/nth @parts 0) ""), orbital: (if @ok (array/nth @parts 3) ""), body: (default @payload.body (bytes/from-string "")), responseHeaders: [] }))))
+
+      ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (not @p.valid))))
+        (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+
+      ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) @p.valid)))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
+        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId)))))
+          (when (!= @p null) (let ((text (bytes/to-string (object/get @p "body"))))
+            (if (== @text null)
+              (do
+                (emit RESPOND { requestId: @payload.requestId, status: 400, headers: (array/append @payload.responseHeaders { name: "content-type", value: "text/plain; charset=utf-8" }), body: (bytes/from-string "Failed to parse the request body as JSON") })
+                (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @payload.requestId)))))
+              (let ((b (default (json/parse @text AppRouteBody) {})))
+                (emit APP_REQUEST {
+                  key: (object/get @p "key"),
+                  app: (object/get @p "app"),
+                  address: (str/concat (object/get @p "orbital") "." (object/get @b "targetTrait" "") "." (object/get @b "event" "")),
+                  payload: (object/get @b "payload" {}),
+                  options: {
+                    wire: true,
+                    orbital: (object/get @p "orbital"),
+                    targetTrait: (object/get @b "targetTrait" ""),
+                    entityId: (object/get @b "entityId" ""),
+                    event: (object/get @b "event" ""),
+                    traits: (object/get @b "traits" null),
+                    mount: (object/get @b "mount" []),
+                    route: (object/get @b "route" ""),
+                    clientId: (object/get @b "clientId" ""),
+                    locale: (object/get @b "locale" ""),
+                    delivery: (object/get @b "delivery" {}),
+                    dispatchLog: (object/get @b "dispatchLog" {}),
+                    entityByTrait: (object/get @b "entityByTrait" {}),
+                    framesSince: (object/get @b "framesSince" null)
+                  }
+                }))))))
+
+      REQUEST_ANSWERED -> serving when (array/some @entity.pending (fn p (= @p.requestId @payload.requestId)))
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+
+      APP_ANSWERED -> serving when (array/some @entity.pending (fn p (and @p.valid (= @p.key @payload.key))))
+        (let ((p (array/find @entity.pending (fn q (= @q.key @payload.key)))))
+          (when (!= @p null) (emit RESPOND { requestId: (object/get @p "requestId"), status: 200, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) })))
+        (set @entity.pending (array/filter @entity.pending (fn q (!= @q.key @payload.key))))
+
+      APP_FAILED -> serving when (array/some @entity.pending (fn p (and @p.valid (= @p.key @payload.key))))
+        (let ((p (array/find @entity.pending (fn q (= @q.key @payload.key)))))
+          (when (!= @p null) (emit RESPOND { requestId: (object/get @p "requestId"), status: 502, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: "APP_FAILED" })) })))
+        (set @entity.pending (array/filter @entity.pending (fn q (!= @q.key @payload.key))))
+    }
+
+    emits {
+      RESPOND -> external {
+        requestId : number!
+        status : number!
+        headers : [AppRouteHeader]!
+        body : bytes!
+      }
+        @description "The answer to a request under the prefix."
+      APP_REQUEST -> external {
+        key : string!
+        app : string!
+        address : string!
+        payload : AppRouteJson
+        options : Map string AppRouteJson?
+      }
+        @description "An events request for a hosted app, for std-program-host ProgramApps."
+    }
+
+    listens {
+      REQUEST_RECEIVED {
+        requestId : number!
+        method : string!
+        path : string!
+        query : string
+        headers : Map string string
+        body : bytes
+        peer : string
+      }
+        @description "A request received by std-http1; only paths under prefix are kept."
+      ROUTE_EXTERNAL {
+        requestId : number!
+        responseHeaders : [AppRouteHeader]!
+      }
+        @description "std-http-router handed the request off, with the headers its answer carries."
+      REQUEST_ANSWERED {
+        requestId : number!
+        status : number!
+        headers : [AppRouteHeader]
+        body : string!
+      }
+        @description "The router or the static server answered the request itself; it is dropped."
+      APP_ANSWERED {
+        key : string!
+        result : AppRouteJson
+      }
+        @description "A hosted app's answer under the request's key."
+      APP_FAILED {
+        key : string!
+        error : string!
+      }
+        @description "A hosted app's failure under the request's key."
+    }
+  }
+
+  page boot as AppRoutePage -> AppRoute
+}

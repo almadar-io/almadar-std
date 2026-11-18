@@ -31,7 +31,7 @@ orbital GraphOrbital {
     embedding : [number] @description "The embedding of the node's text; nearest answers over it, so the field is literally named embedding." @synonyms "vector, meaning vector"
     embeddedText : string @description "The exact text the embedding was made from." @synonyms "indexed text, document" = ""
     embeddingModel : string @description "The model that made the embedding; a model change re-indexes every row before it is switched on." @synonyms "vector model, embedder" = ""
-    createdAt : string
+    createdAt : string! @description "When the row was created; every graph query is ordered by it, so a row without it is never listed."
     updatedAt : string
     reqOp : string @intrinsic = ""
     reqGraphId : string @intrinsic = ""
@@ -69,7 +69,7 @@ orbital GraphOrbital {
     sourceGraphId : string @description "The graph the source node lives in when it is not this edge's graph; empty when the edge stays inside its graph." @synonyms "source graph, from graph" = ""
     targetGraphId : string @description "The graph the target node lives in when it is not this edge's graph; empty when the edge stays inside its graph." @synonyms "target graph, to graph" = ""
     metadata : Map string string @description "Free text details of the edge." @synonyms "extra, notes"
-    createdAt : string
+    createdAt : string! @description "When the row was created; every graph query is ordered by it, so a row without it is never listed."
   }
 
   trait GraphStore -> GraphNode {
@@ -94,6 +94,8 @@ orbital GraphOrbital {
           dependencyIds: []
           dependencyClosure: []
           properties: (if (= ?properties null) {} ?properties)
+          createdAt: @now
+          updatedAt: @now
         } { emit: { success: GraphWritten, failure: GraphFailed } })
       GRAPH_ADD_NODE -> idle when (not (array/includes @config.nodeTypes ?nodeType))
         (emit GRAPH_REJECTED { reason: "unknown-node-type", graphId: ?graphId, subject: ?nodeId })
@@ -273,7 +275,7 @@ orbital GraphOrbital {
       GraphComputed -> idle when (and (= @entity.reqOp "addEdge") @entity.edgeEndpointsExist (not @entity.edgeDuplicate) @entity.engineCyclic)
         (emit GRAPH_REJECTED { reason: "cycle", graphId: @entity.reqGraphId, subject: (str/concat "rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget) })
       GraphComputed -> writing when (and (= @entity.reqOp "addEdge") (not @entity.engineCyclic) @entity.edgeEndpointsExist (not @entity.edgeDuplicate))
-        (persist batch (array/concat [["create" "GraphEdge" { id: (str/concat @entity.reqGraphId ":rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget), graphId: @entity.reqGraphId, relId: (str/concat "rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget), source: @entity.reqSource, target: @entity.reqTarget, edgeType: @entity.reqEdgeType, direction: @entity.reqDirection, strength: @entity.reqStrength, metadata: @entity.reqMetadata }]] (array/map @entity.pendingUpdates (fn u ["update" "GraphNode" (object/get @u rowId "") { depth: (object/get @u depth 0), dependencyIds: (let ((noStrs : GraphStrings [])) (object/get @u dependencyIds @noStrs)), dependencyClosure: (let ((noStrs : GraphStrings [])) (object/get @u dependencyClosure @noStrs)) }]))) { emit: { success: GraphBatchWritten, failure: GraphFailed } })
+        (persist batch (array/concat [["create" "GraphEdge" { id: (str/concat @entity.reqGraphId ":rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget), graphId: @entity.reqGraphId, relId: (str/concat "rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget), source: @entity.reqSource, target: @entity.reqTarget, edgeType: @entity.reqEdgeType, direction: @entity.reqDirection, strength: @entity.reqStrength, metadata: @entity.reqMetadata, createdAt: @now }]] (array/map @entity.pendingUpdates (fn u ["update" "GraphNode" (object/get @u rowId "") { depth: (object/get @u depth 0), dependencyIds: (let ((noStrs : GraphStrings [])) (object/get @u dependencyIds @noStrs)), dependencyClosure: (let ((noStrs : GraphStrings [])) (object/get @u dependencyClosure @noStrs)) }]))) { emit: { success: GraphBatchWritten, failure: GraphFailed } })
 
       GraphComputed -> writing when (and (= @entity.reqOp "removeEdge") @entity.edgeDuplicate)
         (persist batch (array/concat [["delete" "GraphEdge" (str/concat @entity.reqGraphId ":rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget)]] (array/map @entity.pendingUpdates (fn u ["update" "GraphNode" (object/get @u rowId "") { depth: (object/get @u depth 0), dependencyIds: (let ((noStrs : GraphStrings [])) (object/get @u dependencyIds @noStrs)), dependencyClosure: (let ((noStrs : GraphStrings [])) (object/get @u dependencyClosure @noStrs)) }]))) { emit: { success: GraphBatchWritten, failure: GraphFailed } })

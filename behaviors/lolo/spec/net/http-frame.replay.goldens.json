@@ -444,6 +444,80 @@
           }
         }
       ]
+    },
+    {
+      "id": "two-identical-blocks-in-one-read-are-two-frames",
+      "steps": [
+        {
+          "event": "FRAME_RUN",
+          "payload": {
+            "key": "k1",
+            "stream": "sse",
+            "data": "ZGF0YTogIgoKZGF0YTogIgoK",
+            "final": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FRAME_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "\"",
+                  "seq": 1
+                }
+              },
+              {
+                "event": "FRAME_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "\"",
+                  "seq": 2
+                }
+              }
+            ],
+            "emitCounts": {
+              "FRAME_EVENT": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-identical-lines-in-one-read-are-two-frames",
+      "steps": [
+        {
+          "event": "FRAME_RUN",
+          "payload": {
+            "key": "k1",
+            "stream": "jsonl",
+            "data": "e30Ke30K",
+            "final": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FRAME_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "{}",
+                  "seq": 1
+                }
+              },
+              {
+                "event": "FRAME_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "{}",
+                  "seq": 2
+                }
+              }
+            ],
+            "emitCounts": {
+              "FRAME_EVENT": 2
+            }
+          }
+        }
+      ]
     }
   ]
 }

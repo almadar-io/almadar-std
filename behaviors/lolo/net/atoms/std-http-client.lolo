@@ -794,7 +794,7 @@ orbital HttpClientOrbital {
         (set @entity.dec @payload.rest)
         (emit HC_AFTER { n: (+ @entity.total (bytes/length @entity.buf)) })
       HC_FRAME_EVENT -> reading
-        (emit HTTP_STREAM_EVENT { key: @payload.key, data: @payload.data, event: @payload.event, id: @payload.id })
+        (emit HTTP_STREAM_EVENT { key: @payload.key, data: @payload.data, event: @payload.event, id: @payload.id, seq: @payload.seq })
       HC_FRAME_FAILED -> reading
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
@@ -836,6 +836,7 @@ orbital HttpClientOrbital {
         data : string!
         event : string?
         id : string?
+        seq : number?
       }
         @description "One complete frame of a streamed response (sse or jsonl)."
         @tier "primary"
@@ -956,6 +957,7 @@ orbital HttpClientOrbital {
         data : string!
         event : string?
         id : string?
+        seq : number?
       }
       HC_DRAINED {
         rest : bytes!
