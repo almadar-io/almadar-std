@@ -17,8 +17,7 @@ type HostFsGrant = { glob : string!, modes : [string]! }
 type HostNetGrant = { target : string!, kinds : [string]! }
 type AppValue = string | number | boolean | [AppValue?] | Map string AppValue?
 type AppLoaded = { name : string!, guest : string!, lastUsedMs : instant!, loading : boolean! }
-type AppOptions = Map string AppValue
-type AppWaiting = { key : string!, app : string!, address : string!, payload : AppValue, options : AppOptions }
+type AppWaiting = { key : string!, app : string!, address : string!, payload : AppValue, options : Map string AppValue }
 type HostGrants = { fs : [HostFsGrant]?, exec : [string]?, net : [HostNetGrant]?, credentials : [string]? }
 
 orbital ProgramHostOrbital {
@@ -195,13 +194,13 @@ orbital ProgramHostOrbital {
         (program/open (if (= (array/len (default @payload.result.lazy [])) 0) @payload.result.program (object/set @payload.result.program "lazyPrograms" (object/fromEntries (array/map (default @payload.result.lazy []) (fn l [(object/get (default (array/find (default @payload.result.program.lazyPages []) (fn p (= @p.orbital @l.orbital))) { orbital: "", orbRef: "" }) "orbRef") @l.program]))))) { grants: {} } { key: @payload.key emit: { success: APP_OPENED, failure: APP_LOAD_FAILED } })
       APP_OPENED -> serving
         (set @entity.apps (array/map @entity.apps (fn x (if (= @x.name @payload.key) { name: @x.name guest: @payload.result.guest lastUsedMs: (time/now) loading: false } @x))))
-        (emit APP_DRAIN { app: @payload.key })
+        (emit APP_DRAIN { app: @payload.key, guest: @payload.result.guest })
       APP_DRAIN -> serving when (array/some @entity.waiting (fn w (= @w.app @payload.app)))
         (let ((w (default (array/find @entity.waiting (fn x (= @x.app @payload.app))) { key: "" app: "" address: "" payload: "" options: {} })))
           (do
             (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
-            (emit APP_REQUEST { key: @w.key app: @w.app address: @w.address payload: (as @w.payload AppValue) options: (as @w.options AppOptions) })
-            (emit APP_DRAIN { app: @payload.app })))
+            (program/dispatch @w.address @w.payload (object/merge @w.options { guest: @payload.guest key: @w.key emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } }))
+            (emit APP_DRAIN { app: @payload.app, guest: @payload.guest })))
       APP_LOAD_FAILED -> serving
         (set @entity.apps (array/filter @entity.apps (fn x (!= @x.name @payload.key))))
         (emit APP_FAIL_DRAIN { app: @payload.key, error: (default @payload.error "") })
@@ -243,9 +242,6 @@ orbital ProgramHostOrbital {
         @description "An APP_REQUEST that could not be answered: no app named, the app's file unreadable or refused at open, or the dispatch failed."
       APP_UNLOADED -> external { app : string! }
         @description "A hosted app was closed: by APP_UNLOAD or because it sat unused past idleMs."
-      APP_REQUEST { key : string!, app : string!, address : string!, payload : AppValue, options : AppOptions }
-        @description "Internal: a queued request replayed once its app has opened."
-        @tier "internal"
       APP_PROGRAM_READ { result : HostResolved!, key : string }
         @description "An app's program resolved."
         @tier "internal"
@@ -255,7 +251,7 @@ orbital ProgramHostOrbital {
       APP_LOAD_FAILED { error : string, key : string }
         @description "An app's read, resolve or open failed."
         @tier "internal"
-      APP_DRAIN { app : string! }
+      APP_DRAIN { app : string!, guest : string! }
         @description "Replay the next request queued for an app that just opened."
         @tier "internal"
       APP_FAIL_DRAIN { app : string!, error : string! }
@@ -273,7 +269,7 @@ orbital ProgramHostOrbital {
     }
 
     listens {
-      APP_REQUEST { key : string!, app : string!, address : string!, payload : AppValue, options : AppOptions }
+      APP_REQUEST { key : string!, app : string!, address : string!, payload : AppValue, options : Map string AppValue }
         @description "Run an event on a hosted app, loading the app from appsDir when it is not open."
       APP_UNLOAD { app : string! }
         @description "Close a hosted app and forget it."
