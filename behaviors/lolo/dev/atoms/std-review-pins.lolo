@@ -1,7 +1,7 @@
 app std-review-pins [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-review-pins — reviewers leave feedback and questions pinned on a live view. ReviewPinsBoard wraps the trait its contentTrait knob names in the annotated-media pattern's content mode: the view stays usable, and with Comment mode on a click drops a numbered pin at that spot (x and y as percentages of the view) on the route the view shows. A pin is one ReviewPin row: the subject it belongs to (REVIEW_OPEN { subject } names it, for example a review name and its version), the route, x, y, its kind (feedback or question), the text, its author (the signed-in viewer) and whether it is open or resolved; a reply is a row whose parentId names its pin. ROUTE_SEEN { route } tells the board which route the view is on, so only that route's pins are drawn. The side panel lists the route's pins (resolved ones only when shown), opens one with its replies, takes a reply, and resolves or reopens it. The atom states no access policy of its own: the composing program declares who may read and write ReviewPin rows."
+  description: "std-review-pins — reviewers leave feedback and questions pinned on a live view. ReviewPinsBoard wraps the trait its contentTrait knob names in the annotated-media pattern's content mode, so the view stays usable, and puts a Feedback tab on the right edge with the subject's total comment count. The tab opens a side drawer that lists every comment of the subject on every route (resolved ones only when shown), each naming its route. Add comment closes the drawer and waits for one click on the view: the click drops a pin there (x and y as percentages of the view) on the route the view shows and opens the drawer on its text; Cancel on the tab ends the wait. Pins are not drawn on the view until one is opened: opening a comment draws only its pin, and when the comment is on another route the board emits GUEST_NAVIGATE { guest, route } so the guest that shows the view goes there (ROUTE_SEEN { route, guest } names the view's route and guest). An open comment shows its replies, takes a reply, and resolves or reopens it. A pin is one ReviewPin row: the subject it belongs to (REVIEW_OPEN { subject } names it, for example a review name and its version), the route, x, y, its kind (feedback or question), the text, its author (the signed-in viewer) and whether it is open or resolved; a reply is a row whose parentId names its pin. The atom states no access policy of its own: the composing program declares who may read and write ReviewPin rows."
 ]
 ;; @capabilities "pin feedback on a live app, review comments on a prototype, client questions on a page, design review pins, annotate a running screen"
 
@@ -29,9 +29,10 @@ orbital ReviewPinsOrbital {
     rows : [ReviewPinRow] @intrinsic @description "The subject's pins and replies, as last read." = []
     viewSubject : string @intrinsic @description "The subject the board shows." = ""
     viewRoute : string @intrinsic @description "The route the reviewed view is on." = ""
-    placing : boolean @intrinsic @description "Comment mode: a click on the view drops a pin." = false
+    viewGuest : string @intrinsic @description "The guest that shows the reviewed view, as ROUTE_SEEN named it; a pin on another route asks it to go there." = ""
+    placing : boolean @intrinsic @description "Waiting for one click on the view to drop a new pin; the click ends it." = false
     showResolved : boolean @intrinsic @description "Whether resolved pins are listed and drawn." = false
-    panelOpen : boolean @intrinsic @description "Whether the comment drawer over the view is open; closed leaves a slim strip that opens it." = false
+    panelOpen : boolean @intrinsic @description "Whether the comment drawer over the view is open; closed leaves only the feedback tab on the right edge." = false
     draftOpen : boolean @intrinsic @description "A dropped pin waits for its text." = false
     draftX : number @intrinsic = 0
     draftY : number @intrinsic = 0
@@ -53,7 +54,6 @@ orbital ReviewPinsOrbital {
         (navigate "/review")
       REVIEW_OPEN -> ready
         (set @entity.viewSubject ?subject)
-        (set @entity.viewRoute (default ?route ""))
         (fetch ReviewPin { filter: (= (object/get @entity subject) ?subject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
     }
 
@@ -62,13 +62,13 @@ orbital ReviewPinsOrbital {
         (emit PINS_PAINT {})
       REVIEW_OPEN -> ready
         (set @entity.viewSubject ?subject)
-        (set @entity.viewRoute (default ?route @entity.viewRoute))
         (set @entity.activeId "")
         (fetch ReviewPin { filter: (= (object/get @entity subject) ?subject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
       ROUTE_SEEN -> ready when (= ?route @entity.viewRoute)
+        (set @entity.viewGuest (default ?guest @entity.viewGuest))
       ROUTE_SEEN -> ready when (!= ?route @entity.viewRoute)
+        (set @entity.viewGuest (default ?guest @entity.viewGuest))
         (set @entity.viewRoute ?route)
-        (set @entity.activeId "")
         (set @entity.draftOpen false)
         (emit PINS_PAINT {})
       PINS_READ -> ready
@@ -78,8 +78,14 @@ orbital ReviewPinsOrbital {
       PINS_READ_FAILED -> ready
         (set @entity.problem ?error)
         (emit PINS_PAINT {})
-      PLACE_TOGGLE -> ready
-        (set @entity.placing (not @entity.placing))
+      PLACE_TOGGLE -> ready when @entity.placing
+        (set @entity.placing false)
+        (emit PINS_PAINT {})
+      PLACE_TOGGLE -> ready when (not @entity.placing)
+        (set @entity.placing true)
+        (set @entity.panelOpen false)
+        (set @entity.draftOpen false)
+        (set @entity.activeId "")
         (emit PINS_PAINT {})
       RESOLVED_TOGGLE -> ready
         (set @entity.showResolved (not @entity.showResolved))
@@ -87,7 +93,12 @@ orbital ReviewPinsOrbital {
       PANEL_TOGGLE -> ready
         (set @entity.panelOpen (not @entity.panelOpen))
         (emit PINS_PAINT {})
+      PANEL_CLOSE -> ready when (not @entity.panelOpen)
+      PANEL_CLOSE -> ready when @entity.panelOpen
+        (set @entity.panelOpen false)
+        (emit PINS_PAINT {})
       PIN_PLACE -> ready
+        (set @entity.placing false)
         (set @entity.panelOpen true)
         (set @entity.draftOpen true)
         (set @entity.draftX ?x)
@@ -103,6 +114,7 @@ orbital ReviewPinsOrbital {
         (set @entity.draftBody ?value)
       DRAFT_CANCEL -> ready
         (set @entity.draftOpen false)
+        (set @entity.placing false)
         (emit PINS_PAINT {})
       DRAFT_SAVE -> ready when (= (str/trim @entity.draftBody) "")
         (set @entity.problem @config.emptyText)
@@ -118,11 +130,19 @@ orbital ReviewPinsOrbital {
       PIN_WRITE_FAILED -> ready
         (set @entity.problem ?error)
         (emit PINS_PAINT {})
-      PIN_SELECT -> ready
+      PIN_SELECT -> ready when (= ?id "draft")
+      PIN_SELECT -> ready when (and (!= ?id "draft") (or (= (default ?route "") "") (= ?route @entity.viewRoute) (= @entity.viewGuest "")))
         (set @entity.panelOpen true)
         (set @entity.activeId ?id)
         (set @entity.draftOpen false)
         (set @entity.replyBody "")
+        (emit PINS_PAINT {})
+      PIN_SELECT -> ready when (and (!= ?id "draft") (!= (default ?route "") "") (!= ?route @entity.viewRoute) (!= @entity.viewGuest ""))
+        (set @entity.panelOpen true)
+        (set @entity.activeId ?id)
+        (set @entity.draftOpen false)
+        (set @entity.replyBody "")
+        (emit GUEST_NAVIGATE { guest: @entity.viewGuest, route: ?route })
         (emit PINS_PAINT {})
       PIN_CLOSE -> ready
         (set @entity.activeId "")
@@ -141,21 +161,25 @@ orbital ReviewPinsOrbital {
         (fetch ReviewPin { filter: (= (object/get @entity subject) @entity.viewSubject), limit: @config.pinLimit, emit: { success: PINS_READ, failure: PINS_READ_FAILED } })
 
       PINS_PAINT -> ready
-        (let ((pins (array/filter @entity.rows (fn p (and (= @p.parentId "") (= @p.route @entity.viewRoute) (or @entity.showResolved (= @p.status "open"))))))
-              (active (array/find @entity.rows (fn p (= @p.id @entity.activeId)))))
-          (render-ui main { type: stack, direction: horizontal, gap: none, className: "h-full min-h-0 w-full", children: [
-            { type: annotated-media, mediaType: content, children: @config.contentTrait, title: @config.title, pins: (array/map @pins (fn p { id: @p.id, x: @p.x, y: @p.y, time: 0, label: @p.body, resolved: (= @p.status "resolved") })), activePinId: @entity.activeId, placing: @entity.placing, placeEvent: PIN_PLACE, pinSelectEvent: PIN_SELECT, className: "flex-1 min-w-0 h-full overflow-auto" },
-            { type: stack, direction: vertical, gap: sm, align: center, className: "w-12 shrink-0 h-full border-l py-3", children: [
-              { type: button, icon: message-square, variant: ghost, size: sm, aria-label: @config.showPanelLabel, action: PANEL_TOGGLE },
-              { type: typography, variant: caption, color: muted, content: (str/concat "" (array/len @pins)) }
+        (let ((all (array/filter @entity.rows (fn p (and (= @p.parentId "") (or @entity.showResolved (= @p.status "open"))))))
+              (active (array/find @entity.rows (fn p (= @p.id @entity.activeId))))
+              (shown (array/filter @all (fn p (and (= @p.id @entity.activeId) (= @p.route @entity.viewRoute))))))
+          (render-ui main { type: box, position: relative, className: "h-full min-h-0 w-full", children: [
+            { type: annotated-media, mediaType: content, children: @config.contentTrait, title: @config.title,
+              pins: (array/concat
+                (array/map @shown (fn p { id: @p.id, x: @p.x, y: @p.y, time: 0, label: @p.body, resolved: (= @p.status "resolved") }))
+                (if @entity.draftOpen [{ id: "draft", x: @entity.draftX, y: @entity.draftY, time: 0, label: @config.newPinTitle, resolved: false }] [])),
+              activePinId: (if @entity.draftOpen "draft" @entity.activeId), placing: @entity.placing, placeEvent: PIN_PLACE, pinSelectEvent: PIN_SELECT, className: "h-full w-full overflow-auto" },
+            { type: box, position: fixed, className: (if @entity.panelOpen hidden "right-0 top-1/2 -translate-y-1/2 z-40"), children: [
+              { type: button, icon: (if @entity.placing x message-square), variant: primary, size: sm, className: "rounded-l-md rounded-r-none shadow-lg",
+                label: (if @entity.placing @config.placingTabLabel (str/concat @config.tabLabel " · " (array/len @all))),
+                action: (if @entity.placing PLACE_TOGGLE PANEL_TOGGLE) }
             ] },
-            { type: drawer, isOpen: @entity.panelOpen, modal: false, position: right, width: "min(320px, 90vw)", title: @config.panelTitle, closeEvent: PANEL_TOGGLE, children: [{ type: stack, direction: vertical, gap: sm, children: [
+            { type: drawer, isOpen: @entity.panelOpen, modal: false, position: right, width: "min(340px, 90vw)", title: (str/concat @config.panelTitle " · " (array/len @all)), closeEvent: PANEL_CLOSE, children: [{ type: stack, direction: vertical, gap: sm, children: [
               { type: stack, direction: horizontal, gap: xs, align: center, children: [
-                { type: button, icon: panel-right-close, variant: ghost, size: sm, aria-label: @config.hidePanelLabel, action: PANEL_TOGGLE },
-                { type: button, label: (if @entity.placing @config.placingLabel @config.placeLabel), icon: message-square-plus, variant: (if @entity.placing primary secondary), size: sm, action: PLACE_TOGGLE },
+                { type: button, label: @config.placeLabel, icon: message-square-plus, variant: primary, size: sm, action: PLACE_TOGGLE },
                 { type: button, label: (if @entity.showResolved @config.hideResolvedLabel @config.showResolvedLabel), variant: ghost, size: sm, action: RESOLVED_TOGGLE }
               ] },
-              { type: typography, variant: caption, color: muted, content: (if @entity.placing @config.placingHint @config.idleHint) },
               { type: alert, variant: error, message: @entity.problem, className: (if (= @entity.problem "") hidden "") },
               (if @entity.draftOpen
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -169,8 +193,10 @@ orbital ReviewPinsOrbital {
                 ] }
                 (if (= @active null)
                   { type: stack, direction: vertical, gap: xs, children: [
-                    { type: typography, variant: body2, color: muted, content: @config.emptyListText, className: (if (= (array/len @pins) 0) "" hidden) },
-                    { type: stack, direction: vertical, gap: xs, children: (array/map @pins (fn p { type: button, variant: ghost, size: sm, className: "justify-start text-left", label: (str/concat (if (= @p.kind "question") "? " "• ") @p.authorName ": " @p.body), action: PIN_SELECT, actionPayload: { id: @p.id } })) }
+                    { type: typography, variant: body2, color: muted, content: @config.emptyListText, className: (if (= (array/len @all) 0) "" hidden) },
+                    { type: stack, direction: vertical, gap: xs, children: (array/map @all (fn p { type: button, variant: ghost, size: sm, className: "justify-start text-left h-auto py-2 whitespace-normal",
+                      label: (str/concat (if (= @p.kind "question") "? " "• ") @p.authorName ": " @p.body " — " @p.route),
+                      action: PIN_SELECT, actionPayload: { id: @p.id, route: @p.route } })) }
                   ] }
                   { type: stack, direction: vertical, gap: sm, children: (array/concat
                     [{ type: stack, direction: horizontal, gap: xs, align: center, children: [
@@ -178,7 +204,7 @@ orbital ReviewPinsOrbital {
                         { type: badge, label: (if (= @active.kind "question") @config.questionLabel @config.feedbackLabel) },
                         { type: badge, label: (if (= @active.status "resolved") @config.resolvedLabel @config.openLabel) }
                       ] },
-                     { type: typography, variant: caption, color: muted, content: @active.authorName },
+                     { type: typography, variant: caption, color: muted, content: (str/concat @active.authorName " — " @active.route) },
                      { type: typography, variant: body1, content: @active.body }]
                     (array/map (array/filter @entity.rows (fn r (= @r.parentId @active.id))) (fn r { type: stack, direction: vertical, gap: none, className: "border-l-2 pl-2", children: [{ type: typography, variant: caption, color: muted, content: @r.authorName }, { type: typography, variant: body2, content: @r.body }] }))
                     [{ type: textarea, aria-label: @config.replyLabel, placeholder: @config.replyPlaceholder, value: @entity.replyBody, onChange: REPLY_BODY },
@@ -213,6 +239,11 @@ orbital ReviewPinsOrbital {
       }
         @description "A reviewer left a new pin on the subject's route."
         @tier "essential"
+      GUEST_NAVIGATE -> external {
+        guest : string!
+        route : string!
+      }
+        @description "A pin on another route was opened: the guest showing the view goes to that route."
     }
 
     listens {
@@ -227,9 +258,10 @@ orbital ReviewPinsOrbital {
         subject : string!
         route : string
       }
-        @description "Show the pins of this subject; route is the view's first route."
+        @description "Show the pins of this subject. route is the page the link asks the view to start on, not the page it shows: only ROUTE_SEEN sets that."
       ROUTE_SEEN {
         route : string!
+        guest : string
       }
         @description "The reviewed view is on this route now."
       PIN_PLACE {
@@ -239,8 +271,11 @@ orbital ReviewPinsOrbital {
       }
       PIN_SELECT {
         id : string!
+        route : string
       }
       PANEL_TOGGLE { }
+      PANEL_CLOSE { }
+        @description "The drawer asked to close (its close button, Escape or a click outside it); a closed drawer stays closed."
       DRAFT_KIND {
         value : "feedback" | "question"!
       }
@@ -279,23 +314,19 @@ orbital ReviewPinsOrbital {
         @tier "domain"
       indexLabel : string = "All reviews"
         @tier "presentation"
-      showPanelLabel : string = "Show comments"
+      tabLabel : string = "Feedback"
+        @label "Feedback tab"
+        @description "The tab on the right edge that opens the comments; the total count follows it."
+        @tier "presentation"
+      placingTabLabel : string = "Click where it belongs · Cancel"
         @tier "presentation"
       panelTitle : string = "Comments"
-        @tier "presentation"
-      hidePanelLabel : string = "Hide comments"
         @tier "presentation"
       title : string = "Reviewed view"
         @label "Title"
         @description "Accessible name of the reviewed view."
         @tier "presentation"
-      placeLabel : string = "Comment"
-        @tier "presentation"
-      placingLabel : string = "Commenting…"
-        @tier "presentation"
-      idleHint : string = "Use the app as usual. Press Comment, then click where your feedback or question belongs."
-        @tier "presentation"
-      placingHint : string = "Click anywhere on the page to drop a pin."
+      placeLabel : string = "Add comment"
         @tier "presentation"
       showResolvedLabel : string = "Show resolved"
         @tier "presentation"
@@ -319,7 +350,7 @@ orbital ReviewPinsOrbital {
         @tier "presentation"
       emptyText : string = "Write something before saving."
         @tier "presentation"
-      emptyListText : string = "No comments on this page yet."
+      emptyListText : string = "No comments yet."
         @tier "presentation"
       backLabel : string = "All comments"
         @tier "presentation"

@@ -10314,7 +10314,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace · this behavior",
+           "title": "Trace \u00b7 this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -10559,7 +10559,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "••••1234"
+                   "content": "\u2022\u2022\u2022\u20221234"
                   },
                   {
                    "type": "button",
@@ -10685,7 +10685,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "••••abcd"
+                   "content": "\u2022\u2022\u2022\u2022abcd"
                   },
                   {
                    "type": "button",
@@ -10739,7 +10739,7 @@
                  "type": "typography",
                  "variant": "caption",
                  "color": "muted",
-                 "content": "slot-x — its name is only known at run time"
+                 "content": "slot-x \u2014 its name is only known at run time"
                 }
                ]
               },
@@ -10898,7 +10898,7 @@
                      "type": "badge",
                      "variant": "neutral",
                      "size": "sm",
-                     "label": "×3"
+                     "label": "\u00d73"
                     }
                    ]
                   },
@@ -11098,7 +11098,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace · this behavior",
+           "title": "Trace \u00b7 this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -11343,7 +11343,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "••••1234"
+                   "content": "\u2022\u2022\u2022\u20221234"
                   },
                   null
                  ]
@@ -11579,7 +11579,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace · this behavior",
+           "title": "Trace \u00b7 this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -16763,6 +16763,593 @@
      }
     }
    ]
+  },
+  {
+   "id": "cache-a-second-open-of-the-same-program-skips-the-seed-resolve",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PREPARE",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k1",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "emit"
+       }
+      ],
+      "emits": [
+       {
+        "event": "GUEST_SEED_ASK"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-cache-a-different-program-resolves-the-seed-again",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PREPARE",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k2",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "behavior/resolve"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cache-a-second-open-skips-the-personas-resolve-and-the-compose",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_SEED_MARKED",
+     "payload": {
+      "marked": false,
+      "personas": "x",
+      "personasCollection": "team_members",
+      "personasSignIn": "owner",
+      "defaultRole": "owner",
+      "personaTrait": "",
+      "identityEntity": ""
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k1",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "emits": [
+       {
+        "event": "GUEST_COMPOSED",
+        "payload": {
+         "result": {
+          "name": "x",
+          "orbitals": [
+           {
+            "name": "seeded"
+           }
+          ]
+         }
+        }
+       }
+      ],
+      "entity": {
+       "guestProgram": null,
+       "guestSeed": null,
+       "guestSeeded": true
+      },
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "emit"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cache-a-second-open-without-personas-skips-the-compose",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_SEED_MARKED",
+     "payload": {
+      "marked": false,
+      "personas": "",
+      "personasCollection": "",
+      "personasSignIn": "",
+      "defaultRole": "owner",
+      "personaTrait": "",
+      "identityEntity": ""
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k1",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "emits": [
+       {
+        "event": "GUEST_COMPOSED"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-cache-a-different-program-composes-again",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_SEED_MARKED",
+     "payload": {
+      "marked": false,
+      "personas": "",
+      "personasCollection": "",
+      "personasSignIn": "",
+      "defaultRole": "owner",
+      "personaTrait": "",
+      "identityEntity": ""
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k2",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1",
+      "guestSeed": {
+       "name": "s",
+       "orbitals": []
+      }
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "program/compose"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-cache-a-different-program-resolves-the-personas-again",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_SEED_MARKED",
+     "payload": {
+      "marked": false,
+      "personas": "x",
+      "personasCollection": "team_members",
+      "personasSignIn": "owner",
+      "defaultRole": "owner",
+      "personaTrait": "",
+      "identityEntity": ""
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k2",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1",
+      "guestSeed": {
+       "name": "s",
+       "orbitals": []
+      }
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "behavior/resolve"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cache-the-cached-composed-program-opens-the-guest-like-a-fresh-one",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_COMPOSED",
+     "payload": {
+      "result": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k1",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "program/open"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cache-a-composed-answer-is-kept-under-the-program-it-was-composed-for",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_COMPOSED",
+     "payload": {
+      "result": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock",
+      "guestOpenKey": "k3"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "entity": {
+       "guestComposed": {
+        "name": "x",
+        "orbitals": [
+         {
+          "name": "seeded"
+         }
+        ]
+       },
+       "guestComposedKey": "k3"
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cache-a-live-guest-is-never-served-the-composed-program",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PREPARE",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "live",
+      "guestProgram": {
+       "name": "x",
+       "orbitals": []
+      },
+      "guestOpenKey": "k1",
+      "guestComposed": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "seeded"
+        }
+       ]
+      },
+      "guestComposedKey": "k1"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "neverEmits": [
+       "GUEST_SEED_ASK"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cache-an-open-names-the-program-by-the-digest-of-its-value",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPEN",
+     "payload": {
+      "program": {
+       "name": "x",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "entity": {
+       "guestOpenKey": "dfa214a59bb6c6bb7320cc6e011be78b7b809184034679dcda9b5537ebdeb0d8"
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-start-route-denied-after-the-persona-signed-in-is-opened-again-at-once",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_FOLLOWED",
+     "payload": {
+      "result": {
+       "rendered": [],
+       "outcomes": [],
+       "page": [],
+       "route": "",
+       "access": {
+        "verdict": "denied",
+        "returnTo": "/projects"
+       }
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestIntegrations": "mock",
+      "guestError": "",
+      "guestPersona": "u1",
+      "guestReturnTo": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "effects": [
+       {
+        "type": "program/navigate"
+       }
+      ],
+      "entity": {
+       "guestReturnTo": ""
+      }
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "followNavigations": true
+   }
+  },
+  {
+   "id": "CONTROL-a-start-route-denied-before-the-persona-signed-in-waits-for-the-sign-in",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_FOLLOWED",
+     "payload": {
+      "result": {
+       "rendered": [],
+       "outcomes": [],
+       "page": [],
+       "route": "",
+       "access": {
+        "verdict": "denied",
+        "returnTo": "/projects"
+       }
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestIntegrations": "mock",
+      "guestError": "",
+      "guestPersona": "",
+      "guestReturnTo": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestReturnTo": "/projects"
+      }
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "followNavigations": true
+   }
   }
  ]
 }

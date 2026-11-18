@@ -234,6 +234,386 @@
      }
     }
    ]
+  },
+  {
+   "id": "opening a comment on another route sends the guest there",
+   "steps": [
+    {
+     "event": "PIN_SELECT",
+     "payload": {
+      "id": "p1",
+      "route": "/tasks"
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": []
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GUEST_NAVIGATE",
+        "payload": {
+         "guest": "g1",
+         "route": "/tasks"
+        }
+       },
+       {
+        "event": "PINS_PAINT"
+       }
+      ],
+      "entity": {
+       "activeId": "p1",
+       "panelOpen": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL opening a comment on the shown route does not navigate",
+   "steps": [
+    {
+     "event": "PIN_SELECT",
+     "payload": {
+      "id": "p1",
+      "route": "/projects"
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": []
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ],
+      "neverEmits": [
+       "GUEST_NAVIGATE"
+      ],
+      "entity": {
+       "activeId": "p1"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL with no guest known a comment on another route only opens",
+   "steps": [
+    {
+     "event": "PIN_SELECT",
+     "payload": {
+      "id": "p1",
+      "route": "/tasks"
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "",
+      "rows": []
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "GUEST_NAVIGATE"
+      ],
+      "entity": {
+       "activeId": "p1"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL selecting the draft pin changes nothing",
+   "steps": [
+    {
+     "event": "PIN_SELECT",
+     "payload": {
+      "id": "draft"
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": [],
+      "draftOpen": true
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "GUEST_NAVIGATE",
+       "PINS_PAINT"
+      ],
+      "entity": {
+       "draftOpen": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "add comment closes the drawer and waits for one click",
+   "steps": [
+    {
+     "event": "PLACE_TOGGLE",
+     "payload": {},
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": [],
+      "panelOpen": true,
+      "placing": false
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ],
+      "entity": {
+       "placing": true,
+       "panelOpen": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL cancel on the tab stops waiting",
+   "steps": [
+    {
+     "event": "PLACE_TOGGLE",
+     "payload": {},
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": [],
+      "placing": true
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ],
+      "entity": {
+       "placing": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the click that drops a pin ends the wait",
+   "steps": [
+    {
+     "event": "PIN_PLACE",
+     "payload": {
+      "x": 10,
+      "y": 20,
+      "time": 0
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": [],
+      "placing": true,
+      "panelOpen": false
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ],
+      "entity": {
+       "placing": false,
+       "panelOpen": true,
+       "draftOpen": true,
+       "draftX": 10,
+       "draftY": 20
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a route change keeps the opened comment",
+   "steps": [
+    {
+     "event": "ROUTE_SEEN",
+     "payload": {
+      "route": "/tasks",
+      "guest": "g1"
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": [],
+      "activeId": "p1"
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ],
+      "entity": {
+       "activeId": "p1",
+       "viewRoute": "/tasks"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the guest is learned from the route it shows",
+   "steps": [
+    {
+     "event": "ROUTE_SEEN",
+     "payload": {
+      "route": "/projects",
+      "guest": "g2"
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "",
+      "rows": []
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "entity": {
+       "viewGuest": "g2"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a close request from a closed drawer leaves it closed",
+   "steps": [
+    {
+     "event": "PANEL_CLOSE",
+     "payload": {},
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": [],
+      "panelOpen": false
+     },
+     "from": "ready",
+     "expect": {
+      "neverEmits": [
+       "PINS_PAINT"
+      ],
+      "entity": {
+       "panelOpen": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a close request closes an open drawer",
+   "steps": [
+    {
+     "event": "PANEL_CLOSE",
+     "payload": {},
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "/projects",
+      "viewGuest": "g1",
+      "rows": [],
+      "panelOpen": true
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PINS_PAINT"
+       }
+      ],
+      "entity": {
+       "panelOpen": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "opening a subject does not take the link's start page as the shown page",
+   "steps": [
+    {
+     "event": "REVIEW_OPEN",
+     "payload": {
+      "subject": "project-friday/1.1.0",
+      "route": "/projects"
+     },
+     "entity": {
+      "viewRoute": "",
+      "rows": []
+     },
+     "expect": {
+      "fired": true,
+      "entity": {
+       "viewRoute": ""
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL the shown page comes from the view",
+   "steps": [
+    {
+     "event": "ROUTE_SEEN",
+     "payload": {
+      "route": "/admin/people",
+      "guest": "g1"
+     },
+     "entity": {
+      "viewSubject": "project-friday/1.1.0",
+      "viewRoute": "",
+      "viewGuest": "",
+      "rows": []
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "entity": {
+       "viewRoute": "/admin/people"
+      }
+     }
+    }
+   ]
   }
  ]
 }

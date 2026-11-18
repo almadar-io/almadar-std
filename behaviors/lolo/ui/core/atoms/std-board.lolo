@@ -185,7 +185,8 @@ orbital BoardOrbital {
           gap: md
           type: stack
         })
-      ADD_CARD -> adding
+      ADD_CARD -> viewing_board when (= @config.addForm "external")
+      ADD_CARD -> adding when (= @config.addForm "board")
         (set @entity.currentId "")
         (set @entity.currentTitle "")
         (set @entity.currentDescription "")
@@ -742,6 +743,11 @@ orbital BoardOrbital {
       groupByField : field @entity string = stage
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
+        @tier "presentation"
+      addForm : "board" | "external" = board
+        @label "Which form adds a card?"
+        @description "board (default): Add card opens the board's own add form. external: Add card only emits ADD_CARD, for an app whose own create dialog listens to it, so two forms never open at once."
+        @synonyms "add form, create dialog, own form, external form"
         @tier "presentation"
       addPlacement : "floating" | "inline" | "none" = floating
         @label "Add button placement"
