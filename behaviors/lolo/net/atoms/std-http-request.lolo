@@ -17,6 +17,7 @@ orbital HttpRequestOrbital {
     override : string @description "A target that replaces path and query (a link-header page)." = ""
     attempt : number @description "Retries made for the current page." = 0
     page : number @description "The page in flight, from 1." = 1
+    queue : [HttpReq] @description "Requests asked while another is in flight on this frame, oldest first; each starts when the one before it ends." = []
   }
 
   trait RequestDelay = Delay.traits.Delay [server] {
@@ -33,7 +34,7 @@ orbital HttpRequestOrbital {
     }
   }
 
-  trait HttpRequest -> HttpRequestFlight [optimistic] {
+  trait HttpRequest -> HttpRequestFlight [server] {
     initial: ready
 
     config {
@@ -85,10 +86,17 @@ orbital HttpRequestOrbital {
 
     state ready {
       INIT -> ready
+      HTTP_REQUEST_NEXT -> ready when (> (array/len @entity.queue) 0)
+        (let ((next : HttpReq (as (array/first @entity.queue) HttpReq)))
+          (do
+            (set @entity.queue (array/drop @entity.queue 1))
+            (emit HTTP_REQUEST { key: @next.key, method: @next.method, path: @next.path, query: @next.query, headers: @next.headers, json: @next.json, form: @next.form, text: @next.text, bytes: @next.bytes, multipartKind: @next.multipartKind, multipartBoundary: @next.multipartBoundary, multipartParts: @next.multipartParts, stream: @next.stream, retryMax: @next.retryMax, retryOn: @next.retryOn, retryOnFailure: @next.retryOnFailure, retryDelaysMs: @next.retryDelaysMs, paginate: @next.paginate, maxPages: @next.maxPages, timeoutMs: @next.timeoutMs })))
+      HTTP_REQUEST_NEXT -> ready when (= (array/len @entity.queue) 0)
       HTTP_REQUEST_CANCEL -> ready
 
       HTTP_REQUEST -> ready when (or (not (str/startsWith @payload.path "/")) (> (+ (if (!= @payload.json null) 1 0) (if (> (array/len (object/keys @payload.form)) 0) 1 0) (if (!= @payload.text null) 1 0) (if (!= @payload.bytes null) 1 0) (if (!= @payload.multipartKind null) 1 0)) 1) (array/some (object/keys @payload.query) (fn k (= @k ""))) (array/some (object/keys @payload.form) (fn k (= @k ""))) (not (array/includes @config.paginations @payload.paginate)) (and (!= @payload.multipartKind null) (not (and (array/includes @config.multipartKinds (default @payload.multipartKind "")) (validate/pattern (default @payload.multipartBoundary "") @config.boundaryPattern) (> (array/len @payload.multipartParts) 0) (array/every @payload.multipartParts (fn p (= (+ (if (!= @p.text null) 1 0) (if (!= @p.bytes null) 1 0)) 1)))))))
         (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "the request cannot be built: a path must start with /, at most one body may be given, a query or form key may not be empty, pagination must be known, and a multipart body needs a kind, a boundary and parts of exactly one of text or bytes" })
+        (emit HTTP_REQUEST_NEXT {})
 
       HTTP_REQUEST -> awaiting when (and (str/startsWith @payload.path "/") (<= (+ (if (!= @payload.json null) 1 0) (if (> (array/len (object/keys @payload.form)) 0) 1 0) (if (!= @payload.text null) 1 0) (if (!= @payload.bytes null) 1 0) (if (!= @payload.multipartKind null) 1 0)) 1) (not (array/some (object/keys @payload.query) (fn k (= @k "")))) (not (array/some (object/keys @payload.form) (fn k (= @k "")))) (array/includes @config.paginations @payload.paginate) (or (== @payload.multipartKind null) (and (array/includes @config.multipartKinds (default @payload.multipartKind "")) (validate/pattern (default @payload.multipartBoundary "") @config.boundaryPattern) (> (array/len @payload.multipartParts) 0) (array/every @payload.multipartParts (fn p (= (+ (if (!= @p.text null) 1 0) (if (!= @p.bytes null) 1 0)) 1))))))
         (set @entity.req { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages, timeoutMs: @payload.timeoutMs })
@@ -100,8 +108,9 @@ orbital HttpRequestOrbital {
 
     state awaiting {
       INIT -> awaiting
+      HTTP_REQUEST_NEXT -> awaiting
       HTTP_REQUEST -> awaiting
-        (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a request is in flight on this frame" })
+        (set @entity.queue (array/append @entity.queue { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages, timeoutMs: @payload.timeoutMs }))
 
       HC_BUILD -> awaiting
         (set @entity.wire {
@@ -143,7 +152,9 @@ orbital HttpRequestOrbital {
       HTTP_REQUEST_CANCEL -> ready when (= @payload.key @entity.req.key)
         (emit TIMEOUT_STOP {})
         (emit HTTP_CANCEL { key: @entity.req.key })
+        (emit HTTP_REQUEST_NEXT {})
       HTTP_REQUEST_CANCEL -> awaiting when (!= @payload.key @entity.req.key)
+        (set @entity.queue (array/filter @entity.queue (fn q (!= @q.key @payload.key))))
 
       TIMEOUT_ELAPSED -> waiting when (and (array/includes @entity.req.retryOnFailure "timeout") (< @entity.attempt @entity.req.retryMax))
         (emit HTTP_CANCEL { key: @entity.req.key })
@@ -152,6 +163,7 @@ orbital HttpRequestOrbital {
       TIMEOUT_ELAPSED -> ready when (not (and (array/includes @entity.req.retryOnFailure "timeout") (< @entity.attempt @entity.req.retryMax)))
         (emit HTTP_CANCEL { key: @entity.req.key })
         (emit HTTP_REQUEST_FAILED { key: @entity.req.key, error: "the request timed out", kind: "timeout" })
+        (emit HTTP_REQUEST_NEXT {})
 
       HTTP_REPLIED -> waiting when (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))
         (emit TIMEOUT_STOP {})
@@ -165,10 +177,12 @@ orbital HttpRequestOrbital {
       HTTP_FAILED -> ready when (not (and (array/includes @entity.req.retryOnFailure @payload.kind) (< @entity.attempt @entity.req.retryMax)))
         (emit TIMEOUT_STOP {})
         (emit HTTP_REQUEST_FAILED { key: @entity.req.key, error: @payload.error, kind: @payload.kind })
+        (emit HTTP_REQUEST_NEXT {})
 
       HTTP_REPLIED -> ready when (and (= @entity.req.paginate "none") (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
         (emit TIMEOUT_STOP {})
         (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: 1 })
+        (emit HTTP_REQUEST_NEXT {})
 
       HTTP_REPLIED -> awaiting when (and (= @entity.req.paginate "link-header") (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
         (emit TIMEOUT_STOP {})
@@ -181,6 +195,7 @@ orbital HttpRequestOrbital {
         (emit HC_BUILD { n: (+ @entity.page 1) })
       HC_LINK -> ready when (or (= @payload.next "") (>= @entity.page @entity.req.maxPages))
         (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: @entity.page })
+        (emit HTTP_REQUEST_NEXT {})
 
       HTTP_REPLIED -> paging when (and (= @entity.req.paginate "caller") (< @entity.page @entity.req.maxPages) (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
         (emit TIMEOUT_STOP {})
@@ -189,15 +204,19 @@ orbital HttpRequestOrbital {
         (emit TIMEOUT_STOP {})
         (emit HTTP_PAGE { key: @entity.req.key, page: @entity.page, status: @payload.status, headers: @payload.headers, body: @payload.body })
         (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: @entity.page })
+        (emit HTTP_REQUEST_NEXT {})
     }
 
     state waiting {
       INIT -> waiting
+      HTTP_REQUEST_NEXT -> waiting
       HTTP_REQUEST -> waiting
-        (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a request is waiting to retry on this frame" })
+        (set @entity.queue (array/append @entity.queue { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages, timeoutMs: @payload.timeoutMs }))
       HTTP_REQUEST_CANCEL -> ready when (= @payload.key @entity.req.key)
         (emit RETRY_STOP {})
+        (emit HTTP_REQUEST_NEXT {})
       HTTP_REQUEST_CANCEL -> waiting when (!= @payload.key @entity.req.key)
+        (set @entity.queue (array/filter @entity.queue (fn q (!= @q.key @payload.key))))
       RETRY_ELAPSED -> awaiting
         (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream })
         (emit HC_TIMER { delayMs: (default @entity.req.timeoutMs @config.timeoutMs) })
@@ -205,10 +224,13 @@ orbital HttpRequestOrbital {
 
     state paging {
       INIT -> paging
+      HTTP_REQUEST_NEXT -> paging
       HTTP_REQUEST -> paging
-        (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a paginated request is waiting for HTTP_NEXT or HTTP_STOP on this frame" })
+        (set @entity.queue (array/append @entity.queue { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages, timeoutMs: @payload.timeoutMs }))
       HTTP_REQUEST_CANCEL -> ready when (= @payload.key @entity.req.key)
+        (emit HTTP_REQUEST_NEXT {})
       HTTP_REQUEST_CANCEL -> paging when (!= @payload.key @entity.req.key)
+        (set @entity.queue (array/filter @entity.queue (fn q (!= @q.key @payload.key))))
       HTTP_NEXT -> awaiting
         (set @entity.req (object/merge @entity.req { query: @payload.query }))
         (set @entity.override "")
@@ -217,6 +239,7 @@ orbital HttpRequestOrbital {
         (emit HC_BUILD { n: (+ @entity.page 1) })
       HTTP_STOP -> ready
         (emit HTTP_RESULT { key: @entity.req.key, status: 0, headers: {}, body: (bytes/from-string ""), attempts: 1, pages: @entity.page })
+        (emit HTTP_REQUEST_NEXT {})
     }
 
     emits {
@@ -274,6 +297,34 @@ orbital HttpRequestOrbital {
         delayMs : number!
       }
         @description "Internal: the deadline of the attempt just sent; 0 arms none."
+        @tier "internal"
+      HTTP_REQUEST_NEXT -> internal {
+      }
+        @description "Internal: the request in flight ended; the oldest queued request starts."
+        @tier "internal"
+      HTTP_REQUEST -> internal {
+        key : string!
+        method : string!
+        path : string!
+        query : Map string string!
+        headers : Map string string!
+        json : string?
+        form : Map string string!
+        text : string?
+        bytes : bytes?
+        multipartKind : string?
+        multipartBoundary : string?
+        multipartParts : [HttpMultipartPart]!
+        stream : string!
+        retryMax : number!
+        retryOn : [number]!
+        retryOnFailure : [string]!
+        retryDelaysMs : [number]!
+        paginate : string!
+        maxPages : number!
+        timeoutMs : number?
+      }
+        @description "Internal: a queued request, asked again now that the frame is free."
         @tier "internal"
       HC_BUILD -> internal {
         n : number!

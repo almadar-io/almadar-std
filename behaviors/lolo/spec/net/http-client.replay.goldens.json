@@ -2440,6 +2440,122 @@
       ]
     },
     {
+      "id": "keep-alive-off-a-reply-that-allows-keeping-is-not-reused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "connecting",
+            "effects": [
+              {
+                "type": "os/tcp-connect",
+                "arg0": [
+                  "let",
+                  [
+                    [
+                      "knob_host",
+                      "api.example.test",
+                      "{\"version\":1,\"type\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"string\",\"type\":\"string\"}},{\"name\":\"HttpEnvPart\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"anchor\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"env\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"object\",\"required\":true,\"properties\":{\"env\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"HttpEnvPart\",\"type\":\"object\",\"properties\":{\"anchor\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"object\",\"required\":true,\"properties\":{\"env\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}}}}}]}}"
+                    ]
+                  ],
+                  "@knob_host"
+                ],
+                "arg1": [
+                  "let",
+                  [
+                    [
+                      "knob_port",
+                      80,
+                      "{\"version\":1,\"type\":{\"kind\":\"number\"}}"
+                    ]
+                  ],
+                  "@knob_port"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "event": "HC_CONNECTED",
+          "payload": {
+            "sock": 5,
+            "key": "connect"
+          },
+          "expect": {
+            "state": "sending",
+            "effects": [
+              {
+                "type": "os/send"
+              }
+            ]
+          }
+        },
+        {
+          "event": "HC_SENT",
+          "payload": {
+            "bytes": 10,
+            "key": "send"
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/recv"
+              }
+            ]
+          }
+        },
+        {
+          "event": "HC_READ",
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-length": "2"
+                  },
+                  "body": "b2s="
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k2",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "connecting"
+          }
+        }
+      ],
+      "config": {
+        "keepAlive": false
+      }
+    },
+    {
       "id": "control-a-close-delimited-reply-is-not-reused",
       "steps": [
         {

@@ -806,7 +806,7 @@
                 "event": "FIRESTORE_INDEXES_ANSWERED",
                 "payload": {
                   "status": 200,
-                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"DESCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"DESCENDING\"\n        },\n        {\n          \"fieldPath\": \"__name__\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
                 }
               }
             ]
@@ -1378,7 +1378,7 @@
                 "event": "FIRESTORE_INDEXES_ANSWERED",
                 "payload": {
                   "status": 200,
-                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    },\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"c\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"d\",\n          \"order\": \"DESCENDING\"\n        }\n      ]\n    },\n    {\n      \"collectionGroup\": \"users\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"x\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"y\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    },\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"c\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"d\",\n          \"order\": \"DESCENDING\"\n        },\n        {\n          \"fieldPath\": \"__name__\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    },\n    {\n      \"collectionGroup\": \"users\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"x\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"y\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
                 }
               }
             ]
@@ -1633,7 +1633,7 @@
                 "event": "FIRESTORE_INDEXES_ANSWERED",
                 "payload": {
                   "status": 200,
-                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"DESCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"DESCENDING\"\n        },\n        {\n          \"fieldPath\": \"__name__\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
                 }
               }
             ]
@@ -1641,6 +1641,340 @@
         }
       ],
       "note": "a composed orbital may name its entity by reference (a string); only inline entity records declare index paths here"
+    },
+    {
+      "id": "an-auxiliary-entity-index-is-rendered",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {},
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": "Run",
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Chat",
+                      "persistence": "persistent",
+                      "collection": "chats",
+                      "indexes": [
+                        {
+                          "fields": [
+                            "ownerId"
+                          ],
+                          "orderBy": "lastActiveAt:desc"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"chats\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"ownerId\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"lastActiveAt\",\n          \"order\": \"DESCENDING\"\n        },\n        {\n          \"fieldPath\": \"__name__\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-primary-entity-comes-before-its-auxiliary-entities",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {},
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "collection": "posts",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Chat",
+                      "persistence": "persistent",
+                      "collection": "chats",
+                      "indexes": [
+                        {
+                          "fields": [
+                            "ownerId"
+                          ],
+                          "orderBy": "lastActiveAt:desc"
+                        }
+                      ]
+                    },
+                    "Ref"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    },\n    {\n      \"collectionGroup\": \"chats\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"ownerId\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"lastActiveAt\",\n          \"order\": \"DESCENDING\"\n        },\n        {\n          \"fieldPath\": \"__name__\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one-index-declared-by-two-orbitals-is-rendered-once",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {},
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": "Run",
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Chat",
+                      "persistence": "persistent",
+                      "collection": "chats",
+                      "indexes": [
+                        {
+                          "fields": [
+                            "ownerId"
+                          ],
+                          "orderBy": "lastActiveAt:desc"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "entity": "Run",
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Chat",
+                      "persistence": "persistent",
+                      "collection": "chats",
+                      "indexes": [
+                        {
+                          "fields": [
+                            "ownerId"
+                          ],
+                          "orderBy": "lastActiveAt:desc"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"chats\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"ownerId\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"lastActiveAt\",\n          \"order\": \"DESCENDING\"\n        },\n        {\n          \"fieldPath\": \"__name__\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-runtime-auxiliary-entity-renders-nothing",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {},
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": "Run",
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Tmp",
+                      "persistence": "runtime",
+                      "collection": "",
+                      "indexes": [
+                        {
+                          "fields": [
+                            "a",
+                            "b"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

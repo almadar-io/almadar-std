@@ -62,6 +62,10 @@ orbital HttpClientOrbital {
         @label "Server name"
         @description "The name the server certificate is verified against; a host the net grant names. Read only when tls is true."
         @tier "infra"
+      keepAlive : boolean = true
+        @label "Keep the connection"
+        @description "Keep an answered socket idle for the trait's next call when the reply allows it. Off: every call asks connection: close and its socket is closed once answered, for a composer whose row ends with the call (a store driver, whose every ask runs on a fresh row, would otherwise leave each kept socket open)."
+        @tier "infra"
       dynamicHost : boolean = false
         @label "Dynamic host"
         @description "The client may connect to the host a call names (the host field of HTTP_SEND), which is also its host header and TLS server name; a call without one is refused. It needs a pattern net grant covering the hosts, such as net: { \"*.notify.windows.com:443\": [tcp] }. False keeps the host knob whatever a call names."
@@ -209,14 +213,14 @@ orbital HttpClientOrbital {
                 (bytes/from-string (if @entity.credUse
                   (if @queryCred
                     (str/concat @payload.method " " @payload.target (if (str/includes @payload.target "?") "&" "?") @config.credentialName "=")
-                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
+                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
                   "")),
                 (if @bodyCred @payload.body (bytes/from-string "")),
                 (bytes/from-string (if @bodyCred (str/concat @bodySep @config.credentialName "=") ""))
               ]),
               request: (bytes/concat [
                 (bytes/from-string (str/concat (if @entity.credUse (if @queryCred @hostLine (if @bodyCred "" "\r\n")) (str/concat @payload.method " " @payload.target @hostLine))
-                  (if @bodyCred "" (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n")))),
+                  (if @bodyCred "" (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n")))),
                 (if @bodyCred (bytes/from-string "") @payload.body)
               ])
             })))
@@ -251,14 +255,14 @@ orbital HttpClientOrbital {
                 (bytes/from-string (if @entity.credUse
                   (if @queryCred
                     (str/concat @payload.method " " @payload.target (if (str/includes @payload.target "?") "&" "?") @config.credentialName "=")
-                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
+                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
                   "")),
                 (if @bodyCred @payload.body (bytes/from-string "")),
                 (bytes/from-string (if @bodyCred (str/concat @bodySep @config.credentialName "=") ""))
               ]),
               request: (bytes/concat [
                 (bytes/from-string (str/concat (if @entity.credUse (if @queryCred @hostLine (if @bodyCred "" "\r\n")) (str/concat @payload.method " " @payload.target @hostLine))
-                  (if @bodyCred "" (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n")))),
+                  (if @bodyCred "" (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n")))),
                 (if @bodyCred (bytes/from-string "") @payload.body)
               ])
             })))
@@ -292,14 +296,14 @@ orbital HttpClientOrbital {
                 (bytes/from-string (if @entity.credUse
                   (if @queryCred
                     (str/concat @payload.method " " @payload.target (if (str/includes @payload.target "?") "&" "?") @config.credentialName "=")
-                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
+                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
                   "")),
                 (if @bodyCred @payload.body (bytes/from-string "")),
                 (bytes/from-string (if @bodyCred (str/concat @bodySep @config.credentialName "=") ""))
               ]),
               request: (bytes/concat [
                 (bytes/from-string (str/concat (if @entity.credUse (if @queryCred @hostLine (if @bodyCred "" "\r\n")) (str/concat @payload.method " " @payload.target @hostLine))
-                  (if @bodyCred "" (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n")))),
+                  (if @bodyCred "" (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n")))),
                 (if @bodyCred (bytes/from-string "") @payload.body)
               ])
             })))
@@ -333,14 +337,14 @@ orbital HttpClientOrbital {
                 (bytes/from-string (if @entity.credUse
                   (if @queryCred
                     (str/concat @payload.method " " @payload.target (if (str/includes @payload.target "?") "&" "?") @config.credentialName "=")
-                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
+                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
                   "")),
                 (if @bodyCred @payload.body (bytes/from-string "")),
                 (bytes/from-string (if @bodyCred (str/concat @bodySep @config.credentialName "=") ""))
               ]),
               request: (bytes/concat [
                 (bytes/from-string (str/concat (if @entity.credUse (if @queryCred @hostLine (if @bodyCred "" "\r\n")) (str/concat @payload.method " " @payload.target @hostLine))
-                  (if @bodyCred "" (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n")))),
+                  (if @bodyCred "" (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n")))),
                 (if @bodyCred (bytes/from-string "") @payload.body)
               ])
             })))
@@ -376,14 +380,14 @@ orbital HttpClientOrbital {
                 (bytes/from-string (if @entity.credUse
                   (if @queryCred
                     (str/concat @payload.method " " @payload.target (if (str/includes @payload.target "?") "&" "?") @config.credentialName "=")
-                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
+                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
                   "")),
                 (if @bodyCred @payload.body (bytes/from-string "")),
                 (bytes/from-string (if @bodyCred (str/concat @bodySep @config.credentialName "=") ""))
               ]),
               request: (bytes/concat [
                 (bytes/from-string (str/concat (if @entity.credUse (if @queryCred @hostLine (if @bodyCred "" "\r\n")) (str/concat @payload.method " " @payload.target @hostLine))
-                  (if @bodyCred "" (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n")))),
+                  (if @bodyCred "" (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n")))),
                 (if @bodyCred (bytes/from-string "") @payload.body)
               ])
             })))
@@ -417,14 +421,14 @@ orbital HttpClientOrbital {
                 (bytes/from-string (if @entity.credUse
                   (if @queryCred
                     (str/concat @payload.method " " @payload.target (if (str/includes @payload.target "?") "&" "?") @config.credentialName "=")
-                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
+                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
                   "")),
                 (if @bodyCred @payload.body (bytes/from-string "")),
                 (bytes/from-string (if @bodyCred (str/concat @bodySep @config.credentialName "=") ""))
               ]),
               request: (bytes/concat [
                 (bytes/from-string (str/concat (if @entity.credUse (if @queryCred @hostLine (if @bodyCred "" "\r\n")) (str/concat @payload.method " " @payload.target @hostLine))
-                  (if @bodyCred "" (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n")))),
+                  (if @bodyCred "" (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n")))),
                 (if @bodyCred (bytes/from-string "") @payload.body)
               ])
             })))
@@ -458,14 +462,14 @@ orbital HttpClientOrbital {
                 (bytes/from-string (if @entity.credUse
                   (if @queryCred
                     (str/concat @payload.method " " @payload.target (if (str/includes @payload.target "?") "&" "?") @config.credentialName "=")
-                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
+                    (str/concat @payload.method " " @payload.target @hostLine (if @bodyCred (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n") (str/concat @config.credentialHeader ": " @config.credentialPrefix))))
                   "")),
                 (if @bodyCred @payload.body (bytes/from-string "")),
                 (bytes/from-string (if @bodyCred (str/concat @bodySep @config.credentialName "=") ""))
               ]),
               request: (bytes/concat [
                 (bytes/from-string (str/concat (if @entity.credUse (if @queryCred @hostLine (if @bodyCred "" "\r\n")) (str/concat @payload.method " " @payload.target @hostLine))
-                  (if @bodyCred "" (str/concat @fields @contentLength (if (= @payload.stream "none") "" "connection: close\r\n") "\r\n")))),
+                  (if @bodyCred "" (str/concat @fields @contentLength (if (and (= @payload.stream "none") @config.keepAlive) "" "connection: close\r\n") "\r\n")))),
                 (if @bodyCred (bytes/from-string "") @payload.body)
               ])
             })))
@@ -698,7 +702,7 @@ orbital HttpClientOrbital {
                 (set @entity.status @status)
                 (set @entity.headers @fields)
                 (set @entity.buf (bytes/slice @entity.buf (+ @payload.end 4)))
-                (set @entity.keep (and (str/startsWith (default (array/first @lines) "") "HTTP/1.1") (= @entity.stream "none") (not (array/some @fields (fn h (and (= @h.name "connection") (str/includes (str/lower @h.value) "close"))))) (or @entity.headOnly (array/includes @config.noBodyStatuses @status) @chunked (and (> (array/len @lengths) 0) (validate/pattern (default (array/first @lengths) "") @config.lengthPattern)))))
+                (set @entity.keep (and @config.keepAlive (str/startsWith (default (array/first @lines) "") "HTTP/1.1") (= @entity.stream "none") (not (array/some @fields (fn h (and (= @h.name "connection") (str/includes (str/lower @h.value) "close"))))) (or @entity.headOnly (array/includes @config.noBodyStatuses @status) @chunked (and (> (array/len @lengths) 0) (validate/pattern (default (array/first @lengths) "") @config.lengthPattern)))))
                 (set @entity.left (if (and (not @chunked) (> (array/len @lengths) 0) (validate/pattern (default (array/first @lengths) "") @config.lengthPattern)) (default (str/to-int (default (array/first @lengths) "0")) 0) 0))
                 (set @entity.stage (if (or @entity.headOnly (array/includes @config.noBodyStatuses @status)) "done" (if @chunked "chunk-size" (if (and (> (array/len @lengths) 0) (validate/pattern (default (array/first @lengths) "") @config.lengthPattern)) "length" "close"))))
                 (emit HC_ADVANCE { n: (+ @entity.total (bytes/length @entity.buf)) })))))

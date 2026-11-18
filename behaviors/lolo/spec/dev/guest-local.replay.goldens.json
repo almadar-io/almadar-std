@@ -3,190 +3,275 @@
  "trait": "GuestLocal",
  "cases": [
   {
-   "id": "runs-client-local-opens-the-guest-with-local",
+   "id": "a-composed-mock-program-opens-local-with-its-seed-and-env",
    "steps": [
     {
      "trait": "GuestLocal",
-     "event": "GUEST_OPEN",
+     "event": "GUEST_LOCAL_OP",
      "payload": {
+      "kind": "open",
       "program": {
        "name": "x",
        "orbitals": []
+      },
+      "seed": "MockDataMockSeed",
+      "env": {
+       "FIREBASE_AUTH_EMULATOR_HOST": "127.0.0.1:9099",
+       "FIREBASE_PROJECT_ID": "demo-almadar"
       }
      },
      "entity": {
-      "id": "l",
-      "guestHandle": "",
-      "guestPaints": []
+      "id": "l"
      },
-     "from": "idle",
+     "from": "ready",
      "expect": {
       "fired": true,
-      "state": "opening",
-      "emits": [
-       {
-        "event": "GUEST_CLEARED",
-        "payload": {}
-       }
-      ],
+      "state": "ready",
       "effects": [
        {
-        "type": "set"
-       },
-       {
-        "type": "emit"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "when"
-       },
-       {
-        "type": "program/open",
-        "arg1": {
-         "local": true,
-         "seed": "MockDataMockSeed"
-        },
-        "arg2": {
-         "emit": {
-          "success": "GUEST_OPENED",
-          "failure": "GUEST_FAILED"
-         }
-        }
+        "type": "program/open"
        }
       ]
      }
     }
-   ],
-   "now": 1760531445678,
-   "config": {
-    "runs": "client"
-   }
+   ]
   },
   {
-   "id": "control-runs-server-local-ignores-the-open",
+   "id": "a-marked-program-opens-local-with-no-seed",
    "steps": [
     {
      "trait": "GuestLocal",
-     "event": "GUEST_OPEN",
+     "event": "GUEST_LOCAL_OP",
      "payload": {
-      "program": {
+      "kind": "open",
+      "marked": {
        "name": "x",
        "orbitals": []
+      },
+      "seed": "",
+      "env": {
+       "FIREBASE_AUTH_EMULATOR_HOST": "127.0.0.1:9099",
+       "FIREBASE_PROJECT_ID": "demo-almadar"
       }
      },
      "entity": {
-      "id": "l",
-      "guestHandle": "",
-      "guestPaints": []
+      "id": "l"
      },
-     "from": "idle",
+     "from": "ready",
      "expect": {
       "fired": true,
-      "state": "idle",
+      "state": "ready",
+      "effects": [
+       {
+        "type": "program/open"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-open-with-no-program-fails",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_LOCAL_OP",
+     "payload": {
+      "kind": "open",
+      "seed": ""
+     },
+     "entity": {
+      "id": "l"
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "GUEST_FAILED",
+        "payload": {
+         "error": "a local open carries no program"
+        }
+       }
+      ],
       "neverEmits": [
-       "GUEST_CLEARED"
+       "GUEST_OPENED"
       ]
      }
     }
-   ],
-   "now": 1760531445678
+   ]
   },
   {
-   "id": "runs-client-a-send-reaches-dispatch-with-local",
+   "id": "a-send-dispatches-into-the-local-guest",
    "steps": [
     {
      "trait": "GuestLocal",
-     "event": "GUEST_SEND",
+     "event": "GUEST_LOCAL_OP",
      "payload": {
-      "guest": "guest-1",
-      "address": "Counter.INC",
-      "event": "INC",
-      "payload": {}
+      "kind": "send",
+      "guest": "g1",
+      "address": "O.T.E",
+      "payload": {
+       "a": 1
+      }
      },
      "entity": {
-      "id": "l",
-      "guestHandle": "guest-1",
-      "guestPaints": []
+      "id": "l"
      },
-     "from": "live",
+     "from": "ready",
      "expect": {
       "fired": true,
-      "state": "live",
+      "state": "ready",
       "effects": [
        {
-        "type": "program/dispatch",
-        "arg0": "@payload.address",
-        "arg2": {
-         "guest": "@payload.guest",
-         "local": true,
-         "emit": {
-          "success": "GUEST_STEPPED",
-          "failure": "GUEST_STEP_FAILED"
-         }
-        }
+        "type": "program/dispatch"
        }
       ]
      }
     }
-   ],
-   "now": 1760531445678,
-   "config": {
-    "runs": "client"
-   }
+   ]
   },
   {
-   "id": "runs-client-close-carries-local",
+   "id": "a-persona-act-signs-the-local-guest-in-as-the-persona",
    "steps": [
     {
      "trait": "GuestLocal",
-     "event": "GUEST_RESET",
-     "payload": {},
-     "entity": {
-      "id": "l",
-      "guestHandle": "guest-1",
-      "guestPaints": []
+     "event": "GUEST_LOCAL_OP",
+     "payload": {
+      "kind": "persona-act",
+      "guest": "g1",
+      "address": "PERSONA_ACT_AS",
+      "persona": "p1"
      },
-     "from": "live",
+     "entity": {
+      "id": "l"
+     },
+     "from": "ready",
      "expect": {
       "fired": true,
-      "state": "idle",
+      "state": "ready",
+      "effects": [
+       {
+        "type": "program/dispatch"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-persona-list-asks-the-local-guest",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_LOCAL_OP",
+     "payload": {
+      "kind": "persona-list",
+      "guest": "g1",
+      "address": "MockDataMockSeed.SEED_PERSONAS_ASK"
+     },
+     "entity": {
+      "id": "l"
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "program/dispatch"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-navigate-remounts-the-local-guest",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_LOCAL_OP",
+     "payload": {
+      "kind": "navigate",
+      "guest": "g1",
+      "route": "/x",
+      "remount": true
+     },
+     "entity": {
+      "id": "l"
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "program/navigate"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-close-closes-the-local-guest",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_LOCAL_OP",
+     "payload": {
+      "kind": "close",
+      "guest": "g1"
+     },
+     "entity": {
+      "id": "l"
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "program/close"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unknown-operation-fails-naming-it",
+   "steps": [
+    {
+     "trait": "GuestLocal",
+     "event": "GUEST_LOCAL_OP",
+     "payload": {
+      "kind": "trace",
+      "guest": "g1"
+     },
+     "entity": {
+      "id": "l"
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "state": "ready",
       "emits": [
        {
-        "event": "GUEST_CLEARED",
-        "payload": {}
-       }
-      ],
-      "effects": [
-       {
-        "type": "program/close",
-        "arg0": "@entity.guestHandle",
-        "arg1": {
-         "local": true,
-         "emit": {
-          "success": "GUEST_CLOSED",
-          "failure": "GUEST_CLOSE_FAILED"
-         }
+        "event": "GUEST_FAILED",
+        "payload": {
+         "error": "a local guest takes no trace"
         }
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "emit"
        }
       ]
      }
     }
-   ],
-   "now": 1760531445678,
-   "config": {
-    "runs": "client"
-   }
+   ]
   }
- ]
+ ],
+ "defaults": {
+  "GuestSession": {}
+ }
 }

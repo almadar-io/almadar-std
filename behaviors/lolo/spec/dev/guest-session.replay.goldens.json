@@ -267,7 +267,12 @@
       ],
       "effects": [
        {
-        "type": "program/close"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/close"
+         }
+        ]
        },
        {
         "type": "set"
@@ -308,8 +313,13 @@
       "state": "live",
       "effects": [
        {
-        "type": "program/dispatch",
-        "arg0": "@payload.address"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch",
+          "arg0": "@payload.address"
+         }
+        ]
        }
       ]
      }
@@ -613,7 +623,12 @@
       ],
       "effects": [
        {
-        "type": "program/close"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/close"
+         }
+        ]
        },
        {
         "type": "set"
@@ -1063,7 +1078,12 @@
       "state": "live",
       "effects": [
        {
-        "type": "program/navigate"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/navigate"
+         }
+        ]
        }
       ]
      }
@@ -1377,7 +1397,12 @@
       ],
       "effects": [
        {
-        "type": "program/close"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/close"
+         }
+        ]
        },
        {
         "type": "set"
@@ -2799,7 +2824,12 @@
       "state": "live",
       "effects": [
        {
-        "type": "program/dispatch"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch"
+         }
+        ]
        }
       ]
      },
@@ -2884,7 +2914,12 @@
       "state": "live",
       "effects": [
        {
-        "type": "program/dispatch"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch"
+         }
+        ]
        }
       ]
      },
@@ -3357,7 +3392,12 @@
       "state": "live",
       "effects": [
        {
-        "type": "program/dispatch"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch"
+         }
+        ]
        }
       ]
      }
@@ -3451,7 +3491,12 @@
         "type": "emit"
        },
        {
-        "type": "program/navigate"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/navigate"
+         }
+        ]
        }
       ],
       "emits": [
@@ -16128,7 +16173,12 @@
       },
       "effects": [
        {
-        "type": "program/dispatch"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch"
+         }
+        ]
        }
       ]
      }
@@ -16161,7 +16211,12 @@
       },
       "effects": [
        {
-        "type": "program/dispatch"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch"
+         }
+        ]
        }
       ]
      }
@@ -16194,7 +16249,12 @@
       },
       "effects": [
        {
-        "type": "program/dispatch"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch"
+         }
+        ]
        }
       ]
      }
@@ -16614,47 +16674,17 @@
    }
   },
   {
-   "id": "runs-client-the-session-ignores-the-open",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_OPEN",
-     "payload": {
-      "program": {
-       "name": "x",
-       "orbitals": []
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "neverEmits": [
-       "GUEST_CLEARED",
-       "GUEST_PREPARE"
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678,
+   "id": "runs-client-a-composed-mock-guest-is-handed-to-the-browser",
    "config": {
     "runs": "client"
-   }
-  },
-  {
-   "id": "control-runs-server-the-session-opens-and-local-does-nothing",
+   },
    "steps": [
     {
      "trait": "GuestSession",
-     "event": "GUEST_OPEN",
+     "event": "GUEST_COMPOSED",
+     "from": "opening",
      "payload": {
-      "program": {
+      "result": {
        "name": "x",
        "orbitals": []
       }
@@ -16663,48 +16693,76 @@
       "id": "g",
       "guestHandle": "",
       "guestPaints": [],
-      "guestError": ""
+      "guestIntegrations": "mock",
+      "guestLocal": false
      },
-     "from": "idle",
      "expect": {
       "fired": true,
       "state": "opening",
-      "emits": [
+      "effects": [
        {
-        "event": "GUEST_CLEARED",
-        "payload": {}
+        "type": "set"
        },
        {
-        "event": "GUEST_PREPARE"
+        "type": "emit"
        }
-      ]
+      ],
+      "emits": [
+       {
+        "event": "GUEST_LOCAL_OP",
+        "payload": {
+         "kind": "open",
+         "seed": "MockDataMockSeed"
+        }
+       }
+      ],
+      "entity": {
+       "guestLocal": true
+      }
      }
-    },
+    }
+   ]
+  },
+  {
+   "id": "control-runs-server-a-composed-mock-guest-opens-on-the-kernel",
+   "config": {
+    "runs": "server"
+   },
+   "steps": [
     {
-     "trait": "GuestLocal",
-     "event": "GUEST_OPEN",
+     "trait": "GuestSession",
+     "event": "GUEST_COMPOSED",
+     "from": "opening",
      "payload": {
-      "program": {
+      "result": {
        "name": "x",
        "orbitals": []
       }
      },
      "entity": {
-      "id": "l",
+      "id": "g",
       "guestHandle": "",
-      "guestPaints": []
+      "guestPaints": [],
+      "guestIntegrations": "mock",
+      "guestLocal": false
      },
-     "from": "idle",
      "expect": {
       "fired": true,
-      "state": "idle",
+      "state": "opening",
+      "effects": [
+       {
+        "type": "program/open"
+       }
+      ],
       "neverEmits": [
-       "GUEST_CLEARED"
-      ]
+       "GUEST_LOCAL_OP"
+      ],
+      "entity": {
+       "guestLocal": false
+      }
      }
     }
-   ],
-   "now": 1760531445678
+   ]
   }
  ]
 }

@@ -478,6 +478,8 @@ orbital AgentConversationOrbital {
           gap: sm
           type: stack
         })
+      ASK -> idle when (and @entity.working (not (= (default ?message "") "")))
+        (emit DRAFT { message: ?message })
       START_CHAT -> idle when (and @config.ephemeral (not @entity.working))
         (set @entity.entries (if (= (default ?greeting "") "") [] [{ type: message, role: assistant, content: ?greeting, timestamp: @now }]))
         (set @entity.chatInstructions (default ?instructions ""))
@@ -952,6 +954,11 @@ orbital AgentConversationOrbital {
     }
 
     emits {
+      DRAFT -> internal {
+        message : string!
+      }
+        @description "Internal: a message asked while the assistant is answering goes back into the chat bar, to be sent when the answer ends."
+        @tier "internal"
       ASSISTANT_HISTORY_REQUESTED -> external {
       }
         @description "This conversation view opened; the assistant thread loads the current conversation into it."
