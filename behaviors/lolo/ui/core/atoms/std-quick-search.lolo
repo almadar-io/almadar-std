@@ -1,0 +1,106 @@
+app std-quick-search [
+  version: "1.0.0",
+  description: "std-quick-search — a search box that suggests as the viewer types, for a top bar: the first suggestion opens the full results page for the typed text, the rest are records (each labelled with its kind) matched on the text. The records arrive from the app as QUICK_SEARCH_ROWS events, one per kind, after the box asks for them with QUICK_SEARCH_LOAD; the box holds them, narrows them to the typed text and never reads app data itself. Typing navigates nowhere; only picking a suggestion does."
+]
+type QuickSearchRow = { id : string!, label : string }
+type QuickSearchHit = { key : string!, value : string!, label : string!, description : string! }
+orbital QuickSearchOrbital {
+  entity QuickSearchData [runtime] {
+    id : string!
+    query : string @description "The text typed in the box." = ""
+    hits : [QuickSearchHit] @description "Every record the app handed over, each with the address it opens and its kind." = []
+  }
+
+  trait QuickSearch -> @rebindable QuickSearchData [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when @config.enabled
+        (emit QUICK_SEARCH_LOAD { })
+        (emit QUICK_SEARCH_PAINT { })
+      INIT -> idle when (not @config.enabled)
+        (render-ui main null)
+      QUICK_SEARCH_TYPED -> idle
+        (set @entity.query (default ?searchTerm ""))
+        (emit QUICK_SEARCH_PAINT { })
+      QUICK_SEARCH_ROWS -> idle
+        (set @entity.hits (array/concat (array/reject @entity.hits (fn h (= @h.key ?sourceKey))) (array/map (default ?rows []) (fn r { key: ?sourceKey, value: (str/concat ?hrefPrefix @r.id), label: (default @r.label ""), description: ?kindLabel }))))
+        (emit QUICK_SEARCH_PAINT { })
+      QUICK_SEARCH_PAINT -> idle when @config.enabled
+        (render-ui main {
+          type: search-input
+          placeholder: @config.placeholder
+          debounceMs: @config.debounceMs
+          event: QUICK_SEARCH_TYPED
+          suggestionEvent: QUICK_SEARCH_PICKED
+          suggestions: (if (= (str/trim @entity.query) "") [] (array/concat [{ value: (str/concat "/" (str/slice @config.resultsPath 1) "/" (str/encode-uri-component (str/trim @entity.query))), label: (str/concat "See all results for “" (str/trim @entity.query) "”"), description: @config.resultsLabel }] (array/map (array/take (array/filter @entity.hits (fn h (str/includes (str/lower @h.label) (str/lower (str/trim @entity.query))))) @config.maxSuggestions) (fn h { value: @h.value, label: @h.label, description: @h.description }))))
+        })
+      QUICK_SEARCH_PICKED -> idle when (!= (default ?value "") "")
+        (navigate ?value)
+    }
+
+    emits {
+      QUICK_SEARCH_LOAD -> external { }
+        @description "The box mounted and asks the app for the records it can suggest; the app answers with one QUICK_SEARCH_ROWS per kind."
+        @tier "domain"
+      QUICK_SEARCH_PAINT
+        @description "Internal: draw the box with the text and records held now."
+        @tier "internal"
+    }
+
+    listens {
+      *.QUICK_SEARCH_ROWS -> QUICK_SEARCH_ROWS
+      QUICK_SEARCH_ROWS {
+        sourceKey : string!
+        kindLabel : string!
+        hrefPrefix : string!
+        rows : [QuickSearchRow]
+      }
+        @description "The app's records of one kind: their ids and labels, the kind's name and the address prefix a record opens at."
+        @tier "domain"
+      QUICK_SEARCH_TYPED {
+        searchTerm : string
+      }
+        @description "The viewer typed in the box (after the debounce)."
+        @tier "internal"
+      QUICK_SEARCH_PICKED {
+        value : string
+        label : string
+      }
+        @description "The viewer picked a suggestion; the box opens its address."
+        @tier "internal"
+      QUICK_SEARCH_PAINT
+        @description "Internal: draw the box."
+        @tier "internal"
+    }
+
+    config {
+      enabled : boolean = true
+        @label "Suggest as the viewer types?"
+        @description "False draws nothing and asks the app for nothing, for a library that embeds the box but lets its host turn it on."
+        @tier "presentation"
+      placeholder : string = "Search…"
+        @label "Placeholder text"
+        @description "Hint shown in the empty box."
+        @tier "presentation"
+      resultsPath : string = "/search"
+        @label "Results page path"
+        @description "The first suggestion opens <resultsPath>/<the typed text>."
+        @tier "presentation"
+      resultsLabel : string = "Search"
+        @label "Results suggestion kind"
+        @description "The small label under the first suggestion, the one that opens the full results."
+        @tier "presentation"
+      debounceMs : number = 200
+        @label "Typing pause"
+        @description "How long the box waits after a keystroke before suggesting, in milliseconds."
+        @tier "internal"
+      maxSuggestions : number = 8
+        @label "Most record suggestions"
+        @description "Most records listed under the results suggestion."
+        @tier "presentation"
+    }
+  }
+
+  page "/quick-search" as QuickSearchPage -> QuickSearch
+}

@@ -1,0 +1,717 @@
+{
+  "atom": "ops/atoms/std-fleet-cli.lolo",
+  "trait": "FleetCli",
+  "note": "The deploy command over std-deploy-host fleets.",
+  "cases": [
+    {
+      "id": "a deploy call parses its words",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "defaults": [
+        "FleetArgs"
+      ],
+      "steps": [
+        {
+          "event": "FLEET_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"deploy\", \"--target\", \"box\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ARGS_PARSE",
+                "payload": {
+                  "stage": "fleet",
+                  "argv": [
+                    "deploy",
+                    "--target",
+                    "box"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the local target lays its env over every app and deploys no indexes",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {},
+            "positionals": [
+              "deploy"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_DEPLOY",
+                "payload": {
+                  "target": "local",
+                  "only": [],
+                  "apps": [
+                    {
+                      "name": "shop",
+                      "program": "p/shop.lolo",
+                      "site": "shop-site",
+                      "staticDir": "",
+                      "env": {
+                        "FIRESTORE_DATABASE_ID": "(default)",
+                        "X": "1",
+                        "FIRESTORE_AUTH": "emulator"
+                      },
+                      "firestoreDatabase": ""
+                    },
+                    {
+                      "name": "blog",
+                      "program": "p/blog.lolo",
+                      "site": "",
+                      "staticDir": "",
+                      "env": {
+                        "FIRESTORE_AUTH": "emulator",
+                        "FIRESTORE_DATABASE_ID": "(default)"
+                      },
+                      "firestoreDatabase": ""
+                    }
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "busy": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: the box target keeps the apps' env and their indexes, only as named",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "target": [
+                "box"
+              ],
+              "only": [
+                "shop,blog"
+              ]
+            },
+            "positionals": [
+              "deploy"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "only": [
+                    "shop",
+                    "blog"
+                  ],
+                  "apps": [
+                    {
+                      "name": "shop",
+                      "program": "p/shop.lolo",
+                      "site": "shop-site",
+                      "staticDir": "",
+                      "env": {
+                        "FIRESTORE_DATABASE_ID": "shopdb",
+                        "X": "1"
+                      },
+                      "firestoreDatabase": "shopdb"
+                    },
+                    {
+                      "name": "blog",
+                      "program": "p/blog.lolo",
+                      "site": "",
+                      "staticDir": "",
+                      "env": {},
+                      "firestoreDatabase": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unknown target is refused",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "target": [
+                "moon"
+              ]
+            },
+            "positionals": [
+              "deploy"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "error: no target named moon (targets: box, local)"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_DEPLOY"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unknown app is refused",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "only": [
+                "shop",
+                "nope"
+              ]
+            },
+            "positionals": [
+              "deploy"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_DEPLOY"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a word other than deploy answers the usage",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {},
+            "positionals": [
+              "ship"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: deploy [--target box|local] [--only <app>[,<app>\u2026]]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a call while a deploy runs is refused",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_CALLED",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true
+          },
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"deploy\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 409
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_ARGS_PARSE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the results answer one line per app and fail when one failed",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RESULTS",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true
+          },
+          "payload": {
+            "results": [
+              {
+                "app": "shop",
+                "version": 4,
+                "ok": true,
+                "failures": []
+              },
+              {
+                "app": "blog",
+                "version": 0,
+                "ok": false,
+                "failures": [
+                  "resolve: x",
+                  "client: y"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "ok shop release 4\nfailed blog: resolve: x; client: y"
+                }
+              }
+            ],
+            "entity": {
+              "busy": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: all ok answers 200",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RESULTS",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true
+          },
+          "payload": {
+            "results": [
+              {
+                "app": "shop",
+                "version": 4,
+                "ok": true,
+                "failures": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "ok shop release 4"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

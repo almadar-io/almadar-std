@@ -1,6 +1,6 @@
 app std-cli [
   version: "1.0.0",
-  description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, with the passEnv knob's host variables added (read with os/getenv; the explicit env wins on a clash), in the cwd knob's directory (the host's working directory when it is empty). The priority knob sets the child's CPU scheduling priority (normal, or low to run it below the program). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only. With the stdio knob set to inherit the child runs on this process's terminal instead: nothing is piped or read, the atom waits for the exit and CLI_DONE carries the exit code with empty streams."
+  description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, with the passEnv knob's host variables added (read with os/getenv; the explicit env wins on a clash), in the cwd knob's directory (the host's working directory when it is empty). The priority knob sets the child's CPU scheduling priority (normal, or low to run it below the program). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only. With the stdio knob set to inherit the child runs on this process's terminal instead: nothing is piped or read, the atom waits for the exit and CLI_DONE carries the exit code with empty streams. When a run ends (answered or failed) every field of its row returns to its default, so a row std-cli-keyed made for one key is dropped once its run is over (EXEC-STEP-1b)."
 ]
 uses Spec from "almadar-std/cli"
 type AnchoredEnv = { anchor : { env : string! }! }
@@ -17,7 +17,7 @@ orbital CliOrbital {
     errDone : boolean @description "True once the child's stderr reached end of file." = false
     out : bytes @description "Everything the child wrote to stdout so far." = ""
     err : bytes @description "Everything the child wrote to stderr so far." = ""
-    exitCode : number @description "Exit code of the last finished child; -1 when a signal ended it." = 0
+    exitCode : number @description "Exit code of the child that just exited (-1 when a signal ended it), while its answer is made; reset with every other field when the run ends." = 0
     cancelRequested : boolean @description "A cancel arrived before the child started." = false
     hasStdin : boolean @description "The run in flight feeds the child bytes on stdin." = false
     stdin : bytes @description "The bytes the run in flight feeds the child on stdin." = ""
@@ -84,6 +84,22 @@ orbital CliOrbital {
         (emit CLI_FAILED { stage: @entity.stage error: "no command to run" code: "cli_spawn_failed" })
         (set @entity.stage "")
         (set @entity.pid 0)
+        (set @entity.outFd 0)
+        (set @entity.errFd 0)
+        (set @entity.inFd 0)
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.exitCode 0)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin false)
+        (set @entity.stdin (bytes/from-string ""))
+        (set @entity.argv [])
+        (set @entity.baseEnv {})
+        (set @entity.passed {})
+        (set @entity.cmdCursor 0)
+        (set @entity.envCursor 0)
       CLI_CANCEL -> running when (> @entity.pid 0)
         (os/kill @entity.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
       CLI_CANCEL -> running when (= @entity.pid 0)
@@ -132,6 +148,23 @@ orbital CliOrbital {
       CLI_SPAWN_FAILED -> idle when (or (!= @payload.kind "not-found") (>= (+ @entity.cmdCursor 1) (array/len @config.commands)))
         (emit CLI_FAILED { stage: @entity.stage error: (default @payload.error "") code: "cli_spawn_failed" })
         (set @entity.stage "")
+        (set @entity.pid 0)
+        (set @entity.outFd 0)
+        (set @entity.errFd 0)
+        (set @entity.inFd 0)
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.exitCode 0)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin false)
+        (set @entity.stdin (bytes/from-string ""))
+        (set @entity.argv [])
+        (set @entity.baseEnv {})
+        (set @entity.passed {})
+        (set @entity.cmdCursor 0)
+        (set @entity.envCursor 0)
       CLI_OUT_CHUNK -> running when (not @payload.eof)
         (set @entity.out (bytes/concat [@entity.out @payload.data]))
         (os/read @entity.outFd 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
@@ -156,6 +189,22 @@ orbital CliOrbital {
         (emit CLI_FAILED { stage: @entity.stage error: (default @payload.error "") code: "cli_host_failed" })
         (set @entity.stage "")
         (set @entity.pid 0)
+        (set @entity.outFd 0)
+        (set @entity.errFd 0)
+        (set @entity.inFd 0)
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.exitCode 0)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin false)
+        (set @entity.stdin (bytes/from-string ""))
+        (set @entity.argv [])
+        (set @entity.baseEnv {})
+        (set @entity.passed {})
+        (set @entity.cmdCursor 0)
+        (set @entity.envCursor 0)
       CLI_EXITED -> idle when (not @config.binaryOutput)
         (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
         (let ((text (bytes/to-string @entity.out)) (errText (bytes/to-string @entity.err)))
@@ -164,6 +213,22 @@ orbital CliOrbital {
             (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (default @payload.signal 0) stdout: (default @text "") stdoutBytes: @entity.out stderr: (default @errText "") })))
         (set @entity.stage "")
         (set @entity.pid 0)
+        (set @entity.outFd 0)
+        (set @entity.errFd 0)
+        (set @entity.inFd 0)
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.exitCode 0)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin false)
+        (set @entity.stdin (bytes/from-string ""))
+        (set @entity.argv [])
+        (set @entity.baseEnv {})
+        (set @entity.passed {})
+        (set @entity.cmdCursor 0)
+        (set @entity.envCursor 0)
       CLI_EXITED -> idle when @config.binaryOutput
         (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
         (let ((errText (bytes/to-string @entity.err)))
@@ -172,6 +237,22 @@ orbital CliOrbital {
             (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (default @payload.signal 0) stdout: "" stdoutBytes: @entity.out stderr: (default @errText "") })))
         (set @entity.stage "")
         (set @entity.pid 0)
+        (set @entity.outFd 0)
+        (set @entity.errFd 0)
+        (set @entity.inFd 0)
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.exitCode 0)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin false)
+        (set @entity.stdin (bytes/from-string ""))
+        (set @entity.argv [])
+        (set @entity.baseEnv {})
+        (set @entity.passed {})
+        (set @entity.cmdCursor 0)
+        (set @entity.envCursor 0)
     }
 
     emits {

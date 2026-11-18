@@ -1,0 +1,352 @@
+{
+  "atom": "../ui/core/atoms/std-quick-search.lolo",
+  "trait": "QuickSearch",
+  "cases": [
+    {
+      "id": "init-asks-the-app-for-its-records",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "INIT",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emitCounts": {
+              "QUICK_SEARCH_LOAD": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rows-of-one-kind-are-held-with-their-address-and-kind",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_ROWS",
+          "entity": {
+            "id": "e",
+            "query": "",
+            "hits": []
+          },
+          "payload": {
+            "sourceKey": "clients",
+            "kindLabel": "Client",
+            "hrefPrefix": "/clients/",
+            "rows": [
+              {
+                "id": "c1",
+                "label": "Acme"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "hits": [
+                {
+                  "key": "clients",
+                  "value": "/clients/c1",
+                  "label": "Acme",
+                  "description": "Client"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rows-of-a-second-kind-merge-with-the-first",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_ROWS",
+          "entity": {
+            "id": "e",
+            "query": "",
+            "hits": [
+              {
+                "key": "clients",
+                "value": "/clients/c1",
+                "label": "Acme",
+                "description": "Client"
+              }
+            ]
+          },
+          "payload": {
+            "sourceKey": "projects",
+            "kindLabel": "Project",
+            "hrefPrefix": "/projects/",
+            "rows": [
+              {
+                "id": "p1",
+                "label": "Acme site"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "hits": [
+                {
+                  "key": "clients",
+                  "value": "/clients/c1",
+                  "label": "Acme",
+                  "description": "Client"
+                },
+                {
+                  "key": "projects",
+                  "value": "/projects/p1",
+                  "label": "Acme site",
+                  "description": "Project"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "typing-suggests-results-first-then-matching-records-with-their-kind",
+      "config": {
+        "resultsPath": "/search"
+      },
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_PAINT",
+          "entity": {
+            "id": "e",
+            "query": "acm",
+            "hits": [
+              {
+                "key": "clients",
+                "value": "/clients/c1",
+                "label": "Acme",
+                "description": "Client"
+              },
+              {
+                "key": "projects",
+                "value": "/projects/p1",
+                "label": "Acme site",
+                "description": "Project"
+              },
+              {
+                "key": "projects",
+                "value": "/projects/p2",
+                "label": "Other",
+                "description": "Project"
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "suggestions": [
+                    {
+                      "value": "/search/acm",
+                      "label": "See all results for “acm”",
+                      "description": "Search"
+                    },
+                    {
+                      "value": "/clients/c1",
+                      "label": "Acme",
+                      "description": "Client"
+                    },
+                    {
+                      "value": "/projects/p1",
+                      "label": "Acme site",
+                      "description": "Project"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "picking-a-record-navigates-to-it",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "value": "/clients/c1",
+            "label": "Acme"
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "navigate",
+                "arg0": "@payload.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "picking-the-results-suggestion-navigates-to-the-results-page",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "value": "/search/acm",
+            "label": "See all results for “acm”"
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "navigate",
+                "arg0": "@payload.value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-typed-event-never-navigates",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_TYPED",
+          "entity": {
+            "id": "e",
+            "query": "",
+            "hits": []
+          },
+          "payload": {
+            "searchTerm": "acme"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "query": "acme"
+            },
+            "exactEmits": [
+              {
+                "event": "QUICK_SEARCH_PAINT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-empty-query-suggests-nothing",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_PAINT",
+          "entity": {
+            "id": "e",
+            "query": "  ",
+            "hits": [
+              {
+                "key": "clients",
+                "value": "/clients/c1",
+                "label": "Acme",
+                "description": "Client"
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "suggestions": []
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-empty-pick-does-not-navigate",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "value": "",
+            "label": ""
+          },
+          "expect": {
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-disabled-box-asks-the-app-for-nothing",
+      "config": {
+        "enabled": false
+      },
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "INIT",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "QUICK_SEARCH_LOAD"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

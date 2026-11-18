@@ -1,0 +1,523 @@
+{
+  "atom": "ops/atoms/std-firebase-deploy.lolo",
+  "trait": "FirebaseDeploy",
+  "note": "Hosting and Firestore index publishes, one row per app for each.",
+  "cases": [
+    {
+      "id": "a client publish first asks whether the site exists",
+      "config": {
+        "project": "proj"
+      },
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "FirebaseDeploy",
+          "from": "ready",
+          "event": "CLIENT_PUBLISH",
+          "payload": {
+            "app": "shop",
+            "site": "shop-site",
+            "dir": "/w/shop/client/web-client"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FD_HOSTING_START",
+                "payload": {
+                  "app": "shop",
+                  "project": "proj"
+                }
+              },
+              {
+                "event": "HP_FB_RUN",
+                "payload": {
+                  "stage": "shop|h-get",
+                  "argv": [
+                    "hosting:sites:get",
+                    "shop-site",
+                    "--project",
+                    "proj",
+                    "--non-interactive"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: without a project the publish fails at once",
+      "config": {},
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "FirebaseDeploy",
+          "from": "ready",
+          "event": "CLIENT_PUBLISH",
+          "payload": {
+            "app": "shop",
+            "site": "s",
+            "dir": "/d"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CLIENT_PUBLISH_FAILED",
+                "payload": {
+                  "app": "shop"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FD_HOSTING_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an existing site goes straight to its config",
+      "config": {
+        "project": "proj"
+      },
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "HostingPublish",
+          "from": "checking",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "site": "shop-site",
+            "dir": "/w/shop/client/web-client",
+            "project": "proj"
+          },
+          "event": "HP_FB_DONE",
+          "payload": {
+            "stage": "shop|h-get",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "configuring",
+            "emits": [
+              {
+                "event": "HP_SH_RUN",
+                "payload": {
+                  "stage": "shop|h-config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HP_FB_RUN"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a missing site is created first",
+      "config": {
+        "project": "proj"
+      },
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "HostingPublish",
+          "from": "checking",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "site": "shop-site",
+            "dir": "/w/shop/client/web-client",
+            "project": "proj"
+          },
+          "event": "HP_FB_DONE",
+          "payload": {
+            "stage": "shop|h-get",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "creating",
+            "emits": [
+              {
+                "event": "HP_FB_RUN",
+                "payload": {
+                  "stage": "shop|h-create",
+                  "argv": [
+                    "hosting:sites:create",
+                    "shop-site",
+                    "--project",
+                    "proj",
+                    "--non-interactive"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the written config is deployed and answered",
+      "config": {
+        "project": "proj"
+      },
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "HostingPublish",
+          "from": "configuring",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "site": "shop-site",
+            "dir": "/w/shop/client/web-client",
+            "project": "proj"
+          },
+          "event": "HP_SH_DONE",
+          "payload": {
+            "stage": "shop|h-config",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "deploying",
+            "emits": [
+              {
+                "event": "HP_FB_RUN",
+                "payload": {
+                  "stage": "shop|h-deploy",
+                  "argv": [
+                    "deploy",
+                    "--only",
+                    "hosting:shop-site",
+                    "--config",
+                    "/w/shop/client/web-client/../firebase.hosting.json",
+                    "--project",
+                    "proj",
+                    "--non-interactive"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "HostingPublish",
+          "from": "deploying",
+          "event": "HP_FB_DONE",
+          "payload": {
+            "stage": "shop|h-deploy",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HP_DONE",
+                "payload": {
+                  "app": "shop"
+                }
+              },
+              {
+                "event": "CLIENT_PUBLISHED",
+                "payload": {
+                  "app": "shop"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed hosting deploy answers its error",
+      "config": {
+        "project": "proj"
+      },
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "HostingPublish",
+          "from": "deploying",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "site": "shop-site",
+            "dir": "/w/shop/client/web-client",
+            "project": "proj"
+          },
+          "event": "HP_FB_DONE",
+          "payload": {
+            "stage": "shop|h-deploy",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "quota"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HP_FAILED"
+              },
+              {
+                "event": "CLIENT_PUBLISH_FAILED",
+                "payload": {
+                  "app": "shop",
+                  "error": "deploy: quota"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "indexes are configured for their database and deployed",
+      "config": {
+        "project": "proj"
+      },
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "FirebaseDeploy",
+          "from": "ready",
+          "event": "INDEXES_PUBLISH",
+          "payload": {
+            "app": "shop",
+            "database": "shopdb",
+            "file": "/w/shop/firestore.indexes.json"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FD_INDEXES_START"
+              },
+              {
+                "event": "IP_SH_RUN",
+                "payload": {
+                  "stage": "shop|i-config"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "IndexesPublish",
+          "from": "configuring",
+          "event": "IP_SH_DONE",
+          "payload": {
+            "stage": "shop|i-config",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "deploying",
+            "emits": [
+              {
+                "event": "IP_FB_RUN",
+                "payload": {
+                  "stage": "shop|i-deploy",
+                  "argv": [
+                    "deploy",
+                    "--only",
+                    "firestore:indexes",
+                    "--config",
+                    "/w/shop/firestore.indexes.json.firebase.json",
+                    "--project",
+                    "proj",
+                    "--non-interactive"
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "database": "shopdb",
+            "file": "/w/shop/firestore.indexes.json",
+            "project": "proj"
+          }
+        },
+        {
+          "trait": "IndexesPublish",
+          "from": "deploying",
+          "event": "IP_FB_DONE",
+          "payload": {
+            "stage": "shop|i-deploy",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "IP_DONE"
+              },
+              {
+                "event": "INDEXES_PUBLISHED",
+                "payload": {
+                  "app": "shop"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a second client publish of an app in flight is busy and another app is not",
+      "config": {
+        "project": "proj"
+      },
+      "defaults": [
+        "FirebaseDeploy",
+        "HostingPublish",
+        "IndexesPublish",
+        "FbCli",
+        "FbSh"
+      ],
+      "steps": [
+        {
+          "trait": "FirebaseDeploy",
+          "from": "ready",
+          "event": "CLIENT_PUBLISH",
+          "payload": {
+            "app": "shop",
+            "site": "s",
+            "dir": "/d"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FD_HOSTING_START"
+              },
+              {
+                "event": "HP_FB_RUN"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "FirebaseDeploy",
+          "from": "ready",
+          "event": "CLIENT_PUBLISH",
+          "payload": {
+            "app": "shop",
+            "site": "s",
+            "dir": "/d"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FD_HOSTING_START"
+              },
+              {
+                "event": "HP_FAILED"
+              },
+              {
+                "event": "CLIENT_PUBLISH_FAILED",
+                "payload": {
+                  "app": "shop"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "FirebaseDeploy",
+          "from": "ready",
+          "event": "CLIENT_PUBLISH",
+          "payload": {
+            "app": "blog",
+            "site": "b",
+            "dir": "/e"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FD_HOSTING_START"
+              },
+              {
+                "event": "HP_FB_RUN",
+                "payload": {
+                  "stage": "blog|h-get"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLIENT_PUBLISH_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

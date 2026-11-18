@@ -1,0 +1,32 @@
+app cli-keyed-spec [
+  version: "1.0.0",
+  description: "Design contract for concurrent command-line runs by key (std-cli stays one run per row): CLI_RUN { stage, argv, env?, stdin? } routed with `per @payload.stage` is answered CLI_DONE { stage, exitCode, signal, stdout, stdoutBytes, stderr } or CLI_FAILED { stage, error, code } carrying the same stage. Each stage is its own row of std-cli, so its own child process, created on first use and dropped when its run has ended; a second run on a stage in flight answers CLI_FAILED code cli_busy; a stage that is not a non-empty string is refused by the `per` clause as DELIVERY_REJECTED from CliKeyed, which answers CLI_FAILED with an empty stage and code cli_refused. CLI_CANCEL { stage } stops only that stage's child."
+]
+
+orbital CliKeyedSpec {
+  expects entity KeyedRun [runtime] {
+    id : string!
+  }
+  expects trait CliKeyed {
+    state ready {
+      CLI_RUN -> ready
+      CLI_CANCEL -> ready
+    }
+    emits {
+      CLI_FAILED { stage : string!  error : string!  code : string! }
+    }
+  }
+  expects trait KeyedCli {
+    state idle {
+      CLI_RUN -> running
+    }
+    state running {
+      CLI_RUN -> running
+    }
+    emits {
+      CLI_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+      CLI_FAILED { stage : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> CliKeyed, KeyedCli
+}

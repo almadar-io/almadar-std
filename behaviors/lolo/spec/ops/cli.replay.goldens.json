@@ -1,30 +1,170 @@
 {
- "atom": "ops/atoms/std-cli.lolo",
- "trait": "CliRunner",
- "cases": [
-  {
-   "id": "an inherited child's spawn answer carries no descriptors and the runner waits for its exit",
-   "config": { "stdio": "inherit" },
-   "steps": [
+  "atom": "ops/atoms/std-cli.lolo",
+  "trait": "CliRunner",
+  "cases": [
     {
-     "event": "CLI_SPAWNED",
-     "from": "running",
-     "payload": { "pid": 4242, "key": "spawn" },
-     "expect": { "state": "running", "effects": [{ "type": "os/wait", "key": "wait", "optionsAt": 1 }] }
-    }
-   ]
-  },
-  {
-   "id": "control: a piped child's spawn answer carries both descriptors and the runner reads them",
-   "config": { "stdio": "pipe" },
-   "steps": [
+      "id": "an inherited child's spawn answer carries no descriptors and the runner waits for its exit",
+      "config": {
+        "stdio": "inherit"
+      },
+      "steps": [
+        {
+          "event": "CLI_SPAWNED",
+          "from": "running",
+          "payload": {
+            "pid": 4242,
+            "key": "spawn"
+          },
+          "expect": {
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/wait",
+                "key": "wait",
+                "optionsAt": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
     {
-     "event": "CLI_SPAWNED",
-     "from": "running",
-     "payload": { "pid": 4242, "stdout": 5, "stderr": 6, "key": "spawn" },
-     "expect": { "state": "running", "effects": [{ "type": "os/read", "key": "out", "optionsAt": 2 }] }
+      "id": "control: a piped child's spawn answer carries both descriptors and the runner reads them",
+      "config": {
+        "stdio": "pipe"
+      },
+      "steps": [
+        {
+          "event": "CLI_SPAWNED",
+          "from": "running",
+          "payload": {
+            "pid": 4242,
+            "stdout": 5,
+            "stderr": 6,
+            "key": "spawn"
+          },
+          "expect": {
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/read",
+                "key": "out",
+                "optionsAt": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a finished run returns its row to the defaults so a keyed row is dropped",
+      "config": {
+        "stdio": "pipe"
+      },
+      "steps": [
+        {
+          "event": "CLI_EXITED",
+          "from": "running",
+          "entity": {
+            "id": "r1",
+            "stage": "build",
+            "pid": 4242,
+            "outFd": 5,
+            "errFd": 6,
+            "outDone": true,
+            "errDone": true,
+            "argv": [
+              "x"
+            ],
+            "passed": {
+              "PATH": "/bin"
+            }
+          },
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CLI_DONE",
+                "payload": {
+                  "stage": "build",
+                  "exitCode": 0
+                }
+              }
+            ],
+            "entity": {
+              "stage": "",
+              "pid": 0,
+              "outFd": 0,
+              "errFd": 0,
+              "outDone": false,
+              "errDone": false,
+              "exitCode": 0,
+              "argv": [],
+              "passed": {},
+              "cmdCursor": 0,
+              "envCursor": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a host failure mid-run also returns the row to the defaults",
+      "config": {
+        "stdio": "pipe"
+      },
+      "steps": [
+        {
+          "event": "CLI_HOST_FAILED",
+          "from": "running",
+          "entity": {
+            "id": "r1",
+            "stage": "build",
+            "pid": 4242,
+            "outFd": 5,
+            "errFd": 6,
+            "outDone": true,
+            "errDone": true,
+            "out": "ok",
+            "err": "",
+            "argv": [
+              "x"
+            ],
+            "passed": {
+              "PATH": "/bin"
+            }
+          },
+          "payload": {
+            "error": "read failed",
+            "kind": "io",
+            "key": "out"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CLI_FAILED",
+                "payload": {
+                  "stage": "build",
+                  "code": "cli_host_failed"
+                }
+              }
+            ],
+            "entity": {
+              "stage": "",
+              "pid": 0,
+              "outFd": 0,
+              "argv": [],
+              "passed": {}
+            }
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

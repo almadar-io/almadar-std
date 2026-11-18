@@ -389,6 +389,128 @@
           }
         }
       ]
+    },
+    {
+      "id": "search-with-search-path-navigates-to-the-results-page",
+      "note": "a submitted query also opens <searchPath>/<encoded query>",
+      "config": {
+        "searchPath": "/search"
+      },
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "value": "a b&c"
+          },
+          "expect": {
+            "fired": true,
+            "state": "composing",
+            "exactEmits": [
+              {
+                "event": "LAYOUT_SEARCH",
+                "payload": {
+                  "value": "a b&c"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "navigate",
+                "arg0": [
+                  "str/concat",
+                  "/",
+                  [
+                    "str/slice",
+                    "/search",
+                    1
+                  ],
+                  "/",
+                  [
+                    "str/encode-uri-component",
+                    [
+                      "str/trim",
+                      [
+                        "default",
+                        "@payload.value",
+                        ""
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-search-without-search-path-does-not-navigate",
+      "note": "control: an empty searchPath keeps the emit only",
+      "config": {
+        "searchPath": ""
+      },
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "value": "abc"
+          },
+          "expect": {
+            "fired": true,
+            "state": "composing",
+            "exactEmits": [
+              {
+                "event": "LAYOUT_SEARCH",
+                "payload": {
+                  "value": "abc"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-blank-search-with-search-path-does-not-navigate",
+      "note": "edge: a blank query never navigates even with a searchPath",
+      "config": {
+        "searchPath": "/search"
+      },
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "value": "   "
+          },
+          "expect": {
+            "fired": true,
+            "state": "composing",
+            "exactEmits": [
+              {
+                "event": "LAYOUT_SEARCH",
+                "payload": {
+                  "value": "   "
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

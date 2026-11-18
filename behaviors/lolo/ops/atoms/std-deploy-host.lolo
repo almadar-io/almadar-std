@@ -1,40 +1,65 @@
 app std-deploy-host [
-  version: "1.0.0",
-  exec: ["rsync", "ssh", "curl"],
+  version: "2.0.0",
+  exec: ["rsync", "ssh", "sh", "curl", "orb"],
   env: ["PATH", "HOME", "SSH_AUTH_SOCK"],
-  description: "std-deploy-host — deploys a resolved app or the orb binary to one server over ssh and rsync, no containers. The knobs are host (the ssh target, e.g. deploy@box), root (default /srv/orb), service (default orb-central), healthUrl, keep (releases kept per app, default 3) and systemctlArgs (default [\"--user\"]). DEPLOY_APP { app, localDir } reads the app's history from std-deployment-registry for the next number n (artifact = app), runs rsync -a --delete of localDir/ to <host>:<root>/apps/<app>/releases/<n>/, switches <root>/apps/<app>/current to that release over ssh with ln -sfn (and prunes releases beyond keep), then records and activates the deployment with the registry's DEPLOY and answers APP_DEPLOYED { app, version }, or DEPLOY_FAILED { app, step, error } naming the failed step (rsync, link, record; number when the history could not be read, config when host is empty). Nothing is recorded when rsync or the link fails. An app deploy restarts nothing: the central orb loads the new version on its next load. DEPLOY_BINARY { localPath } rsyncs the binary to <root>/bin/orb.new, over ssh copies the old orb to orb.prev and moves orb.new over orb, runs systemctl <systemctlArgs> restart <service>, then checks healthUrl with curl -fsS (std-http-client takes host, port and tls as grants rather than a URL, so a curl run through std-cli fits better); a failed restart or health check moves orb.prev back, restarts again and answers BINARY_ROLLED_BACK { error }, success answers BINARY_DEPLOYED { }. ROLLBACK_APP { app, version } points current at that release over ssh with ln -sfn and re-activates it with the registry's ROLLBACK, answering APP_ROLLED_BACK { app, version }. Every command is an argument array built from knobs and payload fields; paths inside the ssh remote command are single-quoted, rsync runs with -s so remote paths are not shell-parsed. One call at a time: a call made while another runs answers DEPLOY_FAILED step busy."
+  description: "std-deploy-host — deploys resolved apps and the orb runtime to one server over ssh and rsync, or to this machine when the host knob is local. The knobs are host (the ssh target, e.g. deploy@box, or local to run every server command here through sh -c), root (default /srv/orb), runtime (docker or systemd), service (the systemd unit), image (the docker image name), healthUrl, keep (releases kept per app and docker images kept, default 3) and systemctlArgs. Apps deploy concurrently, one row of AppRelease per app (`per @payload.app`, EXEC-STEP-1a): DEPLOY_APP { app, localDir } asks the server for the highest number under <root>/apps/<app>/releases (the release folders are the app's history) and takes the next one, n, rsyncs localDir/ to <root>/apps/<app>/releases/<n>/, then on the server moves a plain current directory left by an older deploy to releases/0, points current at releases/<n> with a relative link swapped in by one rename (so a reader sees the old release or the new one, never neither), removes releases beyond keep, and answers APP_DEPLOYED { app, version }, or DEPLOY_FAILED { app, step, error } naming the failed step (config, busy, number, rsync, link); a failed rsync or link leaves current where it was, and an app deploy restarts nothing: the central host serves the new release when it sees the link change. A second DEPLOY_APP for an app in flight answers DEPLOY_FAILED step busy; other apps are not held. The exclusive calls run only while no app deploy is in flight and refuse as busy otherwise: DEPLOY_RUNTIME { contextDir, stackDir, tag } (runtime docker) rsyncs the build context to <root>/build/ and the stack files to <root>/stack/ (its .env is never touched), builds <image>:<tag> on the server, reads the ORB_IMAGE the stack ran, writes ORB_IMAGE=<image>:<tag> into <root>/stack/.env, links <root>/stack/srv to <root>, runs docker compose up -d and checks healthUrl with curl; a failed health check or start writes the previous ORB_IMAGE back, starts it again and answers RUNTIME_ROLLED_BACK { error }, success removes the image's tags beyond keep and answers RUNTIME_DEPLOYED { image }. DEPLOY_BINARY { localPath } (runtime systemd) rsyncs the binary to <root>/bin/orb.new, keeps orb.prev, moves orb.new over orb, restarts the unit and checks healthUrl, rolling back to orb.prev on failure (BINARY_DEPLOYED, BINARY_ROLLED_BACK). ROLLBACK_APP { app, version } points current at that release folder (APP_ROLLED_BACK). SET_STACK_ENV { name, value, apply } replaces the name's line in <root>/stack/.env and, when apply, runs docker compose up -d so the container takes it (STACK_ENV_SET). Every command is an argument array built from knobs and payload fields; paths and values inside a server command are single-quoted, an app name is letters, digits, dot, dash and underscore (not starting with a dot) so no name reaches a server shell or path as syntax, and every run is its own child on its own std-cli-keyed row, named by stage <app>|<step> or #<op>|<step>."
 ]
-uses Registry from "std/behaviors/std-deployment-registry"
-uses Rsync from "std/behaviors/std-cli"
-uses Ssh from "std/behaviors/std-cli"
-uses Curl from "std/behaviors/std-cli"
+uses Keyed from "std/behaviors/std-cli-keyed"
 
-type HistoryRow = { id : string!, artifact : string!, version : number!, activates : boolean!, recordedAt : instant, details : Map string (string | number) }
+type FleetAppSpec = { name : string!, program : string!, site : string, staticDir : string, env : Map string string, firestoreDatabase : string }
+type FleetResult = { app : string!, version : number!, ok : boolean!, failures : [string]! }
 
 orbital DeployHostOrbital {
   entity DeployHostRun [runtime] {
     id : string!
-    op : string @description "app, binary or rollback: the call in flight." = ""
+    op : string @description "binary, runtime or rollback: the exclusive call in flight." = ""
+    apps : [string] @description "The apps whose deploy is in flight." = []
     app : string = ""
     localPath : string = ""
-    version : number @description "The release number being deployed or rolled back to." = 0
-    relDir : string = ""
-    appDir : string = ""
-    binDir : string = ""
-    reason : string @description "Why the binary deploy is being undone." = ""
+    version : number @description "The release a rollback points at." = 0
+    image : string @description "The image a runtime deploy starts." = ""
+    prevImage : string @description "The ORB_IMAGE the stack ran before a runtime deploy." = ""
+    reason : string @description "Why the exclusive call is being undone." = ""
+    envName : string = ""
+    envApply : boolean = false
   }
 
-  trait HostRegistry = Registry.traits.DeploymentRegistrar {
-    listens {
-      DeployHost.DH_HISTORY -> HISTORY
-      DeployHost.DH_RECORD -> DEPLOY
-      DeployHost.DH_ROLLBACK -> ROLLBACK
-    }
+  entity FleetPlanRun [runtime] {
+    id : string!
+    apps : [string] @description "The apps of the fleet deploy in flight." = []
+    results : [FleetResult] @description "The apps finished so far." = []
+    workDir : string = ""
+    apiOrigin : string = ""
   }
 
-  trait HostRsync = Rsync.traits.CliRunner {
+  entity FleetRun [runtime] {
+    id : string!
+    app : string = ""
+    program : string = ""
+    site : string = ""
+    staticDir : string = ""
+    firestoreDatabase : string = ""
+    stageDir : string = ""
+    origin : string = ""
+    pending : number @description "The parts still running: the server release, the client and the indexes." = 0
+    version : number = 0
+    failures : [string] = []
+  }
+
+  entity AppReleaseRun [runtime] {
+    id : string!
+    app : string = ""
+    localDir : string = ""
+    version : number @description "The release number being deployed." = 0
+    host : string @description "DeployHost's host knob, carried with the run." = ""
+    root : string @description "DeployHost's root knob, carried with the run." = ""
+    keep : number @description "DeployHost's keep knob, carried with the run." = 0
+  }
+
+  trait HostRsync = Keyed.traits.KeyedCli {
     listens {
-      DeployHost.DH_RSYNC_RUN -> CLI_RUN
+      AppRelease.AR_RSYNC_RUN -> CLI_RUN per @payload.stage
+      DeployHost.DH_RSYNC_RUN -> CLI_RUN per @payload.stage
     }
     config {
       commands: ["rsync"]
@@ -42,9 +67,9 @@ orbital DeployHostOrbital {
     }
   }
 
-  trait HostSsh = Ssh.traits.CliRunner {
+  trait HostSsh = Keyed.traits.KeyedCli {
     listens {
-      DeployHost.DH_SSH_RUN -> CLI_RUN
+      HostRemote.REMOTE_SSH -> CLI_RUN per @payload.stage
     }
     config {
       commands: ["ssh"]
@@ -52,13 +77,170 @@ orbital DeployHostOrbital {
     }
   }
 
-  trait HostCurl = Curl.traits.CliRunner {
+  trait HostSh = Keyed.traits.KeyedCli {
     listens {
-      DeployHost.DH_CURL_RUN -> CLI_RUN
+      HostRemote.REMOTE_SH -> CLI_RUN per @payload.stage
+    }
+    config {
+      commands: ["sh"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait HostCurl = Keyed.traits.KeyedCli {
+    listens {
+      DeployHost.DH_CURL_RUN -> CLI_RUN per @payload.stage
     }
     config {
       commands: ["curl"]
       passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait HostRemote -> DeployHostRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      REMOTE_RUN -> ready when (= @payload.host "local")
+        (emit REMOTE_SH { stage: @payload.stage, argv: ["-c", @payload.cmd] })
+      REMOTE_RUN -> ready when (!= @payload.host "local")
+        (emit REMOTE_SSH { stage: @payload.stage, argv: ["-o", "BatchMode=yes", "--", @payload.host, @payload.cmd] })
+    }
+
+    emits {
+      REMOTE_SSH -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+      REMOTE_SH -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+    }
+
+    listens {
+      REMOTE_RUN { stage : string!  cmd : string!  host : string! }
+        @description "Run one shell command on the server (over ssh), or here when the host is local."
+        @tier "internal"
+      AppRelease.AR_REMOTE -> REMOTE_RUN
+      DeployHost.DH_REMOTE -> REMOTE_RUN
+    }
+  }
+
+  trait AppRelease -> AppReleaseRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      AR_START -> history
+        (set @entity.app @payload.app)
+        (set @entity.localDir @payload.localDir)
+        (set @entity.host @payload.host)
+        (set @entity.root @payload.root)
+        (set @entity.keep @payload.keep)
+        (set @entity.version 0)
+        (emit AR_REMOTE { stage: (str/concat @payload.app "|number"), host: @payload.host, cmd: (str/concat "mkdir -p '" (str/join (str/split (str/concat @payload.root "/apps/" @payload.app "/releases") "'") "'\\''") "' && cd '" (str/join (str/split (str/concat @payload.root "/apps/" @payload.app) "'") "'\\''") "' && ls -1 releases | grep -E '^[0-9]+$' | sort -n | tail -n 1; true") })
+    }
+
+    state history {
+      INIT -> history
+      AR_REMOTE_DONE -> uploading when (= @payload.exitCode 0)
+        (set @entity.version (+ (default (str/to-number (str/trim @payload.stdout)) 0) 1))
+        (emit AR_RSYNC_RUN { stage: (str/concat @entity.app "|rsync"), argv: ["-a", "--delete", "--", (str/concat @entity.localDir "/"), (str/concat (if (= @entity.host "local") "" (str/concat @entity.host ":")) @entity.root "/apps/" @entity.app "/releases/" (+ (default (str/to-number (str/trim @payload.stdout)) 0) 1) "/")] })
+      AR_REMOTE_DONE -> idle when (!= @payload.exitCode 0)
+        (emit AR_FAILED { app: @entity.app, step: "number", error: @payload.stderr })
+        (set @entity.app "")
+        (set @entity.localDir "")
+        (set @entity.version 0)
+        (set @entity.host "")
+        (set @entity.root "")
+        (set @entity.keep 0)
+      AR_REMOTE_FAILED -> idle
+        (emit AR_FAILED { app: @entity.app, step: "number", error: @payload.error })
+        (set @entity.app "")
+        (set @entity.localDir "")
+        (set @entity.version 0)
+        (set @entity.host "")
+        (set @entity.root "")
+        (set @entity.keep 0)
+    }
+
+    state uploading {
+      INIT -> uploading
+      AR_RSYNC_DONE -> linking when (= @payload.exitCode 0)
+        (emit AR_REMOTE { stage: (str/concat @entity.app "|link"), host: @entity.host, cmd: (str/concat "cd '" (str/join (str/split (str/concat @entity.root "/apps/" @entity.app) "'") "'\\''") "' && if [ -d current ] && [ ! -L current ]; then mkdir -p releases && rm -rf releases/0 && mv current releases/0; fi && ln -sfn 'releases/" @entity.version "' current.next && perl -e 'rename shift, shift or exit 1' current.next current && { cd releases && ls -1 | sort -rn | tail -n +" (+ (if (< @entity.keep 1) 1 @entity.keep) 1) " | while read -r d; do rm -rf -- \"$d\"; done; true; }") })
+      AR_RSYNC_DONE -> idle when (!= @payload.exitCode 0)
+        (emit AR_FAILED { app: @entity.app, step: "rsync", error: @payload.stderr })
+        (set @entity.app "")
+        (set @entity.localDir "")
+        (set @entity.version 0)
+        (set @entity.host "")
+        (set @entity.root "")
+        (set @entity.keep 0)
+      AR_RSYNC_FAILED -> idle
+        (emit AR_FAILED { app: @entity.app, step: "rsync", error: @payload.error })
+        (set @entity.app "")
+        (set @entity.localDir "")
+        (set @entity.version 0)
+        (set @entity.host "")
+        (set @entity.root "")
+        (set @entity.keep 0)
+    }
+
+    state linking {
+      INIT -> linking
+      AR_REMOTE_DONE -> idle when (= @payload.exitCode 0)
+        (emit AR_DONE { app: @entity.app, version: @entity.version })
+        (set @entity.app "")
+        (set @entity.localDir "")
+        (set @entity.version 0)
+        (set @entity.host "")
+        (set @entity.root "")
+        (set @entity.keep 0)
+      AR_REMOTE_DONE -> idle when (!= @payload.exitCode 0)
+        (emit AR_FAILED { app: @entity.app, step: "link", error: @payload.stderr })
+        (set @entity.app "")
+        (set @entity.localDir "")
+        (set @entity.version 0)
+        (set @entity.host "")
+        (set @entity.root "")
+        (set @entity.keep 0)
+      AR_REMOTE_FAILED -> idle
+        (emit AR_FAILED { app: @entity.app, step: "link", error: @payload.error })
+        (set @entity.app "")
+        (set @entity.localDir "")
+        (set @entity.version 0)
+        (set @entity.host "")
+        (set @entity.root "")
+        (set @entity.keep 0)
+    }
+
+    emits {
+      AR_DONE -> internal { app : string!  version : number! }
+        @tier "internal"
+      AR_FAILED -> internal { app : string!  step : string!  error : string! }
+        @tier "internal"
+      AR_RSYNC_RUN -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+      AR_REMOTE -> internal { stage : string!  cmd : string!  host : string! }
+        @tier "internal"
+    }
+
+    listens {
+      AR_START { app : string!  localDir : string!  host : string!  root : string!  keep : number! }
+        @tier "internal"
+      AR_RSYNC_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      AR_RSYNC_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      AR_REMOTE_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      AR_REMOTE_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      DeployHost.DH_APP_START -> AR_START per @payload.app
+      HostRsync.CLI_DONE -> AR_RSYNC_DONE per (default (array/first (str/split @payload.stage "|")) "") when (not (str/startsWith @payload.stage "#"))
+      HostRsync.CLI_FAILED -> AR_RSYNC_FAILED per (default (array/first (str/split @payload.stage "|")) "") when (not (str/startsWith @payload.stage "#"))
+      HostSsh.CLI_DONE -> AR_REMOTE_DONE per (default (array/first (str/split @payload.stage "|")) "") when (not (str/startsWith @payload.stage "#"))
+      HostSsh.CLI_FAILED -> AR_REMOTE_FAILED per (default (array/first (str/split @payload.stage "|")) "") when (not (str/startsWith @payload.stage "#"))
+      HostSh.CLI_DONE -> AR_REMOTE_DONE per (default (array/first (str/split @payload.stage "|")) "") when (not (str/startsWith @payload.stage "#"))
+      HostSh.CLI_FAILED -> AR_REMOTE_FAILED per (default (array/first (str/split @payload.stage "|")) "") when (not (str/startsWith @payload.stage "#"))
     }
   }
 
@@ -68,14 +250,23 @@ orbital DeployHostOrbital {
     config {
       host : string = ""
         @label "SSH target"
-        @description "The ssh target every command runs against, e.g. deploy@box."
+        @description "The ssh target every command runs against, e.g. deploy@box, or local to run them on this machine."
         @synonyms "server, ssh host, target"
         @tier "domain"
       root : string = "/srv/orb"
         @label "Remote root"
-        @description "The directory on the server holding apps/<app>/releases/<n>, apps/<app>/current and bin/orb."
+        @description "The directory on the server holding apps/, bin/, build/ and stack/."
         @synonyms "install directory, deploy root"
         @tier "domain"
+      runtime : "docker" | "systemd" = "docker"
+        @label "Runtime"
+        @description "How the orb runs on the server: docker (DEPLOY_RUNTIME builds an image and runs docker compose in <root>/stack) or systemd (DEPLOY_BINARY replaces <root>/bin/orb and restarts the unit)."
+        @synonyms "container, service manager"
+        @tier "infra"
+      image : string = "almadar-central-orb"
+        @label "Image name"
+        @description "The docker image a runtime deploy builds and tags, and whose older tags it removes beyond keep."
+        @tier "infra"
       service : string = "orb-central"
         @label "Service"
         @description "The systemd unit a binary deploy restarts."
@@ -83,124 +274,271 @@ orbital DeployHostOrbital {
         @tier "domain"
       healthUrl : string = ""
         @label "Health URL"
-        @description "The URL a binary deploy GETs after the restart; a failure (curl -fsS, retried for a few seconds) rolls the binary back."
+        @description "The URL a runtime or binary deploy GETs after the start; a failure (curl -fsS, retried for about a minute) rolls it back."
         @synonyms "health check, readiness url"
         @tier "domain"
       keep : number = 3
-        @label "Releases kept"
-        @description "How many releases an app deploy leaves on the server per app (the newest ones); older release directories are removed after the switch."
-        @synonyms "retention, release history"
+        @label "Kept"
+        @description "How many releases an app deploy leaves per app (the newest ones), and how many docker image tags a runtime deploy leaves (at least 2: the running one and the one before it)."
+        @synonyms "retention"
+        @tier "domain"
+      workDir : string = ""
+        @label "Work folder"
+        @description "The local folder a fleet deploy stages each app in (<workDir>/<app>/release for the server, <workDir>/<app>/client for the web client); a gitignored build folder."
+        @synonyms "staging folder, build output"
+        @tier "infra"
+      apiOrigin : string = ""
+        @label "API origin"
+        @description "The public origin of the central host; a fleet deploy compiles each app's web client with ORB_PUBLIC_ORIGIN=<apiOrigin>/apps/<app>."
+        @synonyms "server origin, api url"
         @tier "domain"
       systemctlArgs : [string] = ["--user"]
         @label "systemctl arguments"
-        @description "Arguments placed before restart in the systemctl command, [\"--user\"] for a user unit; a system unit is restarted with [\"--system\"] and a host whose ssh user may run it."
+        @description "Arguments placed before restart in the systemctl command, [\"--user\"] for a user unit."
         @synonyms "systemctl flags, user unit"
         @tier "infra"
     }
 
     state idle {
       INIT -> idle
+      DEPLOY_FLEET -> idle
+        (emit DH_FLEET { apps: @payload.apps, only: @payload.only, workDir: @config.workDir, apiOrigin: @config.apiOrigin })
       DEPLOY_APP -> idle when (= @config.host "")
         (emit DEPLOY_FAILED { app: @payload.app, step: "config", error: "the host knob is empty" })
-      DEPLOY_APP -> running when (!= @config.host "")
-        (set @entity.op "app")
-        (set @entity.app @payload.app)
-        (set @entity.localPath @payload.localDir)
-        (set @entity.appDir (str/concat @config.root "/apps/" @payload.app))
-        (emit DH_HISTORY { artifact: @payload.app })
-      DEPLOY_BINARY -> idle when (or (= @config.host "") (= @config.healthUrl ""))
-        (emit DEPLOY_FAILED { app: "", step: "config", error: "the host and healthUrl knobs must be set" })
-      DEPLOY_BINARY -> running when (and (!= @config.host "") (!= @config.healthUrl ""))
+        (emit DH_APP_FAILED { app: @payload.app, step: "config", error: "the host knob is empty" })
+      DEPLOY_APP -> idle when (and (!= @config.host "") (not (validate/pattern @payload.app "^[A-Za-z0-9_-][A-Za-z0-9._-]*$")))
+        (emit DEPLOY_FAILED { app: @payload.app, step: "config", error: "an app name is letters, digits, dot, dash and underscore, not starting with a dot" })
+        (emit DH_APP_FAILED { app: @payload.app, step: "config", error: "an app name is letters, digits, dot, dash and underscore, not starting with a dot" })
+      DEPLOY_APP -> idle when (and (!= @config.host "") (validate/pattern @payload.app "^[A-Za-z0-9_-][A-Za-z0-9._-]*$") (array/includes @entity.apps @payload.app))
+        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: "a deploy of this app is in flight" })
+        (emit DH_APP_FAILED { app: @payload.app, step: "busy", error: "a deploy of this app is in flight" })
+      DEPLOY_APP -> idle when (and (!= @config.host "") (validate/pattern @payload.app "^[A-Za-z0-9_-][A-Za-z0-9._-]*$") (not (array/includes @entity.apps @payload.app)))
+        (set @entity.apps (array/append @entity.apps @payload.app))
+        (emit DH_APP_START { app: @payload.app, localDir: @payload.localDir, host: @config.host, root: @config.root, keep: @config.keep })
+      AR_DONE -> idle
+        (set @entity.apps (array/filter @entity.apps (fn a (!= @a @payload.app))))
+        (emit APP_DEPLOYED { app: @payload.app, version: @payload.version })
+      AR_FAILED -> idle
+        (set @entity.apps (array/filter @entity.apps (fn a (!= @a @payload.app))))
+        (emit DEPLOY_FAILED { app: @payload.app, step: @payload.step, error: @payload.error })
+        (emit DH_APP_FAILED { app: @payload.app, step: @payload.step, error: @payload.error })
+
+      DEPLOY_RUNTIME -> idle when (> (array/len @entity.apps) 0)
+        (emit DEPLOY_FAILED { app: "", step: "busy", error: "app deploys are in flight" })
+      DEPLOY_RUNTIME -> idle when (and (= (array/len @entity.apps) 0) (or (= @config.host "") (= @config.healthUrl "") (!= @config.runtime "docker")))
+        (emit DEPLOY_FAILED { app: "", step: "config", error: "a runtime deploy needs the host and healthUrl knobs and runtime docker" })
+      DEPLOY_RUNTIME -> running when (and (= (array/len @entity.apps) 0) (!= @config.host "") (!= @config.healthUrl "") (= @config.runtime "docker"))
+        (set @entity.op "runtime")
+        (set @entity.image (str/concat @config.image ":" @payload.tag))
+        (set @entity.localPath @payload.stackDir)
+        (emit DH_RSYNC_RUN { stage: "#runtime|context", argv: ["-a", "--delete", "--", (str/concat @payload.contextDir "/"), (str/concat (if (= @config.host "local") "" (str/concat @config.host ":")) @config.root "/build/")] })
+
+      DEPLOY_BINARY -> idle when (> (array/len @entity.apps) 0)
+        (emit DEPLOY_FAILED { app: "", step: "busy", error: "app deploys are in flight" })
+      DEPLOY_BINARY -> idle when (and (= (array/len @entity.apps) 0) (or (= @config.host "") (= @config.healthUrl "") (!= @config.runtime "systemd")))
+        (emit DEPLOY_FAILED { app: "", step: "config", error: "a binary deploy needs the host and healthUrl knobs and runtime systemd" })
+      DEPLOY_BINARY -> running when (and (= (array/len @entity.apps) 0) (!= @config.host "") (!= @config.healthUrl "") (= @config.runtime "systemd"))
         (set @entity.op "binary")
-        (set @entity.app "")
         (set @entity.localPath @payload.localPath)
-        (set @entity.binDir (str/concat @config.root "/bin"))
-        (emit DH_RSYNC_RUN { stage: "bin-rsync", argv: ["-a", "-s", "--mkpath", "--", @payload.localPath, (str/concat @config.host ":" @config.root "/bin/orb.new")] })
+        (emit DH_RSYNC_RUN { stage: "#binary|rsync", argv: ["-a", "--", @payload.localPath, (str/concat (if (= @config.host "local") "" (str/concat @config.host ":")) @config.root "/bin/orb.new")] })
+
       ROLLBACK_APP -> idle when (= @config.host "")
         (emit DEPLOY_FAILED { app: @payload.app, step: "config", error: "the host knob is empty" })
-      ROLLBACK_APP -> running when (!= @config.host "")
+      ROLLBACK_APP -> idle when (and (!= @config.host "") (array/includes @entity.apps @payload.app))
+        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: "a deploy of this app is in flight" })
+      ROLLBACK_APP -> running when (and (!= @config.host "") (not (array/includes @entity.apps @payload.app)))
         (set @entity.op "rollback")
         (set @entity.app @payload.app)
         (set @entity.version @payload.version)
-        (set @entity.appDir (str/concat @config.root "/apps/" @payload.app))
-        (set @entity.relDir (str/concat @config.root "/apps/" @payload.app "/releases/" @payload.version))
-        (emit DH_SSH_RUN { stage: "rollback-link", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "ln -sfn '" (str/join (str/split @entity.relDir "'") "'\\''") "' '" (str/join (str/split (str/concat @entity.appDir "/current") "'") "'\\''") "'")] })
+        (emit DH_REMOTE { host: @config.host, stage: "#rollback|link", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/apps/" @payload.app) "'") "'\\''") "' && test -d 'releases/" @payload.version "' && ln -sfn 'releases/" @payload.version "' current.next && perl -e 'rename shift, shift or exit 1' current.next current") })
+
+      SET_STACK_ENV -> idle when (or (= @config.host "") (!= @config.runtime "docker"))
+        (emit DEPLOY_FAILED { app: "", step: "config", error: "a stack env needs the host knob and runtime docker" })
+      SET_STACK_ENV -> running when (and (!= @config.host "") (= @config.runtime "docker"))
+        (set @entity.op "env")
+        (set @entity.envName @payload.name)
+        (set @entity.envApply @payload.apply)
+        (emit DH_REMOTE { host: @config.host, stage: "#env|write", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/stack") "'") "'\\''") "' && { grep -v '^" @payload.name "=' .env > .env.next || true; } && printf '%s\\n' '" (str/join (str/split (str/concat @payload.name "=" @payload.value) "'") "'\\''") "' >> .env.next && chmod 600 .env.next && mv .env.next .env" (if @payload.apply " && docker compose up -d" "")) })
     }
 
     state running {
       INIT -> running
+      DEPLOY_FLEET -> running
+        (emit DH_FLEET { apps: @payload.apps, only: @payload.only, workDir: @config.workDir, apiOrigin: @config.apiOrigin })
       DEPLOY_APP -> running
-        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: "another deploy is in flight" })
+        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: (str/concat "a " @entity.op " call is in flight") })
+        (emit DH_APP_FAILED { app: @payload.app, step: "busy", error: (str/concat "a " @entity.op " call is in flight") })
+      DEPLOY_RUNTIME -> running
+        (emit DEPLOY_FAILED { app: "", step: "busy", error: (str/concat "a " @entity.op " call is in flight") })
       DEPLOY_BINARY -> running
-        (emit DEPLOY_FAILED { app: "", step: "busy", error: "another deploy is in flight" })
+        (emit DEPLOY_FAILED { app: "", step: "busy", error: (str/concat "a " @entity.op " call is in flight") })
       ROLLBACK_APP -> running
-        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: "another deploy is in flight" })
+        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: (str/concat "a " @entity.op " call is in flight") })
+      SET_STACK_ENV -> running
+        (emit DEPLOY_FAILED { app: "", step: "busy", error: (str/concat "a " @entity.op " call is in flight") })
 
-      DH_HISTORY_DONE -> running
-        (set @entity.version (+ (array/len @payload.deployments) 1))
-        (set @entity.relDir (str/concat @entity.appDir "/releases/" (+ (array/len @payload.deployments) 1)))
-        (emit DH_RSYNC_RUN { stage: "app-rsync", argv: ["-a", "--delete", "-s", "--mkpath", "--", (str/concat @entity.localPath "/"), (str/concat @config.host ":" @entity.appDir "/releases/" (+ (array/len @payload.deployments) 1) "/")] })
-      DH_HISTORY_FAILED -> idle
-        (emit DEPLOY_FAILED { app: @entity.app, step: "number", error: @payload.message })
-
-      DH_RSYNC_DONE -> running when (and (= @payload.stage "app-rsync") (= @payload.exitCode 0))
-        (emit DH_SSH_RUN { stage: "app-link", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "ln -sfn '" (str/join (str/split @entity.relDir "'") "'\\''") "' '" (str/join (str/split (str/concat @entity.appDir "/current") "'") "'\\''") "' && { cd '" (str/join (str/split (str/concat @entity.appDir "/releases") "'") "'\\''") "' && ls -1 | sort -n | head -n -" (if (< @config.keep 1) 1 @config.keep) " | while read -r d; do rm -rf -- \"$d\"; done; true; }")] })
-      DH_RSYNC_DONE -> idle when (and (= @payload.stage "app-rsync") (!= @payload.exitCode 0))
-        (emit DEPLOY_FAILED { app: @entity.app, step: "rsync", error: @payload.stderr })
-      DH_RSYNC_DONE -> running when (and (= @payload.stage "bin-rsync") (= @payload.exitCode 0))
-        (emit DH_SSH_RUN { stage: "bin-swap", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && { test ! -e orb || cp -p orb orb.prev; } && mv -f orb.new orb")] })
-      DH_RSYNC_DONE -> idle when (and (= @payload.stage "bin-rsync") (!= @payload.exitCode 0))
+      DH_RSYNC_DONE -> running when (and (= @payload.stage "#runtime|context") (= @payload.exitCode 0))
+        (emit DH_RSYNC_RUN { stage: "#runtime|stack", argv: ["-a", "--exclude", ".env", "--", (str/concat @entity.localPath "/"), (str/concat (if (= @config.host "local") "" (str/concat @config.host ":")) @config.root "/stack/")] })
+      DH_RSYNC_DONE -> running when (and (= @payload.stage "#runtime|stack") (= @payload.exitCode 0))
+        (emit DH_REMOTE { host: @config.host, stage: "#runtime|build", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/build") "'") "'\\''") "' && docker build -t '" @entity.image "' -t '" @config.image ":latest' . && cd ../stack && ln -sfn '" (str/join (str/split @config.root "'") "'\\''") "' srv && touch .env && chmod 600 .env && { grep -E '^ORB_IMAGE=' .env | cut -d= -f2- || true; }") })
+      DH_RSYNC_DONE -> running when (and (= @payload.stage "#binary|rsync") (= @payload.exitCode 0))
+        (emit DH_REMOTE { host: @config.host, stage: "#binary|swap", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/bin") "'") "'\\''") "' && { test ! -e orb || cp -p orb orb.prev; } && mv -f orb.new orb") })
+      DH_RSYNC_DONE -> idle when (!= @payload.exitCode 0)
         (emit DEPLOY_FAILED { app: "", step: "rsync", error: @payload.stderr })
+        (set @entity.op "")
+        (set @entity.localPath "")
       DH_RSYNC_FAILED -> idle
-        (emit DEPLOY_FAILED { app: @entity.app, step: "rsync", error: @payload.error })
+        (emit DEPLOY_FAILED { app: "", step: "rsync", error: @payload.error })
+        (set @entity.op "")
+        (set @entity.localPath "")
 
-      DH_SSH_DONE -> running when (and (= @payload.stage "app-link") (= @payload.exitCode 0))
-        (emit DH_RECORD { artifact: @entity.app, activates: true, details: { host: @config.host, releaseDir: @entity.relDir } })
-      DH_SSH_DONE -> idle when (and (= @payload.stage "app-link") (!= @payload.exitCode 0))
-        (emit DEPLOY_FAILED { app: @entity.app, step: "link", error: @payload.stderr })
-      DH_SSH_DONE -> running when (and (= @payload.stage "rollback-link") (= @payload.exitCode 0))
-        (emit DH_ROLLBACK { artifact: @entity.app, version: @entity.version })
-      DH_SSH_DONE -> idle when (and (= @payload.stage "rollback-link") (!= @payload.exitCode 0))
-        (emit DEPLOY_FAILED { app: @entity.app, step: "link", error: @payload.stderr })
-      DH_SSH_DONE -> running when (and (= @payload.stage "bin-swap") (= @payload.exitCode 0))
-        (emit DH_SSH_RUN { stage: "bin-restart", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "systemctl " (str/join @config.systemctlArgs " ") " restart '" (str/join (str/split @config.service "'") "'\\''") "'")] })
-      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-swap") (!= @payload.exitCode 0))
-        (emit DEPLOY_FAILED { app: "", step: "swap", error: @payload.stderr })
-      DH_SSH_DONE -> running when (and (= @payload.stage "bin-restart") (= @payload.exitCode 0))
-        (emit DH_CURL_RUN { stage: "bin-health", argv: ["-fsS", "--max-time", "10", "--retry", "5", "--retry-delay", "1", "--retry-connrefused", "--", @config.healthUrl] })
-      DH_SSH_DONE -> running when (and (= @payload.stage "bin-restart") (!= @payload.exitCode 0))
+      DH_REMOTE_DONE -> running when (and (= @payload.stage "#runtime|build") (= @payload.exitCode 0))
+        (set @entity.prevImage (str/trim @payload.stdout))
+        (emit DH_REMOTE { host: @config.host, stage: "#runtime|start", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/stack") "'") "'\\''") "' && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=" @entity.image "' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d") })
+      DH_REMOTE_DONE -> running when (and (= @payload.stage "#runtime|start") (= @payload.exitCode 0))
+        (emit DH_CURL_RUN { stage: "#runtime|health", argv: ["-fsS", "--max-time", "10", "--retry", "30", "--retry-delay", "2", "--retry-connrefused", "--retry-all-errors", "--", @config.healthUrl] })
+      DH_REMOTE_DONE -> running when (and (= @payload.stage "#runtime|start") (!= @payload.exitCode 0) (!= @entity.prevImage ""))
         (set @entity.reason @payload.stderr)
-        (emit DH_SSH_RUN { stage: "bin-undo", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && mv -f orb.prev orb")] })
-      DH_SSH_DONE -> running when (and (= @payload.stage "bin-undo") (= @payload.exitCode 0))
-        (emit DH_SSH_RUN { stage: "bin-restart-prev", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "systemctl " (str/join @config.systemctlArgs " ") " restart '" (str/join (str/split @config.service "'") "'\\''") "'")] })
-      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-undo") (!= @payload.exitCode 0))
-        (emit DEPLOY_FAILED { app: "", step: "undo", error: @payload.stderr })
-      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-restart-prev") (= @payload.exitCode 0))
+        (emit DH_REMOTE { host: @config.host, stage: "#runtime|undo", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/stack") "'") "'\\''") "' && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=" @entity.prevImage "' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d") })
+      DH_REMOTE_DONE -> idle when (and (= @payload.stage "#runtime|prune") (= @payload.exitCode 0))
+        (emit RUNTIME_DEPLOYED { image: @entity.image })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_REMOTE_DONE -> idle when (and (= @payload.stage "#runtime|prune") (!= @payload.exitCode 0))
+        (emit RUNTIME_DEPLOYED { image: @entity.image })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_REMOTE_DONE -> idle when (and (= @payload.stage "#runtime|undo") (= @payload.exitCode 0))
+        (emit RUNTIME_ROLLED_BACK { error: @entity.reason })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_REMOTE_DONE -> running when (and (= @payload.stage "#binary|swap") (= @payload.exitCode 0))
+        (emit DH_REMOTE { host: @config.host, stage: "#binary|restart", cmd: (str/concat "systemctl " (str/join @config.systemctlArgs " ") " restart '" (str/join (str/split @config.service "'") "'\\''") "'") })
+      DH_REMOTE_DONE -> running when (and (= @payload.stage "#binary|restart") (= @payload.exitCode 0))
+        (emit DH_CURL_RUN { stage: "#binary|health", argv: ["-fsS", "--max-time", "10", "--retry", "5", "--retry-delay", "1", "--retry-connrefused", "--", @config.healthUrl] })
+      DH_REMOTE_DONE -> running when (and (= @payload.stage "#binary|restart") (!= @payload.exitCode 0))
+        (set @entity.reason @payload.stderr)
+        (emit DH_REMOTE { host: @config.host, stage: "#binary|undo", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/bin") "'") "'\\''") "' && mv -f orb.prev orb") })
+      DH_REMOTE_DONE -> running when (and (= @payload.stage "#binary|undo") (= @payload.exitCode 0))
+        (emit DH_REMOTE { host: @config.host, stage: "#binary|restart-prev", cmd: (str/concat "systemctl " (str/join @config.systemctlArgs " ") " restart '" (str/join (str/split @config.service "'") "'\\''") "'") })
+      DH_REMOTE_DONE -> idle when (and (= @payload.stage "#binary|restart-prev") (= @payload.exitCode 0))
         (emit BINARY_ROLLED_BACK { error: @entity.reason })
-      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-restart-prev") (!= @payload.exitCode 0))
-        (emit DEPLOY_FAILED { app: "", step: "restart-prev", error: @payload.stderr })
-      DH_SSH_FAILED -> idle
-        (emit DEPLOY_FAILED { app: @entity.app, step: (if (= @payload.stage "app-link") "link" (if (= @payload.stage "rollback-link") "link" (if (= @payload.stage "bin-swap") "swap" (if (= @payload.stage "bin-restart") "restart" (if (= @payload.stage "bin-undo") "undo" "restart-prev"))))), error: @payload.error })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_REMOTE_DONE -> idle when (and (= @payload.stage "#rollback|link") (= @payload.exitCode 0))
+        (emit APP_ROLLED_BACK { app: @entity.app, version: @entity.version })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_REMOTE_DONE -> idle when (and (= @payload.stage "#env|write") (= @payload.exitCode 0))
+        (emit STACK_ENV_SET { name: @entity.envName, applied: @entity.envApply })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_REMOTE_DONE -> idle when (and (!= @payload.exitCode 0) (not (and (= @payload.stage "#runtime|start") (!= @entity.prevImage ""))) (not (= @payload.stage "#runtime|prune")) (not (= @payload.stage "#binary|restart")))
+        (emit DEPLOY_FAILED { app: @entity.app, step: (default (array/nth (str/split @payload.stage "|") 1) "remote"), error: @payload.stderr })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_REMOTE_FAILED -> idle
+        (emit DEPLOY_FAILED { app: @entity.app, step: (default (array/nth (str/split @payload.stage "|") 1) "remote"), error: @payload.error })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
 
-      DH_CURL_DONE -> idle when (= @payload.exitCode 0)
-        (emit BINARY_DEPLOYED { })
-      DH_CURL_DONE -> running when (!= @payload.exitCode 0)
+      DH_CURL_DONE -> running when (and (= @payload.stage "#runtime|health") (= @payload.exitCode 0))
+        (emit DH_REMOTE { host: @config.host, stage: "#runtime|prune", cmd: (str/concat "docker images '" @config.image "' --format '{{.Tag}}' | grep -E '^[0-9]+$' | sort -rn | tail -n +" (+ (if (< @config.keep 2) 2 @config.keep) 1) " | while read -r t; do docker rmi '" @config.image ":'\"$t\" >/dev/null || true; done; true") })
+      DH_CURL_DONE -> running when (and (= @payload.stage "#runtime|health") (!= @payload.exitCode 0) (!= @entity.prevImage ""))
         (set @entity.reason (default @payload.stderr "health check failed"))
-        (emit DH_SSH_RUN { stage: "bin-undo", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && mv -f orb.prev orb")] })
-      DH_CURL_FAILED -> running
-        (set @entity.reason @payload.error)
-        (emit DH_SSH_RUN { stage: "bin-undo", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && mv -f orb.prev orb")] })
-
-      DH_RECORDED -> idle when (= @payload.version @entity.version)
-        (emit APP_DEPLOYED { app: @entity.app, version: @payload.version })
-      DH_RECORDED -> idle when (!= @payload.version @entity.version)
-        (emit DEPLOY_FAILED { app: @entity.app, step: "record", error: (str/concat "the registry numbered the deployment " @payload.version " but the release was uploaded as " @entity.version) })
-      DH_RECORD_FAILED -> idle
-        (emit DEPLOY_FAILED { app: @entity.app, step: "record", error: @payload.message })
-      DH_ROLLED_BACK -> idle
-        (emit APP_ROLLED_BACK { app: @payload.artifact, version: @payload.version })
-      DH_ROLLBACK_FAILED -> idle
-        (emit DEPLOY_FAILED { app: @entity.app, step: "record", error: @payload.message })
+        (emit DH_REMOTE { host: @config.host, stage: "#runtime|undo", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/stack") "'") "'\\''") "' && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=" @entity.prevImage "' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d") })
+      DH_CURL_DONE -> idle when (and (= @payload.stage "#runtime|health") (!= @payload.exitCode 0) (= @entity.prevImage ""))
+        (emit DEPLOY_FAILED { app: "", step: "health", error: (default @payload.stderr "health check failed") })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_CURL_DONE -> idle when (and (= @payload.stage "#binary|health") (= @payload.exitCode 0))
+        (emit BINARY_DEPLOYED { })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
+      DH_CURL_DONE -> running when (and (= @payload.stage "#binary|health") (!= @payload.exitCode 0))
+        (set @entity.reason (default @payload.stderr "health check failed"))
+        (emit DH_REMOTE { host: @config.host, stage: "#binary|undo", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/bin") "'") "'\\''") "' && mv -f orb.prev orb") })
+      DH_CURL_FAILED -> idle
+        (emit DEPLOY_FAILED { app: "", step: "health", error: @payload.error })
+        (set @entity.op "")
+        (set @entity.app "")
+        (set @entity.localPath "")
+        (set @entity.version 0)
+        (set @entity.image "")
+        (set @entity.prevImage "")
+        (set @entity.reason "")
+        (set @entity.envName "")
+        (set @entity.envApply false)
     }
 
     emits {
@@ -208,172 +546,370 @@ orbital DeployHostOrbital {
         app : string!
         version : number!
       }
-        @description "The release is uploaded, current points at it and the registry records it as the active deployment."
+        @description "The release is uploaded and current points at it."
         @tier "primary"
       DEPLOY_FAILED -> external {
         app : string!
         step : string!
         error : string!
       }
-        @description "The deploy stopped at the named step (config, number, rsync, link, record, swap, undo, restart-prev, restart or busy); an app deploy that stopped before record recorded nothing."
+        @description "The call stopped at the named step (config, busy, number, rsync, link, context, stack, build, start, health, swap, restart, undo, restart-prev, write); an app deploy that stopped before record recorded nothing."
+        @tier "primary"
+      RUNTIME_DEPLOYED -> external {
+        image : string!
+      }
+        @description "The new image runs, the health check passed and older image tags beyond keep are removed."
+        @tier "primary"
+      RUNTIME_ROLLED_BACK -> external {
+        error : string!
+      }
+        @description "The start or health check failed; the previous image runs again."
         @tier "primary"
       BINARY_DEPLOYED -> external {
       }
-        @description "The new orb binary is in place, the service restarted and the health check passed."
+        @description "The new orb binary is in place, the unit restarted and the health check passed."
         @tier "primary"
       BINARY_ROLLED_BACK -> external {
         error : string!
       }
-        @description "The restart or health check failed; the previous binary was moved back and the service restarted."
+        @description "The restart or health check failed; the previous binary was moved back and the unit restarted."
         @tier "primary"
       APP_ROLLED_BACK -> external {
         app : string!
         version : number!
       }
-        @description "current points at this release again and the registry marks it active."
+        @description "current points at this earlier release again."
         @tier "primary"
-      DH_HISTORY -> internal {
-        artifact : string!
+      STACK_ENV_SET -> external {
+        name : string!
+        applied : boolean!
       }
+        @description "The stack's .env holds the new line; applied when docker compose up -d ran after it."
+        @tier "primary"
+      DH_FLEET -> internal { apps : [FleetAppSpec]!  only : [string]!  workDir : string!  apiOrigin : string! }
         @tier "internal"
-      DH_RECORD -> internal {
-        artifact : string!
-        activates : boolean!
-        details : Map string (string | number)
-      }
+      DH_APP_FAILED -> internal { app : string!  step : string!  error : string! }
+        @description "An app deploy failed: DEPLOY_FAILED for an app, never empty, so a per-app listener can key on it."
         @tier "internal"
-      DH_ROLLBACK -> internal {
-        artifact : string!
-        version : number!
-      }
+      DH_APP_START -> internal { app : string!  localDir : string!  host : string!  root : string!  keep : number! }
         @tier "internal"
-      DH_RSYNC_RUN -> internal {
-        stage : string!
-        argv : [string]!
-      }
+      DH_RSYNC_RUN -> internal { stage : string!  argv : [string]! }
         @tier "internal"
-      DH_SSH_RUN -> internal {
-        stage : string!
-        argv : [string]!
-      }
+      DH_REMOTE -> internal { stage : string!  cmd : string!  host : string! }
         @tier "internal"
-      DH_CURL_RUN -> internal {
-        stage : string!
-        argv : [string]!
-      }
-        @tier "internal"
+      DH_CURL_RUN -> internal { stage : string!  argv : [string]! }
         @tier "internal"
     }
 
     listens {
-      DH_HISTORY_DONE {
-        artifact : string!
-        deployments : [HistoryRow]!
-      }
+      AR_DONE { app : string!  version : number! }
         @tier "internal"
-      DH_HISTORY_FAILED {
-        artifact : string!
-        code : string
-        message : string!
-      }
+      AR_FAILED { app : string!  step : string!  error : string! }
         @tier "internal"
-      DH_RECORDED {
-        artifact : string!
-        version : number!
-      }
+      DH_RSYNC_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
         @tier "internal"
-      DH_RECORD_FAILED {
-        artifact : string!
-        code : "contended" | "failed"
-        message : string!
-      }
+      DH_RSYNC_FAILED { stage : string!  error : string!  code : string! }
         @tier "internal"
-      DH_ROLLED_BACK {
-        artifact : string!
-        version : number!
-      }
+      DH_REMOTE_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
         @tier "internal"
-      DH_ROLLBACK_FAILED {
-        artifact : string!
-        code : "not-recorded" | "not-activatable" | "failed"
-        message : string!
-      }
+      DH_REMOTE_FAILED { stage : string!  error : string!  code : string! }
         @tier "internal"
-      DH_RSYNC_DONE {
-        stage : string!
-        exitCode : number!
-        signal : number!
-        stdout : string!
-        stdoutBytes : bytes!
-        stderr : string!
-      }
+      DH_CURL_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
         @tier "internal"
-      DH_RSYNC_FAILED {
-        stage : string!
-        error : string!
-        code : string!
-      }
+      DH_CURL_FAILED { stage : string!  error : string!  code : string! }
         @tier "internal"
-      DH_SSH_DONE {
-        stage : string!
-        exitCode : number!
-        signal : number!
-        stdout : string!
-        stdoutBytes : bytes!
-        stderr : string!
-      }
-        @tier "internal"
-      DH_SSH_FAILED {
-        stage : string!
-        error : string!
-        code : string!
-      }
-        @tier "internal"
-      DH_CURL_DONE {
-        stage : string!
-        exitCode : number!
-        signal : number!
-        stdout : string!
-        stdoutBytes : bytes!
-        stderr : string!
-      }
-        @tier "internal"
-      DH_CURL_FAILED {
-        stage : string!
-        error : string!
-        code : string!
-      }
-      HostRegistry.HISTORY_ANSWERED -> DH_HISTORY_DONE
-      HostRegistry.HISTORY_FAILED -> DH_HISTORY_FAILED
-      HostRegistry.DEPLOYED -> DH_RECORDED
-      HostRegistry.DEPLOY_FAILED -> DH_RECORD_FAILED
-      HostRegistry.ROLLED_BACK -> DH_ROLLED_BACK
-      HostRegistry.ROLLBACK_FAILED -> DH_ROLLBACK_FAILED
-      HostRsync.CLI_DONE -> DH_RSYNC_DONE
-      HostRsync.CLI_FAILED -> DH_RSYNC_FAILED
-      HostSsh.CLI_DONE -> DH_SSH_DONE
-      HostSsh.CLI_FAILED -> DH_SSH_FAILED
+      AppRelease.AR_DONE -> AR_DONE
+      FleetApp.FL_DEPLOY_APP -> DEPLOY_APP
+      AppRelease.AR_FAILED -> AR_FAILED
+      HostRsync.CLI_DONE -> DH_RSYNC_DONE when (str/startsWith @payload.stage "#")
+      HostRsync.CLI_FAILED -> DH_RSYNC_FAILED when (str/startsWith @payload.stage "#")
+      HostSsh.CLI_DONE -> DH_REMOTE_DONE when (str/startsWith @payload.stage "#")
+      HostSsh.CLI_FAILED -> DH_REMOTE_FAILED when (str/startsWith @payload.stage "#")
+      HostSh.CLI_DONE -> DH_REMOTE_DONE when (str/startsWith @payload.stage "#")
+      HostSh.CLI_FAILED -> DH_REMOTE_FAILED when (str/startsWith @payload.stage "#")
       HostCurl.CLI_DONE -> DH_CURL_DONE
       HostCurl.CLI_FAILED -> DH_CURL_FAILED
       DEPLOY_APP -> input {
         app : string!
         localDir : string!
       }
-        @description "Upload localDir as the app's next release, switch current to it and record the deployment."
+        @description "Upload localDir as the app's next release and switch current to it; other apps deploy at the same time."
         @synonyms "deploy app, push app, release app"
+      DEPLOY_FLEET -> input {
+        apps : [FleetAppSpec]!
+        only : [string]!
+      }
+        @description "Build and deploy every app listed (or only the names in only, when not empty), each in parallel: resolve it, ship its release to the server, compile its web client against the central host (apiOrigin) and hand it to the publisher (CLIENT_PUBLISH), and hand its store indexes over (INDEXES_PUBLISH); answered once with FLEET_DONE."
+        @synonyms "deploy all apps, release apps, ship fleet"
+      DEPLOY_RUNTIME -> input {
+        contextDir : string!
+        stackDir : string!
+        tag : string!
+      }
+        @description "Build the orb image from contextDir on the server, update the stack files from stackDir, start the new image and roll back when it is unhealthy."
+        @synonyms "deploy orb, update runtime, new image"
       DEPLOY_BINARY -> input {
         localPath : string!
       }
-        @description "Replace the orb binary on the server, restart the service and roll back when it is unhealthy."
-        @synonyms "deploy orb, update binary, push orb"
+        @description "Replace the orb binary on the server, restart the unit and roll back when it is unhealthy."
+        @synonyms "deploy orb binary, update binary"
       ROLLBACK_APP -> input {
         app : string!
         version : number!
       }
-        @description "Point the app's current at an earlier release and re-activate it in the registry."
+        @description "Point the app's current at an earlier release folder."
         @synonyms "roll back app, revert release"
+      SET_STACK_ENV -> input {
+        name : string!
+        value : string!
+        apply : boolean!
+      }
+        @description "Set one NAME=value line in the server stack's .env, and start the stack again when apply."
+        @synonyms "server env, stack variable"
     }
   }
 
-  page boot as DeployHostStart -> DeployHost, HostRegistry, HostRsync, HostSsh, HostCurl
+  trait FleetSh = Keyed.traits.KeyedCli {
+    listens {
+      FleetApp.FL_SH_RUN -> CLI_RUN per @payload.stage
+    }
+    config {
+      commands: ["sh"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait FleetOrb = Keyed.traits.KeyedCli {
+    listens {
+      FleetApp.FL_ORB_RUN -> CLI_RUN per @payload.stage
+    }
+    config {
+      commands: ["orb"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait FleetPlan -> FleetPlanRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PLAN -> idle when (or (= @payload.workDir "") (= @payload.apiOrigin ""))
+        (emit FLEET_DONE { results: [{ app: "", version: 0, ok: false, failures: ["the workDir and apiOrigin knobs must be set"] }] })
+      PLAN -> running when (and (!= @payload.workDir "") (!= @payload.apiOrigin "") (= (array/len (array/filter @payload.apps (fn a (or (= (array/len @payload.only) 0) (array/includes @payload.only @a.name))))) 0))
+        (emit FLEET_DONE { results: [] })
+      PLAN -> running when (and (!= @payload.workDir "") (!= @payload.apiOrigin "") (> (array/len (array/filter @payload.apps (fn a (or (= (array/len @payload.only) 0) (array/includes @payload.only @a.name))))) 0))
+        (set @entity.apps (array/map (array/filter @payload.apps (fn a (or (= (array/len @payload.only) 0) (array/includes @payload.only @a.name)))) (fn a @a.name)))
+        (set @entity.results [])
+        (set @entity.workDir @payload.workDir)
+        (set @entity.apiOrigin @payload.apiOrigin)
+        (emit FL_NEXT { apps: (array/filter @payload.apps (fn a (or (= (array/len @payload.only) 0) (array/includes @payload.only @a.name)))), index: 0 })
+    }
+
+    state running {
+      INIT -> running
+      PLAN -> running
+        (emit FLEET_DONE { results: [{ app: "", version: 0, ok: false, failures: ["a fleet deploy is in flight"] }] })
+      FL_NEXT -> running when (< @payload.index (array/len @payload.apps))
+        (let ((a (array/nth @payload.apps @payload.index)))
+          (do
+            (emit FL_APP_START { name: (default @a.name ""), program: (default @a.program ""), site: (default @a.site ""), staticDir: (default @a.staticDir ""), env: (default @a.env {}), firestoreDatabase: (default @a.firestoreDatabase ""), stageDir: (str/concat @entity.workDir "/" (default @a.name "")), origin: (str/concat @entity.apiOrigin "/apps/" (default @a.name "")) })
+            (emit FL_NEXT { apps: @payload.apps, index: (+ @payload.index 1) })))
+      FL_NEXT -> running when (>= @payload.index (array/len @payload.apps))
+      CLIENT_PUBLISHED -> running
+        (emit FL_PART_OK { app: @payload.app })
+      INDEXES_PUBLISHED -> running
+        (emit FL_PART_OK { app: @payload.app })
+      CLIENT_PUBLISH_FAILED -> running
+        (emit FL_PART_BAD { app: @payload.app, error: (str/concat "client: " @payload.error) })
+      INDEXES_PUBLISH_FAILED -> running
+        (emit FL_PART_BAD { app: @payload.app, error: (str/concat "indexes: " @payload.error) })
+      FL_APP_DONE -> running when (< (+ (array/len @entity.results) 1) (array/len @entity.apps))
+        (set @entity.results (array/append @entity.results { app: @payload.app, version: @payload.version, ok: (= (array/len @payload.failures) 0), failures: @payload.failures }))
+      FL_APP_DONE -> idle when (>= (+ (array/len @entity.results) 1) (array/len @entity.apps))
+        (emit FLEET_DONE { results: (array/append @entity.results { app: @payload.app, version: @payload.version, ok: (= (array/len @payload.failures) 0), failures: @payload.failures }) })
+        (set @entity.apps [])
+        (set @entity.results [])
+        (set @entity.workDir "")
+        (set @entity.apiOrigin "")
+    }
+
+    emits {
+      FLEET_DONE -> external {
+        results : [FleetResult]!
+      }
+        @description "Every selected app finished: per app, the release number deployed (0 when none), ok, and each failed step as text (server, client or indexes)."
+        @tier "primary"
+      FL_NEXT -> internal { apps : [FleetAppSpec]!  index : number! }
+        @tier "internal"
+      FL_PART_OK -> internal { app : string! }
+        @tier "internal"
+      FL_PART_BAD -> internal { app : string!  error : string! }
+        @tier "internal"
+      FL_APP_START -> internal { name : string!  program : string!  site : string!  staticDir : string!  env : Map string string  firestoreDatabase : string!  stageDir : string!  origin : string! }
+        @tier "internal"
+    }
+
+    listens {
+      FL_APP_DONE { app : string!  version : number!  failures : [string]! }
+        @tier "internal"
+      FleetApp.FL_DONE -> FL_APP_DONE
+      CLIENT_PUBLISHED { app : string! }
+        @description "The composer published the app's web client (the answer to CLIENT_PUBLISH)."
+      CLIENT_PUBLISH_FAILED { app : string!  error : string! }
+        @description "The composer could not publish the app's web client."
+      INDEXES_PUBLISHED { app : string! }
+        @description "The composer published the app's store indexes (the answer to INDEXES_PUBLISH)."
+      INDEXES_PUBLISH_FAILED { app : string!  error : string! }
+        @description "The composer could not publish the app's store indexes."
+      PLAN { apps : [FleetAppSpec]!  only : [string]!  workDir : string!  apiOrigin : string! }
+        @tier "internal"
+      DeployHost.DH_FLEET -> PLAN
+    }
+  }
+
+  trait FleetApp -> FleetRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      FL_START -> preparing
+        (set @entity.app @payload.name)
+        (set @entity.program @payload.program)
+        (set @entity.site @payload.site)
+        (set @entity.staticDir @payload.staticDir)
+        (set @entity.firestoreDatabase @payload.firestoreDatabase)
+        (set @entity.stageDir @payload.stageDir)
+        (set @entity.origin @payload.origin)
+        (set @entity.pending (+ 1 (if (= @payload.site "") 0 1) (if (= @payload.firestoreDatabase "") 0 1)))
+        (set @entity.failures [])
+        (set @entity.version 0)
+        (emit FL_SH_RUN { stage: (str/concat @payload.name "|f-prep"), argv: ["-c", "rm -rf \"$1\" && mkdir -p \"$1/release\" \"$1/client\" && printf '%s' \"$2\" > \"$1/release/app.env\"", "sh", @payload.stageDir, (str/join (array/map (object/entries (default @payload.env {})) (fn e (str/concat (array/nth @e 0) "=" (array/nth @e 1) "\n"))) "")] })
+    }
+
+    state preparing {
+      INIT -> preparing
+      FL_SH_DONE -> resolving when (and (= @payload.stage (str/concat @entity.app "|f-prep")) (= @payload.exitCode 0))
+        (emit FL_ORB_RUN { stage: (str/concat @entity.app "|f-resolve"), argv: ["resolve", @entity.program, "-o", (str/concat @entity.stageDir "/release/app.orb")] })
+      FL_SH_DONE -> idle when (and (= @payload.stage (str/concat @entity.app "|f-prep")) (!= @payload.exitCode 0))
+        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "prepare: " @payload.stderr)] })
+      FL_SH_FAILED -> idle
+        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "prepare: " @payload.error)] })
+    }
+
+    state resolving {
+      INIT -> resolving
+      FL_ORB_DONE -> shipping when (and (= @payload.stage (str/concat @entity.app "|f-resolve")) (= @payload.exitCode 0))
+        (emit FL_DEPLOY_APP { app: @entity.app, localDir: (str/concat @entity.stageDir "/release") })
+        (when (!= @entity.site "")
+          (emit FL_ORB_RUN { stage: (str/concat @entity.app "|f-client"), argv: ["compile", @entity.program, "--mode", "client", "--web-client", "-o", (str/concat @entity.stageDir "/client")], env: { ORB_PUBLIC_ORIGIN: @entity.origin } }))
+        (when (!= @entity.firestoreDatabase "")
+          (emit FL_ORB_RUN { stage: (str/concat @entity.app "|f-indexes"), argv: ["firestore-indexes", (str/concat @entity.stageDir "/release/app.orb"), "--out", (str/concat @entity.stageDir "/firestore.indexes.json")] }))
+      FL_ORB_DONE -> idle when (and (= @payload.stage (str/concat @entity.app "|f-resolve")) (!= @payload.exitCode 0))
+        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "resolve: " @payload.stderr)] })
+      FL_ORB_FAILED -> idle
+        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "resolve: " @payload.error)] })
+    }
+
+    state shipping {
+      INIT -> shipping
+      FL_SERVER_DONE -> shipping when (> @entity.pending 1)
+        (set @entity.version @payload.version)
+        (set @entity.pending (- @entity.pending 1))
+      FL_SERVER_DONE -> idle when (<= @entity.pending 1)
+        (emit FL_DONE { app: @entity.app, version: @payload.version, failures: @entity.failures })
+      FL_SERVER_FAILED -> shipping when (> @entity.pending 1)
+        (set @entity.failures (array/append @entity.failures (str/concat "server " @payload.step ": " @payload.error)))
+        (set @entity.pending (- @entity.pending 1))
+      FL_SERVER_FAILED -> idle when (<= @entity.pending 1)
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat "server " @payload.step ": " @payload.error)) })
+
+      FL_ORB_DONE -> shipping when (and (= @payload.stage (str/concat @entity.app "|f-client")) (= @payload.exitCode 0))
+        (emit FL_SH_RUN { stage: (str/concat @entity.app "|f-static"), argv: ["-c", "[ -z \"$2\" ] || cp -R \"$2\"/. \"$1/client/web-client/\"", "sh", @entity.stageDir, @entity.staticDir] })
+      FL_SH_DONE -> shipping when (and (= @payload.stage (str/concat @entity.app "|f-static")) (= @payload.exitCode 0))
+        (emit CLIENT_PUBLISH { app: @entity.app, site: @entity.site, dir: (str/concat @entity.stageDir "/client/web-client") })
+      FL_ORB_DONE -> shipping when (and (= @payload.stage (str/concat @entity.app "|f-indexes")) (= @payload.exitCode 0))
+        (emit INDEXES_PUBLISH { app: @entity.app, database: @entity.firestoreDatabase, file: (str/concat @entity.stageDir "/firestore.indexes.json") })
+
+      FL_PART_DONE -> shipping when (> @entity.pending 1)
+        (set @entity.pending (- @entity.pending 1))
+      FL_PART_DONE -> idle when (<= @entity.pending 1)
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: @entity.failures })
+      FL_PART_FAILED -> shipping when (> @entity.pending 1)
+        (set @entity.failures (array/append @entity.failures @payload.error))
+        (set @entity.pending (- @entity.pending 1))
+      FL_PART_FAILED -> idle when (<= @entity.pending 1)
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures @payload.error) })
+
+      FL_ORB_DONE -> shipping when (and (!= @payload.stage (str/concat @entity.app "|f-resolve")) (!= @payload.exitCode 0) (> @entity.pending 1))
+        (set @entity.failures (array/append @entity.failures (str/concat (default (array/nth (str/split @payload.stage "|f-") 1) "build") ": " @payload.stderr)))
+        (set @entity.pending (- @entity.pending 1))
+      FL_ORB_DONE -> idle when (and (!= @payload.stage (str/concat @entity.app "|f-resolve")) (!= @payload.exitCode 0) (<= @entity.pending 1))
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat (default (array/nth (str/split @payload.stage "|f-") 1) "build") ": " @payload.stderr)) })
+      FL_SH_DONE -> shipping when (and (= @payload.stage (str/concat @entity.app "|f-static")) (!= @payload.exitCode 0) (> @entity.pending 1))
+        (set @entity.failures (array/append @entity.failures (str/concat "static: " @payload.stderr)))
+        (set @entity.pending (- @entity.pending 1))
+      FL_SH_DONE -> idle when (and (= @payload.stage (str/concat @entity.app "|f-static")) (!= @payload.exitCode 0) (<= @entity.pending 1))
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat "static: " @payload.stderr)) })
+      FL_ORB_FAILED -> shipping when (> @entity.pending 1)
+        (set @entity.failures (array/append @entity.failures (str/concat "build: " @payload.error)))
+        (set @entity.pending (- @entity.pending 1))
+      FL_ORB_FAILED -> idle when (<= @entity.pending 1)
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat "build: " @payload.error)) })
+      FL_SH_FAILED -> shipping when (> @entity.pending 1)
+        (set @entity.failures (array/append @entity.failures (str/concat "static: " @payload.error)))
+        (set @entity.pending (- @entity.pending 1))
+      FL_SH_FAILED -> idle when (<= @entity.pending 1)
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat "static: " @payload.error)) })
+    }
+
+    emits {
+      FL_DONE -> internal { app : string!  version : number!  failures : [string]! }
+        @tier "internal"
+      FL_SH_RUN -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+      FL_ORB_RUN -> internal { stage : string!  argv : [string]!  env : (Map string string)? }
+        @tier "internal"
+      FL_DEPLOY_APP -> internal { app : string!  localDir : string! }
+        @tier "internal"
+      CLIENT_PUBLISH -> external { app : string!  site : string!  dir : string! }
+        @description "An app's compiled web client is ready in dir for its hosting site; the composer publishes it and answers CLIENT_PUBLISHED or CLIENT_PUBLISH_FAILED with the app."
+        @tier "primary"
+      INDEXES_PUBLISH -> external { app : string!  database : string!  file : string! }
+        @description "An app's store indexes file is ready for its database; the composer publishes it and answers INDEXES_PUBLISHED or INDEXES_PUBLISH_FAILED with the app."
+        @tier "primary"
+    }
+
+    listens {
+      FL_START { name : string!  program : string!  site : string!  staticDir : string!  env : Map string string  firestoreDatabase : string!  stageDir : string!  origin : string! }
+        @tier "internal"
+      FL_SH_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      FL_SH_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      FL_ORB_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      FL_ORB_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      FL_SERVER_DONE { app : string!  version : number! }
+        @tier "internal"
+      FL_SERVER_FAILED { app : string!  step : string!  error : string! }
+        @tier "internal"
+      FL_PART_DONE { app : string! }
+        @tier "internal"
+      FL_PART_FAILED { app : string!  error : string! }
+        @tier "internal"
+      FleetPlan.FL_APP_START -> FL_START per @payload.name
+      FleetSh.CLI_DONE -> FL_SH_DONE per (default (array/first (str/split @payload.stage "|")) "")
+      FleetSh.CLI_FAILED -> FL_SH_FAILED per (default (array/first (str/split @payload.stage "|")) "")
+      FleetOrb.CLI_DONE -> FL_ORB_DONE per (default (array/first (str/split @payload.stage "|")) "")
+      FleetOrb.CLI_FAILED -> FL_ORB_FAILED per (default (array/first (str/split @payload.stage "|")) "")
+      DeployHost.APP_DEPLOYED -> FL_SERVER_DONE per @payload.app
+      DeployHost.DH_APP_FAILED -> FL_SERVER_FAILED per @payload.app
+      FleetPlan.FL_PART_OK -> FL_PART_DONE per @payload.app
+      FleetPlan.FL_PART_BAD -> FL_PART_FAILED per @payload.app
+    }
+  }
+
+  page boot as DeployHostStart -> DeployHost, AppRelease, HostRemote, HostRsync, HostSsh, HostSh, HostCurl, FleetPlan, FleetApp, FleetSh, FleetOrb
 }

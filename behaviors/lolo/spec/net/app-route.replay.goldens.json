@@ -289,7 +289,19 @@
                     "authorization": "Bearer t1",
                     "clientId": "c1"
                   },
-                  "options": {}
+                  "options": {
+                    "reply": {
+                      "events": [
+                        "IDENTITY_BOUND",
+                        "IDENTITY_ANONYMOUS",
+                        "IDENTITY_REFUSED",
+                        "IDENTITY_SESSION_ENDED"
+                      ],
+                      "match": "requestId",
+                      "timeoutMs": 30000
+                    }
+                  },
+                  "clientId": "c1"
                 }
               }
             ],
@@ -324,7 +336,8 @@
               "options": {
                 "wire": true,
                 "clientId": "c1"
-              }
+              },
+              "clientId": "c3"
             }
           }
         ]
@@ -350,7 +363,8 @@
                   "address": "Cart.CartFlow.ADD",
                   "payload": {
                     "sku": "a"
-                  }
+                  },
+                  "clientId": "c3"
                 }
               }
             ],
@@ -604,7 +618,20 @@
                     "requestId": 11,
                     "authorization": "Bearer t1",
                     "clientId": "c1"
-                  }
+                  },
+                  "options": {
+                    "reply": {
+                      "events": [
+                        "IDENTITY_BOUND",
+                        "IDENTITY_ANONYMOUS",
+                        "IDENTITY_REFUSED",
+                        "IDENTITY_SESSION_ENDED"
+                      ],
+                      "match": "requestId",
+                      "timeoutMs": 30000
+                    }
+                  },
+                  "clientId": "c1"
                 }
               }
             ],
@@ -940,7 +967,8 @@
                 "event": "APP_GUEST",
                 "payload": {
                   "key": "12-guest",
-                  "app": "shop"
+                  "app": "shop",
+                  "clientId": "c9"
                 }
               }
             ],
@@ -1438,6 +1466,58 @@
             ],
             "neverEmits": [
               "APP_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-events-request-names-its-client-so-a-pinned-tab-reaches-its-own-release",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "key": "7",
+            "valid": true,
+            "app": "shop",
+            "orbital": "Cart",
+            "body": "eyJldmVudCI6IkFERCIsInRhcmdldFRyYWl0IjoiQ2FydEZsb3ciLCJwYXlsb2FkIjp7InNrdSI6ImEifSwiY2xpZW50SWQiOiJjNyJ9",
+            "responseHeaders": [],
+            "authorization": "",
+            "awaitingAuth": false,
+            "request": {
+              "key": "",
+              "app": "",
+              "address": "",
+              "payload": {},
+              "options": {}
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 7,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_REQUEST",
+                "payload": {
+                  "key": "7",
+                  "app": "shop",
+                  "address": "Cart.CartFlow.ADD",
+                  "clientId": "c7"
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESPOND"
             ]
           }
         }

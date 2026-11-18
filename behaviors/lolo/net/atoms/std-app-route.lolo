@@ -1,6 +1,6 @@
 app std-app-route [
   version: "1.0.0",
-  description: "std-app-route — the HTTP door to apps hosted by the central host (std-program-host ProgramApps). A request std-http-router handed off (its externalPrefixes name prefix) whose method is POST and whose path is <prefix><app>/api/orbitals/<Orbital>/events is an events request for the app <app>: its body is the EventRequest std-http-dispatch accepts ({ event, targetTrait, entityId, payload, clientId, locale, traits, mount, route, delivery, dispatchLog, entityByTrait, framesSince }) and it is emitted as APP_REQUEST { key, app, address, payload, options } with the address <Orbital>.<targetTrait>.<event>, the key the request id as text and the options of a wire dispatch (wire: true), for ProgramApps. APP_ANSWERED under that key answers 200 with the result, the EventResponse wire, as the JSON body; APP_FAILED answers 502 { error, code: APP_FAILED }; a request carrying an authorization header first presents it to the hosted app as APP_REQUEST { key: <requestId>-auth, address: BEARER_PRESENT, payload: { requestId, authorization, clientId } } and sends the real APP_REQUEST once that is answered or failed; a body that is not JSON answers 400 text/plain; POST <prefix><app>/api/events/ticket?clientId=<c> mints a stream ticket (APP_TICKET_MINT { requestId, clientId } for std-stream-ticket, a bearer presented first as BEARER_PRESENT under <requestId>-mintauth) and answers 200 { ticket } or 503; GET <prefix><app>/api/events?ticket=<t> spends it (APP_STREAM_TAKE { requestId, ticket }; no ticket or a refused one answers 401), asks ProgramApps for the app guest (APP_GUEST { key: <requestId>-guest, app }) and on APP_GUEST_ANSWERED opens the stream (SSE_OPEN, then APP_STREAM_AUTHORIZED { requestId, clientId, guest } for std-live-feed), a failed guest answers 502; POST <prefix><app>/api/hooks/<name> delivers the body and headers to the app's inbound hook <name> (APP_REQUEST whose address is { inbound, body, headers }, no bearer presented, as std-http-dispatch delivers hooks) and answers the handler's status and body, 502 when the app fails; any other path under the prefix answers 404 { error, code: NOT_FOUND }. It names no app: the app is the path's.",
+  description: "std-app-route — the HTTP door to apps hosted by the central host (std-program-host ProgramApps). A request std-http-router handed off (its externalPrefixes name prefix) whose method is POST and whose path is <prefix><app>/api/orbitals/<Orbital>/events is an events request for the app <app>: its body is the EventRequest std-http-dispatch accepts ({ event, targetTrait, entityId, payload, clientId, locale, traits, mount, route, delivery, dispatchLog, entityByTrait, framesSince }) and it is emitted as APP_REQUEST { key, app, address, payload, options } with the address <Orbital>.<targetTrait>.<event>, the key the request id as text and the options of a wire dispatch (wire: true), for ProgramApps. APP_ANSWERED under that key answers 200 with the result, the EventResponse wire, as the JSON body; APP_FAILED answers 502 { error, code: APP_FAILED }; a request carrying an authorization header first presents it to the hosted app as APP_REQUEST { key: <requestId>-auth, address: BEARER_PRESENT, payload: { requestId, authorization, clientId }, options: { reply } }, whose answer waits for the app's sign-in outcome for that requestId (program/dispatch reply, up to identityTimeoutMs), and sends the real APP_REQUEST once that is answered or failed; a body that is not JSON answers 400 text/plain; POST <prefix><app>/api/events/ticket?clientId=<c> mints a stream ticket (APP_TICKET_MINT { requestId, clientId } for std-stream-ticket, a bearer presented first as BEARER_PRESENT under <requestId>-mintauth) and answers 200 { ticket } or 503; GET <prefix><app>/api/events?ticket=<t> spends it (APP_STREAM_TAKE { requestId, ticket }; no ticket or a refused one answers 401), asks ProgramApps for the app guest (APP_GUEST { key: <requestId>-guest, app }) and on APP_GUEST_ANSWERED opens the stream (SSE_OPEN, then APP_STREAM_AUTHORIZED { requestId, clientId, guest } for std-live-feed), a failed guest answers 502; POST <prefix><app>/api/hooks/<name> delivers the body and headers to the app's inbound hook <name> (APP_REQUEST whose address is { inbound, body, headers }, no bearer presented, as std-http-dispatch delivers hooks) and answers the handler's status and body, 502 when the app fails; any other path under the prefix answers 404 { error, code: NOT_FOUND }. It names no app: the app is the path's.",
 ]
 type AppRouteHeader = { name : string!, value : string! }
 type AppRouteJson = string | number | boolean | [AppRouteJson?] | Map string AppRouteJson?
@@ -9,7 +9,7 @@ type AppRouteOptions = Map string AppRouteJson?
 type AppRouteHook = { inbound : string!, body : string!, headers : Map string string }
 type AppRouteAddress = string | AppRouteHook
 type AppRouteHookAnswer = { status : number!, body : string! }
-type AppRouteRequest = { key : string!, app : string!, address : AppRouteAddress!, payload : AppRouteJson, options : AppRouteOptions }
+type AppRouteRequest = { key : string!, app : string!, address : AppRouteAddress!, payload : AppRouteJson, options : AppRouteOptions, clientId : string }
 type AppRoutePending = { requestId : number!, key : string!, valid : boolean!, app : string!, orbital : string!, body : bytes!, responseHeaders : [AppRouteHeader]!, authorization : string!, awaitingAuth : boolean!, request : AppRouteRequest!, kind : string, ticket : string, clientId : string, hook : string, hookHeaders : Map string string }
 
 orbital AppRouteOrbital {
@@ -25,6 +25,10 @@ orbital AppRouteOrbital {
       prefix : string = "/apps/"
         @label "App prefix"
         @description "A path starting with this is an app request; the router's externalPrefixes names the same prefix. What follows it is <app>/api/orbitals/<Orbital>/events."
+        @tier "infra"
+      identityTimeoutMs : number = 30000
+        @label "Sign-in wait"
+        @description "How long a request carrying a bearer waits for the app's sign-in outcome (IDENTITY_BOUND, IDENTITY_ANONYMOUS, IDENTITY_REFUSED or IDENTITY_SESSION_ENDED for its requestId) before it is sent anyway; the app decides what the request may do once it has one."
         @tier "infra"
     }
 
@@ -56,6 +60,7 @@ orbital AppRouteOrbital {
                   (set @entity.pending (array/map @entity.pending (fn q (if (= @q.requestId @payload.requestId) (object/merge @q { awaitingAuth: (!= @q.authorization ""), request: {
                     key: @q.key,
                     app: @q.app,
+                    clientId: (object/get @b "clientId" ""),
                     address: (str/concat @q.orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" "")),
                     payload: (object/get @b "payload" {}),
                     options: {
@@ -78,8 +83,8 @@ orbital AppRouteOrbital {
                   (let ((r (array/find @entity.pending (fn q (= @q.requestId @payload.requestId)))))
                     (when (!= @r null)
                       (if @r.awaitingAuth
-                        (emit APP_REQUEST { key: (str/concat @r.key "-auth"), app: @r.app, address: "BEARER_PRESENT", payload: { requestId: @r.requestId, authorization: @r.authorization, clientId: (object/get @b "clientId" "") }, options: {} })
-                        (emit APP_REQUEST { key: @r.request.key, app: @r.request.app, address: @r.request.address, payload: (object/get @r.request "payload" {}), options: (object/get @r.request "options" {}) }))))))))))
+                        (emit APP_REQUEST { key: (str/concat @r.key "-auth"), app: @r.app, address: "BEARER_PRESENT", clientId: (object/get @b "clientId" ""), payload: { requestId: @r.requestId, authorization: @r.authorization, clientId: (object/get @b "clientId" "") }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })
+                        (emit APP_REQUEST { key: @r.request.key, app: @r.request.app, clientId: (default @r.request.clientId ""), address: @r.request.address, payload: (object/get @r.request "payload" {}), options: (object/get @r.request "options" {}) }))))))))))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "mint") (= @p.authorization ""))))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
@@ -87,7 +92,7 @@ orbital AppRouteOrbital {
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "mint") (!= @p.authorization ""))))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
-        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (when (!= @p null) (emit APP_REQUEST { key: (str/concat @p.key "-mintauth"), app: @p.app, address: "BEARER_PRESENT", payload: { requestId: @p.requestId, authorization: @p.authorization, clientId: @p.clientId }, options: {} })))
+        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (when (!= @p null) (emit APP_REQUEST { key: (str/concat @p.key "-mintauth"), app: @p.app, address: "BEARER_PRESENT", clientId: @p.clientId, payload: { requestId: @p.requestId, authorization: @p.authorization, clientId: @p.clientId }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "stream") (= @p.ticket ""))))
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
@@ -119,7 +124,7 @@ orbital AppRouteOrbital {
 
       TICKET_TAKEN -> serving when (array/some @entity.pending (fn q (and (= (default (object/get @q "kind") "") "stream") (= @q.ticket @payload.ticket))))
         (let ((p (array/find @entity.pending (fn q (and (= (default (object/get @q "kind") "") "stream") (= @q.ticket @payload.ticket))))))
-          (when (!= @p null) (emit APP_GUEST { key: (str/concat @p.key "-guest"), app: @p.app })))
+          (when (!= @p null) (emit APP_GUEST { key: (str/concat @p.key "-guest"), app: @p.app, clientId: (default @payload.clientId "") })))
         (set @entity.pending (array/map @entity.pending (fn q (if (and (= (default (object/get @q "kind") "") "stream") (= @q.ticket @payload.ticket)) (object/merge @q { clientId: @payload.clientId }) @q))))
 
       APP_GUEST_ANSWERED -> serving when (array/some @entity.pending (fn q (and (= (default (object/get @q "kind") "") "stream") (= (str/concat @q.key "-guest") @payload.key))))
@@ -145,13 +150,13 @@ orbital AppRouteOrbital {
       APP_ANSWERED -> serving when (array/some @entity.pending (fn p (and @p.awaitingAuth (= (str/concat @p.key "-auth") @payload.key))))
         (let ((p (array/find @entity.pending (fn q (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key))))))
           (when (!= @p null)
-            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
+            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, clientId: (default @p.request.clientId ""), address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
         (set @entity.pending (array/map @entity.pending (fn q (if (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key)) (object/merge @q { awaitingAuth: false }) @q))))
 
       APP_FAILED -> serving when (array/some @entity.pending (fn p (and @p.awaitingAuth (= (str/concat @p.key "-auth") @payload.key))))
         (let ((p (array/find @entity.pending (fn q (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key))))))
           (when (!= @p null)
-            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
+            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, clientId: (default @p.request.clientId ""), address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
         (set @entity.pending (array/map @entity.pending (fn q (if (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key)) (object/merge @q { awaitingAuth: false }) @q))))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "hook"))))
@@ -191,6 +196,7 @@ orbital AppRouteOrbital {
       APP_REQUEST -> external {
         key : string!
         app : string!
+        clientId : string?
         address : AppRouteAddress!
         payload : AppRouteJson
         options : Map string AppRouteJson?
@@ -199,6 +205,7 @@ orbital AppRouteOrbital {
       APP_GUEST -> external {
         key : string!
         app : string!
+        clientId : string?
       }
         @description "Asks ProgramApps for the guest handle of the app whose live stream a GET is opening."
       APP_TICKET_MINT -> external {

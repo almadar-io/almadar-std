@@ -1,847 +1,2125 @@
 {
- "atom": "ops/atoms/std-deploy-host.lolo",
- "trait": "DeployHost",
- "cases": [
-  {
-   "id": "app deploy reads the history, rsyncs to the next release, links, records and answers",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
+  "atom": "ops/atoms/std-deploy-host.lolo",
+  "trait": "DeployHost",
+  "note": "Apps deploy concurrently on their own AppRelease rows; runtime, binary, rollback and env calls are exclusive.",
+  "cases": [
     {
-     "trait": "DeployHost",
-     "from": "idle",
-     "event": "DEPLOY_APP",
-     "payload": {
-      "app": "shop",
-      "localDir": "/w/out"
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_HISTORY",
-        "payload": {
-         "artifact": "shop"
+      "id": "an app deploy is handed to the app's own release row",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "shop",
+            "localDir": "/w/shop"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DH_APP_START",
+                "payload": {
+                  "app": "shop",
+                  "localDir": "/w/shop"
+                }
+              },
+              {
+                "event": "AR_REMOTE",
+                "payload": {
+                  "stage": "shop|number",
+                  "cmd": "mkdir -p '/srv/orb/apps/shop/releases' && cd '/srv/orb/apps/shop' && ls -1 releases | grep -E '^[0-9]+$' | sort -n | tail -n 1; true"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DEPLOY_FAILED"
+            ],
+            "entity": {
+              "apps": [
+                "shop"
+              ]
+            }
+          }
         }
-       }
-      ]
-     }
-    },
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_HISTORY_DONE",
-     "payload": {
-      "artifact": "shop",
-      "deployments": [
-       {
-        "id": "shop#1",
-        "artifact": "shop",
-        "version": 1,
-        "activates": true,
-        "recordedAt": "2026-11-18T00:00:00.000Z",
-        "details": {}
-       },
-       {
-        "id": "shop#2",
-        "artifact": "shop",
-        "version": 2,
-        "activates": true,
-        "recordedAt": "2026-11-18T00:00:00.000Z",
-        "details": {}
-       }
-      ]
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_RSYNC_RUN",
-        "payload": {
-         "stage": "app-rsync",
-         "argv": [
-          "-a",
-          "--delete",
-          "-s",
-          "--mkpath",
-          "--",
-          "/w/out/",
-          "deploy@box:/srv/orb/apps/shop/releases/3/"
-         ]
-        }
-       }
-      ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
-    },
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_RSYNC_DONE",
-     "payload": {
-      "stage": "app-rsync",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_SSH_RUN",
-        "payload": {
-         "stage": "app-link",
-         "argv": [
-          "-o",
-          "BatchMode=yes",
-          "--",
-          "deploy@box",
-          "ln -sfn '/srv/orb/apps/shop/releases/3' '/srv/orb/apps/shop/current' && { cd '/srv/orb/apps/shop/releases' && ls -1 | sort -n | head -n -3 | while read -r d; do rm -rf -- \"$d\"; done; true; }"
-         ]
-        }
-       }
-      ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
-    },
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "app-link",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_RECORD",
-        "payload": {
-         "artifact": "shop",
-         "activates": true,
-         "details": {
-          "host": "deploy@box",
-          "releaseDir": "/srv/orb/apps/shop/releases/3"
-         }
-        }
-       }
-      ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
-    },
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_RECORDED",
-     "payload": {
-      "artifact": "shop",
-      "version": 3
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "APP_DEPLOYED",
-        "payload": {
-         "app": "shop",
-         "version": 3
-        }
-       }
       ],
-      "neverEmits": [
-       "DEPLOY_FAILED",
-       "DH_RSYNC_RUN"
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
       ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a failed rsync answers DEPLOY_FAILED at rsync and records nothing",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_RSYNC_DONE",
-     "payload": {
-      "stage": "app-rsync",
-      "exitCode": 23,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": "rsync: connection unexpectedly closed"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "DEPLOY_FAILED",
-        "payload": {
-         "app": "shop",
-         "step": "rsync",
-         "error": "rsync: connection unexpectedly closed"
-        }
-       }
-      ],
-      "neverEmits": [
-       "DH_SSH_RUN",
-       "DH_RECORD",
-       "APP_DEPLOYED"
-      ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a failed link answers DEPLOY_FAILED at link and records nothing",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "app-link",
-      "exitCode": 1,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": "ln: failed"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "DEPLOY_FAILED",
-        "payload": {
-         "app": "shop",
-         "step": "link",
-         "error": "ln: failed"
-        }
-       }
-      ],
-      "neverEmits": [
-       "DH_RECORD",
-       "APP_DEPLOYED"
-      ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a refused registry record answers DEPLOY_FAILED at record",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_RECORD_FAILED",
-     "payload": {
-      "artifact": "shop",
-      "code": "contended",
-      "message": "lost the race"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "DEPLOY_FAILED",
-        "payload": {
-         "app": "shop",
-         "step": "record",
-         "error": "lost the race"
-        }
-       }
-      ],
-      "neverEmits": [
-       "APP_DEPLOYED"
-      ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a binary deploy rsyncs, swaps, restarts, passes the health check and answers BINARY_DEPLOYED",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "idle",
-     "event": "DEPLOY_BINARY",
-     "payload": {
-      "localPath": "/w/orb"
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_RSYNC_RUN",
-        "payload": {
-         "stage": "bin-rsync",
-         "argv": [
-          "-a",
-          "-s",
-          "--mkpath",
-          "--",
-          "/w/orb",
-          "deploy@box:/srv/orb/bin/orb.new"
-         ]
-        }
-       }
-      ]
-     }
     },
     {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_RSYNC_DONE",
-     "payload": {
-      "stage": "bin-rsync",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_SSH_RUN",
-        "payload": {
-         "stage": "bin-swap",
-         "argv": [
-          "-o",
-          "BatchMode=yes",
-          "--",
-          "deploy@box",
-          "cd '/srv/orb/bin' && { test ! -e orb || cp -p orb orb.prev; } && mv -f orb.new orb"
-         ]
+      "id": "two apps deploy at once",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "shop",
+            "localDir": "/w/shop"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_APP_START",
+                "payload": {
+                  "app": "shop"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DEPLOY_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "blog",
+            "localDir": "/w/blog"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_APP_START",
+                "payload": {
+                  "app": "blog"
+                }
+              },
+              {
+                "event": "AR_REMOTE",
+                "payload": {
+                  "stage": "blog|number"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DEPLOY_FAILED"
+            ]
+          }
         }
-       }
-      ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb"
-     }
-    },
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "bin-swap",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_SSH_RUN",
-        "payload": {
-         "stage": "bin-restart",
-         "argv": [
-          "-o",
-          "BatchMode=yes",
-          "--",
-          "deploy@box",
-          "systemctl --user restart 'orb-central'"
-         ]
-        }
-       }
-      ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb"
-     }
-    },
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "bin-restart",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_CURL_RUN",
-        "payload": {
-         "stage": "bin-health",
-         "argv": [
-          "-fsS",
-          "--max-time",
-          "10",
-          "--retry",
-          "5",
-          "--retry-delay",
-          "1",
-          "--retry-connrefused",
-          "--",
-          "http://127.0.0.1:8080/health"
-         ]
-        }
-       }
-      ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb"
-     }
-    },
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_CURL_DONE",
-     "payload": {
-      "stage": "bin-health",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "BINARY_DEPLOYED",
-        "payload": {}
-       }
       ],
-      "neverEmits": [
-       "BINARY_ROLLED_BACK",
-       "DH_SSH_RUN"
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
       ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a binary deploy whose health check fails moves orb.prev back, restarts and answers BINARY_ROLLED_BACK",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_CURL_DONE",
-     "payload": {
-      "stage": "bin-health",
-      "exitCode": 22,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": "curl: (22) The requested URL returned error: 503"
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_SSH_RUN",
-        "payload": {
-         "stage": "bin-undo",
-         "argv": [
-          "-o",
-          "BatchMode=yes",
-          "--",
-          "deploy@box",
-          "cd '/srv/orb/bin' && mv -f orb.prev orb"
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "BINARY_DEPLOYED"
-      ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb"
-     }
     },
     {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "bin-undo",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_SSH_RUN",
-        "payload": {
-         "stage": "bin-restart-prev",
-         "argv": [
-          "-o",
-          "BatchMode=yes",
-          "--",
-          "deploy@box",
-          "systemctl --user restart 'orb-central'"
-         ]
+      "id": "control: a second deploy of an app in flight is busy",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "shop",
+            "localDir": "/w/shop"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_APP_START"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "shop",
+            "localDir": "/w/shop"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "shop",
+                  "step": "busy"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_APP_START"
+            ]
+          }
         }
-       }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
       ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb",
-      "reason": "curl: (22) The requested URL returned error: 503"
-     }
     },
     {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "bin-restart-prev",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "BINARY_ROLLED_BACK",
-        "payload": {
-         "error": "curl: (22) The requested URL returned error: 503"
+      "id": "the release row takes the number after the highest on the server",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "AppRelease",
+          "from": "history",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "localDir": "/w/shop",
+            "host": "deploy@box",
+            "root": "/srv/orb",
+            "keep": 3
+          },
+          "event": "AR_REMOTE_DONE",
+          "payload": {
+            "stage": "shop|number",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "4\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "uploading",
+            "emits": [
+              {
+                "event": "AR_RSYNC_RUN",
+                "payload": {
+                  "stage": "shop|rsync",
+                  "argv": [
+                    "-a",
+                    "--delete",
+                    "--",
+                    "/w/shop/",
+                    "deploy@box:/srv/orb/apps/shop/releases/5/"
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "version": 5
+            }
+          }
         }
-       }
       ],
-      "neverEmits": [
-       "BINARY_DEPLOYED"
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
       ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb",
-      "reason": "curl: (22) The requested URL returned error: 503"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a failed binary restart is undone the same way",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "bin-restart",
-      "exitCode": 5,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": "Unit orb-central.service not found."
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_SSH_RUN",
-        "payload": {
-         "stage": "bin-undo",
-         "argv": [
-          "-o",
-          "BatchMode=yes",
-          "--",
-          "deploy@box",
-          "cd '/srv/orb/bin' && mv -f orb.prev orb"
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "DH_CURL_RUN"
-      ]
-     },
-     "entity": {
-      "op": "binary",
-      "binDir": "/srv/orb/bin",
-      "localPath": "/w/orb"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a rollback links the earlier release then re-activates it in the registry",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "idle",
-     "event": "ROLLBACK_APP",
-     "payload": {
-      "app": "shop",
-      "version": 2
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_SSH_RUN",
-        "payload": {
-         "stage": "rollback-link",
-         "argv": [
-          "-o",
-          "BatchMode=yes",
-          "--",
-          "deploy@box",
-          "ln -sfn '/srv/orb/apps/shop/releases/2' '/srv/orb/apps/shop/current'"
-         ]
-        }
-       }
-      ]
-     }
     },
     {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_SSH_DONE",
-     "payload": {
-      "stage": "rollback-link",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "",
-      "stdoutBytes": "",
-      "stderr": ""
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DH_ROLLBACK",
-        "payload": {
-         "artifact": "shop",
-         "version": 2
+      "id": "control: an app with no releases yet takes release 1",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "AppRelease",
+          "from": "history",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "localDir": "/w/shop",
+            "host": "deploy@box",
+            "root": "/srv/orb",
+            "keep": 3
+          },
+          "event": "AR_REMOTE_DONE",
+          "payload": {
+            "stage": "shop|number",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "uploading",
+            "emits": [
+              {
+                "event": "AR_RSYNC_RUN",
+                "payload": {
+                  "stage": "shop|rsync",
+                  "argv": [
+                    "-a",
+                    "--delete",
+                    "--",
+                    "/w/shop/",
+                    "deploy@box:/srv/orb/apps/shop/releases/1/"
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "version": 1
+            }
+          }
         }
-       }
       ]
-     },
-     "entity": {
-      "op": "rollback",
-      "app": "shop",
-      "version": 2
-     }
     },
     {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DH_ROLLED_BACK",
-     "payload": {
-      "artifact": "shop",
-      "version": 2
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "APP_ROLLED_BACK",
-        "payload": {
-         "app": "shop",
-         "version": 2
+      "id": "the release row links current by one rename and keeps three",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "AppRelease",
+          "from": "uploading",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "localDir": "/w/shop",
+            "version": 3,
+            "host": "deploy@box",
+            "root": "/srv/orb",
+            "keep": 3
+          },
+          "event": "AR_RSYNC_DONE",
+          "payload": {
+            "stage": "shop|rsync",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "linking",
+            "emits": [
+              {
+                "event": "AR_REMOTE",
+                "payload": {
+                  "stage": "shop|link",
+                  "cmd": "cd '/srv/orb/apps/shop' && if [ -d current ] && [ ! -L current ]; then mkdir -p releases && rm -rf releases/0 && mv current releases/0; fi && ln -sfn 'releases/3' current.next && perl -e 'rename shift, shift or exit 1' current.next current && { cd releases && ls -1 | sort -rn | tail -n +4 | while read -r d; do rm -rf -- \"$d\"; done; true; }"
+                }
+              },
+              {
+                "event": "REMOTE_SSH",
+                "payload": {
+                  "stage": "shop|link",
+                  "argv": [
+                    "-o",
+                    "BatchMode=yes",
+                    "--",
+                    "deploy@box",
+                    "cd '/srv/orb/apps/shop' && if [ -d current ] && [ ! -L current ]; then mkdir -p releases && rm -rf releases/0 && mv current releases/0; fi && ln -sfn 'releases/3' current.next && perl -e 'rename shift, shift or exit 1' current.next current && { cd releases && ls -1 | sort -rn | tail -n +4 | while read -r d; do rm -rf -- \"$d\"; done; true; }"
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
-      ]
-     },
-     "entity": {
-      "op": "rollback",
-      "app": "shop",
-      "version": 2
-     }
-    }
-   ]
-  },
-  {
-   "id": "an empty host refuses the deploy before any command",
-   "config": {},
-   "steps": [
-    {
-     "trait": "DeployHost",
-     "from": "idle",
-     "event": "DEPLOY_APP",
-     "payload": {
-      "app": "shop",
-      "localDir": "/w/out"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "DEPLOY_FAILED",
-        "payload": {
-         "app": "shop",
-         "step": "config",
-         "error": "the host knob is empty"
-        }
-       }
       ],
-      "neverEmits": [
-       "DH_HISTORY"
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a call made while another runs is refused as busy",
-   "config": {
-    "host": "deploy@box",
-    "healthUrl": "http://127.0.0.1:8080/health"
-   },
-   "steps": [
+    },
     {
-     "trait": "DeployHost",
-     "from": "running",
-     "event": "DEPLOY_APP",
-     "payload": {
-      "app": "other",
-      "localDir": "/w/x"
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "DEPLOY_FAILED",
-        "payload": {
-         "app": "other",
-         "step": "busy",
-         "error": "another deploy is in flight"
+      "id": "control: on a local host the link runs through sh",
+      "config": {
+        "host": "local",
+        "healthUrl": "http://localhost:8088/api/health"
+      },
+      "steps": [
+        {
+          "trait": "AppRelease",
+          "from": "uploading",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "localDir": "/w/shop",
+            "version": 3,
+            "host": "local",
+            "root": "/srv/orb",
+            "keep": 3
+          },
+          "event": "AR_RSYNC_DONE",
+          "payload": {
+            "stage": "shop|rsync",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "AR_REMOTE",
+                "payload": {
+                  "stage": "shop|link"
+                }
+              },
+              {
+                "event": "REMOTE_SH",
+                "payload": {
+                  "stage": "shop|link",
+                  "argv": [
+                    "-c",
+                    "cd '/srv/orb/apps/shop' && if [ -d current ] && [ ! -L current ]; then mkdir -p releases && rm -rf releases/0 && mv current releases/0; fi && ln -sfn 'releases/3' current.next && perl -e 'rename shift, shift or exit 1' current.next current && { cd releases && ls -1 | sort -rn | tail -n +4 | while read -r d; do rm -rf -- \"$d\"; done; true; }"
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "REMOTE_SSH"
+            ]
+          }
         }
-       }
       ],
-      "neverEmits": [
-       "DH_HISTORY"
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
       ]
-     },
-     "entity": {
-      "app": "shop",
-      "localPath": "/w/out",
-      "appDir": "/srv/orb/apps/shop",
-      "version": 3,
-      "relDir": "/srv/orb/apps/shop/releases/3",
-      "op": "app"
-     }
+    },
+    {
+      "id": "a failed rsync answers at rsync and records nothing",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "AppRelease",
+          "from": "uploading",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "localDir": "/w/shop",
+            "version": 3,
+            "host": "deploy@box",
+            "root": "/srv/orb",
+            "keep": 3
+          },
+          "event": "AR_RSYNC_DONE",
+          "payload": {
+            "stage": "shop|rsync",
+            "exitCode": 23,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "denied"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "AR_FAILED",
+                "payload": {
+                  "app": "shop",
+                  "step": "rsync",
+                  "error": "denied"
+                }
+              }
+            ],
+            "neverEmits": [
+              "AR_RECORD",
+              "AR_REMOTE"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "a linked release is answered with its number",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "AppRelease",
+          "from": "linking",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "localDir": "/w/shop",
+            "host": "deploy@box",
+            "root": "/srv/orb",
+            "keep": 3,
+            "version": 3
+          },
+          "event": "AR_REMOTE_DONE",
+          "payload": {
+            "stage": "shop|link",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "AR_DONE",
+                "payload": {
+                  "app": "shop",
+                  "version": 3
+                }
+              }
+            ],
+            "entity": {
+              "app": "",
+              "localDir": "",
+              "version": 0,
+              "host": "",
+              "root": "",
+              "keep": 0
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "a finished app frees its name and is answered",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "entity": {
+            "id": "h",
+            "apps": [
+              "shop",
+              "blog"
+            ]
+          },
+          "event": "AR_DONE",
+          "payload": {
+            "app": "shop",
+            "version": 3
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "APP_DEPLOYED",
+                "payload": {
+                  "app": "shop",
+                  "version": 3
+                }
+              }
+            ],
+            "entity": {
+              "apps": [
+                "blog"
+              ]
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "a runtime deploy waits for no app and is refused while one is in flight",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "entity": {
+            "id": "h",
+            "apps": [
+              "shop"
+            ]
+          },
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "step": "busy"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "a runtime deploy rsyncs the context, then the stack without its env",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|context",
+                  "argv": [
+                    "-a",
+                    "--delete",
+                    "--",
+                    "/w/ctx/",
+                    "deploy@box:/srv/orb/build/"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_RSYNC_DONE",
+          "payload": {
+            "stage": "#runtime|context",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|stack",
+                  "argv": [
+                    "-a",
+                    "--exclude",
+                    ".env",
+                    "--",
+                    "/w/stack/",
+                    "deploy@box:/srv/orb/stack/"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_RSYNC_DONE",
+          "payload": {
+            "stage": "#runtime|stack",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|build"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|build",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "almadar-central-orb:20261117\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|start"
+                }
+              }
+            ],
+            "entity": {
+              "prevImage": "almadar-central-orb:20261117",
+              "image": "almadar-central-orb:20261118"
+            }
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|start",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_CURL_RUN",
+                "payload": {
+                  "stage": "#runtime|health"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_CURL_DONE",
+          "payload": {
+            "stage": "#runtime|health",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|prune"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|prune",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RUNTIME_DEPLOYED",
+                "payload": {
+                  "image": "almadar-central-orb:20261118"
+                }
+              }
+            ],
+            "entity": {
+              "op": ""
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "an unhealthy runtime goes back to the previous image",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime",
+            "image": "almadar-central-orb:20261118",
+            "prevImage": "almadar-central-orb:20261117"
+          },
+          "event": "DH_CURL_DONE",
+          "payload": {
+            "stage": "#runtime|health",
+            "exitCode": 22,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "502"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|undo"
+                }
+              }
+            ],
+            "neverEmits": [
+              "RUNTIME_DEPLOYED"
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|undo",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RUNTIME_ROLLED_BACK",
+                "payload": {
+                  "error": "502"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "control: a binary deploy is refused under runtime docker",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_BINARY",
+          "payload": {
+            "localPath": "/w/orb"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "an empty host refuses the deploy before any command",
+      "config": {
+        "host": ""
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "shop",
+            "localDir": "/w/shop"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_APP_START"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "a stack env line is replaced and applied",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "SET_STACK_ENV",
+          "payload": {
+            "name": "CORS_ORIGIN",
+            "value": "https://a.web.app,https://b.web.app",
+            "apply": true
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#env|write",
+                  "cmd": "cd '/srv/orb/stack' && { grep -v '^CORS_ORIGIN=' .env > .env.next || true; } && printf '%s\\n' 'CORS_ORIGIN=https://a.web.app,https://b.web.app' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#env|write",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STACK_ENV_SET",
+                "payload": {
+                  "name": "CORS_ORIGIN",
+                  "applied": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "a systemd binary deploy rsyncs, swaps, restarts, checks health and answers",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "http://127.0.0.1:8080/health",
+        "runtime": "systemd"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_BINARY",
+          "payload": {
+            "localPath": "/w/orb"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#binary|rsync",
+                  "argv": [
+                    "-a",
+                    "--",
+                    "/w/orb",
+                    "deploy@box:/srv/orb/bin/orb.new"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_RSYNC_DONE",
+          "payload": {
+            "stage": "#binary|rsync",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#binary|swap",
+                  "cmd": "cd '/srv/orb/bin' && { test ! -e orb || cp -p orb orb.prev; } && mv -f orb.new orb"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#binary|swap",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#binary|restart",
+                  "cmd": "systemctl --user restart 'orb-central'"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#binary|restart",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_CURL_RUN",
+                "payload": {
+                  "stage": "#binary|health"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_CURL_DONE",
+          "payload": {
+            "stage": "#binary|health",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "BINARY_DEPLOYED"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a rollback links the earlier release folder",
+      "config": {
+        "host": "deploy@box"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "ROLLBACK_APP",
+          "payload": {
+            "app": "shop",
+            "version": 2
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#rollback|link",
+                  "cmd": "cd '/srv/orb/apps/shop' && test -d 'releases/2' && ln -sfn 'releases/2' current.next && perl -e 'rename shift, shift or exit 1' current.next current"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#rollback|link",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "APP_ROLLED_BACK",
+                "payload": {
+                  "app": "shop",
+                  "version": 2
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an app deploy during a runtime deploy is busy",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://x/h"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime"
+          },
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "shop",
+            "localDir": "/w/shop"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "shop",
+                  "step": "busy"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_APP_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a fleet deploy starts every selected app on its own row",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_FLEET",
+          "payload": {
+            "apps": [
+              {
+                "name": "shop",
+                "program": "lolo/shop.lolo",
+                "site": "shop-site",
+                "staticDir": "",
+                "env": {
+                  "A": "1",
+                  "B": "x=y"
+                },
+                "firestoreDatabase": "shopdb"
+              },
+              {
+                "name": "blog",
+                "program": "lolo/blog.lolo",
+                "site": "",
+                "staticDir": "",
+                "env": {},
+                "firestoreDatabase": ""
+              }
+            ],
+            "only": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_FLEET"
+              },
+              {
+                "event": "FL_NEXT"
+              },
+              {
+                "event": "FL_APP_START",
+                "payload": {
+                  "name": "shop",
+                  "stageDir": "/w/fleet/shop",
+                  "origin": "https://central.example/apps/shop"
+                }
+              },
+              {
+                "event": "FL_NEXT"
+              },
+              {
+                "event": "FL_APP_START",
+                "payload": {
+                  "name": "blog"
+                }
+              },
+              {
+                "event": "FL_SH_RUN",
+                "payload": {
+                  "stage": "shop|f-prep",
+                  "argv": [
+                    "-c",
+                    "rm -rf \"$1\" && mkdir -p \"$1/release\" \"$1/client\" && printf '%s' \"$2\" > \"$1/release/app.env\"",
+                    "sh",
+                    "/w/fleet/shop",
+                    "A=1\nB=x=y\n"
+                  ]
+                }
+              },
+              {
+                "event": "FL_SH_RUN",
+                "payload": {
+                  "stage": "blog|f-prep"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: only names one app",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_FLEET",
+          "payload": {
+            "apps": [
+              {
+                "name": "shop",
+                "program": "lolo/shop.lolo",
+                "site": "shop-site",
+                "staticDir": "",
+                "env": {
+                  "A": "1",
+                  "B": "x=y"
+                },
+                "firestoreDatabase": "shopdb"
+              },
+              {
+                "name": "blog",
+                "program": "lolo/blog.lolo",
+                "site": "",
+                "staticDir": "",
+                "env": {},
+                "firestoreDatabase": ""
+              }
+            ],
+            "only": [
+              "blog"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_FLEET"
+              },
+              {
+                "event": "FL_NEXT"
+              },
+              {
+                "event": "FL_APP_START",
+                "payload": {
+                  "name": "blog"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a resolved app ships its release, compiles its client against the central host and builds its indexes at once",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "FleetApp",
+          "from": "resolving",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "program": "lolo/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "/s/static",
+            "firestoreDatabase": "shopdb",
+            "stageDir": "/w/fleet/shop",
+            "origin": "https://central.example/apps/shop",
+            "pending": 3,
+            "version": 0,
+            "failures": []
+          },
+          "event": "FL_ORB_DONE",
+          "payload": {
+            "stage": "shop|f-resolve",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "shipping",
+            "emits": [
+              {
+                "event": "FL_DEPLOY_APP",
+                "payload": {
+                  "app": "shop",
+                  "localDir": "/w/fleet/shop/release"
+                }
+              },
+              {
+                "event": "FL_ORB_RUN",
+                "payload": {
+                  "stage": "shop|f-client",
+                  "argv": [
+                    "compile",
+                    "lolo/shop.lolo",
+                    "--mode",
+                    "client",
+                    "--web-client",
+                    "-o",
+                    "/w/fleet/shop/client"
+                  ],
+                  "env": {
+                    "ORB_PUBLIC_ORIGIN": "https://central.example/apps/shop"
+                  }
+                }
+              },
+              {
+                "event": "FL_ORB_RUN",
+                "payload": {
+                  "stage": "shop|f-indexes",
+                  "argv": [
+                    "firestore-indexes",
+                    "/w/fleet/shop/release/app.orb",
+                    "--out",
+                    "/w/fleet/shop/firestore.indexes.json"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an app with no site and no database only ships its release",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "FleetApp",
+          "from": "resolving",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "program": "lolo/shop.lolo",
+            "site": "",
+            "staticDir": "/s/static",
+            "firestoreDatabase": "",
+            "stageDir": "/w/fleet/shop",
+            "origin": "https://central.example/apps/shop",
+            "pending": 1,
+            "version": 0,
+            "failures": []
+          },
+          "event": "FL_ORB_DONE",
+          "payload": {
+            "stage": "shop|f-resolve",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "shipping",
+            "emits": [
+              {
+                "event": "FL_DEPLOY_APP"
+              }
+            ],
+            "neverEmits": [
+              "FL_ORB_RUN"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed resolve ends the app with its error and ships nothing",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "FleetApp",
+          "from": "resolving",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "program": "lolo/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "/s/static",
+            "firestoreDatabase": "shopdb",
+            "stageDir": "/w/fleet/shop",
+            "origin": "https://central.example/apps/shop",
+            "pending": 3,
+            "version": 0,
+            "failures": []
+          },
+          "event": "FL_ORB_DONE",
+          "payload": {
+            "stage": "shop|f-resolve",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "does not lower"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "FL_DONE",
+                "payload": {
+                  "app": "shop",
+                  "version": 0,
+                  "failures": [
+                    "resolve: does not lower"
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "FL_DEPLOY_APP"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the app answers once its release, client and indexes are all done",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "FleetApp",
+          "from": "shipping",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "program": "lolo/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "/s/static",
+            "firestoreDatabase": "shopdb",
+            "stageDir": "/w/fleet/shop",
+            "origin": "https://central.example/apps/shop",
+            "pending": 3,
+            "version": 0,
+            "failures": []
+          },
+          "event": "FL_SERVER_DONE",
+          "payload": {
+            "app": "shop",
+            "version": 4
+          },
+          "expect": {
+            "state": "shipping",
+            "entity": {
+              "pending": 2,
+              "version": 4
+            }
+          }
+        },
+        {
+          "trait": "FleetApp",
+          "from": "shipping",
+          "event": "FL_PART_DONE",
+          "payload": {
+            "app": "shop"
+          },
+          "expect": {
+            "state": "shipping",
+            "entity": {
+              "pending": 1
+            }
+          }
+        },
+        {
+          "trait": "FleetApp",
+          "from": "shipping",
+          "event": "FL_PART_FAILED",
+          "payload": {
+            "app": "shop",
+            "error": "indexes: denied"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "FL_DONE",
+                "payload": {
+                  "app": "shop",
+                  "version": 4,
+                  "failures": [
+                    "indexes: denied"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the compiled client gets the app's static files and is handed to the publisher",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "FleetApp",
+          "from": "shipping",
+          "entity": {
+            "id": "shop",
+            "app": "shop",
+            "program": "lolo/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "/s/static",
+            "firestoreDatabase": "shopdb",
+            "stageDir": "/w/fleet/shop",
+            "origin": "https://central.example/apps/shop",
+            "pending": 3,
+            "version": 0,
+            "failures": []
+          },
+          "event": "FL_ORB_DONE",
+          "payload": {
+            "stage": "shop|f-client",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FL_SH_RUN",
+                "payload": {
+                  "stage": "shop|f-static",
+                  "argv": [
+                    "-c",
+                    "[ -z \"$2\" ] || cp -R \"$2\"/. \"$1/client/web-client/\"",
+                    "sh",
+                    "/w/fleet/shop",
+                    "/s/static"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "FleetApp",
+          "from": "shipping",
+          "event": "FL_SH_DONE",
+          "payload": {
+            "stage": "shop|f-static",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CLIENT_PUBLISH",
+                "payload": {
+                  "app": "shop",
+                  "site": "shop-site",
+                  "dir": "/w/fleet/shop/client/web-client"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the plan answers once every app is done",
+      "config": {
+        "workDir": "/w/fleet",
+        "apiOrigin": "https://central.example"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "FleetPlan",
+          "from": "running",
+          "entity": {
+            "id": "p",
+            "apps": [
+              "shop",
+              "blog"
+            ],
+            "results": []
+          },
+          "event": "FL_APP_DONE",
+          "payload": {
+            "app": "blog",
+            "version": 2,
+            "failures": []
+          },
+          "expect": {
+            "state": "running",
+            "neverEmits": [
+              "FLEET_DONE"
+            ]
+          }
+        },
+        {
+          "trait": "FleetPlan",
+          "from": "running",
+          "event": "FL_APP_DONE",
+          "payload": {
+            "app": "shop",
+            "version": 0,
+            "failures": [
+              "resolve: x"
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "FLEET_DONE",
+                "payload": {
+                  "results": [
+                    {
+                      "app": "blog",
+                      "version": 2,
+                      "ok": true,
+                      "failures": []
+                    },
+                    {
+                      "app": "shop",
+                      "version": 0,
+                      "ok": false,
+                      "failures": [
+                        "resolve: x"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a fleet without workDir or apiOrigin answers at once",
+      "config": {},
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease",
+        "FleetPlan",
+        "FleetApp",
+        "FleetSh",
+        "FleetOrb"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_FLEET",
+          "payload": {
+            "apps": [
+              {
+                "name": "shop",
+                "program": "lolo/shop.lolo",
+                "site": "shop-site",
+                "staticDir": "",
+                "env": {
+                  "A": "1",
+                  "B": "x=y"
+                },
+                "firestoreDatabase": "shopdb"
+              },
+              {
+                "name": "blog",
+                "program": "lolo/blog.lolo",
+                "site": "",
+                "staticDir": "",
+                "env": {},
+                "firestoreDatabase": ""
+              }
+            ],
+            "only": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_FLEET"
+              },
+              {
+                "event": "FLEET_DONE",
+                "payload": {
+                  "results": [
+                    {
+                      "app": "",
+                      "version": 0,
+                      "ok": false,
+                      "failures": [
+                        "the workDir and apiOrigin knobs must be set"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "FL_APP_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app name that could reach a server shell as syntax is refused",
+      "config": {
+        "host": "deploy@box"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "shop; rm -rf /",
+            "localDir": "/w"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "step": "config"
+                }
+              },
+              {
+                "event": "DH_APP_FAILED"
+              }
+            ],
+            "neverEmits": [
+              "DH_APP_START"
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_APP",
+          "payload": {
+            "app": "..",
+            "localDir": "/w"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_APP_START"
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

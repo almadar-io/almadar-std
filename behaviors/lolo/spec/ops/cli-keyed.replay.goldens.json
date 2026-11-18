@@ -1,0 +1,370 @@
+{
+  "atom": "ops/atoms/std-cli-keyed.lolo",
+  "trait": "KeyedCli",
+  "note": "Concurrent std-cli runs by stage: each stage is its own row (EXEC-STEP-1a).",
+  "cases": [
+    {
+      "id": "two-stages-run-at-once-on-two-rows",
+      "config": {
+        "commands": [
+          "echo"
+        ]
+      },
+      "defaults": [
+        "CliKeyed"
+      ],
+      "steps": [
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "a",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN",
+                "payload": {
+                  "stage": "a"
+                }
+              },
+              {
+                "event": "CLI_ENV_NEXT"
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "b",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN",
+                "payload": {
+                  "stage": "b"
+                }
+              },
+              {
+                "event": "CLI_ENV_NEXT"
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-stage-already-in-flight-is-busy-on-its-own-row",
+      "config": {
+        "commands": [
+          "echo"
+        ]
+      },
+      "defaults": [
+        "CliKeyed"
+      ],
+      "steps": [
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "a",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN",
+                "payload": {
+                  "stage": "a"
+                }
+              },
+              {
+                "event": "CLI_ENV_NEXT"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "a",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN",
+                "payload": {
+                  "stage": "a"
+                }
+              },
+              {
+                "event": "CLI_FAILED",
+                "payload": {
+                  "stage": "a",
+                  "code": "cli_busy"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_ENV_NEXT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cancel-reaches-only-its-own-row",
+      "config": {
+        "commands": [
+          "echo"
+        ]
+      },
+      "defaults": [
+        "CliKeyed"
+      ],
+      "steps": [
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "a",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN"
+              },
+              {
+                "event": "CLI_ENV_NEXT"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "b",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN"
+              },
+              {
+                "event": "CLI_ENV_NEXT"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_CANCEL",
+          "payload": {
+            "stage": "a"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_CANCEL",
+                "payload": {
+                  "stage": "a"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "b",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN",
+                "payload": {
+                  "stage": "b"
+                }
+              },
+              {
+                "event": "CLI_FAILED",
+                "payload": {
+                  "stage": "b",
+                  "code": "cli_busy"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cancel-on-an-idle-stage-answers-idle",
+      "config": {
+        "commands": [
+          "echo"
+        ]
+      },
+      "defaults": [
+        "CliKeyed"
+      ],
+      "steps": [
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_CANCEL",
+          "payload": {
+            "stage": "c"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_CANCEL",
+                "payload": {
+                  "stage": "c"
+                }
+              },
+              {
+                "event": "CLI_FAILED",
+                "payload": {
+                  "code": "cli_idle"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-stage-is-refused-never-the-singleton",
+      "config": {
+        "commands": [
+          "echo"
+        ]
+      },
+      "defaults": [
+        "CliKeyed"
+      ],
+      "steps": [
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CLI_FAILED",
+                "payload": {
+                  "stage": "",
+                  "code": "cli_refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_ENV_NEXT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-good-stage-after-a-refused-one-opens-its-own-row",
+      "config": {
+        "commands": [
+          "echo"
+        ]
+      },
+      "defaults": [
+        "CliKeyed"
+      ],
+      "steps": [
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CLI_FAILED",
+                "payload": {
+                  "code": "cli_refused"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "CliKeyed",
+          "event": "CLI_RUN",
+          "payload": {
+            "stage": "a",
+            "argv": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "KEYED_RUN",
+                "payload": {
+                  "stage": "a"
+                }
+              },
+              {
+                "event": "CLI_ENV_NEXT"
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

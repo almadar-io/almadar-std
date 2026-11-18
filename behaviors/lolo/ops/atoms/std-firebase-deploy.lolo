@@ -1,0 +1,335 @@
+app std-firebase-deploy [
+  version: "1.0.0",
+  exec: ["firebase", "sh"],
+  env: ["PATH", "HOME"],
+  description: "std-firebase-deploy — publishes compiled web clients to Firebase Hosting and store indexes to Firestore through the firebase CLI (std-cli-keyed, with the host's PATH and HOME passed through so the CLI finds its login), one row per app for each, so many apps publish at once. The project knob names the Firebase project. CLIENT_PUBLISH { app, site, dir } (the answer std-deploy-host's fleet waits for) asks `firebase hosting:sites:get <site>` and creates the site with `hosting:sites:create` only when that exits non-zero, writes <dir>/../firebase.hosting.json naming the site, dir (by its folder name, beside the file) as its public folder and a rewrite of every path to /index.html, runs `firebase deploy --only hosting:<site> --config <that file> --non-interactive` and answers CLIENT_PUBLISHED { app }, or CLIENT_PUBLISH_FAILED { app, error } naming the step (site, config, deploy) with the CLI's stderr. INDEXES_PUBLISH { app, database, file } writes <file>.firebase.json naming the database and the indexes file, runs `firebase deploy --only firestore:indexes --config <that file> --non-interactive` and answers INDEXES_PUBLISHED { app } or INDEXES_PUBLISH_FAILED { app, error }. A second publish of the same kind for an app in flight is refused with step busy. Every path and value is passed as an argument, never parsed by a shell; the files are written with printf through sh."
+]
+uses Keyed from "std/behaviors/std-cli-keyed"
+
+orbital FirebaseDeployOrbital {
+  entity FirebaseDeployRun [runtime] {
+    id : string!
+  }
+
+  entity HostingRun [runtime] {
+    id : string!
+    app : string = ""
+    site : string = ""
+    dir : string = ""
+    project : string = ""
+  }
+
+  entity IndexesRun [runtime] {
+    id : string!
+    app : string = ""
+    database : string = ""
+    file : string = ""
+    project : string = ""
+  }
+
+  trait FbCli = Keyed.traits.KeyedCli {
+    listens {
+      HostingPublish.HP_FB_RUN -> CLI_RUN per @payload.stage
+      IndexesPublish.IP_FB_RUN -> CLI_RUN per @payload.stage
+    }
+    config {
+      commands: ["firebase"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait FbSh = Keyed.traits.KeyedCli {
+    listens {
+      HostingPublish.HP_SH_RUN -> CLI_RUN per @payload.stage
+      IndexesPublish.IP_SH_RUN -> CLI_RUN per @payload.stage
+    }
+    config {
+      commands: ["sh"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait FirebaseDeploy -> FirebaseDeployRun [optimistic] {
+    initial: ready
+
+    config {
+      project : string = ""
+        @label "Firebase project"
+        @description "The Firebase project every site and database belongs to."
+        @synonyms "gcp project, project id"
+        @tier "infra"
+    }
+
+    state ready {
+      INIT -> ready
+      CLIENT_PUBLISH -> ready when (= @config.project "")
+        (emit CLIENT_PUBLISH_FAILED { app: @payload.app, error: "config: the project knob is empty" })
+      CLIENT_PUBLISH -> ready when (!= @config.project "")
+        (emit FD_HOSTING_START { app: @payload.app, site: @payload.site, dir: @payload.dir, project: @config.project })
+      INDEXES_PUBLISH -> ready when (= @config.project "")
+        (emit INDEXES_PUBLISH_FAILED { app: @payload.app, error: "config: the project knob is empty" })
+      INDEXES_PUBLISH -> ready when (!= @config.project "")
+        (emit FD_INDEXES_START { app: @payload.app, database: @payload.database, file: @payload.file, project: @config.project })
+      FD_HOSTING_DONE -> ready
+        (emit CLIENT_PUBLISHED { app: @payload.app })
+      FD_HOSTING_FAILED -> ready
+        (emit CLIENT_PUBLISH_FAILED { app: @payload.app, error: @payload.error })
+      FD_INDEXES_DONE -> ready
+        (emit INDEXES_PUBLISHED { app: @payload.app })
+      FD_INDEXES_FAILED -> ready
+        (emit INDEXES_PUBLISH_FAILED { app: @payload.app, error: @payload.error })
+    }
+
+    emits {
+      CLIENT_PUBLISHED -> external { app : string! }
+        @description "The app's web client is live on its Hosting site."
+        @tier "primary"
+      CLIENT_PUBLISH_FAILED -> external { app : string!  error : string! }
+        @description "The client was not published: the step (config, busy, site, deploy) and the CLI's error."
+        @tier "primary"
+      INDEXES_PUBLISHED -> external { app : string! }
+        @description "The app's Firestore indexes are deployed to its database."
+        @tier "primary"
+      INDEXES_PUBLISH_FAILED -> external { app : string!  error : string! }
+        @description "The indexes were not deployed: the step (config, busy, deploy) and the CLI's error."
+        @tier "primary"
+      FD_HOSTING_START -> internal { app : string!  site : string!  dir : string!  project : string! }
+        @tier "internal"
+      FD_INDEXES_START -> internal { app : string!  database : string!  file : string!  project : string! }
+        @tier "internal"
+    }
+
+    listens {
+      FD_HOSTING_DONE { app : string! }
+        @tier "internal"
+      FD_HOSTING_FAILED { app : string!  error : string! }
+        @tier "internal"
+      FD_INDEXES_DONE { app : string! }
+        @tier "internal"
+      FD_INDEXES_FAILED { app : string!  error : string! }
+        @tier "internal"
+      HostingPublish.HP_DONE -> FD_HOSTING_DONE
+      HostingPublish.HP_FAILED -> FD_HOSTING_FAILED
+      IndexesPublish.IP_DONE -> FD_INDEXES_DONE
+      IndexesPublish.IP_FAILED -> FD_INDEXES_FAILED
+      CLIENT_PUBLISH -> input { app : string!  site : string!  dir : string! }
+        @description "Publish the web client in dir to the Hosting site, creating the site when it does not exist."
+        @synonyms "deploy hosting, publish site, upload client"
+      INDEXES_PUBLISH -> input { app : string!  database : string!  file : string! }
+        @description "Deploy the firestore.indexes.json in file to the Firestore database."
+        @synonyms "deploy indexes, firestore indexes"
+    }
+  }
+
+  trait HostingPublish -> HostingRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      HP_START -> checking
+        (set @entity.app @payload.app)
+        (set @entity.site @payload.site)
+        (set @entity.dir @payload.dir)
+        (set @entity.project @payload.project)
+        (emit HP_FB_RUN { stage: (str/concat @payload.app "|h-get"), argv: ["hosting:sites:get", @payload.site, "--project", @payload.project, "--non-interactive"] })
+    }
+
+    state checking {
+      INIT -> checking
+      HP_START -> checking
+        (emit HP_FAILED { app: @payload.app, error: "busy: a client publish of this app is in flight" })
+      HP_FB_DONE -> configuring when (and (= @payload.stage (str/concat @entity.app "|h-get")) (= @payload.exitCode 0))
+        (emit HP_SH_RUN { stage: (str/concat @entity.app "|h-config"), argv: ["-c", "printf '{\"hosting\":{\"site\":\"%s\",\"public\":\"%s\",\"ignore\":[\"firebase.json\",\"**/.*\"],\"rewrites\":[{\"source\":\"**\",\"destination\":\"/index.html\"}]}}\\n' \"$1\" \"$(basename \"$2\")\" > \"$2/../firebase.hosting.json\"", "sh", @entity.site, @entity.dir] })
+      HP_FB_DONE -> creating when (and (= @payload.stage (str/concat @entity.app "|h-get")) (!= @payload.exitCode 0))
+        (emit HP_FB_RUN { stage: (str/concat @entity.app "|h-create"), argv: ["hosting:sites:create", @entity.site, "--project", @entity.project, "--non-interactive"] })
+      HP_FB_FAILED -> idle
+        (emit HP_FAILED { app: @entity.app, error: (str/concat "site: " @payload.error) })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+    }
+
+    state creating {
+      INIT -> creating
+      HP_START -> creating
+        (emit HP_FAILED { app: @payload.app, error: "busy: a client publish of this app is in flight" })
+      HP_FB_DONE -> configuring when (= @payload.exitCode 0)
+        (emit HP_SH_RUN { stage: (str/concat @entity.app "|h-config"), argv: ["-c", "printf '{\"hosting\":{\"site\":\"%s\",\"public\":\"%s\",\"ignore\":[\"firebase.json\",\"**/.*\"],\"rewrites\":[{\"source\":\"**\",\"destination\":\"/index.html\"}]}}\\n' \"$1\" \"$(basename \"$2\")\" > \"$2/../firebase.hosting.json\"", "sh", @entity.site, @entity.dir] })
+      HP_FB_DONE -> idle when (!= @payload.exitCode 0)
+        (emit HP_FAILED { app: @entity.app, error: (str/concat "site: " @payload.stderr) })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+      HP_FB_FAILED -> idle
+        (emit HP_FAILED { app: @entity.app, error: (str/concat "site: " @payload.error) })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+    }
+
+    state configuring {
+      INIT -> configuring
+      HP_START -> configuring
+        (emit HP_FAILED { app: @payload.app, error: "busy: a client publish of this app is in flight" })
+      HP_SH_DONE -> deploying when (= @payload.exitCode 0)
+        (emit HP_FB_RUN { stage: (str/concat @entity.app "|h-deploy"), argv: ["deploy", "--only", (str/concat "hosting:" @entity.site), "--config", (str/concat @entity.dir "/../firebase.hosting.json"), "--project", @entity.project, "--non-interactive"] })
+      HP_SH_DONE -> idle when (!= @payload.exitCode 0)
+        (emit HP_FAILED { app: @entity.app, error: (str/concat "config: " @payload.stderr) })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+      HP_SH_FAILED -> idle
+        (emit HP_FAILED { app: @entity.app, error: (str/concat "config: " @payload.error) })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+    }
+
+    state deploying {
+      INIT -> deploying
+      HP_START -> deploying
+        (emit HP_FAILED { app: @payload.app, error: "busy: a client publish of this app is in flight" })
+      HP_FB_DONE -> idle when (= @payload.exitCode 0)
+        (emit HP_DONE { app: @entity.app })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+      HP_FB_DONE -> idle when (!= @payload.exitCode 0)
+        (emit HP_FAILED { app: @entity.app, error: (str/concat "deploy: " @payload.stderr) })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+      HP_FB_FAILED -> idle
+        (emit HP_FAILED { app: @entity.app, error: (str/concat "deploy: " @payload.error) })
+        (set @entity.app "")
+        (set @entity.site "")
+        (set @entity.dir "")
+        (set @entity.project "")
+    }
+
+    emits {
+      HP_DONE -> internal { app : string! }
+        @tier "internal"
+      HP_FAILED -> internal { app : string!  error : string! }
+        @tier "internal"
+      HP_FB_RUN -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+      HP_SH_RUN -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+    }
+
+    listens {
+      HP_START { app : string!  site : string!  dir : string!  project : string! }
+        @tier "internal"
+      HP_FB_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      HP_FB_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      HP_SH_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      HP_SH_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      FirebaseDeploy.FD_HOSTING_START -> HP_START per @payload.app
+      FbCli.CLI_DONE -> HP_FB_DONE per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|h-")
+      FbCli.CLI_FAILED -> HP_FB_FAILED per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|h-")
+      FbSh.CLI_DONE -> HP_SH_DONE per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|h-")
+      FbSh.CLI_FAILED -> HP_SH_FAILED per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|h-")
+    }
+  }
+
+  trait IndexesPublish -> IndexesRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      IP_START -> configuring
+        (set @entity.app @payload.app)
+        (set @entity.database @payload.database)
+        (set @entity.file @payload.file)
+        (set @entity.project @payload.project)
+        (emit IP_SH_RUN { stage: (str/concat @payload.app "|i-config"), argv: ["-c", "printf '{\"firestore\":[{\"database\":\"%s\",\"indexes\":\"%s\"}]}\\n' \"$1\" \"$(basename \"$2\")\" > \"$2.firebase.json\"", "sh", @payload.database, @payload.file] })
+    }
+
+    state configuring {
+      INIT -> configuring
+      IP_START -> configuring
+        (emit IP_FAILED { app: @payload.app, error: "busy: an indexes publish of this app is in flight" })
+      IP_SH_DONE -> deploying when (= @payload.exitCode 0)
+        (emit IP_FB_RUN { stage: (str/concat @entity.app "|i-deploy"), argv: ["deploy", "--only", "firestore:indexes", "--config", (str/concat @entity.file ".firebase.json"), "--project", @entity.project, "--non-interactive"] })
+      IP_SH_DONE -> idle when (!= @payload.exitCode 0)
+        (emit IP_FAILED { app: @entity.app, error: (str/concat "config: " @payload.stderr) })
+        (set @entity.app "")
+        (set @entity.database "")
+        (set @entity.file "")
+        (set @entity.project "")
+      IP_SH_FAILED -> idle
+        (emit IP_FAILED { app: @entity.app, error: (str/concat "config: " @payload.error) })
+        (set @entity.app "")
+        (set @entity.database "")
+        (set @entity.file "")
+        (set @entity.project "")
+    }
+
+    state deploying {
+      INIT -> deploying
+      IP_START -> deploying
+        (emit IP_FAILED { app: @payload.app, error: "busy: an indexes publish of this app is in flight" })
+      IP_FB_DONE -> idle when (= @payload.exitCode 0)
+        (emit IP_DONE { app: @entity.app })
+        (set @entity.app "")
+        (set @entity.database "")
+        (set @entity.file "")
+        (set @entity.project "")
+      IP_FB_DONE -> idle when (!= @payload.exitCode 0)
+        (emit IP_FAILED { app: @entity.app, error: (str/concat "deploy: " @payload.stderr) })
+        (set @entity.app "")
+        (set @entity.database "")
+        (set @entity.file "")
+        (set @entity.project "")
+      IP_FB_FAILED -> idle
+        (emit IP_FAILED { app: @entity.app, error: (str/concat "deploy: " @payload.error) })
+        (set @entity.app "")
+        (set @entity.database "")
+        (set @entity.file "")
+        (set @entity.project "")
+    }
+
+    emits {
+      IP_DONE -> internal { app : string! }
+        @tier "internal"
+      IP_FAILED -> internal { app : string!  error : string! }
+        @tier "internal"
+      IP_FB_RUN -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+      IP_SH_RUN -> internal { stage : string!  argv : [string]! }
+        @tier "internal"
+    }
+
+    listens {
+      IP_START { app : string!  database : string!  file : string!  project : string! }
+        @tier "internal"
+      IP_FB_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      IP_FB_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      IP_SH_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @tier "internal"
+      IP_SH_FAILED { stage : string!  error : string!  code : string! }
+        @tier "internal"
+      FirebaseDeploy.FD_INDEXES_START -> IP_START per @payload.app
+      FbCli.CLI_DONE -> IP_FB_DONE per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|i-")
+      FbCli.CLI_FAILED -> IP_FB_FAILED per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|i-")
+      FbSh.CLI_DONE -> IP_SH_DONE per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|i-")
+      FbSh.CLI_FAILED -> IP_SH_FAILED per (default (array/first (str/split @payload.stage "|")) "") when (str/includes @payload.stage "|i-")
+    }
+  }
+
+  page boot as FirebaseDeployPage -> FirebaseDeploy, HostingPublish, IndexesPublish, FbCli, FbSh
+}

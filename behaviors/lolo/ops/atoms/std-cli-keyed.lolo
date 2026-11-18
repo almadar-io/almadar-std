@@ -1,0 +1,88 @@
+app std-cli-keyed [
+  version: "1.0.0",
+  description: "std-cli-keyed — concurrent command-line runs by key (spec/ops/cli-keyed.lolo), the std-cli counterpart of std-http-keyed: one std-cli trait (KeyedCli) whose rows are addressed by the run's stage. A caller routes its CLI_RUN { stage, argv, env?, stdin? } and CLI_CANCEL { stage } to CliKeyed, which re-emits them and KeyedCli hears each with `per @payload.stage`; the kernel gives each stage its own row of the runner, so its own child process, descriptors and output (EXEC-STEP-1a), created on first use, and each run's os/* completions return to the row that asked. Runs on different stages proceed at once, each its own child (EXEC-CONC-6); a second CLI_RUN on a stage whose run is in flight answers CLI_FAILED code cli_busy from that row. The answers are std-cli's, unchanged and carrying the stage: CLI_DONE { stage, exitCode, signal, stdout, stdoutBytes, stderr } and CLI_FAILED { stage, error, code }. A stage that is not a non-empty string is refused by the `per` clause as DELIVERY_REJECTED (reason key-invalid) from CliKeyed, which hears it and answers CLI_FAILED { stage: \"\", code: cli_refused } for a run (a refused cancel has no answer). std-cli returns a row to its defaults when its run ends, so the row is dropped (EXEC-STEP-1b). No slot count or queue: how many stages run at once is the caller's. The command, passEnv, env, cwd, priority, stdio and binaryOutput knobs are set once on KeyedCli and the composing program's exec grant names the command; a call site that restates KeyedCli's listens restates every `per` clause with it."
+]
+uses Spec from "almadar-std/cli-keyed"
+uses Cli from "std/behaviors/std-cli"
+type RefusedTo = { instance : string!, orbital : string!, trait : string }
+
+orbital CliKeyedOrbital {
+  entity KeyedRun [runtime] {
+    id : string!
+  }
+
+  trait CliKeyed -> KeyedRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      CLI_RUN -> ready
+        (emit KEYED_RUN { stage: @payload.stage, argv: @payload.argv, env: @payload.env, stdin: @payload.stdin })
+      CLI_CANCEL -> ready
+        (emit KEYED_CANCEL { stage: @payload.stage })
+      KEY_REFUSED -> ready when (and (= @payload.reason "key-invalid") (= @payload.event "CLI_RUN"))
+        (emit CLI_FAILED { stage: "", error: "a run needs a stage: a non-empty string", code: "cli_refused" })
+    }
+
+    emits {
+      CLI_FAILED -> external {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A run whose stage is not a non-empty string is refused before any row exists: code cli_refused, stage empty. A run on a good stage is answered by KeyedCli."
+      DELIVERY_REJECTED {
+        id : string!
+        to : RefusedTo!
+        event : string!
+        reason : string!
+        causalId : string!
+      }
+        @description "Produced by the kernel, never by an effect: a delivery this trait emitted whose `per` key is not a non-empty string is refused, reason key-invalid (EXEC-STEP-1a)."
+      KEYED_RUN {
+        stage : string!
+        argv : [string]!
+        env : (Map string string)?
+        stdin : bytes?
+      }
+        @description "Internal: the run, for the row of its stage."
+        @tier "internal"
+      KEYED_CANCEL {
+        stage : string!
+      }
+        @description "Internal: stop the run, for the row of its stage."
+        @tier "internal"
+    }
+
+    listens {
+      KEY_REFUSED {
+        id : string!
+        reason : string!
+        event : string!
+      }
+        @description "The kernel refused a delivery whose `per` key is not a non-empty string (DELIVERY_REJECTED from this trait, EXEC-STEP-1a); only a refused run is answered, a refused cancel has no answer."
+      CliKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+      CLI_RUN {
+        stage : string!
+        argv : [string]!
+        env : (Map string string)?
+        stdin : bytes?
+      }
+        @description "Run the command once under this stage; answered by KeyedCli as CLI_DONE or CLI_FAILED with the same stage, any number of stages at once."
+        @synonyms "concurrent commands, parallel processes, keyed runs"
+      CLI_CANCEL {
+        stage : string!
+      }
+        @description "Stop the running child of this stage with TERM; its exit is still answered with CLI_DONE."
+    }
+  }
+
+  trait KeyedCli = Cli.traits.CliRunner {
+    listens {
+      CliKeyed.KEYED_RUN -> CLI_RUN per @payload.stage
+      CliKeyed.KEYED_CANCEL -> CLI_CANCEL per @payload.stage with { }
+    }
+  }
+
+  page boot as CliKeyedPage -> CliKeyed, KeyedCli
+}

@@ -31,7 +31,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "os/read-file"
+                "type": "os/readlink"
               }
             ]
           }
@@ -133,7 +133,8 @@
                   "name": "a",
                   "guest": "g1",
                   "lastUsedMs": "1970-01-01T00:00:01.000Z",
-                  "loading": false
+                  "loading": false,
+                  "current": true
                 }
               ]
             }
@@ -230,10 +231,20 @@
                 "type": "let",
                 "nested": [
                   {
-                    "type": "do",
+                    "type": "let",
                     "nested": [
                       {
-                        "type": "program/dispatch"
+                        "type": "let",
+                        "nested": [
+                          {
+                            "type": "do",
+                            "nested": [
+                              {
+                                "type": "program/dispatch"
+                              }
+                            ]
+                          }
+                        ]
                       }
                     ]
                   }
@@ -297,10 +308,20 @@
                 "type": "let",
                 "nested": [
                   {
-                    "type": "do",
+                    "type": "let",
                     "nested": [
                       {
-                        "type": "program/dispatch"
+                        "type": "let",
+                        "nested": [
+                          {
+                            "type": "do",
+                            "nested": [
+                              {
+                                "type": "program/dispatch"
+                              }
+                            ]
+                          }
+                        ]
                       }
                     ]
                   }
@@ -495,7 +516,8 @@
                   "name": "a",
                   "guest": "g1",
                   "lastUsedMs": "1970-01-01T00:00:01.000Z",
-                  "loading": false
+                  "loading": false,
+                  "current": true
                 }
               ]
             }
@@ -763,7 +785,10 @@
             ]
           }
         }
-      ]
+      ],
+      "config": {
+        "appsDir": ""
+      }
     },
     {
       "id": "unload closes the guest and a later request loads again",
@@ -835,7 +860,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "os/read-file"
+                "type": "os/readlink"
               }
             ]
           }
@@ -976,7 +1001,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "os/read-file"
+                "type": "os/readlink"
               }
             ]
           }
@@ -1282,6 +1307,1122 @@
             "entity": {
               "apps": []
             }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a new link of a loaded app opens beside the serving release",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_RELEASE_SEEN",
+          "from": "serving",
+          "payload": {
+            "target": "releases/4",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/3"
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "os/read-file"
+              }
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/3"
+                },
+                {
+                  "name": "a",
+                  "guest": "",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": true,
+                  "current": false,
+                  "release": "releases/4"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: the link a loaded app already serves loads nothing",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_RELEASE_SEEN",
+          "from": "serving",
+          "payload": {
+            "target": "releases/3",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/3"
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "effects": [],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/3"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a second new link while one release loads waits for it",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_RELEASE_SEEN",
+          "from": "serving",
+          "payload": {
+            "target": "releases/5",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/3"
+              },
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true,
+                "current": false,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "effects": [],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/3"
+                },
+                {
+                  "name": "a",
+                  "guest": "",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": true,
+                  "current": false,
+                  "release": "releases/4"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the opened new release becomes current and the earlier one retires",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_OPENED",
+          "from": "serving",
+          "payload": {
+            "result": {
+              "guest": "g2"
+            },
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/3"
+              },
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true,
+                "current": false,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_RELEASED",
+                "payload": {
+                  "app": "a",
+                  "release": "releases/4"
+                }
+              }
+            ],
+            "neverEmits": [
+              "APP_DRAIN"
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": false,
+                  "release": "releases/3",
+                  "retiredMs": "1970-01-01T00:00:01.000Z"
+                },
+                {
+                  "name": "a",
+                  "guest": "g2",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/4"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a new release that cannot open is dropped and the earlier keeps serving",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_LOAD_FAILED",
+          "from": "serving",
+          "payload": {
+            "error": "bad program",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/3"
+              },
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true,
+                "current": false,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_RELEASE_FAILED",
+                "payload": {
+                  "app": "a",
+                  "release": "releases/4",
+                  "error": "bad program"
+                }
+              }
+            ],
+            "neverEmits": [
+              "APP_FAIL_DRAIN",
+              "APP_FAILED"
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/3"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a client pinned to the earlier release stays on it",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k9",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {},
+            "clientId": "c1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": false,
+                "release": "releases/3",
+                "retiredMs": "1970-01-01T00:00:00.000Z"
+              },
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false,
+                  "current": false,
+                  "release": "releases/3",
+                  "retiredMs": "1970-01-01T00:00:00.000Z"
+                },
+                {
+                  "name": "a",
+                  "guest": "g2",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/4"
+                }
+              ],
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a new client goes to the current release and is pinned there",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k9",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {},
+            "clientId": "c2"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": false,
+                "release": "releases/3",
+                "retiredMs": "1970-01-01T00:00:00.000Z"
+              },
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": false,
+                  "release": "releases/3",
+                  "retiredMs": "1970-01-01T00:00:00.000Z"
+                },
+                {
+                  "name": "a",
+                  "guest": "g2",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/4"
+                }
+              ],
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                },
+                {
+                  "clientId": "c2",
+                  "app": "a",
+                  "guest": "g2"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a request with no client (a hook) goes to the current release and pins nothing",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k9",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": false,
+                "release": "releases/3",
+                "retiredMs": "1970-01-01T00:00:00.000Z"
+              },
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                  "loading": false,
+                  "current": false,
+                  "release": "releases/3",
+                  "retiredMs": "1970-01-01T00:00:00.000Z"
+                },
+                {
+                  "name": "a",
+                  "guest": "g2",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/4"
+                }
+              ],
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a stream of a pinned client follows its release",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_GUEST",
+          "from": "serving",
+          "payload": {
+            "key": "s1",
+            "app": "a",
+            "clientId": "c1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": false,
+                "release": "releases/3",
+                "retiredMs": "1970-01-01T00:00:00.000Z"
+              },
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_GUEST_ANSWERED",
+                "payload": {
+                  "key": "s1",
+                  "guest": "g1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a stream with no client gets the current release",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_GUEST",
+          "from": "serving",
+          "payload": {
+            "key": "s1",
+            "app": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": false,
+                "release": "releases/3",
+                "retiredMs": "1970-01-01T00:00:00.000Z"
+              },
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_GUEST_ANSWERED",
+                "payload": {
+                  "key": "s1",
+                  "guest": "g2"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a retired release closes past drainMs and its pins go",
+      "now": 2000000,
+      "config": {
+        "appsDir": "/apps",
+        "idleMs": 600000000,
+        "drainMs": 1800000
+      },
+      "steps": [
+        {
+          "event": "APP_IDLE_SWEEP",
+          "from": "serving",
+          "payload": {
+            "swept": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:33:00.000Z",
+                "loading": false,
+                "current": false,
+                "release": "releases/3",
+                "retiredMs": "1970-01-01T00:00:00.000Z"
+              },
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:33:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g2",
+                  "lastUsedMs": "1970-01-01T00:33:00.000Z",
+                  "loading": false,
+                  "current": true,
+                  "release": "releases/4"
+                }
+              ],
+              "pins": []
+            },
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "set"
+                      },
+                      {
+                        "type": "set"
+                      },
+                      {
+                        "type": "when"
+                      },
+                      {
+                        "type": "when"
+                      },
+                      {
+                        "type": "emit"
+                      },
+                      {
+                        "type": "program/close"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a retired release still in use inside drainMs keeps serving",
+      "now": 1000000,
+      "config": {
+        "appsDir": "/apps",
+        "idleMs": 600000,
+        "drainMs": 1800000
+      },
+      "steps": [
+        {
+          "event": "APP_IDLE_SWEEP",
+          "from": "serving",
+          "payload": {
+            "swept": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:16:30.000Z",
+                "loading": false,
+                "current": false,
+                "release": "releases/3",
+                "retiredMs": "1970-01-01T00:16:00.000Z"
+              },
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:16:30.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "a resident app's current release is never closed for idleness",
+      "now": 1000000,
+      "config": {
+        "appsDir": "/apps",
+        "idleMs": 600000,
+        "resident": [
+          "a"
+        ]
+      },
+      "steps": [
+        {
+          "event": "APP_IDLE_SWEEP",
+          "from": "serving",
+          "payload": {
+            "swept": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: the same app not resident is closed for idleness",
+      "now": 1000000,
+      "config": {
+        "appsDir": "/apps",
+        "idleMs": 600000
+      },
+      "steps": [
+        {
+          "event": "APP_IDLE_SWEEP",
+          "from": "serving",
+          "payload": {
+            "swept": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g2",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true,
+                "release": "releases/4"
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "apps": []
+            },
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "set"
+                      },
+                      {
+                        "type": "set"
+                      },
+                      {
+                        "type": "when"
+                      },
+                      {
+                        "type": "when"
+                      },
+                      {
+                        "type": "emit"
+                      },
+                      {
+                        "type": "program/close"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a resident app is loaded when the host starts",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps",
+        "resident": [
+          "a"
+        ]
+      },
+      "steps": [
+        {
+          "event": "APP_RESIDENT_LOAD",
+          "from": "serving",
+          "payload": {
+            "index": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "os/readlink"
+              }
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": true,
+                  "current": true,
+                  "release": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a current folder that is not a link loads as the release current",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_LINK_UNREAD",
+          "from": "serving",
+          "payload": {
+            "error": "not a link",
+            "kind": "invalid",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true,
+                "current": true,
+                "release": ""
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_LINK_READ",
+                "payload": {
+                  "target": "current",
+                  "key": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a missing app folder fails the load",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_LINK_UNREAD",
+          "from": "serving",
+          "payload": {
+            "error": "no such file",
+            "kind": "not-found",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true,
+                "current": true,
+                "release": ""
+              }
+            ],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_LOAD_FAILED",
+                "payload": {
+                  "key": "a"
+                }
+              }
+            ],
+            "neverEmits": [
+              "APP_LINK_READ"
+            ]
           }
         }
       ]
