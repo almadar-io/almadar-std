@@ -91,11 +91,11 @@ orbital RasmStackOrbital {
         (set @entity.layouts (+ @entity.layouts 1))
         (emit STACK_LAYOUT { n: @entity.layouts })
       RASM_EXTENT -> ready when (not (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))) (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h)))))
-      RASM_POINTER -> ready when (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (!= (let ((h (array/find @entity.last (fn p (and (or (= (array/len @config.hoverChildren) 0) (array/includes @config.hoverChildren @p.id)) (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot))
+      RASM_POINTER -> ready when (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (array/find @entity.last (fn p (and (or (= (array/len @config.hoverChildren) 0) (array/includes @config.hoverChildren @p.id)) (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot))
         (set @entity.hot (let ((h (array/find @entity.last (fn p (and (or (= (array/len @config.hoverChildren) 0) (array/includes @config.hoverChildren @p.id)) (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit STACK_LAYOUT { n: @entity.layouts })
-      RASM_POINTER -> ready when (not (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (!= (let ((h (array/find @entity.last (fn p (and (or (= (array/len @config.hoverChildren) 0) (array/includes @config.hoverChildren @p.id)) (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot)))
+      RASM_POINTER -> ready when (not (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (array/find @entity.last (fn p (and (or (= (array/len @config.hoverChildren) 0) (array/includes @config.hoverChildren @p.id)) (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot)))
       RASM_ENTER -> ready
         (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.enterIndex (array/indexOf ?order @config.id))

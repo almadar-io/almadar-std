@@ -9124,6 +9124,316 @@
         }
       ],
       "note": "A null nested in a map or a list is written as nullValue like a top-level one: Firestore refuses a bare null (type unset). Seen 2026-11-12 on an accessibility result whose statement could not be checked."
+    },
+    {
+      "id": "from-env-a-read-takes-its-project-and-emulator-host-from-the-environment",
+      "config": {
+        "fromEnv": true
+      },
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Task",
+            "id": "t1"
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "FS_WIRE"
+            ],
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              }
+            ]
+          }
+        },
+        {
+          "event": "FS_ENV_PROJECT",
+          "payload": {
+            "value": "proj-a"
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "FS_WIRE"
+            ]
+          }
+        },
+        {
+          "event": "FS_ENV_DATABASE",
+          "payload": {
+            "value": "hosted"
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "FS_ENV_AUTH",
+          "payload": {
+            "value": "emulator"
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "FS_ENV_EMULATOR",
+          "payload": {
+            "value": "firestore"
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "read",
+                  "path": ":batchGet",
+                  "body": {
+                    "documents": [
+                      "projects/proj-a/databases/hosted/documents/Task/t1"
+                    ]
+                  }
+                }
+              },
+              {
+                "event": "FS_EMU_SEND",
+                "payload": {
+                  "host": "firestore"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-from-env-blank-variables-keep-the-knobs",
+      "config": {
+        "fromEnv": true
+      },
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Task",
+            "id": "t1"
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "FS_WIRE"
+            ],
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              }
+            ]
+          }
+        },
+        {
+          "event": "FS_ENV_PROJECT",
+          "payload": {},
+          "from": "busy",
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "FS_ENV_DATABASE",
+          "payload": {
+            "value": " "
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "FS_ENV_AUTH",
+          "payload": {},
+          "from": "busy",
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "FS_ENV_EMULATOR",
+          "payload": {},
+          "from": "busy",
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "read",
+                  "path": ":batchGet",
+                  "body": {
+                    "documents": [
+                      "projects/demo-almadar/databases/(default)/documents/Task/t1"
+                    ]
+                  }
+                }
+              },
+              {
+                "event": "FS_EMU_SEND",
+                "payload": {
+                  "host": "127.0.0.1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "from-env-an-unknown-auth-mode-fails-the-ask",
+      "config": {
+        "fromEnv": true
+      },
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Task",
+            "id": "t1"
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "FS_WIRE"
+            ],
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              }
+            ]
+          }
+        },
+        {
+          "event": "FS_ENV_PROJECT",
+          "payload": {
+            "value": "p"
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "FS_ENV_DATABASE",
+          "payload": {},
+          "from": "busy",
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "FS_ENV_AUTH",
+          "payload": {
+            "value": "magic"
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "from-env-an-unreadable-variable-fails-the-ask",
+      "config": {
+        "fromEnv": true
+      },
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Task",
+            "id": "t1"
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "FS_WIRE"
+            ],
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              }
+            ]
+          }
+        },
+        {
+          "event": "FS_ENV_FAILED",
+          "payload": {
+            "error": "FIRESTORE_PROJECT_ID is not granted",
+            "kind": "denied"
+          },
+          "from": "busy",
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": " The service-account mode runs over the composed std-http-client with a jwt-bearer credential-connect; emulator, token and metadata modes are unchanged."

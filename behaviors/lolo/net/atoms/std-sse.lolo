@@ -1,6 +1,6 @@
 app std-sse [
   version: "1.0.0",
-  description: "std-sse — server-sent events over std-http1's streamed replies. SSE_OPEN { requestId } opens the stream (RESPOND_HEAD 200 text/event-stream, cache-control no-cache, x-accel-buffering no) and writes retry: sseRetryMs; SSE_SEND { requestId, data, event?, id? } writes one frame (id: and event: lines when given, one data: line per line of data, a blank line); STREAM_IDLE from std-http1 writes the : hb comment every heartbeatEvery timeouts; SSE_CLOSE ends the stream; STREAM_CLOSED from std-http1 forgets it. SSE_CLOSED { requestId, reason } tells the fan-out to unsubscribe. SSE_REFUSED { requestId, kind, error } refuses a send: invalid for CR or LF in event or id, NUL in id, CR in data; closed for an id with no open stream."
+  description: "std-sse — server-sent events over std-http1's streamed replies. SSE_OPEN { requestId, headers? } opens the stream (RESPOND_HEAD 200 text/event-stream, cache-control no-cache, x-accel-buffering no, then the given headers, which carry the opener's decided policy headers such as the CORS grant) and writes retry: sseRetryMs; SSE_SEND { requestId, data, event?, id? } writes one frame (id: and event: lines when given, one data: line per line of data, a blank line); STREAM_IDLE from std-http1 writes the : hb comment every heartbeatEvery timeouts; SSE_CLOSE ends the stream; STREAM_CLOSED from std-http1 forgets it. SSE_CLOSED { requestId, reason } tells the fan-out to unsubscribe. SSE_REFUSED { requestId, kind, error } refuses a send: invalid for CR or LF in event or id, NUL in id, CR in data; closed for an id with no open stream."
 ]
 uses Spec from "almadar-std/sse"
 type Http1Header = { name : string!, value : string! }
@@ -42,7 +42,7 @@ orbital SseOrbital {
 
       SSE_OPEN -> serving
         (set @entity.open (array/append @entity.open @payload.requestId))
-        (emit RESPOND_HEAD { requestId: @payload.requestId, status: 200, headers: [{ name: "content-type", value: "text/event-stream" }, { name: "cache-control", value: "no-cache" }, { name: "x-accel-buffering", value: "no" }] })
+        (emit RESPOND_HEAD { requestId: @payload.requestId, status: 200, headers: (array/concat [{ name: "content-type", value: "text/event-stream" }, { name: "cache-control", value: "no-cache" }, { name: "x-accel-buffering", value: "no" }] (default @payload.headers [])) })
         (emit RESPOND_CHUNK { requestId: @payload.requestId, body: (bytes/from-string (str/concat "retry: " @config.sseRetryMs "\n\n")) })
 
       SSE_SEND -> serving when (not (array/includes @entity.open @payload.requestId))
@@ -106,6 +106,7 @@ orbital SseOrbital {
     listens {
       SSE_OPEN {
         requestId : number!
+        headers : [Http1Header]
       }
       SSE_SEND {
         requestId : number!

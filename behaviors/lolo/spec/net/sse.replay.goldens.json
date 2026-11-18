@@ -52,6 +52,72 @@
    }
   },
   {
+   "id": "open-adds-the-openers-decided-headers-after-the-event-stream-head",
+   "steps": [
+    {
+     "from": "serving",
+     "event": "SSE_OPEN",
+     "payload": {
+      "requestId": 5,
+      "headers": [
+       {
+        "name": "access-control-allow-origin",
+        "value": "https://app.example"
+       },
+       {
+        "name": "access-control-allow-credentials",
+        "value": "true"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESPOND_HEAD",
+        "payload": {
+         "requestId": 5,
+         "status": 200,
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/event-stream"
+          },
+          {
+           "name": "cache-control",
+           "value": "no-cache"
+          },
+          {
+           "name": "x-accel-buffering",
+           "value": "no"
+          },
+          {
+           "name": "access-control-allow-origin",
+           "value": "https://app.example"
+          },
+          {
+           "name": "access-control-allow-credentials",
+           "value": "true"
+          }
+         ]
+        }
+       },
+       {
+        "event": "RESPOND_CHUNK",
+        "payload": {
+         "requestId": 5,
+         "body": "cmV0cnk6IDMwMDAKCg=="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "open": []
+   }
+  },
+  {
    "id": "send-to-an-open-stream-writes-a-frame",
    "steps": [
     {

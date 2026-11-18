@@ -1,9 +1,9 @@
 app std-program-host [
   version: "1.0.0",
   inbound: ["cli-host"],
-  fs: { cwd: "**/*.lolo": [read], "/**/*.orb": [read] },
+  fs: { cwd: "**/*.lolo": [read], "/**/*.orb": [read], "/**/app.env": [read] },
   kernel: { "guest": [spawn] },
-  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. With `--route <path>` the host navigates the guest to that route right after it opens, keyed by the route string, and the answer comes back as HOST_ANSWERED. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it; a HOST_NAVIGATE { key, route } is forwarded to the guest as a keyed program/navigate and answered as HOST_ANSWERED like an event. A second trait, ProgramApps, lets one running orb host many apps loaded on demand. The appsDir knob names a folder holding one subfolder per app, each with its resolved program at <appsDir>/<app>/current/app.orb (current: the release std-deploy-host made active); idleMs (default 600000) closes an app unused that long and idleCheckMs (default 60000) sets how often that is checked (the check runs on a one second tick and acts once idleCheckMs has passed since the last one). APP_REQUEST { key, app, address, payload, options } runs the event address on the app: a loaded app has its lastUsedMs updated and gets a keyed program/dispatch (options merged with its guest and the key); an app not loaded is marked loading, the request is queued, its file is read with program/read and opened with program/open with no grants, and every queued request for it is replayed when it opens; a request for an app that is loading is only queued. APP_GUEST { key, app } answers APP_GUEST_ANSWERED { key, guest } with the app guest handle, loading the app first the same way (queued while it loads, APP_FAILED { key, error } when the load fails). Each answer is emitted as APP_ANSWERED { key, result } or APP_FAILED { key, error }; an empty app name or appsDir, an unreadable or refused file, or a failed dispatch answers APP_FAILED, and a failed load answers every queued request of that app and forgets the app. APP_UNLOAD { app } closes the app guest, forgets it and emits APP_UNLOADED { app }; the idle tick does the same for each loaded app unused longer than idleMs. The loaded apps are the apps field of the AppHost entity (name, guest, lastUsedMs, loading) and the waiting requests its waiting field."
+  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. With `--route <path>` the host navigates the guest to that route right after it opens, keyed by the route string, and the answer comes back as HOST_ANSWERED. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it; a HOST_NAVIGATE { key, route } is forwarded to the guest as a keyed program/navigate and answered as HOST_ANSWERED like an event. A second trait, ProgramApps, lets one running orb host many apps loaded on demand. The appsDir knob names a folder holding one subfolder per app, each with its resolved program at <appsDir>/<app>/current/app.orb (current: the release std-deploy-host made active); idleMs (default 600000) closes an app unused that long and idleCheckMs (default 60000) sets how often that is checked (the check runs on a one second tick and acts once idleCheckMs has passed since the last one). APP_REQUEST { key, app, address, payload, options } runs the event address on the app (an app is opened with the env its <appsDir>/<app>/current/app.env lists, and with the opener's program port when its own declared grants ask for it (kernel: { guest: [program] }), one NAME=value per line, blank lines and # comments skipped, values taken literally, no file meaning no env of its own; any other read failure fails the load) (an address that is an inbound record { inbound, body, headers } delivers that hook to the app instead, answered with its handler's { status, body }): a loaded app has its lastUsedMs updated and gets a keyed program/dispatch (options merged with its guest and the key); an app not loaded is marked loading, the request is queued, its file is read with program/read and opened with program/open with no grants, and every queued request for it is replayed when it opens; a request for an app that is loading is only queued. APP_GUEST { key, app } answers APP_GUEST_ANSWERED { key, guest } with the app guest handle, loading the app first the same way (queued while it loads, APP_FAILED { key, error } when the load fails). Each answer is emitted as APP_ANSWERED { key, result } or APP_FAILED { key, error }; an empty app name or appsDir, an unreadable or refused file, or a failed dispatch answers APP_FAILED, and a failed load answers every queued request of that app and forgets the app. APP_UNLOAD { app } closes the app guest, forgets it and emits APP_UNLOADED { app }; the idle tick does the same for each loaded app unused longer than idleMs. The loaded apps are the apps field of the AppHost entity (name, guest, lastUsedMs, loading) and the waiting requests its waiting field."
 ]
 uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -11,13 +11,17 @@ type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, rep
 type HostOpened = { guest : string! }
 type HostLazyPage = { orbital : string!, orbRef : string! }
 type HostLazy = { orbital : string!, program : SExpr! }
-type HostProgram = { name : string, orbitals : [orbital], lazyPages : [HostLazyPage]?, lazyPrograms : (Map string SExpr)? }
+type HostKernelGrant = { target : string!, kinds : [string]! }
+type HostProgramGrants = { kernel : [HostKernelGrant]? }
+type HostProgram = { name : string, orbitals : [orbital], lazyPages : [HostLazyPage]?, lazyPrograms : (Map string SExpr)?, osGrants : HostProgramGrants? }
 type HostResolved = { program : HostProgram!, lazy : [HostLazy] }
 type HostFsGrant = { glob : string!, modes : [string]! }
 type HostNetGrant = { target : string!, kinds : [string]! }
 type AppValue = string | number | boolean | [AppValue?] | Map string AppValue?
-type AppLoaded = { name : string!, guest : string!, lastUsedMs : instant!, loading : boolean! }
-type AppWaiting = { key : string!, app : string!, address : string!, payload : AppValue, options : Map string AppValue, guestOnly : boolean }
+type AppLoaded = { name : string!, guest : string!, lastUsedMs : instant!, loading : boolean!, env : (Map string string)? }
+type AppHook = { inbound : string!, body : string!, headers : Map string string }
+type AppAddress = string | AppHook
+type AppWaiting = { key : string!, app : string!, address : AppAddress!, payload : AppValue, options : Map string AppValue, guestOnly : boolean }
 type HostGrants = { fs : [HostFsGrant]?, exec : [string]?, net : [HostNetGrant]?, credentials : [string]? }
 
 orbital ProgramHostOrbital {
@@ -38,8 +42,7 @@ orbital ProgramHostOrbital {
     id : string!
     apps : [AppLoaded]! = []
     waiting : [AppWaiting]! = []
-    lastSweepMs : instant! = 0
-    answeringKey : string! = ""
+    lastSweepMs : instant! = "1970-01-01T00:00:00Z"
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -184,14 +187,13 @@ orbital ProgramHostOrbital {
         (let ((a (array/find @entity.apps (fn x (= @x.name @payload.app)))))
           (do
             (set @entity.apps (array/map @entity.apps (fn x (if (= @x.name @payload.app) (object/set @x "lastUsedMs" (time/now)) @x))))
-            (set @entity.answeringKey @payload.key)
-            (program/dispatch @payload.address @payload.payload (object/merge (default @payload.options {}) { guest: @a.guest emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } }))))
+            (program/dispatch @payload.address @payload.payload (object/merge (default @payload.options {}) { guest: @a.guest }) { key: @payload.key emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } })))
       APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) @a.loading))))
         (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) }))
       APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (not (array/some @entity.apps (fn a (= @a.name @payload.app)))))
         (set @entity.apps (array/append @entity.apps { name: @payload.app guest: "" lastUsedMs: (time/now) loading: true }))
         (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) }))
-        (program/read "" { resolve: true text: false path: (str/concat @config.appsDir "/" @payload.app "/current/app.orb") } { key: @payload.app emit: { success: APP_PROGRAM_READ, failure: APP_LOAD_FAILED } })
+        (os/read-file (str/concat @config.appsDir "/" @payload.app "/current/app.env") { key: @payload.app emit: { success: APP_ENV_READ, failure: APP_ENV_UNREAD } })
       APP_GUEST -> serving when (or (= @payload.app "") (= @config.appsDir ""))
         (emit APP_FAILED { key: @payload.key, error: "no app or appsDir named for the request" })
       APP_GUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) (not @a.loading)))))
@@ -204,9 +206,20 @@ orbital ProgramHostOrbital {
       APP_GUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (not (array/some @entity.apps (fn a (= @a.name @payload.app)))))
         (set @entity.apps (array/append @entity.apps { name: @payload.app guest: "" lastUsedMs: (time/now) loading: true }))
         (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: "" payload: {} options: {} guestOnly: true }))
-        (program/read "" { resolve: true text: false path: (str/concat @config.appsDir "/" @payload.app "/current/app.orb") } { key: @payload.app emit: { success: APP_PROGRAM_READ, failure: APP_LOAD_FAILED } })
+        (os/read-file (str/concat @config.appsDir "/" @payload.app "/current/app.env") { key: @payload.app emit: { success: APP_ENV_READ, failure: APP_ENV_UNREAD } })
+      APP_ENV_READ -> serving
+        (let ((lines (str/split (default (bytes/to-string @payload.data) "") "\n")))
+          (let ((env (object/fromEntries (array/map (array/filter (array/map @lines (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#")) (str/includes @l "=")))) (fn l (let ((parts (str/split @l "="))) [(str/trim (default (array/first @parts) "")) (str/join (array/drop @parts 1) "=")]))))))
+            (set @entity.apps (array/map @entity.apps (fn x (if (= @x.name (default @payload.key "")) (object/set @x "env" @env) @x))))))
+        (program/read "" { resolve: true text: false path: (str/concat @config.appsDir "/" (default @payload.key "") "/current/app.orb") } { key: (default @payload.key "") emit: { success: APP_PROGRAM_READ, failure: APP_LOAD_FAILED } })
+      APP_ENV_UNREAD -> serving when (= (default @payload.kind "") "not-found")
+        (program/read "" { resolve: true text: false path: (str/concat @config.appsDir "/" (default @payload.key "") "/current/app.orb") } { key: (default @payload.key "") emit: { success: APP_PROGRAM_READ, failure: APP_LOAD_FAILED } })
+      APP_ENV_UNREAD -> serving when (!= (default @payload.kind "") "not-found")
+        (set @entity.apps (array/filter @entity.apps (fn x (!= @x.name (default @payload.key "")))))
+        (emit APP_FAIL_DRAIN { app: (default @payload.key ""), error: (str/concat "app.env could not be read: " (default @payload.error "")) })
       APP_PROGRAM_READ -> serving
-        (program/open (if (= (array/len (default @payload.result.lazy [])) 0) @payload.result.program (object/set @payload.result.program "lazyPrograms" (object/fromEntries (array/map (default @payload.result.lazy []) (fn l [(object/get (default (array/find (default @payload.result.program.lazyPages []) (fn p (= @p.orbital @l.orbital))) { orbital: "", orbRef: "" }) "orbRef") @l.program]))))) { split: true, declared: true } { key: @payload.key emit: { success: APP_OPENED, failure: APP_LOAD_FAILED } })
+        (let ((env (default (object/get (default (array/find @entity.apps (fn a (= @a.name @payload.key))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "env") {})) (program (array/some (default (object/get (default @payload.result.program.osGrants {}) "kernel") []) (fn g (and (= @g.target "guest") (array/includes @g.kinds "program"))))))
+          (program/open (if (= (array/len (default @payload.result.lazy [])) 0) @payload.result.program (object/set @payload.result.program "lazyPrograms" (object/fromEntries (array/map (default @payload.result.lazy []) (fn l [(object/get (default (array/find (default @payload.result.program.lazyPages []) (fn p (= @p.orbital @l.orbital))) { orbital: "", orbRef: "" }) "orbRef") @l.program]))))) { split: true, declared: true, env: @env, program: @program } { key: @payload.key emit: { success: APP_OPENED, failure: APP_LOAD_FAILED } }))
       APP_OPENED -> serving
         (set @entity.apps (array/map @entity.apps (fn x (if (= @x.name @payload.key) { name: @x.name guest: @payload.result.guest lastUsedMs: (time/now) loading: false } @x))))
         (emit APP_DRAIN { app: @payload.key, guest: @payload.result.guest })
@@ -220,8 +233,7 @@ orbital ProgramHostOrbital {
         (let ((w (default (array/find @entity.waiting (fn x (= @x.app @payload.app))) { key: "" app: "" address: "" payload: "" options: {} })))
           (do
             (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
-            (set @entity.answeringKey @w.key)
-            (program/dispatch @w.address @w.payload (object/merge (default @w.options {}) { guest: @payload.guest emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } }))
+            (program/dispatch @w.address @w.payload (object/merge (default @w.options {}) { guest: @payload.guest }) { key: @w.key emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } })
             (emit APP_DRAIN { app: @payload.app, guest: @payload.guest })))
       APP_LOAD_FAILED -> serving
         (set @entity.apps (array/filter @entity.apps (fn x (!= @x.name @payload.key))))
@@ -233,9 +245,9 @@ orbital ProgramHostOrbital {
             (emit APP_FAILED { key: @w.key, error: @payload.error })
             (emit APP_FAIL_DRAIN { app: @payload.app, error: @payload.error })))
       APP_ANSWERED_IN -> serving
-        (emit APP_ANSWERED { key: @entity.answeringKey, result: @payload.result })
+        (emit APP_ANSWERED { key: @payload.key, result: @payload.result })
       APP_FAILED_IN -> serving
-        (emit APP_FAILED { key: @entity.answeringKey, error: (default @payload.error "") })
+        (emit APP_FAILED { key: @payload.key, error: (default @payload.error "") })
       APP_UNLOAD -> serving when (array/some @entity.apps (fn a (and (= @a.name @payload.app) (not @a.loading))))
         (let ((a (array/find @entity.apps (fn x (= @x.name @payload.app)))))
           (do
@@ -266,6 +278,12 @@ orbital ProgramHostOrbital {
         @description "An APP_REQUEST that could not be answered: no app named, the app's file unreadable or refused at open, or the dispatch failed."
       APP_UNLOADED -> external { app : string! }
         @description "A hosted app was closed: by APP_UNLOAD or because it sat unused past idleMs."
+      APP_ENV_READ { data : bytes!, key : string }
+        @description "An app's app.env read: its NAME=value lines are the env it is opened with."
+        @tier "internal"
+      APP_ENV_UNREAD { error : string, kind : string, key : string }
+        @description "An app's app.env could not be read: not-found opens the app with no env of its own, anything else fails its load."
+        @tier "internal"
       APP_PROGRAM_READ { result : HostResolved!, key : string }
         @description "An app's program resolved."
         @tier "internal"
@@ -284,7 +302,7 @@ orbital ProgramHostOrbital {
       APP_ANSWERED_IN { key : string!, result : AppValue }
         @description "The keyed dispatch to an app completed."
         @tier "internal"
-      APP_FAILED_IN { key : string, error : string }
+      APP_FAILED_IN { key : string!, error : string }
         @description "The keyed dispatch to an app failed."
         @tier "internal"
       APP_IDLE_SWEEP { swept : number! }
@@ -293,7 +311,7 @@ orbital ProgramHostOrbital {
     }
 
     listens {
-      APP_REQUEST { key : string!, app : string!, address : string!, payload : AppValue, options : Map string AppValue }
+      APP_REQUEST { key : string!, app : string!, address : AppAddress!, payload : AppValue, options : Map string AppValue }
         @description "Run an event on a hosted app, loading the app from appsDir when it is not open."
       APP_GUEST { key : string!, app : string! }
         @description "Ask for the guest handle of a hosted app, loading the app from appsDir when it is not open; answered as APP_GUEST_ANSWERED, or APP_FAILED under the key."

@@ -1219,6 +1219,229 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-hook-post-is-delivered-to-the-app-as-an-inbound-address",
+      "entity": {
+        "pending": []
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 20,
+            "method": "POST",
+            "path": "/apps/shop/api/hooks/ping",
+            "query": "",
+            "headers": {
+              "x-sig": "abc"
+            },
+            "peer": "1.2.3.4:5000",
+            "body": "eyJhIjoxfQ=="
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 20,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_REQUEST",
+                "payload": {
+                  "key": "20",
+                  "app": "shop",
+                  "address": {
+                    "inbound": "ping",
+                    "body": "{\"a\":1}",
+                    "headers": {
+                      "x-sig": "abc"
+                    }
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESPOND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-hooks-answer-is-written-with-the-handlers-status-and-body",
+      "entity": {
+        "pending": []
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 21,
+            "method": "POST",
+            "path": "/apps/shop/api/hooks/ping",
+            "query": "",
+            "headers": {
+              "x-sig": "abc"
+            },
+            "peer": "1.2.3.4:5000",
+            "body": "eyJhIjoxfQ=="
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 21,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "from": "serving",
+          "event": "APP_ANSWERED",
+          "payload": {
+            "key": "21",
+            "result": {
+              "status": 202,
+              "body": "pong"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 21,
+                  "status": 202,
+                  "body": "cG9uZw=="
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-hook-the-app-fails-answers-502",
+      "entity": {
+        "pending": []
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 22,
+            "method": "POST",
+            "path": "/apps/shop/api/hooks/ping",
+            "query": "",
+            "headers": {
+              "x-sig": "abc"
+            },
+            "peer": "1.2.3.4:5000",
+            "body": "eyJhIjoxfQ=="
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 22,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "from": "serving",
+          "event": "APP_FAILED",
+          "payload": {
+            "key": "22",
+            "error": "boom"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 22,
+                  "status": 502
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-get-on-the-hooks-path-answers-404",
+      "entity": {
+        "pending": []
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 23,
+            "method": "GET",
+            "path": "/apps/shop/api/hooks/ping",
+            "query": "",
+            "headers": {
+              "x-sig": "abc"
+            },
+            "peer": "1.2.3.4:5000",
+            "body": "eyJhIjoxfQ=="
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 23,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 23,
+                  "status": 404
+                }
+              }
+            ],
+            "neverEmits": [
+              "APP_REQUEST"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

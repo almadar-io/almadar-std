@@ -2296,6 +2296,63 @@
           }
         }
       ]
+    },
+    {
+      "id": "an-unreachable-tools-call-reports-the-transports-error",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_TOOLS_UNREACHABLE",
+          "payload": {
+            "error": "connect refused: api.example.test:443",
+            "kind": "io",
+            "key": "{\"key\":\"t1\",\"usage\":{\"modelCalls\":0}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "message": "The model could not be reached: connect refused: api.example.test:443"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-timed-out-tools-call-says-it-timed-out",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_TOOLS_UNREACHABLE",
+          "payload": {
+            "error": "deadline",
+            "kind": "timeout",
+            "key": "{\"key\":\"t1\",\"usage\":{\"modelCalls\":0}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": "timeout",
+                  "message": "LLMClient.callWithTools timed out"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

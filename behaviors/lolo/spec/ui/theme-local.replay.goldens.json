@@ -1,0 +1,22 @@
+{
+  "atom": "ui/core/atoms/std-theme-picker.lolo",
+  "trait": "ThemeLocal",
+  "note": "std-theme-picker ThemeLocal reads the browser's kept theme on mount and binds it, and keeps every chosen or restored theme in the browser.",
+  "cases": [
+    { "id": "a-mounted-page-reads-the-browsers-kept-theme", "steps": [
+      { "event": "INIT", "from": "idle", "entity": { "id": "v" }, "payload": {},
+        "expect": { "state": "idle", "effects": [{ "type": "kv/get" }] } } ] },
+    { "id": "a-kept-theme-is-bound", "steps": [
+      { "event": "LOCAL_READ", "from": "idle", "entity": { "id": "v" }, "payload": { "found": true, "value": "bauhaus-light", "key": "theme" },
+        "expect": { "state": "idle", "effects": [{ "type": "when" }] } } ] },
+    { "id": "control-nothing-kept-binds-nothing", "steps": [
+      { "event": "LOCAL_READ", "from": "idle", "entity": { "id": "v" }, "payload": { "found": false, "key": "theme" },
+        "expect": { "state": "idle", "neverEmits": ["THEME_RESTORE_FAILED", "LOCAL_BOUND"] } } ] },
+    { "id": "a-chosen-theme-is-kept-in-the-browser", "steps": [
+      { "event": "THEME_CHOSEN", "from": "idle", "entity": { "id": "v" }, "payload": { "theme": "arabesque-dark" },
+        "expect": { "state": "idle", "effects": [{ "type": "kv/put" }] } } ] },
+    { "id": "a-browser-store-failure-is-reported", "steps": [
+      { "event": "LOCAL_UNREAD", "from": "idle", "entity": { "id": "v" }, "payload": { "error": "blocked", "kind": "unsupported" },
+        "expect": { "state": "idle", "emits": [{ "event": "THEME_RESTORE_FAILED" }] } } ] }
+  ]
+}

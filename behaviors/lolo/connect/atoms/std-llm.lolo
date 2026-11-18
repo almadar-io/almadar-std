@@ -833,7 +833,7 @@ orbital LlmOrbital {
 
       LLM_TOOLS_UNREACHABLE -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: (if (= @payload.kind "timeout") "timeout" ""), message: (if (= @payload.kind "timeout") "LLMClient.callWithTools timed out" "fetch failed"), key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
+        (emit LLM_FAILED { code: (if (= @payload.kind "timeout") "timeout" ""), message: (if (= @payload.kind "timeout") "LLMClient.callWithTools timed out" (str/concat "The model could not be reached: " @payload.error)), key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
 
       LLM_TOOLS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))

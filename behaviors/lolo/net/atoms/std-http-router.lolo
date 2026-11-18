@@ -223,7 +223,7 @@ orbital HttpRouterOrbital {
         (set @entity.streams (array/append @entity.streams { requestId: @payload.requestId, ticket: (str/replace (default (array/find (str/split (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "query"))) "") "&") (fn s (str/startsWith @s "ticket="))) "") "ticket=" "") }))
         (emit STREAM_OPEN_REQUESTED { requestId: @payload.requestId, ticket: (str/replace (default (array/find (str/split (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "query"))) "") "&") (fn s (str/startsWith @s "ticket="))) "") "ticket=" ""), clientId: (str/replace (default (array/find (str/split (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "query"))) "") "&") (fn s (str/startsWith @s "clientId="))) "") "clientId=" "") })
       TICKET_TAKEN -> routing when (!= (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))) null)
-        (emit SSE_OPEN { requestId: (let ((found (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))))) (if (= @found null) -1 (object/get @found "requestId"))) })
+        (emit SSE_OPEN { requestId: (let ((found (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))))) (if (= @found null) -1 (object/get @found "requestId"))), headers: (let ((found (array/find @entity.pending (fn p (= @p.requestId (let ((found (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))))) (if (= @found null) null (object/get @found "requestId")))))))) (if (= @found null) [] (object/get @found "responseHeaders"))) })
         (emit STREAM_AUTHORIZED { requestId: (let ((found (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))))) (if (= @found null) -1 (object/get @found "requestId"))), clientId: (str/replace (default (array/find (str/split (let ((found (array/find @entity.pending (fn p (= @p.requestId (let ((found (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))))) (if (= @found null) null (object/get @found "requestId")))))))) (if (= @found null) "" (object/get @found "query"))) "&") (fn s (str/startsWith @s "clientId="))) "") "clientId=" "") })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId (let ((found (array/find @entity.streams (fn s (= @s.ticket @payload.ticket))))) (if (= @found null) null (object/get @found "requestId")))))))
         (set @entity.streams (array/filter @entity.streams (fn s (!= @s.ticket @payload.ticket))))
@@ -406,8 +406,9 @@ orbital HttpRouterOrbital {
         @tier "secondary"
       SSE_OPEN -> external {
         requestId : number!
+        headers : [RouterHeader]
       }
-        @description "The ticket was spent; open the stream for this request."
+        @description "The ticket was spent; open the stream for this request, with the request's decided policy headers."
         @tier "secondary"
       STREAM_AUTHORIZED -> external {
         requestId : number!

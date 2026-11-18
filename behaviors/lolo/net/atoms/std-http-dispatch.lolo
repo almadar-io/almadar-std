@@ -242,7 +242,7 @@ orbital HttpDispatchOrbital {
             (let ((id (object/get (default (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "requestId")))
               (do
                 (set @entity.frames (array/append @entity.frames { requestId: @id, frames: (array/map @payload.result.items (fn item (json/stringify @item))) }))
-                (emit SSE_OPEN { requestId: @id })
+                (emit SSE_OPEN { requestId: @id, headers: (let ((found (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))))) (if (= @found null) [] (object/get @found "responseHeaders"))) })
                 (emit FRAME_NEXT { requestId: @id })))
             (set @entity.pending (array/filter @entity.pending (fn q (!= @q.dispatchKey @payload.key))))
             (emit DISPATCH_DONE {}))
@@ -264,7 +264,7 @@ orbital HttpDispatchOrbital {
         (let ((id (object/get (default (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "requestId")))
           (do
             (set @entity.frames (array/append @entity.frames { requestId: @id, frames: [(json/stringify { type: "error", data: { message: @payload.error }, timestamp: @now })] }))
-            (emit SSE_OPEN { requestId: @id })
+            (emit SSE_OPEN { requestId: @id, headers: (let ((found (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))))) (if (= @found null) [] (object/get @found "responseHeaders"))) })
             (emit FRAME_NEXT { requestId: @id })))
         (set @entity.pending (array/filter @entity.pending (fn q (!= @q.dispatchKey @payload.key))))
         (emit DISPATCH_DONE {})
@@ -274,7 +274,7 @@ orbital HttpDispatchOrbital {
         (emit DISPATCH_DONE {})
       INPUTS_FAILED -> serving when (object/get (default (array/find @entity.pending (fn q (= @q.requestId @entity.inflight))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream")
         (set @entity.frames (array/append @entity.frames { requestId: @entity.inflight, frames: [(json/stringify { type: "error", data: { message: @payload.error }, timestamp: @now })] }))
-        (emit SSE_OPEN { requestId: @entity.inflight })
+        (emit SSE_OPEN { requestId: @entity.inflight, headers: (let ((found (array/find @entity.pending (fn q (= @q.requestId @entity.inflight))))) (if (= @found null) [] (object/get @found "responseHeaders"))) })
         (emit FRAME_NEXT { requestId: @entity.inflight })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @entity.inflight))))
         (emit DISPATCH_DONE {})
@@ -305,6 +305,7 @@ orbital HttpDispatchOrbital {
       }
       SSE_OPEN -> external {
         requestId : number!
+        headers : [DispatchHeader]
       }
       SSE_SEND -> external {
         requestId : number!

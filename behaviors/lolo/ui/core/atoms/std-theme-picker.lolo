@@ -1,5 +1,6 @@
 app std-theme-picker [
   version: "1.0.0",
+  kv: { themes: [read, write] },
   description: "std-theme-picker — the viewer's theme switcher: a select listing the themes the app offers, the one in effect selected. Picking one runs theme/set where the pick happens, in the viewer's browser, so @currentTheme of every orbital, an orbital's own theme included, becomes that key and the whole app repaints at once; the empty entry (the default label) runs theme/clear and the declared themes apply again. A key the program does not declare (the app's theme, an orbital's theme or the app's themes list) is refused with undeclared-theme and the reason is shown under the select. The kernel holds the pick for the viewer's session. With keep on, it is also kept in the bound ThemePick entity, one row per viewer (id the viewer's @user.id), and bound again when the picker mounts; an importing orbital that wants it kept beyond the session turns keep on and retags the entity, for example [persistent: theme_picks]. Compose ThemePicker once per page, in the slot where the select belongs."
 ]
 type ThemeChoiceOption = { value : string!, label : string! }
@@ -37,11 +38,13 @@ orbital ThemePickerOrbital {
         (set @entity.problem "")
         (render-ui @config.slot @config.pickerContent)
         (when @config.keep (persist upsert ThemePick { id: @user.id, theme: ?theme } { emit: { success: PICK_KEPT, failure: PICK_UNKEPT } }))
+        (emit THEME_CHOSEN { theme: ?theme })
       THEME_CLEARED -> idle
         (set @entity.current ?theme)
         (set @entity.problem "")
         (render-ui @config.slot @config.pickerContent)
         (when @config.keep (persist upsert ThemePick { id: @user.id, theme: "" } { emit: { success: PICK_KEPT, failure: PICK_UNKEPT } }))
+        (emit THEME_CHOSEN { theme: "" })
       THEME_REFUSED -> idle
         (set @entity.problem (str/concat ?kind ": " ?error))
         (render-ui @config.slot @config.pickerContent)
@@ -49,6 +52,12 @@ orbital ThemePickerOrbital {
       PICK_UNKEPT -> idle
         (set @entity.problem (default ?error "the pick could not be kept"))
         (render-ui @config.slot @config.pickerContent)
+    }
+
+    emits {
+      THEME_CHOSEN -> external { theme : string! }
+        @description "The viewer chose a theme key, or the empty key for the declared themes; ThemeLocal keeps it in the browser."
+        @tier "secondary"
     }
 
     listens {
@@ -127,11 +136,15 @@ orbital ThemePickerOrbital {
       RESTORE_UNREAD -> idle
         (emit THEME_RESTORE_FAILED { error: (default ?error "the kept theme could not be read") })
       RESTORE_BOUND -> idle
+        (emit THEME_CHOSEN { theme: ?theme })
       RESTORE_REFUSED -> idle
         (emit THEME_RESTORE_FAILED { error: (str/concat ?kind ": " ?error) })
     }
 
     emits {
+      THEME_CHOSEN -> external { theme : string! }
+        @description "The kept pick was bound; ThemeLocal keeps it in the browser."
+        @tier "secondary"
       THEME_RESTORE_FAILED -> external { error : string! }
         @description "The kept theme could not be read or bound; the declared themes stay. An app may show it."
         @tier "secondary"
@@ -149,5 +162,58 @@ orbital ThemePickerOrbital {
     }
   }
 
-  page "/theme-picker" as ThemePickerPage -> ThemePicker, ThemeRestore
+
+  entity ThemeLocalRun [runtime] {
+    id : string!
+  }
+
+  trait ThemeLocal -> @rebindable ThemeLocalRun [client] {
+    @description "Keeps the viewer's theme in the browser (kv, IndexedDB) and binds it as soon as a page mounts, before any server read, so the page does not paint the declared theme first. Every choice the picker makes and every pick ThemeRestore binds from the server is kept again, so the server's copy still wins across devices. The key is one per browser and app locale."
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (kv/get @config.store "theme" { key: "theme", emit: { success: LOCAL_READ, failure: LOCAL_UNREAD } })
+      LOCAL_READ -> idle when (and ?found (validate/string ?value) (!= ?value ""))
+        (when (!= ?value @currentTheme) (theme/set ?value { emit: { success: LOCAL_BOUND, failure: LOCAL_REFUSED } }))
+      LOCAL_READ -> idle when (not (and ?found (validate/string ?value) (!= ?value "")))
+      LOCAL_UNREAD -> idle
+        (emit THEME_RESTORE_FAILED { error: (str/concat "the browser's kept theme could not be read: " (default ?error "")) })
+      LOCAL_BOUND -> idle
+      LOCAL_REFUSED -> idle
+        (emit THEME_RESTORE_FAILED { error: (str/concat ?kind ": " ?error) })
+      THEME_CHOSEN -> idle
+        (kv/put @config.store "theme" ?theme { emit: { success: LOCAL_KEPT, failure: LOCAL_UNKEPT } })
+      LOCAL_KEPT -> idle
+      LOCAL_UNKEPT -> idle
+        (emit THEME_RESTORE_FAILED { error: (str/concat "the theme could not be kept in the browser: " (default ?error "")) })
+    }
+
+    config {
+      store : string = "themes"
+        @label "Store"
+        @description "The browser kv store the theme is kept in, declared in the app's kv grant."
+        @tier "infra"
+    }
+
+    emits {
+      THEME_RESTORE_FAILED -> external { error : string! }
+        @description "The browser's kept theme could not be read, bound or kept; the declared themes stay."
+        @tier "secondary"
+    }
+
+    listens {
+      *.THEME_CHOSEN -> THEME_CHOSEN
+      THEME_CHOSEN { theme : string! }
+        @description "A theme was chosen or restored; keep it in the browser."
+      LOCAL_READ { found : boolean!, value : string, key : string }
+      LOCAL_UNREAD { error : string, kind : string }
+      LOCAL_BOUND { theme : string! }
+      LOCAL_REFUSED { error : string!, kind : string! }
+      LOCAL_KEPT { }
+      LOCAL_UNKEPT { error : string, kind : string }
+    }
+  }
+
+  page "/theme-picker" as ThemePickerPage -> ThemePicker, ThemeRestore, ThemeLocal
 }

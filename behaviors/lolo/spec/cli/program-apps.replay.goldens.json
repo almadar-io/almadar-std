@@ -31,7 +31,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "program/read"
+                "type": "os/read-file"
               }
             ]
           }
@@ -75,7 +75,12 @@
             "state": "serving",
             "effects": [
               {
-                "type": "program/open"
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "program/open"
+                  }
+                ]
               }
             ]
           }
@@ -201,6 +206,73 @@
             "key": "k2",
             "app": "a",
             "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/dispatch"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "lastUsedMs": "1970-01-01T00:00:01.000Z",
+                  "loading": false
+                }
+              ],
+              "waiting": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-hook-request-to-a-loaded-app-dispatches-its-inbound-address",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k2",
+            "app": "a",
+            "address": {
+              "inbound": "ping",
+              "body": "{}",
+              "headers": {}
+            },
             "payload": {},
             "options": {}
           },
@@ -483,15 +555,7 @@
               }
             ],
             "entity": {
-              "waiting": [
-                {
-                  "key": "k2",
-                  "app": "a",
-                  "address": "O.T.E",
-                  "payload": {},
-                  "options": {}
-                }
-              ]
+              "waiting": []
             }
           }
         },
@@ -771,7 +835,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "program/read"
+                "type": "os/read-file"
               }
             ]
           }
@@ -912,7 +976,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "program/read"
+                "type": "os/read-file"
               }
             ]
           }
@@ -1063,6 +1127,161 @@
                 }
               }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-apps-env-file-is-the-env-it-is-opened-with",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_ENV_READ",
+          "from": "serving",
+          "payload": {
+            "data": "QT0xCiMgYSBjb21tZW50CgogQiA9IHg9eSANCg==",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let"
+              },
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-app-with-no-env-file-is-read-and-opened-with-no-env-of-its-own",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_ENV_UNREAD",
+          "from": "serving",
+          "payload": {
+            "error": "no such file",
+            "kind": "not-found",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-env-file-that-cannot-be-read-fails-the-load",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_ENV_UNREAD",
+          "from": "serving",
+          "payload": {
+            "error": "permission denied",
+            "kind": "denied",
+            "key": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {}
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "emits": [
+              {
+                "event": "APP_FAIL_DRAIN",
+                "payload": {
+                  "app": "a"
+                }
+              }
+            ],
+            "neverEmits": [
+              "APP_PROGRAM_READ"
+            ],
+            "entity": {
+              "apps": []
+            }
           }
         }
       ]

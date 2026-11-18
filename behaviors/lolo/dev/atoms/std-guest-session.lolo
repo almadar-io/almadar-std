@@ -139,16 +139,11 @@ orbital GuestSessionOrbital {
     guestRevealFor : string @description "The guest the pending reveal is for." = ""
     guestRevealSource : GuestRevealSource @description "Whether the pending reveal reads an environment name or a credential." = environment
     guestIntegrations : "mock" | "live" @description "How the guest reaches real services: mock opens it with no credentials and every row in its own store, live with the opener's credentials and its declared store drivers (program/open integrations)." = mock
+    guestLocal : boolean @description "Whether the open guest runs in the viewer's browser (a mock guest under runs client): its operations go to GuestLocal, which answers them as the kernel answers a server guest's." = false
   }
 
   entity GuestLocalRun [runtime] {
     id : string!
-    guestHandle : string = ""
-    guestStartRoute : string @description "The route the next opened guest is sent to once it is open (GUEST_OPEN route); empty keeps the guest's own first page." = ""
-    guestPaints : [GuestPaint] = []
-    guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
-    guestPage : [string] @description "The traits of the page the guest shows." = []
-    guestPaintSeq : number @description "How many paints this trait has handed on, so the stage keeps the newest." = 0
   }
 
   entity GuestStageRun [runtime] {
@@ -231,7 +226,7 @@ orbital GuestSessionOrbital {
         @tier "policy"
       runs : "server" | "client" = "server"
         @label "Where a mock guest runs"
-        @description "server: this trait opens every guest on the kernel. client: it ignores GUEST_OPEN, so GuestLocal opens the mock guest in the viewer's browser; meant only for mock integrations."
+        @description "server: every guest runs on the kernel. client: a mock guest runs in the viewer's browser: this trait still prepares and composes it, hands the composed program to GuestLocal (GUEST_LOCAL_OP open) and runs it from here as it runs a server guest, each operation on it asked of GuestLocal; a live guest still runs on the kernel."
         @tier "policy"
       split : boolean = false
         @label "Run client traits in the viewer"
@@ -255,7 +250,8 @@ orbital GuestSessionOrbital {
 
     state idle {
       INIT -> idle
-      GUEST_OPEN -> opening when (= @config.runs "server")
+      GUEST_OPEN -> opening
+        (set @entity.guestLocal false)
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (set @entity.guestStartRoute (default ?route ""))
@@ -268,7 +264,6 @@ orbital GuestSessionOrbital {
         (set @entity.guestViewer "")
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
-      GUEST_OPEN -> idle when (= @config.runs "client")
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
@@ -372,8 +367,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
         (emit GUEST_READY { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
-        (when (!= @entity.guestStartRoute "") (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
-        (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } })
+        (when (!= @entity.guestStartRoute "") (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "follow", guest: ?result.guest, route: @entity.guestStartRoute }) (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } })))
+        (when (not @entity.guestLocal) (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } }))
       GUEST_FAILED -> idle
         (emit GUEST_ERROR { message: ?error })
       GUEST_PREPARE -> opening when (= @entity.guestIntegrations "live")
@@ -400,12 +395,15 @@ orbital GuestSessionOrbital {
       GUEST_SEED_RESOLVED -> opening when (!= @entity.guestSeed null)
       GUEST_PREPARE -> opening when (and (= @entity.guestIntegrations "mock") (!= @entity.guestSeed null))
         (emit GUEST_SEED_ASK { program: @entity.guestProgram })
-      GUEST_SEED_MARKED -> opening when @payload.marked
-        (set @entity.guestSeeded false)
-        (set @entity.guestDefaultRole (default @payload.defaultRole ""))
-        (set @entity.guestIdentityEntity @payload.identityEntity)
+      GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "server"))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
         (program/open @entity.guestProgram { split: @config.split, program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (set @entity.guestProgram null)
+        (set @entity.guestSeed null)
+      GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "client"))
+        (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
+        (set @entity.guestLocal true)
+        (emit GUEST_LOCAL_OP { kind: "open", marked: @entity.guestProgram, seed: "", env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject } })
         (set @entity.guestProgram null)
         (set @entity.guestSeed null)
       GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personasCollection ""))
@@ -426,8 +424,11 @@ orbital GuestSessionOrbital {
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
         (set @entity.guestSeed null)
-      GUEST_COMPOSED -> opening
+      GUEST_COMPOSED -> opening when (= @config.runs "server")
         (program/open ?result { split: @config.split, program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_COMPOSED -> opening when (= @config.runs "client")
+        (set @entity.guestLocal true)
+        (emit GUEST_LOCAL_OP { kind: "open", program: ?result, seed: @config.seedTrait, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject } })
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
@@ -492,7 +493,8 @@ orbital GuestSessionOrbital {
       INIT -> idle
       GUEST_OPEN -> opening
         (set @entity.guestStartRoute (default ?route ""))
-        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
+        (set @entity.guestLocal false)
         (set @entity.guestHandle "")
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
@@ -506,7 +508,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
       GUEST_OPENED -> live
-        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
         (set @entity.guestHandle ?result.guest)
         (set @entity.guestClientHeld ?result.client)
         (set @entity.guestPage ?result.page)
@@ -519,8 +521,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
         (emit GUEST_READY { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
-        (when (!= @entity.guestStartRoute "") (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
-        (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } })
+        (when (!= @entity.guestStartRoute "") (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "follow", guest: ?result.guest, route: @entity.guestStartRoute }) (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } })))
+        (when (not @entity.guestLocal) (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } }))
       GUEST_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_PREPARE -> live
@@ -534,9 +536,9 @@ orbital GuestSessionOrbital {
       GUEST_LIVE_LINKED -> live
       GUEST_PERSONAS_ASK -> live when (and @entity.guestSeeded (!= @entity.guestIdentityEntity "") (not @entity.guestIdentitySeeded))
         (set @entity.guestIdentitySeeded true)
-        (program/dispatch (str/concat @config.seedTrait ".SEED_PAGE") { page: "", route: "", traits: [], entities: [@entity.guestIdentityEntity] } { guest: @entity.guestHandle, emit: { success: GUEST_IDENTITY_SEEDED, failure: GUEST_IDENTITY_SEED_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "identity-seed", guest: @entity.guestHandle, address: (str/concat @config.seedTrait ".SEED_PAGE"), entities: [@entity.guestIdentityEntity] }) (program/dispatch (str/concat @config.seedTrait ".SEED_PAGE") { page: "", route: "", traits: [], entities: [@entity.guestIdentityEntity] } { guest: @entity.guestHandle, emit: { success: GUEST_IDENTITY_SEEDED, failure: GUEST_IDENTITY_SEED_FAILED } }))
       GUEST_PERSONAS_ASK -> live when (not (and @entity.guestSeeded (!= @entity.guestIdentityEntity "") (not @entity.guestIdentitySeeded)))
-        (program/dispatch (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-list", guest: @entity.guestHandle, address: (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) }) (program/dispatch (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } }))
       GUEST_IDENTITY_SEEDED -> live
         (emit GUEST_PERSONAS_ASK {})
       GUEST_IDENTITY_SEED_FAILED -> live
@@ -545,7 +547,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONAS_STEPPED -> live when (and (= @entity.guestPersona "") (!= @entity.guestDefaultRole "") (array/some (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))) (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))))
         (set @entity.guestPersonas (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
-        (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") } { guest: @entity.guestHandle, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-act", guest: @entity.guestHandle, address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") }) (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") } { guest: @entity.guestHandle, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } }))
       GUEST_PERSONAS_STEPPED -> live when (not (and (= @entity.guestPersona "") (!= @entity.guestDefaultRole "") (array/some (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))) (fn r (= (object/get @r "role" "") @entity.guestDefaultRole)))))
         (set @entity.guestPersonas (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
@@ -557,7 +559,7 @@ orbital GuestSessionOrbital {
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_PERSONA_PICK -> live when (= ?guest @entity.guestHandle)
-        (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-act", guest: ?guest, address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), persona: ?persona }) (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } }))
       GUEST_PERSONA_PICK -> live when (!= ?guest @entity.guestHandle)
       GUEST_INTEGRATIONS_PICK -> live
         (set @entity.guestPick ?integrations)
@@ -609,7 +611,7 @@ orbital GuestSessionOrbital {
         (let ((m (array/find (default ?result.outcomes []) (fn o (and (= (default @o.event "") "PERSONA_ACT_AS") @o.fired))))) (when (!= @m null) (set @entity.guestPersonaTrait @m.trait)))
         (set @entity.guestPersona (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))) {}) "payload") GuestTextPayload) {}) "subject") ""))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
-        (program/navigate { guest: @entity.guestHandle, route: @entity.guestRoute, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "navigate", guest: @entity.guestHandle, route: @entity.guestRoute, remount: true }) (program/navigate { guest: @entity.guestHandle, route: @entity.guestRoute, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } }))
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_PERSONA_ACTED -> live when (and @config.split (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
@@ -627,7 +629,7 @@ orbital GuestSessionOrbital {
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
-        (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "send", guest: ?guest, address: ?address, payload: ?payload }) (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } }))
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
       GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (!= @entity.guestPendingToken "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") ""))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
@@ -713,7 +715,7 @@ orbital GuestSessionOrbital {
         (program/dispatch { ask: ?ask, refuse: ?reason } {} { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_ASK_REFUSE -> live when (!= ?guest @entity.guestHandle)
       GUEST_INPUT_SEND -> live when (= ?guest @entity.guestHandle)
-        (program/dispatch ?address ?text { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "send", guest: ?guest, address: ?address, payload: ?text }) (program/dispatch ?address ?text { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } }))
       GUEST_INPUT_SEND -> live when (!= ?guest @entity.guestHandle)
       GUEST_STEPPED -> live
         (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
@@ -721,7 +723,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
         (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-        (when (and @config.followNavigations (> (array/len (default ?result.navigations [])) 0)) (program/navigate { guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
+        (when (and @config.followNavigations (> (array/len (default ?result.navigations [])) 0)) (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "follow", guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") }) (program/navigate { guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } })))
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
@@ -741,7 +743,7 @@ orbital GuestSessionOrbital {
       GUEST_TICKS_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
-        (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "navigate", guest: ?guest, route: ?route }) (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } }))
       GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
       GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "live"))
         (set @entity.guestReturnTo (default ?result.access.returnTo ""))
@@ -807,13 +809,13 @@ orbital GuestSessionOrbital {
       GUEST_NAVIGATE_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_FAIL -> idle
-        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
         (set @entity.guestHandle "")
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
-        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
         (set @entity.guestHandle "")
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
@@ -824,6 +826,21 @@ orbital GuestSessionOrbital {
     }
 
     emits {
+      GUEST_LOCAL_OP -> external {
+        kind : string!
+        guest : string?
+        address : string?
+        payload : GuestJson?
+        persona : string?
+        entities : [string]?
+        route : string?
+        remount : boolean?
+        program : behavior?
+        marked : GuestProgram?
+        seed : string?
+        env : (Map string string)?
+      }
+        @description "An operation on the guest that runs in the viewer's browser (runs client), for GuestLocal: open, send, persona-list, identity-seed, persona-act, navigate, follow or close."
       GUEST_CLIENT -> external {
         guest : string!
         program : SExpr!
@@ -1084,6 +1101,20 @@ orbital GuestSessionOrbital {
     listens {
       GuestOpener.GUEST_OPEN -> GUEST_OPEN
       GuestOpener.GUEST_FAIL -> GUEST_FAIL
+      GuestLocal.GUEST_OPENED -> GUEST_OPENED
+      GuestLocal.GUEST_FAILED -> GUEST_FAILED
+      GuestLocal.GUEST_STEPPED -> GUEST_STEPPED
+      GuestLocal.GUEST_STEP_FAILED -> GUEST_STEP_FAILED
+      GuestLocal.GUEST_PERSONAS_STEPPED -> GUEST_PERSONAS_STEPPED
+      GuestLocal.GUEST_PERSONAS_FAILED -> GUEST_PERSONAS_FAILED
+      GuestLocal.GUEST_IDENTITY_SEEDED -> GUEST_IDENTITY_SEEDED
+      GuestLocal.GUEST_IDENTITY_SEED_FAILED -> GUEST_IDENTITY_SEED_FAILED
+      GuestLocal.GUEST_PERSONA_ACTED -> GUEST_PERSONA_ACTED
+      GuestLocal.GUEST_NAVIGATED -> GUEST_NAVIGATED
+      GuestLocal.GUEST_FOLLOWED -> GUEST_FOLLOWED
+      GuestLocal.GUEST_NAVIGATE_FAILED -> GUEST_NAVIGATE_FAILED
+      GuestLocal.GUEST_CLOSED -> GUEST_CLOSED
+      GuestLocal.GUEST_CLOSE_FAILED -> GUEST_CLOSE_FAILED
       GuestOpener.GUEST_RESET -> GUEST_RESET
       GuestOpener.GUEST_REACH -> GUEST_REACH
       GUEST_REACH {
@@ -1644,11 +1675,6 @@ orbital GuestSessionOrbital {
 
     listens {
       GuestSession.GUEST_PAINTS -> GUEST_PAINTS
-      GuestLocal.GUEST_PAINTS -> GUEST_PAINTS
-      GuestLocal.GUEST_CLEARED -> GUEST_CLEARED
-      GuestLocal.GUEST_THEME -> GUEST_THEME
-      GuestLocal.GUEST_ERROR -> GUEST_ERROR
-      GuestLocal.GUEST_NOTICE -> GUEST_NOTICE
       GuestSession.GUEST_CLIENT -> GUEST_CLIENT
       GUEST_CLIENT {
         guest : string!
@@ -1846,199 +1872,99 @@ orbital GuestSessionOrbital {
   }
 
   trait GuestLocal -> GuestLocalRun [client] {
-    config {
-      runs : "server" | "client" = "server"
-        @label "Where a mock guest runs"
-        @description "client: this trait opens the guest inside the viewer's browser kernel (program/open local) and steps it there; server: it does nothing and GuestSession opens the guest. Keep it equal to GuestSession's runs."
-        @tier "policy"
-      seedTrait : string = "MockDataMockSeed"
-        @label "Seeder trait"
-        @description "The trait of the already composed program that writes its mock rows (program/open seed)."
-        @tier "internal"
-    }
+    initial: ready
 
-    initial: idle
-
-    state idle {
-      INIT -> idle
-      GUEST_OPEN -> opening when (= @config.runs "client")
-        (set @entity.guestPaints [])
-        (emit GUEST_CLEARED {})
-        (set @entity.guestStartRoute (default ?route ""))
-        (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
-        (program/open ?program { local: true, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
-      GUEST_OPEN -> idle when (= @config.runs "server")
-      GUEST_RESET -> idle when (= @config.runs "client")
-        (emit GUEST_CLEARED {})
-      GUEST_RESET -> idle when (= @config.runs "server")
-      GUEST_SEND -> idle
-      GUEST_NAVIGATE -> idle
-      GUEST_OPENED -> idle
-        (program/close ?result.guest { local: true, emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
-      GUEST_FAILED -> idle
-      GUEST_STEPPED -> idle
-      GUEST_STEP_FAILED -> idle
-      GUEST_NAVIGATED -> idle
-      GUEST_NAVIGATE_FAILED -> idle
-      GUEST_FOLLOWED -> idle
-      GUEST_CLOSED -> idle
-      GUEST_CLOSE_FAILED -> idle
-    }
-
-    state opening {
-      INIT -> idle
-      GUEST_OPENED -> live
-        (set @entity.guestHandle ?result.guest)
-        (set @entity.guestPage ?result.page)
-        (set @entity.guestRoute (default ?result.route ""))
-        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
-        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
-        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-        (when (!= @entity.guestStartRoute "") (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute, local: true } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
-      GUEST_FAILED -> idle
-        (emit GUEST_ERROR { message: ?error })
-      GUEST_OPEN -> opening
-        (emit GUEST_CLEARED {})
-        (set @entity.guestStartRoute (default ?route ""))
-        (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
-        (program/open ?program { local: true, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
-      GUEST_RESET -> idle
-        (emit GUEST_CLEARED {})
-      GUEST_SEND -> opening
-      GUEST_NAVIGATE -> opening
-      GUEST_STEPPED -> opening
-      GUEST_STEP_FAILED -> opening
-      GUEST_NAVIGATED -> opening
-      GUEST_NAVIGATE_FAILED -> opening
-      GUEST_FOLLOWED -> opening
-      GUEST_CLOSED -> opening
-      GUEST_CLOSE_FAILED -> opening
-    }
-
-    state live {
-      INIT -> idle
-      GUEST_OPEN -> opening
-        (program/close @entity.guestHandle { local: true, emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
-        (set @entity.guestHandle "")
-        (set @entity.guestPaints [])
-        (emit GUEST_CLEARED {})
-        (set @entity.guestStartRoute (default ?route ""))
-        (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
-        (program/open ?program { local: true, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
-      GUEST_SEND -> live when (= ?guest @entity.guestHandle)
-        (program/dispatch ?address ?payload { guest: ?guest, local: true, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
-      GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
-      GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
-        (program/navigate { guest: ?guest, route: ?route, local: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
-      GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
-      GUEST_STEPPED -> live
-        (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
-        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
-        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-      GUEST_STEP_FAILED -> live
-        (emit GUEST_NOTICE { message: ?error })
-      GUEST_NAVIGATED -> live
-        (set @entity.guestPage ?result.page)
-        (set @entity.guestRoute (default ?result.route ""))
-        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
-        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
-        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-      GUEST_FOLLOWED -> live
-        (set @entity.guestPage ?result.page)
-        (set @entity.guestRoute (default ?result.route ""))
-        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
-        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
-        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-      GUEST_NAVIGATE_FAILED -> live
-        (emit GUEST_NOTICE { message: ?error })
-      GUEST_FAILED -> live
-      GUEST_OPENED -> live
-      GUEST_RESET -> idle
-        (program/close @entity.guestHandle { local: true, emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
-        (set @entity.guestHandle "")
-        (set @entity.guestPaints [])
-        (emit GUEST_CLEARED {})
-      GUEST_CLOSED -> live
-      GUEST_CLOSE_FAILED -> live
+    state ready {
+      INIT -> ready
+      GUEST_LOCAL_OP -> ready when (and (= @payload.kind "open") (!= @payload.program null) (= (default @payload.seed "") ""))
+        (program/open @payload.program { local: true, env: (default @payload.env {}) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_LOCAL_OP -> ready when (and (= @payload.kind "open") (!= @payload.program null) (!= (default @payload.seed "") ""))
+        (program/open @payload.program { local: true, seed: (default @payload.seed ""), env: (default @payload.env {}) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_LOCAL_OP -> ready when (and (= @payload.kind "open") (= @payload.program null) (!= @payload.marked null))
+        (program/open @payload.marked { local: true, env: (default @payload.env {}) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_LOCAL_OP -> ready when (and (= @payload.kind "open") (= @payload.program null) (= @payload.marked null))
+        (emit GUEST_FAILED { error: "a local open carries no program" })
+      GUEST_LOCAL_OP -> ready when (= @payload.kind "send")
+        (program/dispatch (default @payload.address "") (default @payload.payload {}) { guest: (default @payload.guest ""), local: true, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+      GUEST_LOCAL_OP -> ready when (= @payload.kind "persona-list")
+        (program/dispatch (default @payload.address "") {} { guest: (default @payload.guest ""), local: true, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } })
+      GUEST_LOCAL_OP -> ready when (= @payload.kind "identity-seed")
+        (program/dispatch (default @payload.address "") { page: "", route: "", traits: [], entities: (default @payload.entities []) } { guest: (default @payload.guest ""), local: true, emit: { success: GUEST_IDENTITY_SEEDED, failure: GUEST_IDENTITY_SEED_FAILED } })
+      GUEST_LOCAL_OP -> ready when (= @payload.kind "persona-act")
+        (program/dispatch (default @payload.address "") { persona: (default @payload.persona "") } { guest: (default @payload.guest ""), local: true, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
+      GUEST_LOCAL_OP -> ready when (= @payload.kind "navigate")
+        (program/navigate { guest: (default @payload.guest ""), route: (default @payload.route ""), remount: (default @payload.remount false), local: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+      GUEST_LOCAL_OP -> ready when (= @payload.kind "follow")
+        (program/navigate { guest: (default @payload.guest ""), route: (default @payload.route ""), local: true } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } })
+      GUEST_LOCAL_OP -> ready when (= @payload.kind "close")
+        (program/close (default @payload.guest "") { local: true, emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+      GUEST_LOCAL_OP -> ready when (not (array/includes ["open", "send", "persona-list", "identity-seed", "persona-act", "navigate", "follow", "close"] @payload.kind))
+        (emit GUEST_FAILED { error: (str/concat "a local guest takes no " @payload.kind) })
     }
 
     emits {
-      GUEST_PAINTS -> external {
-        guest : string!
-        route : string!
-        page : [string]!
-        paints : [GuestPaint]!
-        seq : number!
-      }
-      GUEST_MOVED -> external {
-        guest : string!
-        moves : [GuestMove]!
-      }
-      GUEST_ERROR -> external {
-        message : string!
-      }
-      GUEST_NOTICE -> external {
-        message : string!
-      }
-      GUEST_CLEARED -> external { }
-      GUEST_THEME -> external {
-        theme : GuestTheme!
-      }
-      GUEST_OPENED {
+      GUEST_OPENED -> external {
         result : GuestOpened!
       }
-      GUEST_FAILED {
+        @description "The guest opened in this browser; GuestSession runs it from here as it runs a server guest."
+      GUEST_FAILED -> external {
         error : string!
       }
-      GUEST_STEPPED {
+      GUEST_STEPPED -> external {
         result : GuestStepped!
       }
-      GUEST_STEP_FAILED {
+      GUEST_STEP_FAILED -> external {
         error : string!
       }
-      GUEST_NAVIGATED {
-        result : GuestNavigated!
+      GUEST_PERSONAS_STEPPED -> external {
+        result : GuestAnswered!
       }
-      GUEST_FOLLOWED {
-        result : GuestNavigated!
-      }
-      GUEST_NAVIGATE_FAILED {
+      GUEST_PERSONAS_FAILED -> external {
         error : string!
       }
-      GUEST_CLOSED {
+      GUEST_IDENTITY_SEEDED -> external {
+        result : GuestAnswered!
+      }
+      GUEST_IDENTITY_SEED_FAILED -> external {
+        error : string!
+      }
+      GUEST_PERSONA_ACTED -> external {
+        result : GuestAnswered!
+      }
+      GUEST_NAVIGATED -> external {
+        result : GuestNavigated!
+      }
+      GUEST_FOLLOWED -> external {
+        result : GuestNavigated!
+      }
+      GUEST_NAVIGATE_FAILED -> external {
+        error : string!
+      }
+      GUEST_CLOSED -> external {
         result : GuestClosed!
       }
-      GUEST_CLOSE_FAILED {
+      GUEST_CLOSE_FAILED -> external {
         error : string!
       }
     }
 
     listens {
-      GuestOpener.GUEST_OPEN -> GUEST_OPEN
-      GuestOpener.GUEST_RESET -> GUEST_RESET
-      GuestStage.GUEST_SEND -> GUEST_SEND
-      GuestStage.GUEST_NAVIGATE -> GUEST_NAVIGATE
-      GUEST_OPEN {
-        program : GuestProgram!
+      GuestSession.GUEST_LOCAL_OP -> GUEST_LOCAL_OP
+      GUEST_LOCAL_OP {
+        kind : string!
+        guest : string?
+        address : string?
+        payload : GuestJson?
+        persona : string?
+        entities : [string]?
         route : string?
+        remount : boolean?
+        program : behavior?
+        marked : GuestProgram?
+        seed : string?
+        env : (Map string string)?
       }
-        @description "Open an already composed program as the guest in this browser, closing the one already open."
-      GUEST_RESET { }
-        @description "Close the open guest and clear the paint."
-      GUEST_SEND {
-        guest : string!
-        address : string!
-        event : event!
-        payload : @payload event?
-      }
-      GUEST_NAVIGATE {
-        guest : string!
-        route : string!
-      }
+        @description "One operation GuestSession asks of the guest open in this browser; its answer is the same completion event a server guest's operation answers."
     }
   }
 
