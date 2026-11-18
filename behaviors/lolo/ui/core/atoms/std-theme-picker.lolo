@@ -15,10 +15,13 @@ orbital ThemePickerOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.keep
         (set @entity.current @currentTheme)
         (render-ui @config.slot @config.pickerContent)
-        (when @config.keep (fetch ThemePick { filter: { id: @user.id }, limit: 1, emit: { success: PICKS_READ, failure: PICKS_UNREAD } }))
+        (fetch ThemePick { filter: { id: @user.id }, limit: 1, emit: { success: PICKS_READ, failure: PICKS_UNREAD } })
+      INIT -> idle when (not @config.keep)
+        (set @entity.current @currentTheme)
+        (render-ui @config.slot @config.pickerContent)
       PICKS_READ -> idle
         (let ((kept (object/get (default (array/find ?data (fn r (== @r.id @user.id))) { id: "", theme: "" }) theme "")))
           (when (!= @kept "") (theme/set @kept { emit: { success: THEME_BOUND, failure: THEME_REFUSED } })))
@@ -110,5 +113,41 @@ orbital ThemePickerOrbital {
     }
   }
 
-  page "/theme-picker" as ThemePickerPage -> ThemePicker
+
+  trait ThemeRestore -> @rebindable ThemePick {
+    @description "Binds the viewer's kept pick when a page mounts and draws nothing. Compose it on every page of an app whose ThemePicker keeps picks (keep on, the same entity retagged), so the kept theme applies wherever the viewer lands, not only on the page that shows the select."
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch ThemePick { filter: { id: @user.id }, limit: 1, emit: { success: RESTORE_READ, failure: RESTORE_UNREAD } })
+      RESTORE_READ -> idle
+        (let ((kept (object/get (default (array/find ?data (fn r (== @r.id @user.id))) { id: "", theme: "" }) theme "")))
+          (when (and (!= @kept "") (!= @kept @currentTheme)) (theme/set @kept { emit: { success: RESTORE_BOUND, failure: RESTORE_REFUSED } })))
+      RESTORE_UNREAD -> idle
+        (emit THEME_RESTORE_FAILED { error: (default ?error "the kept theme could not be read") })
+      RESTORE_BOUND -> idle
+      RESTORE_REFUSED -> idle
+        (emit THEME_RESTORE_FAILED { error: (str/concat ?kind ": " ?error) })
+    }
+
+    emits {
+      THEME_RESTORE_FAILED -> external { error : string! }
+        @description "The kept theme could not be read or bound; the declared themes stay. An app may show it."
+        @tier "secondary"
+    }
+
+    listens {
+      RESTORE_READ { data : [ThemePick]!, totalCount : number }
+        @description "The viewer's kept pick was read."
+      RESTORE_UNREAD { error : string, code : string }
+        @description "The kept pick could not be read; the declared themes stay."
+      RESTORE_BOUND { theme : string! }
+        @description "theme/set bound the kept key to the viewer's session."
+      RESTORE_REFUSED { error : string!, kind : string! }
+        @description "theme/set refused the kept key, for example a theme the app no longer declares; the declared themes stay."
+    }
+  }
+
+  page "/theme-picker" as ThemePickerPage -> ThemePicker, ThemeRestore
 }

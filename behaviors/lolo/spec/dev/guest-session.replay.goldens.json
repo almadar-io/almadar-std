@@ -16492,6 +16492,126 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "a-split-guests-credential-before-its-first-leg-is-held-and-the-view-mounts-signed-in",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_CREDENTIAL",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestViewer": "",
+      "guestPendingToken": ""
+     },
+     "from": "live",
+     "payload": {
+      "guest": "guest-1",
+      "token": "t0k"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestPendingToken": "t0k"
+      },
+      "emits": [
+       {
+        "event": "GUEST_VIEWER",
+        "payload": {
+         "guest": "guest-1",
+         "signedIn": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   }
+  },
+  {
+   "id": "the-first-leg-signs-its-session-in-with-the-held-credential-then-runs",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LEG",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestViewer": "",
+      "guestPendingToken": "t0k"
+     },
+     "from": "live",
+     "payload": {
+      "guest": "guest-1",
+      "leg": "l1",
+      "orbital": "PersonOrbital",
+      "body": "{\"clientId\":\"c-9\",\"event\":\"INIT\",\"targetTrait\":\"T\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestPendingToken": "",
+       "guestViewer": "c-9",
+       "guestSigningIn": true
+      },
+      "emits": [
+       {
+        "event": "GUEST_LEG_AGAIN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   }
+  },
+  {
+   "id": "control-a-split-guest-that-has-a-viewer-presents-the-credential-to-it-at-once",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_CREDENTIAL",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestViewer": "c-9",
+      "guestPendingToken": ""
+     },
+     "from": "live",
+     "payload": {
+      "guest": "guest-1",
+      "token": "t0k"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestPendingToken": ""
+      },
+      "neverEmits": [
+       "GUEST_VIEWER"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   }
   }
  ]
 }

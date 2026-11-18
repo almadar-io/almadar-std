@@ -1,10 +1,13 @@
 app std-concept-icon [
   version: "1.0.0",
   description: "std-concept-icon — turns a concept label into a brand icon id and tone through the keyless Iconify API, cached per label. CONCEPT_ICON probes devicon/<slug>.svg, falls back to the first Iconify search hit, resolves the icon's SVG body and classifies its tone (themed when it uses currentColor, else light or dark by the mean luminance of its #rrggbb fills). A lookup with no icon is cached as a miss and answers CONCEPT_ICON_RESULT with an empty icon and tone none.",
-  egress: ["https://api.iconify.design"]
+  egress: ["https://api.iconify.design"],
+  net: { "api.iconify.design:443": [tcp] }
 ]
 orbital ConceptIconOrbital {
   uses IconApi from "std/behaviors/std-iconify"
+  uses Http from "std/behaviors/std-http-client"
+  uses Frame from "std/behaviors/std-http-frame"
 
   entity ConceptIconLookup [runtime] {
     id : string!
@@ -72,9 +75,11 @@ orbital ConceptIconOrbital {
       INIT -> idle
       CONCEPT_ICON -> probing
         (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
-      CONCEPT_ICON_PROBED -> bodying when ?exists
+      CONCEPT_ICON_PROBED -> idle when ?failed
+        (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: "The icon service did not answer the logo probe" })
+      CONCEPT_ICON_PROBED -> bodying when (and ?exists (not ?failed))
         (emit ICONIFY_GET_ICON_BODY { iconId: @entity.iconId })
-      CONCEPT_ICON_PROBED -> searching when (not ?exists)
+      CONCEPT_ICON_PROBED -> searching when (and (not ?exists) (not ?failed))
         (emit ICONIFY_SEARCH { query: @entity.term, limit: 1 })
     }
 
@@ -82,14 +87,16 @@ orbital ConceptIconOrbital {
       INIT -> idle
       CONCEPT_ICON -> searching
         (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
-      CONCEPT_ICON_SEARCHED -> bodying when (> (array/len ?icons) 0)
+      CONCEPT_ICON_SEARCHED -> idle when ?failed
+        (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: "The icon service did not answer the search" })
+      CONCEPT_ICON_SEARCHED -> bodying when (and (> (array/len ?icons) 0) (not ?failed))
         (set @entity.iconId (default (array/first ?icons) ""))
         (emit ICONIFY_GET_ICON_BODY { iconId: (array/first ?icons) })
-      CONCEPT_ICON_SEARCHED -> storing when (= (array/len ?icons) 0)
+      CONCEPT_ICON_SEARCHED -> storing when (and (= (array/len ?icons) 0) (not ?failed))
         (set @entity.resultIcon "")
         (set @entity.resultTone "none")
         (set @entity.resultSvg "")
-        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: @now } {
+        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: (time/epoch-ms @now) } {
           emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
         })
     }
@@ -102,7 +109,7 @@ orbital ConceptIconOrbital {
         (set @entity.resultIcon "")
         (set @entity.resultTone "none")
         (set @entity.resultSvg "")
-        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: @now } {
+        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: (time/epoch-ms @now) } {
           emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
         })
       CONCEPT_ICON_BODIED -> storing when (not (= ?body null))
@@ -116,7 +123,7 @@ orbital ConceptIconOrbital {
           (if (str/includes (str/lower ?body) "currentcolor") "themed"
             (if (= (array/len @entity.fills) 0) "dark"
               (if (>= (/ (array/reduce @entity.fills 0 (fn acc s (+ @acc (+ (+ (* 0.299 (str/to-number (str/concat "0x" (str/slice @s 0 2)))) (* 0.587 (str/to-number (str/concat "0x" (str/slice @s 2 4))))) (* 0.114 (str/to-number (str/concat "0x" (str/slice @s 4 6)))))))) (array/len @entity.fills)) 170) "light" "dark"))))
-        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, icon: @entity.iconId, tone: @entity.resultTone, svg: @entity.resultSvg, fetchedAt: @now } {
+        (persist upsert ConceptIconCache { id: @entity.key, label: @entity.term, icon: @entity.iconId, tone: @entity.resultTone, svg: @entity.resultSvg, fetchedAt: (time/epoch-ms @now) } {
           emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
         })
     }
@@ -191,13 +198,16 @@ orbital ConceptIconOrbital {
       }
         @description "Resolve a concept label to a brand icon and tone."
         @synonyms "find concept icon, icon for concept, topic icon"
+      *.CONCEPT_ICON -> CONCEPT_ICON
       ConceptIconApi.ICONIFY_SVG_EXISTS_RESULT -> CONCEPT_ICON_PROBED
       CONCEPT_ICON_PROBED {
         exists : boolean!
+        failed : boolean!
       }
       ConceptIconApi.ICONIFY_SEARCH_RESULT -> CONCEPT_ICON_SEARCHED
       CONCEPT_ICON_SEARCHED {
         icons : [string]!
+        failed : boolean!
       }
       ConceptIconApi.ICONIFY_ICON_BODY_RESULT -> CONCEPT_ICON_BODIED
       CONCEPT_ICON_BODIED {
@@ -207,9 +217,24 @@ orbital ConceptIconOrbital {
     }
   }
 
-  trait ConceptIconFetch = IconApi.traits.IconifyFetch {
+  trait ConceptIconHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ConceptIconHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait ConceptIconHttp = Http.traits.HttpClient {
+    config {
+      host: "api.iconify.design"
+      port: 443
+      tls: true
+      serverName: "api.iconify.design"
+    }
     listens {
       ConceptIconApi.ICONIFY_HTTP_SEND -> HTTP_SEND
+      ConceptIconHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ConceptIconHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ConceptIconHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -229,10 +254,10 @@ orbital ConceptIconOrbital {
         error : string!
         kind : string!
       }
-      ConceptIconFetch.HTTP_REPLIED -> ICONIFY_REPLIED
-      ConceptIconFetch.HTTP_FAILED -> ICONIFY_FAILED
+      ConceptIconHttp.HTTP_REPLIED -> ICONIFY_REPLIED
+      ConceptIconHttp.HTTP_FAILED -> ICONIFY_FAILED
     }
   }
 
-  page boot as ConceptIconPage -> ConceptIconResolver, ConceptIconApi, ConceptIconFetch
+  page boot as ConceptIconPage -> ConceptIconResolver, ConceptIconApi, ConceptIconHttp, ConceptIconHttpFrame
 }

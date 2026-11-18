@@ -32,24 +32,24 @@ orbital IconifyOrbital {
       ICONIFY_SVG_EXISTS -> idle when (!= @payload.path "")
         (emit ICONIFY_HTTP_SEND { key: "svg", method: "GET", target: (str/concat "/" @payload.path), headers: [{ name: "Accept", value: "*/*" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
       ICONIFY_SVG_EXISTS -> idle when (= @payload.path "")
-        (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
+        (emit ICONIFY_SVG_EXISTS_RESULT { exists: false, failed: false })
       ICONIFY_REPLIED -> idle when (and (= @payload.key "svg") (>= @payload.status 200) (< @payload.status 300))
-        (emit ICONIFY_SVG_EXISTS_RESULT { exists: true })
+        (emit ICONIFY_SVG_EXISTS_RESULT { exists: true, failed: false })
       ICONIFY_REPLIED -> idle when (and (= @payload.key "svg") (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
+        (emit ICONIFY_SVG_EXISTS_RESULT { exists: false, failed: (not (= @payload.status 404)) })
       ICONIFY_FAILED -> idle when (= @payload.key "svg")
-        (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
+        (emit ICONIFY_SVG_EXISTS_RESULT { exists: false, failed: true })
 
       ICONIFY_SEARCH -> idle when (!= @payload.query "")
         (emit ICONIFY_HTTP_SEND { key: "search", method: "GET", target: (str/concat "/search?query=" (str/encode-uri-component @payload.query) "&limit=" (default @payload.limit 1)), headers: [{ name: "Accept", value: "*/*" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
       ICONIFY_SEARCH -> idle when (= @payload.query "")
-        (emit ICONIFY_SEARCH_RESULT { icons: [] })
+        (emit ICONIFY_SEARCH_RESULT { icons: [], failed: false })
       ICONIFY_REPLIED -> idle when (and (= @payload.key "search") (>= @payload.status 200) (< @payload.status 300))
-        (emit ICONIFY_SEARCH_RESULT { icons: (default (object/get (default (json/parse (default (bytes/to-string @payload.body) "") IconifySearchReply) {}) icons []) []) })
+        (emit ICONIFY_SEARCH_RESULT { icons: (default (object/get (default (json/parse (default (bytes/to-string @payload.body) "") IconifySearchReply) {}) icons []) []), failed: false })
       ICONIFY_REPLIED -> idle when (and (= @payload.key "search") (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit ICONIFY_SEARCH_RESULT { icons: [] })
+        (emit ICONIFY_SEARCH_RESULT { icons: [], failed: true })
       ICONIFY_FAILED -> idle when (= @payload.key "search")
-        (emit ICONIFY_SEARCH_RESULT { icons: [] })
+        (emit ICONIFY_SEARCH_RESULT { icons: [], failed: true })
 
       ICONIFY_GET_ICON_BODY -> idle when (and (>= (array/len (str/split @payload.iconId ":")) 2) (!= (array/nth (str/split @payload.iconId ":") 0) "") (!= (array/nth (str/split @payload.iconId ":") 1) ""))
         (emit ICONIFY_HTTP_SEND { key: (str/concat "body|" @payload.iconId), method: "GET", target: (str/concat "/" (default (array/nth (str/split @payload.iconId ":") 0) "") ".json?icons=" (str/encode-uri-component (default (array/nth (str/split @payload.iconId ":") 1) ""))), headers: [{ name: "Accept", value: "*/*" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
@@ -71,14 +71,16 @@ orbital IconifyOrbital {
     emits {
       ICONIFY_SVG_EXISTS_RESULT -> external {
         exists : boolean!
+        failed : boolean!
       }
-        @description "Whether the probed Iconify path answered 2xx; false for an empty path, a failed call or any non-2xx reply."
+        @description "Whether the probed Iconify path answered 2xx (false for an empty path or any other reply), and whether the probe failed: the call itself failed or the reply was neither 2xx nor 404, so absence is not known."
         @synonyms "logo exists, svg found, icon path exists"
         @tier "primary"
       ICONIFY_SEARCH_RESULT -> external {
         icons : [string]!
+        failed : boolean!
       }
-        @description "Icon ids (prefix:name) matching the search; empty when the query is empty, the call failed or the reply was unreadable."
+        @description "Icon ids (prefix:name) matching the search, empty when the query is empty or the reply was unreadable; failed when the call failed or the reply was not 2xx, so no match is known."
         @synonyms "icon search results, matching icons, brand logo candidates"
         @tier "primary"
       ICONIFY_ICON_BODY_RESULT -> external {

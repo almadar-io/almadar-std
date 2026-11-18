@@ -1,0 +1,379 @@
+app std-deploy-host [
+  version: "1.0.0",
+  exec: ["rsync", "ssh", "curl"],
+  env: ["PATH", "HOME", "SSH_AUTH_SOCK"],
+  description: "std-deploy-host — deploys a resolved app or the orb binary to one server over ssh and rsync, no containers. The knobs are host (the ssh target, e.g. deploy@box), root (default /srv/orb), service (default orb-central), healthUrl, keep (releases kept per app, default 3) and systemctlArgs (default [\"--user\"]). DEPLOY_APP { app, localDir } reads the app's history from std-deployment-registry for the next number n (artifact = app), runs rsync -a --delete of localDir/ to <host>:<root>/apps/<app>/releases/<n>/, switches <root>/apps/<app>/current to that release over ssh with ln -sfn (and prunes releases beyond keep), then records and activates the deployment with the registry's DEPLOY and answers APP_DEPLOYED { app, version }, or DEPLOY_FAILED { app, step, error } naming the failed step (rsync, link, record; number when the history could not be read, config when host is empty). Nothing is recorded when rsync or the link fails. An app deploy restarts nothing: the central orb loads the new version on its next load. DEPLOY_BINARY { localPath } rsyncs the binary to <root>/bin/orb.new, over ssh copies the old orb to orb.prev and moves orb.new over orb, runs systemctl <systemctlArgs> restart <service>, then checks healthUrl with curl -fsS (std-http-client takes host, port and tls as grants rather than a URL, so a curl run through std-cli fits better); a failed restart or health check moves orb.prev back, restarts again and answers BINARY_ROLLED_BACK { error }, success answers BINARY_DEPLOYED { }. ROLLBACK_APP { app, version } points current at that release over ssh with ln -sfn and re-activates it with the registry's ROLLBACK, answering APP_ROLLED_BACK { app, version }. Every command is an argument array built from knobs and payload fields; paths inside the ssh remote command are single-quoted, rsync runs with -s so remote paths are not shell-parsed. One call at a time: a call made while another runs answers DEPLOY_FAILED step busy."
+]
+uses Registry from "std/behaviors/std-deployment-registry"
+uses Rsync from "std/behaviors/std-cli"
+uses Ssh from "std/behaviors/std-cli"
+uses Curl from "std/behaviors/std-cli"
+
+type HistoryRow = { id : string!, artifact : string!, version : number!, activates : boolean!, recordedAt : instant, details : Map string (string | number) }
+
+orbital DeployHostOrbital {
+  entity DeployHostRun [runtime] {
+    id : string!
+    op : string @description "app, binary or rollback: the call in flight." = ""
+    app : string = ""
+    localPath : string = ""
+    version : number @description "The release number being deployed or rolled back to." = 0
+    relDir : string = ""
+    appDir : string = ""
+    binDir : string = ""
+    reason : string @description "Why the binary deploy is being undone." = ""
+  }
+
+  trait HostRegistry = Registry.traits.DeploymentRegistrar {
+    listens {
+      DeployHost.DH_HISTORY -> HISTORY
+      DeployHost.DH_RECORD -> DEPLOY
+      DeployHost.DH_ROLLBACK -> ROLLBACK
+    }
+  }
+
+  trait HostRsync = Rsync.traits.CliRunner {
+    listens {
+      DeployHost.DH_RSYNC_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["rsync"]
+      passEnv: ["PATH", "HOME", "SSH_AUTH_SOCK"]
+    }
+  }
+
+  trait HostSsh = Ssh.traits.CliRunner {
+    listens {
+      DeployHost.DH_SSH_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["ssh"]
+      passEnv: ["PATH", "HOME", "SSH_AUTH_SOCK"]
+    }
+  }
+
+  trait HostCurl = Curl.traits.CliRunner {
+    listens {
+      DeployHost.DH_CURL_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["curl"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait DeployHost -> DeployHostRun [optimistic] {
+    initial: idle
+
+    config {
+      host : string = ""
+        @label "SSH target"
+        @description "The ssh target every command runs against, e.g. deploy@box."
+        @synonyms "server, ssh host, target"
+        @tier "domain"
+      root : string = "/srv/orb"
+        @label "Remote root"
+        @description "The directory on the server holding apps/<app>/releases/<n>, apps/<app>/current and bin/orb."
+        @synonyms "install directory, deploy root"
+        @tier "domain"
+      service : string = "orb-central"
+        @label "Service"
+        @description "The systemd unit a binary deploy restarts."
+        @synonyms "unit, systemd service"
+        @tier "domain"
+      healthUrl : string = ""
+        @label "Health URL"
+        @description "The URL a binary deploy GETs after the restart; a failure (curl -fsS, retried for a few seconds) rolls the binary back."
+        @synonyms "health check, readiness url"
+        @tier "domain"
+      keep : number = 3
+        @label "Releases kept"
+        @description "How many releases an app deploy leaves on the server per app (the newest ones); older release directories are removed after the switch."
+        @synonyms "retention, release history"
+        @tier "domain"
+      systemctlArgs : [string] = ["--user"]
+        @label "systemctl arguments"
+        @description "Arguments placed before restart in the systemctl command, [\"--user\"] for a user unit; a system unit is restarted with [\"--system\"] and a host whose ssh user may run it."
+        @synonyms "systemctl flags, user unit"
+        @tier "infra"
+    }
+
+    state idle {
+      INIT -> idle
+      DEPLOY_APP -> idle when (= @config.host "")
+        (emit DEPLOY_FAILED { app: @payload.app, step: "config", error: "the host knob is empty" })
+      DEPLOY_APP -> running when (!= @config.host "")
+        (set @entity.op "app")
+        (set @entity.app @payload.app)
+        (set @entity.localPath @payload.localDir)
+        (set @entity.appDir (str/concat @config.root "/apps/" @payload.app))
+        (emit DH_HISTORY { artifact: @payload.app })
+      DEPLOY_BINARY -> idle when (or (= @config.host "") (= @config.healthUrl ""))
+        (emit DEPLOY_FAILED { app: "", step: "config", error: "the host and healthUrl knobs must be set" })
+      DEPLOY_BINARY -> running when (and (!= @config.host "") (!= @config.healthUrl ""))
+        (set @entity.op "binary")
+        (set @entity.app "")
+        (set @entity.localPath @payload.localPath)
+        (set @entity.binDir (str/concat @config.root "/bin"))
+        (emit DH_RSYNC_RUN { stage: "bin-rsync", argv: ["-a", "-s", "--mkpath", "--", @payload.localPath, (str/concat @config.host ":" @config.root "/bin/orb.new")] })
+      ROLLBACK_APP -> idle when (= @config.host "")
+        (emit DEPLOY_FAILED { app: @payload.app, step: "config", error: "the host knob is empty" })
+      ROLLBACK_APP -> running when (!= @config.host "")
+        (set @entity.op "rollback")
+        (set @entity.app @payload.app)
+        (set @entity.version @payload.version)
+        (set @entity.appDir (str/concat @config.root "/apps/" @payload.app))
+        (set @entity.relDir (str/concat @config.root "/apps/" @payload.app "/releases/" @payload.version))
+        (emit DH_SSH_RUN { stage: "rollback-link", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "ln -sfn '" (str/join (str/split @entity.relDir "'") "'\\''") "' '" (str/join (str/split (str/concat @entity.appDir "/current") "'") "'\\''") "'")] })
+    }
+
+    state running {
+      INIT -> running
+      DEPLOY_APP -> running
+        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: "another deploy is in flight" })
+      DEPLOY_BINARY -> running
+        (emit DEPLOY_FAILED { app: "", step: "busy", error: "another deploy is in flight" })
+      ROLLBACK_APP -> running
+        (emit DEPLOY_FAILED { app: @payload.app, step: "busy", error: "another deploy is in flight" })
+
+      DH_HISTORY_DONE -> running
+        (set @entity.version (+ (array/len @payload.deployments) 1))
+        (set @entity.relDir (str/concat @entity.appDir "/releases/" (+ (array/len @payload.deployments) 1)))
+        (emit DH_RSYNC_RUN { stage: "app-rsync", argv: ["-a", "--delete", "-s", "--mkpath", "--", (str/concat @entity.localPath "/"), (str/concat @config.host ":" @entity.appDir "/releases/" (+ (array/len @payload.deployments) 1) "/")] })
+      DH_HISTORY_FAILED -> idle
+        (emit DEPLOY_FAILED { app: @entity.app, step: "number", error: @payload.message })
+
+      DH_RSYNC_DONE -> running when (and (= @payload.stage "app-rsync") (= @payload.exitCode 0))
+        (emit DH_SSH_RUN { stage: "app-link", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "ln -sfn '" (str/join (str/split @entity.relDir "'") "'\\''") "' '" (str/join (str/split (str/concat @entity.appDir "/current") "'") "'\\''") "' && { cd '" (str/join (str/split (str/concat @entity.appDir "/releases") "'") "'\\''") "' && ls -1 | sort -n | head -n -" (if (< @config.keep 1) 1 @config.keep) " | while read -r d; do rm -rf -- \"$d\"; done; true; }")] })
+      DH_RSYNC_DONE -> idle when (and (= @payload.stage "app-rsync") (!= @payload.exitCode 0))
+        (emit DEPLOY_FAILED { app: @entity.app, step: "rsync", error: @payload.stderr })
+      DH_RSYNC_DONE -> running when (and (= @payload.stage "bin-rsync") (= @payload.exitCode 0))
+        (emit DH_SSH_RUN { stage: "bin-swap", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && { test ! -e orb || cp -p orb orb.prev; } && mv -f orb.new orb")] })
+      DH_RSYNC_DONE -> idle when (and (= @payload.stage "bin-rsync") (!= @payload.exitCode 0))
+        (emit DEPLOY_FAILED { app: "", step: "rsync", error: @payload.stderr })
+      DH_RSYNC_FAILED -> idle
+        (emit DEPLOY_FAILED { app: @entity.app, step: "rsync", error: @payload.error })
+
+      DH_SSH_DONE -> running when (and (= @payload.stage "app-link") (= @payload.exitCode 0))
+        (emit DH_RECORD { artifact: @entity.app, activates: true, details: { host: @config.host, releaseDir: @entity.relDir } })
+      DH_SSH_DONE -> idle when (and (= @payload.stage "app-link") (!= @payload.exitCode 0))
+        (emit DEPLOY_FAILED { app: @entity.app, step: "link", error: @payload.stderr })
+      DH_SSH_DONE -> running when (and (= @payload.stage "rollback-link") (= @payload.exitCode 0))
+        (emit DH_ROLLBACK { artifact: @entity.app, version: @entity.version })
+      DH_SSH_DONE -> idle when (and (= @payload.stage "rollback-link") (!= @payload.exitCode 0))
+        (emit DEPLOY_FAILED { app: @entity.app, step: "link", error: @payload.stderr })
+      DH_SSH_DONE -> running when (and (= @payload.stage "bin-swap") (= @payload.exitCode 0))
+        (emit DH_SSH_RUN { stage: "bin-restart", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "systemctl " (str/join @config.systemctlArgs " ") " restart '" (str/join (str/split @config.service "'") "'\\''") "'")] })
+      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-swap") (!= @payload.exitCode 0))
+        (emit DEPLOY_FAILED { app: "", step: "swap", error: @payload.stderr })
+      DH_SSH_DONE -> running when (and (= @payload.stage "bin-restart") (= @payload.exitCode 0))
+        (emit DH_CURL_RUN { stage: "bin-health", argv: ["-fsS", "--max-time", "10", "--retry", "5", "--retry-delay", "1", "--retry-connrefused", "--", @config.healthUrl] })
+      DH_SSH_DONE -> running when (and (= @payload.stage "bin-restart") (!= @payload.exitCode 0))
+        (set @entity.reason @payload.stderr)
+        (emit DH_SSH_RUN { stage: "bin-undo", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && mv -f orb.prev orb")] })
+      DH_SSH_DONE -> running when (and (= @payload.stage "bin-undo") (= @payload.exitCode 0))
+        (emit DH_SSH_RUN { stage: "bin-restart-prev", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "systemctl " (str/join @config.systemctlArgs " ") " restart '" (str/join (str/split @config.service "'") "'\\''") "'")] })
+      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-undo") (!= @payload.exitCode 0))
+        (emit DEPLOY_FAILED { app: "", step: "undo", error: @payload.stderr })
+      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-restart-prev") (= @payload.exitCode 0))
+        (emit BINARY_ROLLED_BACK { error: @entity.reason })
+      DH_SSH_DONE -> idle when (and (= @payload.stage "bin-restart-prev") (!= @payload.exitCode 0))
+        (emit DEPLOY_FAILED { app: "", step: "restart-prev", error: @payload.stderr })
+      DH_SSH_FAILED -> idle
+        (emit DEPLOY_FAILED { app: @entity.app, step: (if (= @payload.stage "app-link") "link" (if (= @payload.stage "rollback-link") "link" (if (= @payload.stage "bin-swap") "swap" (if (= @payload.stage "bin-restart") "restart" (if (= @payload.stage "bin-undo") "undo" "restart-prev"))))), error: @payload.error })
+
+      DH_CURL_DONE -> idle when (= @payload.exitCode 0)
+        (emit BINARY_DEPLOYED { })
+      DH_CURL_DONE -> running when (!= @payload.exitCode 0)
+        (set @entity.reason (default @payload.stderr "health check failed"))
+        (emit DH_SSH_RUN { stage: "bin-undo", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && mv -f orb.prev orb")] })
+      DH_CURL_FAILED -> running
+        (set @entity.reason @payload.error)
+        (emit DH_SSH_RUN { stage: "bin-undo", argv: ["-o", "BatchMode=yes", "--", @config.host, (str/concat "cd '" (str/join (str/split @entity.binDir "'") "'\\''") "' && mv -f orb.prev orb")] })
+
+      DH_RECORDED -> idle when (= @payload.version @entity.version)
+        (emit APP_DEPLOYED { app: @entity.app, version: @payload.version })
+      DH_RECORDED -> idle when (!= @payload.version @entity.version)
+        (emit DEPLOY_FAILED { app: @entity.app, step: "record", error: (str/concat "the registry numbered the deployment " @payload.version " but the release was uploaded as " @entity.version) })
+      DH_RECORD_FAILED -> idle
+        (emit DEPLOY_FAILED { app: @entity.app, step: "record", error: @payload.message })
+      DH_ROLLED_BACK -> idle
+        (emit APP_ROLLED_BACK { app: @payload.artifact, version: @payload.version })
+      DH_ROLLBACK_FAILED -> idle
+        (emit DEPLOY_FAILED { app: @entity.app, step: "record", error: @payload.message })
+    }
+
+    emits {
+      APP_DEPLOYED -> external {
+        app : string!
+        version : number!
+      }
+        @description "The release is uploaded, current points at it and the registry records it as the active deployment."
+        @tier "primary"
+      DEPLOY_FAILED -> external {
+        app : string!
+        step : string!
+        error : string!
+      }
+        @description "The deploy stopped at the named step (config, number, rsync, link, record, swap, undo, restart-prev, restart or busy); an app deploy that stopped before record recorded nothing."
+        @tier "primary"
+      BINARY_DEPLOYED -> external {
+      }
+        @description "The new orb binary is in place, the service restarted and the health check passed."
+        @tier "primary"
+      BINARY_ROLLED_BACK -> external {
+        error : string!
+      }
+        @description "The restart or health check failed; the previous binary was moved back and the service restarted."
+        @tier "primary"
+      APP_ROLLED_BACK -> external {
+        app : string!
+        version : number!
+      }
+        @description "current points at this release again and the registry marks it active."
+        @tier "primary"
+      DH_HISTORY -> internal {
+        artifact : string!
+      }
+        @tier "internal"
+      DH_RECORD -> internal {
+        artifact : string!
+        activates : boolean!
+        details : Map string (string | number)
+      }
+        @tier "internal"
+      DH_ROLLBACK -> internal {
+        artifact : string!
+        version : number!
+      }
+        @tier "internal"
+      DH_RSYNC_RUN -> internal {
+        stage : string!
+        argv : [string]!
+      }
+        @tier "internal"
+      DH_SSH_RUN -> internal {
+        stage : string!
+        argv : [string]!
+      }
+        @tier "internal"
+      DH_CURL_RUN -> internal {
+        stage : string!
+        argv : [string]!
+      }
+        @tier "internal"
+      DH_HISTORY_DONE {
+        artifact : string!
+        deployments : [HistoryRow]!
+      }
+        @tier "internal"
+      DH_HISTORY_FAILED {
+        artifact : string!
+        code : string
+        message : string!
+      }
+        @tier "internal"
+      DH_RECORDED {
+        artifact : string!
+        version : number!
+      }
+        @tier "internal"
+      DH_RECORD_FAILED {
+        artifact : string!
+        code : "contended" | "failed"
+        message : string!
+      }
+        @tier "internal"
+      DH_ROLLED_BACK {
+        artifact : string!
+        version : number!
+      }
+        @tier "internal"
+      DH_ROLLBACK_FAILED {
+        artifact : string!
+        code : "not-recorded" | "not-activatable" | "failed"
+        message : string!
+      }
+        @tier "internal"
+      DH_RSYNC_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @tier "internal"
+      DH_RSYNC_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @tier "internal"
+      DH_SSH_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @tier "internal"
+      DH_SSH_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @tier "internal"
+      DH_CURL_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @tier "internal"
+      DH_CURL_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      HostRegistry.HISTORY_ANSWERED -> DH_HISTORY_DONE
+      HostRegistry.HISTORY_FAILED -> DH_HISTORY_FAILED
+      HostRegistry.DEPLOYED -> DH_RECORDED
+      HostRegistry.DEPLOY_FAILED -> DH_RECORD_FAILED
+      HostRegistry.ROLLED_BACK -> DH_ROLLED_BACK
+      HostRegistry.ROLLBACK_FAILED -> DH_ROLLBACK_FAILED
+      HostRsync.CLI_DONE -> DH_RSYNC_DONE
+      HostRsync.CLI_FAILED -> DH_RSYNC_FAILED
+      HostSsh.CLI_DONE -> DH_SSH_DONE
+      HostSsh.CLI_FAILED -> DH_SSH_FAILED
+      HostCurl.CLI_DONE -> DH_CURL_DONE
+      HostCurl.CLI_FAILED -> DH_CURL_FAILED
+      DEPLOY_APP -> input {
+        app : string!
+        localDir : string!
+      }
+        @description "Upload localDir as the app's next release, switch current to it and record the deployment."
+        @synonyms "deploy app, push app, release app"
+      DEPLOY_BINARY -> input {
+        localPath : string!
+      }
+        @description "Replace the orb binary on the server, restart the service and roll back when it is unhealthy."
+        @synonyms "deploy orb, update binary, push orb"
+      ROLLBACK_APP -> input {
+        app : string!
+        version : number!
+      }
+        @description "Point the app's current at an earlier release and re-activate it in the registry."
+        @synonyms "roll back app, revert release"
+    }
+  }
+
+  page boot as DeployHostStart -> DeployHost, HostRegistry, HostRsync, HostSsh, HostCurl
+}

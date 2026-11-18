@@ -76,12 +76,14 @@
                   "iconId": "devicon:rust"
                 }
               }
-            ],
-            "neverEmits": [
-              "CONCEPT_ICON_RESULT"
             ]
           }
         }
+      ],
+      "defaults": [
+        "ConceptIconApi",
+        "ConceptIconHttp",
+        "ConceptIconHttpFrame"
       ]
     },
     {
@@ -145,7 +147,96 @@
             },
             "effects": [
               {
-                "type": "persist"
+                "type": "persist",
+                "status": "executed"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-probe-fails-the-lookup-and-keeps-nothing",
+      "steps": [
+        {
+          "event": "CONCEPT_ICON_PROBED",
+          "from": "probing",
+          "entity": {
+            "id": "l",
+            "key": "i:rust",
+            "term": "Rust",
+            "slug": "rust",
+            "iconId": "devicon:rust"
+          },
+          "payload": {
+            "exists": false,
+            "failed": true
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CONCEPT_ICON_FAILED"
+              }
+            ],
+            "neverEmits": [
+              "ICONIFY_SEARCH"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-search-fails-the-lookup-and-keeps-no-miss",
+      "steps": [
+        {
+          "event": "CONCEPT_ICON_SEARCHED",
+          "from": "searching",
+          "entity": {
+            "id": "l",
+            "key": "i:rust",
+            "term": "Rust",
+            "slug": "rust",
+            "iconId": "devicon:rust"
+          },
+          "payload": {
+            "icons": [],
+            "failed": true
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CONCEPT_ICON_FAILED"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-empty-search-keeps-the-miss",
+      "steps": [
+        {
+          "event": "CONCEPT_ICON_SEARCHED",
+          "from": "searching",
+          "entity": {
+            "id": "l",
+            "key": "i:rust",
+            "term": "Rust",
+            "slug": "rust",
+            "iconId": "devicon:rust"
+          },
+          "payload": {
+            "icons": [],
+            "failed": false
+          },
+          "expect": {
+            "state": "storing",
+            "effects": [
+              {
+                "type": "persist",
+                "status": "executed"
               }
             ]
           }

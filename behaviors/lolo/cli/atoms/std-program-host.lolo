@@ -1,9 +1,9 @@
 app std-program-host [
   version: "1.0.0",
   inbound: ["cli-host"],
-  fs: { cwd: "**/*.lolo": [read] },
+  fs: { cwd: "**/*.lolo": [read], "/**/*.orb": [read] },
   kernel: { "guest": [spawn] },
-  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. With `--route <path>` the host navigates the guest to that route right after it opens, keyed by the route string, and the answer comes back as HOST_ANSWERED. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it; a HOST_NAVIGATE { key, route } is forwarded to the guest as a keyed program/navigate and answered as HOST_ANSWERED like an event."
+  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. With `--route <path>` the host navigates the guest to that route right after it opens, keyed by the route string, and the answer comes back as HOST_ANSWERED. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it; a HOST_NAVIGATE { key, route } is forwarded to the guest as a keyed program/navigate and answered as HOST_ANSWERED like an event. A second trait, ProgramApps, lets one running orb host many apps loaded on demand. The appsDir knob names a folder holding one subfolder per app, each with its resolved program at <appsDir>/<app>/app.orb; idleMs (default 600000) closes an app unused that long and idleCheckMs (default 60000) sets how often that is checked (the check runs on a one second tick and acts once idleCheckMs has passed since the last one). APP_REQUEST { key, app, address, payload, options } runs the event address on the app: a loaded app has its lastUsedMs updated and gets a keyed program/dispatch (options merged with its guest and the key); an app not loaded is marked loading, the request is queued, its file is read with program/read and opened with program/open with no grants, and every queued request for it is replayed when it opens; a request for an app that is loading is only queued. Each answer is emitted as APP_ANSWERED { key, result } or APP_FAILED { key, error }; an empty app name or appsDir, an unreadable or refused file, or a failed dispatch answers APP_FAILED, and a failed load answers every queued request of that app and forgets the app. APP_UNLOAD { app } closes the app guest, forgets it and emits APP_UNLOADED { app }; the idle tick does the same for each loaded app unused longer than idleMs. The loaded apps are the apps field of the AppHost entity (name, guest, lastUsedMs, loading) and the waiting requests its waiting field."
 ]
 uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -15,6 +15,10 @@ type HostProgram = { name : string, orbitals : [orbital], lazyPages : [HostLazyP
 type HostResolved = { program : HostProgram!, lazy : [HostLazy] }
 type HostFsGrant = { glob : string!, modes : [string]! }
 type HostNetGrant = { target : string!, kinds : [string]! }
+type AppValue = string | number | boolean | [AppValue?] | Map string AppValue?
+type AppLoaded = { name : string!, guest : string!, lastUsedMs : instant!, loading : boolean! }
+type AppOptions = Map string AppValue
+type AppWaiting = { key : string!, app : string!, address : string!, payload : AppValue, options : AppOptions }
 type HostGrants = { fs : [HostFsGrant]?, exec : [string]?, net : [HostNetGrant]?, credentials : [string]? }
 
 orbital ProgramHostOrbital {
@@ -29,6 +33,13 @@ orbital ProgramHostOrbital {
     loaded : boolean! = false
     grants : HostGrants = {}
     route : string! = ""
+  }
+
+  entity AppHost [runtime] {
+    id : string!
+    apps : [AppLoaded]! = []
+    waiting : [AppWaiting]! = []
+    lastSweepMs : instant! = 0
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -162,5 +173,127 @@ orbital ProgramHostOrbital {
     }
   }
 
-  page boot as ProgramHostOrbitalStart -> ProgramHost, ArgsCli
+  trait ProgramApps -> AppHost [optimistic] {
+    initial: serving
+
+    state serving {
+      INIT -> serving
+      APP_REQUEST -> serving when (or (= @payload.app "") (= @config.appsDir ""))
+        (emit APP_FAILED { key: @payload.key, error: "no app or appsDir named for the request" })
+      APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) (not @a.loading)))))
+        (let ((a (array/find @entity.apps (fn x (= @x.name @payload.app)))))
+          (do
+            (set @entity.apps (array/map @entity.apps (fn x (if (= @x.name @payload.app) (object/set @x "lastUsedMs" (time/now)) @x))))
+            (program/dispatch @payload.address @payload.payload (object/merge (default @payload.options {}) { guest: @a.guest key: @payload.key emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } }))))
+      APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) @a.loading))))
+        (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) }))
+      APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (not (array/some @entity.apps (fn a (= @a.name @payload.app)))))
+        (set @entity.apps (array/append @entity.apps { name: @payload.app guest: "" lastUsedMs: (time/now) loading: true }))
+        (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) }))
+        (program/read "" { resolve: true text: false path: (str/concat @config.appsDir "/" @payload.app "/app.orb") } { key: @payload.app emit: { success: APP_PROGRAM_READ, failure: APP_LOAD_FAILED } })
+      APP_PROGRAM_READ -> serving
+        (program/open (if (= (array/len (default @payload.result.lazy [])) 0) @payload.result.program (object/set @payload.result.program "lazyPrograms" (object/fromEntries (array/map (default @payload.result.lazy []) (fn l [(object/get (default (array/find (default @payload.result.program.lazyPages []) (fn p (= @p.orbital @l.orbital))) { orbital: "", orbRef: "" }) "orbRef") @l.program]))))) { grants: {} } { key: @payload.key emit: { success: APP_OPENED, failure: APP_LOAD_FAILED } })
+      APP_OPENED -> serving
+        (set @entity.apps (array/map @entity.apps (fn x (if (= @x.name @payload.key) { name: @x.name guest: @payload.result.guest lastUsedMs: (time/now) loading: false } @x))))
+        (emit APP_DRAIN { app: @payload.key })
+      APP_DRAIN -> serving when (array/some @entity.waiting (fn w (= @w.app @payload.app)))
+        (let ((w (default (array/find @entity.waiting (fn x (= @x.app @payload.app))) { key: "" app: "" address: "" payload: "" options: {} })))
+          (do
+            (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
+            (emit APP_REQUEST { key: @w.key app: @w.app address: @w.address payload: (as @w.payload AppValue) options: (as @w.options AppOptions) })
+            (emit APP_DRAIN { app: @payload.app })))
+      APP_LOAD_FAILED -> serving
+        (set @entity.apps (array/filter @entity.apps (fn x (!= @x.name @payload.key))))
+        (emit APP_FAIL_DRAIN { app: @payload.key, error: (default @payload.error "") })
+      APP_FAIL_DRAIN -> serving when (array/some @entity.waiting (fn w (= @w.app @payload.app)))
+        (let ((w (array/find @entity.waiting (fn x (= @x.app @payload.app)))))
+          (do
+            (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
+            (emit APP_FAILED { key: @w.key, error: @payload.error })
+            (emit APP_FAIL_DRAIN { app: @payload.app, error: @payload.error })))
+      APP_ANSWERED_IN -> serving
+        (emit APP_ANSWERED { key: @payload.key, result: @payload.result })
+      APP_FAILED_IN -> serving
+        (emit APP_FAILED { key: (default @payload.key ""), error: (default @payload.error "") })
+      APP_UNLOAD -> serving when (array/some @entity.apps (fn a (and (= @a.name @payload.app) (not @a.loading))))
+        (let ((a (array/find @entity.apps (fn x (= @x.name @payload.app)))))
+          (do
+            (program/close @a.guest)
+            (set @entity.apps (array/filter @entity.apps (fn x (!= @x.name @payload.app))))
+            (emit APP_UNLOADED { app: @payload.app })))
+      APP_IDLE_SWEEP -> serving when (array/some @entity.apps (fn a (and (not @a.loading) (> (time/diff (time/now) @a.lastUsedMs "ms") @config.idleMs))))
+        (let ((a (array/find @entity.apps (fn x (and (not @x.loading) (> (time/diff (time/now) @x.lastUsedMs "ms") @config.idleMs))))))
+          (do
+            (program/close @a.guest)
+            (set @entity.apps (array/filter @entity.apps (fn x (!= @x.name @a.name))))
+            (emit APP_UNLOADED { app: @a.name })
+            (emit APP_IDLE_SWEEP { swept: (+ @payload.swept 1) })))
+    }
+
+    ticks {
+      idleCheck every 1s when (>= (time/diff (time/now) @entity.lastSweepMs "ms") @config.idleCheckMs)
+        (set @entity.lastSweepMs (time/now))
+        (emit APP_IDLE_SWEEP { swept: 0 })
+    }
+
+    emits {
+      APP_ANSWERED -> external { key : string!  result : AppValue }
+        @description "A hosted app's answer to an APP_REQUEST, under the request's key."
+      APP_FAILED -> external { key : string!  error : string! }
+        @description "An APP_REQUEST that could not be answered: no app named, the app's file unreadable or refused at open, or the dispatch failed."
+      APP_UNLOADED -> external { app : string! }
+        @description "A hosted app was closed: by APP_UNLOAD or because it sat unused past idleMs."
+      APP_REQUEST { key : string!, app : string!, address : string!, payload : AppValue, options : AppOptions }
+        @description "Internal: a queued request replayed once its app has opened."
+        @tier "internal"
+      APP_PROGRAM_READ { result : HostResolved!, key : string }
+        @description "An app's program resolved."
+        @tier "internal"
+      APP_OPENED { result : HostOpened!, key : string }
+        @description "An app's guest session opened."
+        @tier "internal"
+      APP_LOAD_FAILED { error : string, key : string }
+        @description "An app's read, resolve or open failed."
+        @tier "internal"
+      APP_DRAIN { app : string! }
+        @description "Replay the next request queued for an app that just opened."
+        @tier "internal"
+      APP_FAIL_DRAIN { app : string!, error : string! }
+        @description "Answer the next request queued for an app that failed to load."
+        @tier "internal"
+      APP_ANSWERED_IN { key : string!, result : AppValue }
+        @description "The keyed dispatch to an app completed."
+        @tier "internal"
+      APP_FAILED_IN { key : string, error : string }
+        @description "The keyed dispatch to an app failed."
+        @tier "internal"
+      APP_IDLE_SWEEP { swept : number! }
+        @description "Close the next app unused past idleMs."
+        @tier "internal"
+    }
+
+    listens {
+      APP_REQUEST { key : string!, app : string!, address : string!, payload : AppValue, options : AppOptions }
+        @description "Run an event on a hosted app, loading the app from appsDir when it is not open."
+      APP_UNLOAD { app : string! }
+        @description "Close a hosted app and forget it."
+    }
+
+    config {
+      appsDir : string = ""
+        @label "Apps folder"
+        @description "The folder holding one subfolder per app, each with its resolved program at <appsDir>/<app>/app.orb."
+        @tier "domain"
+      idleMs : number = 600000
+        @label "Idle limit"
+        @description "Close a hosted app unused for this many milliseconds."
+        @tier "domain"
+      idleCheckMs : number = 60000
+        @label "Idle check interval"
+        @description "How often, in milliseconds, hosted apps are checked for idleness."
+        @tier "domain"
+    }
+  }
+
+  page boot as ProgramHostOrbitalStart -> ProgramHost, ArgsCli, ProgramApps
 }

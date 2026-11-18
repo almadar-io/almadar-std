@@ -175,24 +175,11 @@ orbital BoardOrbital {
             look: @config.cardLook
             type: card
           }, { type: divider }, {
-            color: muted
-            content: "Move to stage:"
-            type: typography
-            variant: caption
-          }, {
-            entity: @entity.boards
-            fields: []
-            gap: sm
-            renderItem: (fn (col colIndex) {
-              action: MOVE_CARD
-              actionPayload: { id: @entity.currentId, targetGroup: @col.key }
-              icon: @col.icon
-              label: (if (== (array/len @config.columnLabels) 0) @col.label (array/nth @config.columnLabels @colIndex))
-              type: button
-              variant: secondary
-            })
-            type: data-list
-            variant: default
+            action: MOVE_PICKED
+            label: "Move to stage"
+            placeholder: "Pick a stage"
+            options: (array/filter (array/map (array/range (array/len @entity.boards)) (fn i (let ((col (array/nth @entity.boards @i))) { value: @col.key, label: (if (== (array/len @config.columnLabels) 0) @col.label (array/nth @config.columnLabels @i)) }))) (fn o (!= @o.value @entity.currentStage)))
+            type: select
           }, @config.cardActionsContent]
           direction: vertical
           gap: md
@@ -355,6 +342,14 @@ orbital BoardOrbital {
         (render-ui main { type: skeleton, variant: card })
       MOVE_CARD -> loading
         (persist update BoardView (object/set { id: ?id } @config.groupByField ?targetGroup) {
+          emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
+        })
+        (render-ui main {
+          title: "Moving item…"
+          type: loading-state
+        })
+      MOVE_PICKED -> loading
+        (persist update BoardView (object/set { id: @entity.currentId } @config.groupByField ?value) {
           emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
         })
         (render-ui main {
@@ -529,6 +524,10 @@ orbital BoardOrbital {
         @description "Indicates a card's data has been successfully saved."
         @synonyms "persist, update, store"
         @tier "domain"
+      MOVE_PICKED {
+        value : string!
+      }
+        @description "The open card's Move to stage menu picked a stage; the card moves there."
       MOVE_CARD {
         id : string!
         sourceGroup : string

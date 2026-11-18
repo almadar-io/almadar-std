@@ -791,6 +791,134 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-failed-probe-call-says-failed",
+      "steps": [
+        {
+          "event": "ICONIFY_FAILED",
+          "payload": {
+            "key": "svg",
+            "error": "offline",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": false,
+                  "failed": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-404-probe-is-absent-not-failed",
+      "steps": [
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "svg",
+            "status": 404,
+            "headers": {},
+            "body": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": false,
+                  "failed": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-server-error-probe-says-failed",
+      "steps": [
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "svg",
+            "status": 503,
+            "headers": {},
+            "body": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": false,
+                  "failed": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-search-call-says-failed",
+      "steps": [
+        {
+          "event": "ICONIFY_FAILED",
+          "payload": {
+            "key": "search",
+            "error": "offline",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": [],
+                  "failed": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-empty-search-reply-is-not-failed",
+      "steps": [
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "eyJpY29ucyI6W119"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": [],
+                  "failed": false
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

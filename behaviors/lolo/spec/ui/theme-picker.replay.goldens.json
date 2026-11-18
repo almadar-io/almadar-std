@@ -1,0 +1,94 @@
+{
+  "atom": "ui/core/atoms/std-theme-picker.lolo",
+  "trait": "ThemePicker",
+  "note": "std-theme-picker reads the viewer's kept pick on mount only when keep is on, binds a pick with theme/set and keeps it when keep is on.",
+  "cases": [
+    {
+      "id": "a-keeping-picker-reads-the-kept-pick-on-mount",
+      "config": {
+        "keep": true
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ],
+            "emits": [
+              {
+                "event": "PICKS_READ"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-session-picker-reads-nothing-on-mount",
+      "config": {
+        "keep": false
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "PICKS_READ",
+              "PICKS_UNREAD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-picked-theme-is-kept-when-keeping",
+      "config": {
+        "keep": true
+      },
+      "steps": [
+        {
+          "event": "THEME_BOUND",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {
+            "theme": "bauhaus-dark"
+          },
+          "expect": {
+            "state": "idle",
+            "entity": {
+              "current": "bauhaus-dark",
+              "problem": ""
+            },
+            "effects": [
+              {
+                "type": "when"
+              }
+            ],
+            "emits": [
+              {
+                "event": "PICK_KEPT"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

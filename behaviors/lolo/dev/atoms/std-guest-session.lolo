@@ -120,6 +120,7 @@ orbital GuestSessionOrbital {
     guestError : string = ""
     guestSigningIn : boolean @description "A credential was handed to the guest and its IDENTITY_BOUND or IDENTITY_AL_REFUSED has not arrived yet." = false
     guestReturnTo : string @description "The page a denied guest asked for, opened again once it has signed in." = ""
+    guestPendingToken : string @description "A split guest's credential handed before its browser opened a session: its first leg signs that session in with it." = ""
     guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
     guestSeed : behavior? @description "std-mock-page-seed, resolved while a mock guest opens and cleared once compose takes it: the entity rides every request a stateless host's client posts."
     guestSeeded : boolean @description "Whether the catalog composed std-mock-page-seed into the open guest, so its seeder answers the personas it wrote." = false
@@ -249,6 +250,7 @@ orbital GuestSessionOrbital {
         (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
         (set @entity.guestPersona "")
         (set @entity.guestIdentitySeeded false)
+        (set @entity.guestPendingToken "")
         (set @entity.guestViewer "")
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
@@ -336,6 +338,7 @@ orbital GuestSessionOrbital {
         (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
         (set @entity.guestPersona "")
         (set @entity.guestIdentitySeeded false)
+        (set @entity.guestPendingToken "")
         (set @entity.guestViewer "")
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
@@ -481,6 +484,7 @@ orbital GuestSessionOrbital {
         (when (!= ?program.theme null) (emit GUEST_THEME { theme: ?program.theme }))
         (set @entity.guestPersona "")
         (set @entity.guestIdentitySeeded false)
+        (set @entity.guestPendingToken "")
         (set @entity.guestViewer "")
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
@@ -608,12 +612,19 @@ orbital GuestSessionOrbital {
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
-      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (!= @entity.guestPersona "") (!= @entity.guestPersonaTrait "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer))
+      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (!= @entity.guestPendingToken "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") ""))
+        (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
+        (set @entity.guestViewerOrbital ?orbital)
+        (set @entity.guestSigningIn true)
+        (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " @entity.guestPendingToken), clientId: @entity.guestViewer } { guest: ?guest, emit: { success: GUEST_VIEWER_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
+        (set @entity.guestPendingToken "")
+        (emit GUEST_LEG_AGAIN { guest: ?guest, leg: ?leg, orbital: ?orbital, body: ?body })
+      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (= @entity.guestPendingToken "") (!= @entity.guestPersona "") (!= @entity.guestPersonaTrait "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
         (program/dispatch (str/concat ?orbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona, clientId: @entity.guestViewer } { guest: ?guest, wire: true, orbital: ?orbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } })
         (emit GUEST_LEG_AGAIN { guest: ?guest, leg: ?leg, orbital: ?orbital, body: ?body })
-      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (or (= @entity.guestPersona "") (= @entity.guestPersonaTrait "") (= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer)))
+      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (= @entity.guestPendingToken "") (or (= @entity.guestPersona "") (= @entity.guestPersonaTrait "") (= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer)))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
         (set @entity.guestLeg ?leg)
@@ -733,7 +744,10 @@ orbital GuestSessionOrbital {
         (set @entity.guestSigningIn false)
         (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (let ((r (array/find ?emitted (fn e (array/includes ["IDENTITY_REFUSED", "IDENTITY_ANONYMOUS", "IDENTITY_SESSION_ENDED"] @e.event))))) (if (= @r null) "" (if (= @r.event "IDENTITY_REFUSED") (default (object/get (default @r.payload {}) "reason") "") (str/lower @r.event))))) })
       GUEST_VIEWER_SETTLE -> live when (or (not @entity.guestSigningIn) (not (array/some ?emitted (fn e (array/includes ["IDENTITY_BOUND", "IDENTITY_REFUSED", "IDENTITY_ANONYMOUS", "IDENTITY_SESSION_ENDED"] @e.event)))))
-      GUEST_CREDENTIAL -> live when (and (= ?guest @entity.guestHandle) (not (and @config.split (!= @entity.guestViewer ""))))
+      GUEST_CREDENTIAL -> live when (and (= ?guest @entity.guestHandle) @config.split (= @entity.guestViewer ""))
+        (set @entity.guestPendingToken ?token)
+        (emit GUEST_VIEWER { guest: @entity.guestHandle, signedIn: true })
+      GUEST_CREDENTIAL -> live when (and (= ?guest @entity.guestHandle) (not @config.split))
         (set @entity.guestSigningIn true)
         (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: "", self: true } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
       GUEST_CREDENTIAL -> live when (!= ?guest @entity.guestHandle)

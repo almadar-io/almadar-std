@@ -2123,6 +2123,179 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-live-deepseek-content-chunk-is-a-delta",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+            "data": "{\"id\":\"c0\",\"object\":\"chat.completion.chunk\",\"created\":1794968970,\"model\":\"deepseek-flash\",\"system_fingerprint\":\"bc\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\"},\"logprobs\":null,\"finish_reason\":null}]}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_GENERATE_DELTA",
+                "payload": {
+                  "key": "r9",
+                  "delta": "Hi"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-live-deepseek-role-chunk-is-no-delta",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+            "data": "{\"id\":\"c0\",\"object\":\"chat.completion.chunk\",\"created\":1794968970,\"model\":\"deepseek-flash\",\"system_fingerprint\":\"bc\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"logprobs\":null,\"finish_reason\":null}]}"
+          },
+          "expect": {
+            "neverEmits": [
+              "LLM_GENERATE_DELTA"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-live-deepseek-chunk-with-null-usage-is-a-delta",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+            "data": "{\"id\":\"c0\",\"object\":\"chat.completion.chunk\",\"created\":1794969704,\"model\":\"deepseek-flash\",\"system_fingerprint\":\"bc\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"activate\"},\"logprobs\":null,\"finish_reason\":null}],\"usage\":null}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_GENERATE_DELTA",
+                "payload": {
+                  "key": "r9",
+                  "delta": "activate"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-deepseek-stream-ending-in-a-usage-chunk-keeps-its-text-and-counts",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+            "data": "{\"id\":\"c0\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\"},\"logprobs\":null,\"finish_reason\":null}],\"usage\":null}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_GENERATE_DELTA",
+                "payload": {
+                  "key": "r9",
+                  "delta": "Hi"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+            "data": "{\"id\":\"c0\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":2,\"total_tokens\":7,\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":5}}"
+          },
+          "expect": {
+            "neverEmits": [
+              "LLM_GENERATE_DELTA"
+            ],
+            "entity": {
+              "streamed": [
+                {
+                  "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+                  "text": "Hi",
+                  "inputTokens": 5,
+                  "outputTokens": 2
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-deepseek-usage-only-chunk-with-no-choices-keeps-the-text",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+            "data": "{\"id\":\"c0\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hi\"},\"logprobs\":null,\"finish_reason\":null}],\"usage\":null}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_GENERATE_DELTA"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeepseekOffLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+            "data": "{\"id\":\"c0\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"deepseek-flash\",\"choices\":[],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":2,\"total_tokens\":7}}"
+          },
+          "expect": {
+            "entity": {
+              "streamed": [
+                {
+                  "key": "{\"stream\":true,\"action\":\"generate\",\"attempt\":0,\"system\":\"s\",\"user\":\"u\",\"base\":\"u\",\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"maxTokens\":0,\"callKey\":\"r9\"}",
+                  "text": "Hi",
+                  "inputTokens": 5,
+                  "outputTokens": 2
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }

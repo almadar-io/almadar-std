@@ -6810,13 +6810,6 @@
                       "severity": "warning"
                     },
                     {
-                      "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
-                      "path": "orbitals[2 (A3)].traits[0 (A3T)].stateMachine.transitions[0].guard",
-                      "message": "trait \"A3T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([optimistic]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
-                      "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
-                      "severity": "warning"
-                    },
-                    {
                       "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
                       "path": "orbitals[4 (A5)].traits[0 (A5T)].stateMachine.transitions[0].guard",
                       "message": "trait \"A5T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
@@ -19404,6 +19397,321 @@
                       "severity": "error"
                     }
                   ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-server-trait-guarding-on-user-is-not-client-only",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "fetch": {
+                "runsOn": "server",
+                "params": [
+                  {
+                    "name": "entity",
+                    "type": {
+                      "kind": "entity"
+                    }
+                  },
+                  {
+                    "name": "options",
+                    "type": {
+                      "kind": "object"
+                    }
+                  }
+                ]
+              },
+              "persist": {
+                "runsOn": "server",
+                "params": [
+                  {
+                    "name": "action",
+                    "type": {
+                      "kind": "union"
+                    }
+                  },
+                  {
+                    "name": "entity",
+                    "type": {
+                      "kind": "entity"
+                    }
+                  }
+                ]
+              },
+              "http": {
+                "runsOn": "server",
+                "params": [
+                  {
+                    "name": "method",
+                    "type": "string"
+                  }
+                ]
+              },
+              "call-service": {
+                "runsOn": "server",
+                "params": [
+                  {
+                    "name": "service",
+                    "type": "string"
+                  }
+                ]
+              },
+              "navigate": {
+                "runsOn": "client",
+                "params": [
+                  {
+                    "name": "path",
+                    "type": "string"
+                  }
+                ]
+              },
+              "render-ui": {
+                "runsOn": "client",
+                "params": [
+                  {
+                    "name": "slot",
+                    "type": {
+                      "kind": "uiSlot"
+                    }
+                  }
+                ]
+              },
+              "send-server": {
+                "runsOn": "client",
+                "params": [
+                  {
+                    "name": "event",
+                    "type": "string"
+                  }
+                ]
+              },
+              "emit": {
+                "runsOn": "any",
+                "params": [
+                  {
+                    "name": "event",
+                    "type": {
+                      "kind": "eventKey"
+                    }
+                  }
+                ]
+              },
+              "set": {
+                "runsOn": "any",
+                "params": [
+                  {
+                    "name": "binding",
+                    "type": {
+                      "kind": "binding"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "functions": [
+              "fn"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "WALK_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": {
+              "array/concat": {
+                "kind": "args"
+              },
+              "array/prepend": {
+                "args": [
+                  0,
+                  1
+                ],
+                "kind": "listed"
+              },
+              "array/append": {
+                "args": [
+                  0,
+                  1
+                ],
+                "kind": "listed"
+              },
+              "array/map": {
+                "kind": "lambdaResult"
+              },
+              "array/filter": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "array/flatten": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "array/take": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "if": {
+                "kind": "branches"
+              },
+              "let": {
+                "args": [
+                  1
+                ],
+                "kind": "listed"
+              }
+            },
+            "projections": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "set"
+              ],
+              "0-0-0": [
+                "fetch",
+                "set"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity",
+                "@user"
+              ],
+              "0-0-0": [
+                "@entity"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "a",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Row",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Row",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E0"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E0",
+                            "effects": [
+                              {
+                                "fetch": [
+                                  "fetch",
+                                  "Row"
+                                ]
+                              },
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ]
+                            ],
+                            "guard": [
+                              "=",
+                              "@user.role",
+                              "admin"
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "dispatch-contract",
+                  "scope": "",
+                  "findings": []
                 }
               }
             ]

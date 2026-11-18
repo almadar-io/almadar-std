@@ -1,0 +1,125 @@
+{
+  "atom": "ui/core/atoms/std-theme-picker.lolo",
+  "trait": "ThemeRestore",
+  "note": "std-theme-picker ThemeRestore binds the viewer's kept pick when a page mounts, drawing nothing.",
+  "cases": [
+    {
+      "id": "a-mounted-page-reads-the-kept-pick",
+      "steps": [
+        {
+          "event": "INIT",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RESTORE_READ"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-kept-pick-is-bound",
+      "steps": [
+        {
+          "event": "RESTORE_READ",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "anonymous",
+                "theme": "bauhaus-light"
+              }
+            ],
+            "totalCount": 1
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "let"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-kept-pick-binds-nothing",
+      "steps": [
+        {
+          "event": "RESTORE_READ",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "RESTORE_BOUND",
+              "RESTORE_REFUSED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-it-draws-nothing",
+      "steps": [
+        {
+          "event": "INIT",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "RESTORE_BOUND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-read-is-reported",
+      "steps": [
+        {
+          "event": "RESTORE_UNREAD",
+          "from": "idle",
+          "entity": {
+            "id": "v"
+          },
+          "payload": {
+            "error": "offline"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "THEME_RESTORE_FAILED",
+                "payload": {
+                  "error": "offline"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -117,7 +117,7 @@ orbital IdentityBindingOrbital {
         (let ((a (default (array/find @entity.asks (fn x (= @x.stage "created"))) { requestId: 0, session: "", self: false, authorization: "", stage: "created", reason: "", subject: "", email: "", name: "", created: true, emailVerified: false })))
           (do
             (set @entity.asks (array/map @entity.asks (fn x (if (= @x.requestId @a.requestId) (object/merge @x { stage: "verifying" }) @x))))
-            (emit BEARER_VERIFY { requestId: @a.requestId, authorization: @a.authorization })
+            (emit BEARER_VERIFY { requestId: @a.requestId, authorization: @a.authorization, attempt: 2 })
             (emit REVERIFY_NEXT { })))
       REVERIFY_DRAIN -> idle when (not (array/some @entity.asks (fn x (= @x.stage "created"))))
       REVERIFY_NEXT -> idle
@@ -154,6 +154,7 @@ orbital IdentityBindingOrbital {
       BEARER_VERIFY -> external {
         requestId : number
         authorization : string
+        attempt : number?
       }
         @description "Ask the composed bearer verifier, in the program session, about the ask's header."
         @tier "secondary"

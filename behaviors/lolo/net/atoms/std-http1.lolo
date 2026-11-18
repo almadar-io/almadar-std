@@ -52,7 +52,7 @@ orbital Http1Orbital {
         @tier "infra"
       recvBytes : number = 8192
         @label "Read size"
-        @description "The most bytes one os/recv takes."
+        @description "The most bytes one os/recv takes while reading a head or a chunked body; a content-length body is asked for whole, the remaining bytes up to maxBody."
         @tier "infra"
       maxHead : number = 65536
         @label "Largest head"
@@ -307,7 +307,7 @@ orbital Http1Orbital {
         (emit SEND_RESPONSE { requestId: @payload.sock, status: (default (str/to-number (object/get (default (array/find @entity.conns (fn c (= @c.sock @payload.sock))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "dstate")) 400), headers: [], body: (bytes/from-string "") })
 
       WANT_MORE -> serving when (!= (array/find @entity.conns (fn c (= @c.sock @payload.sock))) null)
-        (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
+        (os/recv @payload.sock (let ((conn (array/find @entity.conns (fn c (= @c.sock @payload.sock))))) (if (and (> (object/get @conn "headLen") 0) (not (object/get @conn "te")) (> (object/get @conn "need") (- (bytes/length (object/get @conn "buf")) (object/get @conn "headLen")))) (if (> (- (object/get @conn "need") (- (bytes/length (object/get @conn "buf")) (object/get @conn "headLen"))) @config.maxBody) @config.maxBody (- (object/get @conn "need") (- (bytes/length (object/get @conn "buf")) (object/get @conn "headLen")))) @config.recvBytes)) { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
         (emit CONN_WAIT { key: (str/concat "conn-" @payload.sock), delayMs: (if (= (object/get (default (array/find @entity.conns (fn c (= @c.key (str/concat "conn-" @payload.sock)))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") @config.streamHeartbeatMs @config.idleTimeoutMs) })
 
       DELIVER -> serving
