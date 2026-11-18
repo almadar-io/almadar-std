@@ -223,6 +223,99 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-guest-stream-follows-the-guest-live-stream",
+   "entity": {
+    "open": []
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STREAM_AUTHORIZED",
+     "payload": {
+      "requestId": 7,
+      "clientId": "c1",
+      "guest": "g-1"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "program/live",
+        "arg0": [
+         "object/merge",
+         {
+          "clientId": "@payload.clientId"
+         },
+         [
+          "if",
+          [
+           "=",
+           [
+            "default",
+            "@payload.guest",
+            ""
+           ],
+           ""
+          ],
+          {},
+          {
+           "guest": "@payload.guest"
+          }
+         ]
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-stream-with-no-guest-subscribes-with-the-same-guard",
+   "entity": {
+    "open": []
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STREAM_AUTHORIZED",
+     "payload": {
+      "requestId": 7,
+      "clientId": "c1"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "program/live",
+        "arg0": [
+         "object/merge",
+         {
+          "clientId": "@payload.clientId"
+         },
+         [
+          "if",
+          [
+           "=",
+           [
+            "default",
+            "@payload.guest",
+            ""
+           ],
+           ""
+          ],
+          {},
+          {
+           "guest": "@payload.guest"
+          }
+         ]
+        ]
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

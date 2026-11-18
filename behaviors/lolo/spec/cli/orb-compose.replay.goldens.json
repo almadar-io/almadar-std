@@ -43,6 +43,20 @@
            "aliases": [],
            "takesValue": true,
            "repeatable": false
+          },
+          {
+           "name": "resolve",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "output",
+           "aliases": [
+            "-o"
+           ],
+           "takesValue": true,
+           "repeatable": false
           }
          ]
         }
@@ -187,6 +201,209 @@
         "payload": {
          "status": 500,
          "stderr": "Error: program/compose: layout must be one of x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--resolve reads the file with program/read",
+   "entity": {
+    "files": [
+     "/a/app.lolo"
+    ],
+    "cursor": 0,
+    "file": "/a/app.lolo",
+    "resolve": true
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "reading",
+     "event": "COMPOSE_OPEN",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "effects": [
+       {
+        "type": "program/read"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without --resolve an absolute file is read with os/read-file",
+   "entity": {
+    "files": [
+     "/a/app.orb"
+    ],
+    "cursor": 0,
+    "file": "/a/app.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "reading",
+     "event": "COMPOSE_OPEN",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a resolved program is appended and the next file is asked for",
+   "entity": {
+    "files": [
+     "/a/app.lolo",
+     "/b/seed.lolo"
+    ],
+    "cursor": 0,
+    "resolve": true
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "reading",
+     "event": "COMPOSE_RESOLVED",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "p",
+        "orbitals": []
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "COMPOSE_NEXT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "-o writes the composed program to the file",
+   "entity": {
+    "out": "/o/mock.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "composing",
+     "event": "COMPOSE_COMPOSED",
+     "payload": {
+      "result": {
+       "name": "p",
+       "orbitals": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no -o prints the JSON as the answer",
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "composing",
+     "event": "COMPOSE_COMPOSED",
+     "payload": {
+      "result": {
+       "name": "p",
+       "orbitals": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPOSE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"name\":\"p\",\"orbitals\":[]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the written file answers status 200 with its path",
+   "entity": {
+    "out": "/o/mock.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "writing",
+     "event": "COMPOSE_WRITTEN",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPOSE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "/o/mock.orb"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a write failure answers status 500 naming the file",
+   "entity": {
+    "out": "/o/mock.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "writing",
+     "event": "COMPOSE_WRITE_FAILED",
+     "payload": {
+      "error": "denied"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPOSE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "stderr": "Error: Could not write /o/mock.orb: denied"
         }
        }
       ]

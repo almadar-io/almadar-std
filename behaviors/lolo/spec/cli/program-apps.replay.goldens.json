@@ -842,6 +842,230 @@
           }
         }
       ]
+    },
+    {
+      "id": "a guest request for a loaded app answers its guest",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_GUEST",
+          "from": "serving",
+          "payload": {
+            "key": "g1",
+            "app": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "guest-1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "exactEmits": [
+              {
+                "event": "APP_GUEST_ANSWERED",
+                "payload": {
+                  "key": "g1",
+                  "guest": "guest-1"
+                }
+              }
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a guest request for an unloaded app loads it then answers its guest",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_GUEST",
+          "from": "serving",
+          "payload": {
+            "key": "g1",
+            "app": "a"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_DRAIN",
+          "from": "serving",
+          "payload": {
+            "app": "a",
+            "guest": "guest-1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "guest-1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false
+              }
+            ],
+            "waiting": [
+              {
+                "key": "g1",
+                "app": "a",
+                "address": "",
+                "payload": {},
+                "options": {},
+                "guestOnly": true
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "exactEmits": [
+              {
+                "event": "APP_DRAIN"
+              },
+              {
+                "event": "APP_GUEST_ANSWERED",
+                "payload": {
+                  "key": "g1",
+                  "guest": "guest-1"
+                }
+              }
+            ],
+            "entity": {
+              "waiting": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a guest request for an app whose folder is missing answers failed",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_LOAD_FAILED",
+          "from": "serving",
+          "payload": {
+            "key": "a",
+            "error": "no such file"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "g1",
+                "app": "a",
+                "address": "",
+                "payload": {},
+                "options": {},
+                "guestOnly": true
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "exactEmits": [
+              {
+                "event": "APP_FAIL_DRAIN"
+              },
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "g1",
+                  "error": "no such file"
+                }
+              },
+              {
+                "event": "APP_FAIL_DRAIN"
+              }
+            ],
+            "entity": {
+              "apps": [],
+              "waiting": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a guest request with an empty app name answers failed at once",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_GUEST",
+          "from": "serving",
+          "payload": {
+            "key": "g1",
+            "app": ""
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "exactEmits": [
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "g1"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
