@@ -478,7 +478,7 @@
                 "event": "FLEET_ANSWERED",
                 "payload": {
                   "status": 400,
-                  "body": "usage: deploy [--target box|local] [--only <app>[,<app>\u2026]]"
+                  "body": "usage: deploy [--target box|local] [--only <app>[,<app>\u2026]] [--runtime]"
                 }
               }
             ]
@@ -706,6 +706,427 @@
                 "payload": {
                   "status": 200,
                   "body": "ok shop release 4"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--runtime builds the target's runtime before any app",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "target": [
+                "box"
+              ],
+              "runtime": [
+                "true"
+              ]
+            },
+            "positionals": [
+              "deploy"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_BUILD",
+                "payload": {
+                  "requestId": "runtime-box",
+                  "steps": [
+                    {
+                      "scope": "root",
+                      "args": [
+                        "-c",
+                        "date +%Y"
+                      ],
+                      "stdin": "",
+                      "feed": false,
+                      "tolerate": false,
+                      "raw": false
+                    },
+                    {
+                      "scope": "root",
+                      "args": [
+                        "-c",
+                        "echo built"
+                      ],
+                      "stdin": "",
+                      "feed": false,
+                      "tolerate": false,
+                      "raw": false
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_DEPLOY"
+            ],
+            "entity": {
+              "busy": true,
+              "target": "box"
+            }
+          }
+        },
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "payload": {
+            "requestId": "runtime-box",
+            "outputs": [
+              "2026\n",
+              "built\n"
+            ],
+            "rawOuts": [
+              "",
+              ""
+            ],
+            "codes": [
+              0,
+              0
+            ],
+            "failures": [
+              "",
+              ""
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "contextDir": "/w/ctx",
+                  "stackDir": "/w/stack",
+                  "tag": "2026"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_DEPLOY"
+            ]
+          }
+        },
+        {
+          "event": "FLEET_RUNTIME_UP",
+          "from": "ready",
+          "payload": {
+            "image": "almadar-central-orb:2026"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "only": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime that does not come up deploys no app",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_DOWN",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": []
+          },
+          "payload": {
+            "error": "health check failed"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "failed runtime: health check failed"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_DEPLOY"
+            ],
+            "entity": {
+              "busy": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a target with no runtime record refuses --runtime",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "target": [
+                "local"
+              ],
+              "runtime": [
+                "true"
+              ]
+            },
+            "positionals": [
+              "deploy"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "error: target local declares no runtime build"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_RUNTIME_BUILD",
+              "FLEET_DEPLOY"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed runtime build step answers it",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_BUILD_FAILED",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": []
+          },
+          "payload": {
+            "requestId": "runtime-box",
+            "index": 1,
+            "code": "step_failed",
+            "stderr": "no zig",
+            "stdout": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "failed runtime build step 1: no zig"
                 }
               }
             ]

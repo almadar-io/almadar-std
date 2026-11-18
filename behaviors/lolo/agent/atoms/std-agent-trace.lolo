@@ -1,6 +1,6 @@
 app std-agent-trace [
   version: "2.0.0",
-  description: "std-agent-trace — the persisted record of what an in-app assistant did. Each REPLIED (from std-agent-tool-loop) stores one AgentRun row: the reply, every step (each model call, each tool used with its arguments, whether it took effect and why not), the tokens and the model calls; each REPLY_FAILED stores a failed run with its error. The record verification grades and later optimisation reads, in one format for tests and production. AgentTraceRecorder is headless; AgentRunBrowse is the run list. Rows carry ownerId (the real @user); the binding organism scopes @read."
+  description: "std-agent-trace — the persisted record of what an in-app assistant did. Each REPLIED (from std-agent-tool-loop) stores one AgentRun row (the reply, the tokens, the model calls and how many steps it took) and one AgentRunStep row per step (each model call, each tool used with its arguments, whether it took effect and why not), written in one batch after it, so a long run never outgrows a store's row size (a step write that fails is reported as RUN_RECORD_FAILED and leaves the run row without its steps); each REPLY_FAILED stores a failed run with its error and its steps the same way. AgentRunBrowse lists the runs and loads a run's steps when it is opened. The record verification grades and later optimisation reads, in one format for tests and production. AgentTraceRecorder is headless; AgentRunBrowse is the run list. Rows carry ownerId (the real @user); the binding organism scopes @read."
 ]
 
 type AgentToolKind = "input" | "read" | "invalid"
@@ -53,6 +53,7 @@ type AgentUsage = {
 orbital AgentTraceOrbital {
   type AgentRunsLoaded = Event { data : [AgentRun]!, totalCount : number! } "Fired when the run record finishes loading"
   type AgentRunsLoadFailed = Event { error : string, code : string } "Fired when the run record fails to load"
+  type AgentRunStepsLoaded = Event { data : [AgentRunStep]! } "Fired when an opened run's steps finish loading"
 
   entity AgentRun [persistent: agentRuns] {
     @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
@@ -62,13 +63,25 @@ orbital AgentTraceOrbital {
     outcome : "answered" | "failed" @description "Whether the assistant answered." @synonyms "result, status" = answered
     reply : string @description "What the assistant said." @synonyms "answer, response" = ""
     error : string @description "Why the run failed." = ""
-    steps : [AgentActivity] @description "Every step, in order: each model call, each tool used and what the app answered." @synonyms "actions, tool calls, trace" = []
+    stepCount : number @description "How many steps the run took; each is an AgentRunStep row." @synonyms "steps, actions" = 0
     promptTokens : number @description "Tokens sent to the model." = 0
     completionTokens : number @description "Tokens the model produced." = 0
     totalTokens : number @description "All tokens for the run." = 0
     modelCalls : number @description "Model round-trips." @synonyms "turns, calls" = 0
     recordedAt : instant @description "When the run finished." @synonyms "time, timestamp"
     page : number @intrinsic @description "The page the list shows." = 1
+  }
+
+  entity AgentRunStep [persistent: agentRunSteps] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, as for AgentRun."
+    @read none "Rows are keyed by ownerId and every fetch in this atom is scoped to the signed-in owner; the binding organism states the @read policy, as for AgentRun."
+    @index { fields: ["runId", "ownerId"], orderBy: "position" }
+    id : string!
+    ownerId : string! @description "Whose run this step belongs to (the real @user)." @synonyms "user, owner"
+    runId : string! @description "The AgentRun this step belongs to." @synonyms "run"
+    position : number! @description "The step's place in its run, from 0." @synonyms "order, index"
+    step : AgentActivity! @description "What happened: a model call, a tool used, or what the app answered." @synonyms "activity, action"
+    recordedAt : instant @description "When the run finished."
   }
 
   trait AgentTraceRecorder -> @rebindable AgentRun {
@@ -78,40 +91,33 @@ orbital AgentTraceOrbital {
       INIT -> recording
         (set @entity.outcome answered)
       REPLIED -> recording when (!= @user.role "anonymous")
-        (persist create AgentRun {
-          ownerId: @user.id
-          outcome: answered
-          reply: ?reply
-          steps: ?steps
-          promptTokens: ?usage.promptTokens
-          completionTokens: ?usage.completionTokens
-          totalTokens: ?usage.totalTokens
-          modelCalls: ?usage.modelCalls
-          recordedAt: @now
-        } {
-          emit: { failure: RUN_RECORD_FAILED, success: RUN_RECORDED }
-        })
+        (let ((runId (default (hash/sha 256 (str/concat @user.id "|" (time/epoch-ms @now) "|" (math/random)) "hex") (str/concat @user.id "-" (time/epoch-ms @now)))) (taken : [AgentActivity] ?steps))
+          (do
+            (persist create AgentRun { id: @runId, ownerId: @user.id, outcome: answered, reply: ?reply, promptTokens: ?usage.promptTokens, completionTokens: ?usage.completionTokens, totalTokens: ?usage.totalTokens, modelCalls: ?usage.modelCalls, stepCount: (array/len @taken), recordedAt: @now } { emit: { failure: RUN_RECORD_FAILED, success: RUN_RECORDED } })
+            (when (> (array/len @taken) 0)
+              (persist batch (array/map (array/range (array/len @taken)) (fn i ["create" "AgentRunStep" { id: (str/concat @runId "-" @i), ownerId: @user.id, runId: @runId, position: @i, step: (array/nth @taken @i), recordedAt: @now }])) { emit: { failure: RUN_RECORD_FAILED, success: RUN_STEPS_RECORDED } }))))
       REPLY_FAILED -> recording when (!= @user.role "anonymous")
-        (persist create AgentRun {
-          ownerId: @user.id
-          outcome: failed
-          error: ?error
-          steps: (default ?steps [])
-          recordedAt: @now
-        } {
-          emit: { failure: RUN_RECORD_FAILED, success: RUN_RECORDED }
-        })
+        (let ((runId (default (hash/sha 256 (str/concat @user.id "|" (time/epoch-ms @now) "|" (math/random)) "hex") (str/concat @user.id "-" (time/epoch-ms @now)))) (taken : [AgentActivity] (default ?steps [])))
+          (do
+            (persist create AgentRun { id: @runId, ownerId: @user.id, outcome: failed, error: ?error, stepCount: (array/len @taken), recordedAt: @now } { emit: { failure: RUN_RECORD_FAILED, success: RUN_RECORDED } })
+            (when (> (array/len @taken) 0)
+              (persist batch (array/map (array/range (array/len @taken)) (fn i ["create" "AgentRunStep" { id: (str/concat @runId "-" @i), ownerId: @user.id, runId: @runId, position: @i, step: (array/nth @taken @i), recordedAt: @now }])) { emit: { failure: RUN_RECORD_FAILED, success: RUN_STEPS_RECORDED } }))))
       RUN_RECORDED -> recording
         (set @entity.outcome answered)
+      RUN_STEPS_RECORDED -> recording
       RUN_RECORD_FAILED -> recording
         (notify error (str/concat "Couldn't record the run — " (default ?error "")))
     }
 
     emits {
       RUN_RECORDED -> external
-        @description "A run was recorded — payload is the created AgentRun row itself."
+        @description "A run and its steps were recorded."
         @synonyms "recorded, logged, traced"
         @tier "domain"
+      RUN_STEPS_RECORDED -> internal {
+      }
+        @description "Internal: a run's steps were written."
+        @tier "internal"
       RUN_RECORD_FAILED {
         error : string
         code : string
@@ -171,13 +177,16 @@ orbital AgentTraceOrbital {
                   type: typography
                   variant: body
                 }, {
-                  content: (str/concat @item.modelCalls " model calls, " @item.totalTokens " tokens")
+                  content: (str/concat @item.modelCalls " model calls, " @item.totalTokens " tokens, " @item.stepCount " steps")
                   type: typography
                   variant: caption
                 }, {
-                  activities: @item.steps
-                  followLatest: false
-                  type: agent-activity-feed
+                  action: RUN_OPENED
+                  actionPayload: { runId: @item.id, stepCount: @item.stepCount }
+                  label: (str/concat "Show " @item.stepCount " steps")
+                  size: sm
+                  type: button
+                  variant: ghost
                 }]
                 direction: vertical
                 gap: xs
@@ -207,6 +216,33 @@ orbital AgentTraceOrbital {
           offset: 0
           orderBy: "recordedAt:desc"
         })
+      RUN_OPENED -> browsing
+        (fetch AgentRunStep {
+          filter: (and (= (object/get @entity runId) ?runId) (= (object/get @entity ownerId) @user.id))
+          emit: { failure: AgentRunsLoadFailed, success: AgentRunStepsLoaded }
+          limit: (math/max 1 ?stepCount)
+          orderBy: "position"
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
+      AgentRunStepsLoaded -> browsing
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          children: [{
+            action: REFETCH_PAGE
+            actionPayload: { page: @entity.page }
+            icon: arrow-left
+            label: "All runs"
+            size: sm
+            type: button
+            variant: ghost
+          }, {
+            activities: (array/map (array/sort ?data position asc) (fn s @s.step))
+            followLatest: false
+            type: agent-activity-feed
+          }]
+        })
       REFETCH_PAGE -> browsing
         (set @entity.page ?page)
         (fetch AgentRun {
@@ -230,10 +266,22 @@ orbital AgentTraceOrbital {
         code : string
       }
         @tier "internal"
+      AgentRunStepsLoaded {
+        data : [AgentRunStep]!
+      }
+        @description "An opened run's steps finished loading."
+        @tier "internal"
     }
 
     listens {
       AgentTraceRecorder.RUN_RECORDED -> RUN_RECORDED
+      RUN_OPENED {
+        runId : string!
+        stepCount : number!
+      }
+        @description "Show the steps of one run."
+        @synonyms "open run, show steps, details"
+        @tier "domain"
       REFETCH_PAGE {
         page : number!
       }
@@ -248,7 +296,7 @@ orbital AgentTraceOrbital {
     config {
       pageSize : number = 25
         @label "How many runs per page?"
-        @description "Runs fetched per page request, newest first; each row renders the full step feed, so the page stays small. The list's own pager loads later pages through REFETCH_PAGE."
+        @description "Runs fetched per page request, newest first; a run's steps load when it is opened. The list's own pager loads later pages through REFETCH_PAGE."
         @synonyms "fetch limit, records per page, batch size, page limit"
         @tier "presentation"
     }

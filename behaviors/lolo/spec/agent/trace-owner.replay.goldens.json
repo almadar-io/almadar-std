@@ -72,11 +72,183 @@
                   "ownerId": "u1"
                 }
               }
+            ],
+            "neverEmits": [
+              "RUN_RECORD_FAILED"
             ]
           }
         }
       ],
       "defaults": []
+    },
+    {
+      "id": "a run is written as its row, then one row per step in one batch",
+      "now": 1700000000000,
+      "defaults": [],
+      "steps": [
+        {
+          "trait": "AgentTraceRecorder",
+          "event": "REPLIED",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "reply": "ok",
+            "steps": [
+              {
+                "type": "llm_response",
+                "content": "step 1",
+                "timestamp": "2026-11-18T10:00:01.000Z"
+              },
+              {
+                "type": "llm_response",
+                "content": "step 2",
+                "timestamp": "2026-11-18T10:00:02.000Z"
+              },
+              {
+                "type": "llm_response",
+                "content": "step 3",
+                "timestamp": "2026-11-18T10:00:03.000Z"
+              }
+            ],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RUN_RECORDED",
+                "payload": {
+                  "ownerId": "u1",
+                  "stepCount": 3,
+                  "reply": "ok"
+                }
+              },
+              {
+                "event": "RUN_STEPS_RECORDED",
+                "payload": {
+                  "completedCount": 3,
+                  "totalCount": 3
+                }
+              }
+            ],
+            "neverEmits": [
+              "RUN_RECORD_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentRunBrowse",
+          "event": "INIT",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "AgentRunsLoaded",
+                "payload": {
+                  "totalCount": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed run keeps its steps the same way",
+      "now": 1700000000000,
+      "defaults": [],
+      "steps": [
+        {
+          "trait": "AgentTraceRecorder",
+          "event": "REPLY_FAILED",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "error": "model down",
+            "steps": [
+              {
+                "type": "llm_response",
+                "content": "step 1",
+                "timestamp": "2026-11-18T10:00:01.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RUN_RECORDED",
+                "payload": {
+                  "outcome": "failed",
+                  "error": "model down",
+                  "stepCount": 1
+                }
+              },
+              {
+                "event": "RUN_STEPS_RECORDED",
+                "payload": {
+                  "completedCount": 1,
+                  "totalCount": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control a run with no steps writes only its row",
+      "now": 1700000000000,
+      "defaults": [],
+      "steps": [
+        {
+          "trait": "AgentTraceRecorder",
+          "event": "REPLIED",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "reply": "ok",
+            "steps": [],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RUN_RECORDED",
+                "payload": {
+                  "stepCount": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "RUN_STEPS_RECORDED",
+              "RUN_RECORD_FAILED"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
