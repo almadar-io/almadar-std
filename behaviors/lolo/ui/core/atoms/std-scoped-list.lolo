@@ -47,6 +47,8 @@ orbital ScopedListOrbital {
           emptyDescription: @config.emptyDescription
           emptyIcon: @config.emptyIcon
           gap: @config.gap
+          sortable: (!= @config.reorderEvent "")
+          reorderEvent: @config.reorderEvent
           type: data-list
         })
       ScopedListLoadFailed -> listing
@@ -85,6 +87,14 @@ orbital ScopedListOrbital {
         @description "A row's delete action was chosen."
         @synonyms "remove, delete"
         @tier "presentation"
+      @config.reorderEvent -> external {
+        id : string!
+        oldIndex : number!
+        newIndex : number!
+      }
+        @description "A row was dragged to a new place in the list: its id and its old and new index in the shown order."
+        @synonyms "reorder, move, drag, resequence"
+        @tier "domain"
     }
 
     listens {
@@ -128,6 +138,11 @@ orbital ScopedListOrbital {
         @tier "presentation"
       sortDirection : "asc" | "desc" = asc
         @label "Sort direction"
+        @tier "presentation"
+      reorderEvent : event = ""
+        @label "Event fired when a row is dragged"
+        @description "Set it to let rows be dragged into a new order; a drop fires it with { id, oldIndex, newIndex } in the shown order, so the listener can persist the order (pair it with sortBy on the persisted field). Blank: no dragging."
+        @synonyms "reorder event, drag to reorder, sortable"
         @tier "presentation"
       emptyTitle : string = "Nothing here yet"
         @label "Empty-state title"
