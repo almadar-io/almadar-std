@@ -48,12 +48,16 @@ orbital DevPersonasOrbital {
     }
   }
 
+  ;; renamed so a viewer's bare BEARER_PRESENT never reaches the persona binding
   trait PersonaBinding = Binding.traits.IdentityBinder {
+    events {
+      BEARER_PRESENT: PERSONA_BEARER_PRESENT
+    }
     config {
       identityEntity: DevPersona
     }
     listens {
-      DevPersonas.PERSONA_BEARER -> BEARER_PRESENT
+      DevPersonas.PERSONA_BEARER -> PERSONA_BEARER_PRESENT
       DevPersonas.PERSONA_VERIFIED -> BEARER_VERIFIED
       DevPersonas.PERSONA_REFUSED -> REFUSED_SEEN
     }

@@ -56,7 +56,7 @@
       "delayMs": 15000
      },
      "expect": {
-      "state": "idle",
+      "state": "keyed",
       "neverEmits": [
        "ELAPSED"
       ]
@@ -121,6 +121,7 @@
    "steps": [
     {
      "event": "KEYED_DUE",
+     "from": "keyed",
      "payload": {},
      "expect": {
       "exactEmits": [
@@ -157,10 +158,12 @@
    "steps": [
     {
      "event": "CANCEL",
+     "from": "keyed",
      "payload": {
       "key": "conn-7"
      },
      "expect": {
+      "state": "keyed",
       "neverEmits": [
        "ELAPSED"
       ]
@@ -256,6 +259,7 @@
    "steps": [
     {
      "event": "KEYED_DUE",
+     "from": "keyed",
      "payload": {},
      "expect": {
       "emits": [
@@ -273,6 +277,243 @@
      "event": "KEYED_DUE",
      "payload": {},
      "expect": {
+      "neverEmits": [
+       "ELAPSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-start-in-idle-rests-in-keyed",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": []
+   },
+   "steps": [
+    {
+     "event": "START",
+     "from": "idle",
+     "payload": {
+      "key": "conn-7",
+      "delayMs": 15000
+     },
+     "expect": {
+      "state": "keyed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-start-in-waiting-rests-in-keyed-waiting",
+   "entity": {
+    "deadline": "2999-01-01T00:00:00.000Z",
+    "waitedMs": 60000,
+    "keyed": []
+   },
+   "steps": [
+    {
+     "event": "START",
+     "from": "waiting",
+     "payload": {
+      "key": "conn-7",
+      "delayMs": 15000
+     },
+     "expect": {
+      "state": "keyedWaiting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyless-start-in-keyed-rests-in-keyed-waiting",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2999-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "START",
+     "from": "keyed",
+     "payload": {
+      "delayMs": 60000
+     },
+     "expect": {
+      "state": "keyedWaiting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cancelling-the-last-key-in-keyed-returns-to-idle",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2999-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "CANCEL",
+     "from": "keyed",
+     "payload": {
+      "key": "conn-7"
+     },
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-cancelling-one-of-two-keys-stays-in-keyed",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2999-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     },
+     {
+      "key": "conn-8",
+      "deadline": "2999-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "CANCEL",
+     "from": "keyed",
+     "payload": {
+      "key": "conn-7"
+     },
+     "expect": {
+      "state": "keyed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cancelling-the-last-key-in-keyed-waiting-returns-to-waiting",
+   "entity": {
+    "deadline": "2999-01-01T00:00:00.000Z",
+    "waitedMs": 60000,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2999-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "CANCEL",
+     "from": "keyedWaiting",
+     "payload": {
+      "key": "conn-7"
+     },
+     "expect": {
+      "state": "waiting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-single-timer-firing-in-keyed-waiting-rests-in-keyed",
+   "entity": {
+    "deadline": "2000-01-01T00:00:00.000Z",
+    "waitedMs": 60000,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2999-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "TIMER_DUE",
+     "from": "keyedWaiting",
+     "payload": {},
+     "expect": {
+      "state": "keyed",
+      "exactEmits": [
+       {
+        "event": "ELAPSED",
+        "payload": {
+         "waitedMs": 60000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-only-due-key-firing-in-keyed-rests-in-idle",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2000-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "KEYED_DUE",
+     "from": "keyed",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "ELAPSED",
+        "payload": {
+         "key": "conn-7",
+         "waitedMs": 15000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-keyed-due-in-idle-emits-nothing",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": []
+   },
+   "steps": [
+    {
+     "event": "KEYED_DUE",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "state": "idle",
       "neverEmits": [
        "ELAPSED"
       ]

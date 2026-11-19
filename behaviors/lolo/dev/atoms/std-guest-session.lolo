@@ -239,6 +239,10 @@ orbital GuestSessionOrbital {
         @label "Follow the guest's own navigation"
         @description "When a step of the guest navigates, ask the kernel to open that path as a route of the guest (program/navigate); a path no page of the guest matches changes nothing. Off by default: a composer that shows a program whose navigation belongs to its own host leaves it off."
         @tier "policy"
+      liveSeed : string = ""
+        @label "Live seed writer"
+        @description "The trait of a live guest that writes its own @mock rows (a composed std-mock-page-seed's MockSeed), opened as its seed writer (program/open seed) so those rows are not held to the entities' create policies; empty opens a live guest with none."
+        @tier "policy"
       liveRoot : string = "~/.almadar/launchpad/live"
         @label "Live guest folders"
         @description "The directory holding one folder per program opened with real integrations; that folder is the guest's working directory, so its relative file stores never meet another program's."
@@ -386,11 +390,11 @@ orbital GuestSessionOrbital {
         (os/symlink @payload.path (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") "/node_modules") { key: "guest-live-link", emit: { success: GUEST_LIVE_LINKED, failure: GUEST_FAILED } })
       GUEST_LIVE_CHECKED -> opening when @payload.ok
         (set @entity.guestSeeded false)
-        (program/open @entity.guestProgram { split: @config.split, program: @config.program, declared: true, integrations: "live", env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { split: @config.split, program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_LIVE_LINKED -> opening
         (set @entity.guestSeeded false)
-        (program/open @entity.guestProgram { split: @config.split, program: @config.program, declared: true, integrations: "live", env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { split: @config.split, program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_PREPARE -> opening when (and (= @entity.guestIntegrations "mock") (= @entity.guestSeed null) (not (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
         (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_FAILED } })
@@ -1366,6 +1370,10 @@ orbital GuestSessionOrbital {
         @label "Personas label"
         @description "The caption before the personas the guest lists, which the viewer picks to open the guest as that persona."
         @tier "presentation"
+      integrationsSwitch : boolean = true
+        @label "Integrations switch"
+        @description "Show the switch that opens the guest again with live or mocked integrations. Off when the composer fixes the reach itself."
+        @tier "presentation"
       integrationsLabel : string = "Real integrations"
         @label "Integrations label"
         @description "The label of the switch beside the persona picker that opens the guest again with live integrations (on) or mocked ones (off)."
@@ -1599,9 +1607,8 @@ orbital GuestSessionOrbital {
       GUEST_ROUTE -> idle when (!= ?guest @entity.guestHandle)
       GUEST_SHOWN -> idle
         (render-ui main { type: box, className: (str/concat "flex min-h-0 flex-col " @config.className), children: (array/concat (array/concat (if (and (= @entity.guestError "") (!= @entity.guestHandle "")) (let ((current (default (array/find @entity.guestPersonas (fn p (= @p.id @entity.guestPersona))) (default (array/first @entity.guestPersonas) { id: "", name: "", role: "" }))) (currentRole (default @current.role "")) (currentName (default @current.name ""))) [{ type: stack, direction: horizontal, justify: end, align: center, gap: md, className: "px-4 py-2 border-b border-border", children: (array/concat [
-            { type: button, icon: activity, variant: (if @entity.guestTraceOpen primary ghost), size: sm, action: GUEST_TRACE_TOGGLED, aria-label: @config.traceLabel },
-            { type: switch, label: @config.integrationsLabel, checked: (= @entity.guestIntegrations live), action: GUEST_INTEGRATIONS_CHOSEN }
-          ] (if @entity.guestSignInAsked [{ type: button, icon: log-in, variant: primary, size: sm, label: @config.signInLabel, action: GUEST_SIGN_IN_CHOSEN }] []) (if (= (array/len @entity.guestPersonas) 0) [] [
+            { type: button, icon: activity, variant: (if @entity.guestTraceOpen primary ghost), size: sm, action: GUEST_TRACE_TOGGLED, aria-label: @config.traceLabel }
+          ] (if @config.integrationsSwitch [{ type: switch, label: @config.integrationsLabel, checked: (= @entity.guestIntegrations live), action: GUEST_INTEGRATIONS_CHOSEN }] []) (if @entity.guestSignInAsked [{ type: button, icon: log-in, variant: primary, size: sm, label: @config.signInLabel, action: GUEST_SIGN_IN_CHOSEN }] []) (if (= (array/len @entity.guestPersonas) 0) [] [
             { type: menu, position: bottom-end, trigger: { type: button, variant: ghost, size: sm, rightIcon: chevron-down, children: [{ type: stack, direction: horizontal, align: center, gap: sm, children: [
               { type: icon, name: user-round, size: sm },
               { type: stack, direction: vertical, gap: none, align: start, children: [

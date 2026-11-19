@@ -404,12 +404,16 @@ orbital AgentIdentityOrbital {
     }
   }
 
+  ;; renamed so a viewer's bare BEARER_PRESENT never reaches the agent's own binding
   trait AgentBinding = Binding.traits.IdentityBinder {
+    events {
+      BEARER_PRESENT: AGENT_BEARER_PRESENT
+    }
     config {
       identityEntity: AgentIdentityRecord
     }
     listens {
-      AgentSignIn.AGENT_BEARER -> BEARER_PRESENT
+      AgentSignIn.AGENT_BEARER -> AGENT_BEARER_PRESENT
       AgentSignIn.AGENT_VERIFIED -> BEARER_VERIFIED
       AgentSignIn.AGENT_REFUSED -> REFUSED_SEEN
     }

@@ -496,13 +496,20 @@ orbital ReviewPinsOrbital {
 
   ;; Reads a review link's prebuilt program file (program/read resolve on its path) so the stage opens it without listing the catalog.
   trait ReviewProgramFile -> ReviewProgramFileView [server] {
+    config {
+      integrations : "mock" | "live" = "mock"
+        @label "Integrations"
+        @description "How the review's program reaches real services when it opens: mock keeps its rows in its own store, live uses its declared store drivers."
+        @tier "policy"
+    }
+
     initial: idle
 
     state idle {
       LOAD_PROGRAM_FILE -> idle
         (program/read "" { resolve: true, text: false, path: ?path } { emit: { success: PROGRAM_FILE_READ, failure: PROGRAM_FILE_FAILED } })
       PROGRAM_FILE_READ -> idle
-        (emit REVIEW_PROGRAM { program: ?result.program })
+        (emit REVIEW_PROGRAM { program: ?result.program, integrations: @config.integrations })
       PROGRAM_FILE_FAILED -> idle
         (emit REVIEW_REFUSED { title: "This review could not be opened", message: (default ?error "") })
     }
@@ -510,6 +517,7 @@ orbital ReviewPinsOrbital {
     emits {
       REVIEW_PROGRAM -> external {
         program : ReviewProgram!
+        integrations : "mock" | "live"!
       }
         @description "The review link's prebuilt program, read and ready to open on the stage."
       REVIEW_REFUSED -> external {

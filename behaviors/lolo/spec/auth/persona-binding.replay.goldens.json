@@ -1,0 +1,32 @@
+{
+  "atom": "auth/atoms/std-dev-personas.lolo",
+  "trait": "PersonaBinding",
+  "note": "The persona binding takes only the persona sign-in's presentation: a viewer's bare BEARER_PRESENT sent into the program never reaches it (G-CROSS-731).",
+  "cases": [
+    {
+      "id": "a viewer's bare BEARER_PRESENT does not reach the persona binding",
+      "steps": [
+        {
+          "event": "BEARER_PRESENT",
+          "payload": { "requestId": 0, "authorization": "Bearer viewer-google-token", "clientId": "viewer-session" },
+          "expect": { "fired": false }
+        }
+      ]
+    },
+    {
+      "id": "control: a persona's own presentation is verified",
+      "steps": [
+        {
+          "event": "PERSONA_BEARER_PRESENT",
+          "payload": { "requestId": 0, "authorization": "Bearer persona-token", "clientId": "persona-session" },
+          "expect": {
+            "fired": true,
+            "emits": [
+              { "event": "BEARER_VERIFY", "payload": { "requestId": 0, "authorization": "Bearer persona-token" } }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

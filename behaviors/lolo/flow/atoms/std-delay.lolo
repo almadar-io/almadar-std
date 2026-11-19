@@ -1,6 +1,6 @@
 app std-delay [
   version: "1.0.0",
-  description: "std-delay — wait a declared number of milliseconds, then emit one event. START arms the deadline, CANCEL disarms it, ELAPSED fires once when the deadline passes. Replaces the retired async/delay operator. A START or CANCEL carrying a key arms or disarms that key's own deadline instead, in either state, so one timer serves many waits at once (a server's open connections); each fires ELAPSED { key, waitedMs } once it passes. A keyless START, CANCEL and ELAPSED are the single timer, unchanged."
+  description: "std-delay — wait a declared number of milliseconds, then emit one event. START arms the deadline, CANCEL disarms it, ELAPSED fires once when the deadline passes. Replaces the retired async/delay operator. A START or CANCEL carrying a key arms or disarms that key's own deadline instead, in either state, so one timer serves many waits at once (a server's open connections); each fires ELAPSED { key, waitedMs } once it passes. A keyless START, CANCEL and ELAPSED are the single timer, unchanged. The trait rests in idle with nothing armed, waiting with the single timer armed, keyed with keyed deadlines armed and keyedWaiting with both; its two 100ms checks run only in the states that have something armed, so a timer nothing armed never ticks."
 ]
 type DelayKeyed = { key : string!, deadline : instant!, waitedMs : number! }
 
@@ -22,19 +22,10 @@ orbital DelayOrbital {
       START -> waiting when (= (default ?key "") "")
         (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
         (set @entity.deadline (time/add @now @entity.waitedMs "ms"))
-      START -> idle when (!= (default ?key "") "")
+      START -> keyed when (!= (default ?key "") "")
         (set @entity.keyed (array/append (array/filter @entity.keyed (fn d (!= @d.key ?key))) { key: (default ?key ""), deadline: (time/add @now (if (== ?delayMs null) @config.delayMs ?delayMs) "ms"), waitedMs: (if (== ?delayMs null) @config.delayMs ?delayMs) }))
       CANCEL -> idle when (!= (default ?key "") "")
-        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
-      KEYED_DUE -> idle when (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))
-        (let ((due (array/find @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))))
-          (when (!= @due null)
-            (do
-              (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key @due.key))))
-              (emit ELAPSED { key: @due.key, waitedMs: @due.waitedMs })
-              (when (array/some @entity.keyed (fn d (and (!= @d.key @due.key) (not (time/isBefore @now @d.deadline)))))
-                (emit KEYED_DUE { left: (- (array/len @entity.keyed) 1) })))))
-      KEYED_DUE -> idle when (not (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))))
+      KEYED_DUE -> idle
     }
 
     state waiting {
@@ -44,16 +35,31 @@ orbital DelayOrbital {
       START -> waiting when (= (default ?key "") "")
         (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
         (set @entity.deadline (time/add @now @entity.waitedMs "ms"))
-      START -> waiting when (!= (default ?key "") "")
+      START -> keyedWaiting when (!= (default ?key "") "")
         (set @entity.keyed (array/append (array/filter @entity.keyed (fn d (!= @d.key ?key))) { key: (default ?key ""), deadline: (time/add @now (if (== ?delayMs null) @config.delayMs ?delayMs) "ms"), waitedMs: (if (== ?delayMs null) @config.delayMs ?delayMs) }))
       CANCEL -> idle when (= (default ?key "") "")
         (set @entity.deadline null)
       CANCEL -> waiting when (!= (default ?key "") "")
-        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
       TIMER_DUE -> idle
         (set @entity.deadline null)
         (emit ELAPSED { waitedMs: @entity.waitedMs })
-      KEYED_DUE -> waiting when (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))
+      KEYED_DUE -> waiting
+    }
+
+    state keyed {
+      INIT -> idle
+        (set @entity.deadline null)
+        (set @entity.keyed [])
+      START -> keyedWaiting when (= (default ?key "") "")
+        (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
+        (set @entity.deadline (time/add @now @entity.waitedMs "ms"))
+      START -> keyed when (!= (default ?key "") "")
+        (set @entity.keyed (array/append (array/filter @entity.keyed (fn d (!= @d.key ?key))) { key: (default ?key ""), deadline: (time/add @now (if (== ?delayMs null) @config.delayMs ?delayMs) "ms"), waitedMs: (if (== ?delayMs null) @config.delayMs ?delayMs) }))
+      CANCEL -> keyed when (and (!= (default ?key "") "") (array/some @entity.keyed (fn d (!= @d.key ?key))))
+        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
+      CANCEL -> idle when (and (!= (default ?key "") "") (not (array/some @entity.keyed (fn d (!= @d.key ?key)))))
+        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
+      KEYED_DUE -> keyed when (and (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))) (> (array/len @entity.keyed) 1))
         (let ((due (array/find @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))))
           (when (!= @due null)
             (do
@@ -61,7 +67,52 @@ orbital DelayOrbital {
               (emit ELAPSED { key: @due.key, waitedMs: @due.waitedMs })
               (when (array/some @entity.keyed (fn d (and (!= @d.key @due.key) (not (time/isBefore @now @d.deadline)))))
                 (emit KEYED_DUE { left: (- (array/len @entity.keyed) 1) })))))
-      KEYED_DUE -> waiting when (not (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))))
+      KEYED_DUE -> idle when (and (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))) (<= (array/len @entity.keyed) 1))
+        (let ((due (array/find @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))))
+          (when (!= @due null)
+            (do
+              (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key @due.key))))
+              (emit ELAPSED { key: @due.key, waitedMs: @due.waitedMs })
+              (when (array/some @entity.keyed (fn d (and (!= @d.key @due.key) (not (time/isBefore @now @d.deadline)))))
+                (emit KEYED_DUE { left: (- (array/len @entity.keyed) 1) })))))
+      KEYED_DUE -> keyed when (not (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))))
+    }
+
+    state keyedWaiting {
+      INIT -> idle
+        (set @entity.deadline null)
+        (set @entity.keyed [])
+      START -> keyedWaiting when (= (default ?key "") "")
+        (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
+        (set @entity.deadline (time/add @now @entity.waitedMs "ms"))
+      START -> keyedWaiting when (!= (default ?key "") "")
+        (set @entity.keyed (array/append (array/filter @entity.keyed (fn d (!= @d.key ?key))) { key: (default ?key ""), deadline: (time/add @now (if (== ?delayMs null) @config.delayMs ?delayMs) "ms"), waitedMs: (if (== ?delayMs null) @config.delayMs ?delayMs) }))
+      CANCEL -> keyed when (= (default ?key "") "")
+        (set @entity.deadline null)
+      CANCEL -> keyedWaiting when (and (!= (default ?key "") "") (array/some @entity.keyed (fn d (!= @d.key ?key))))
+        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
+      CANCEL -> waiting when (and (!= (default ?key "") "") (not (array/some @entity.keyed (fn d (!= @d.key ?key)))))
+        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
+      TIMER_DUE -> keyed
+        (set @entity.deadline null)
+        (emit ELAPSED { waitedMs: @entity.waitedMs })
+      KEYED_DUE -> keyedWaiting when (and (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))) (> (array/len @entity.keyed) 1))
+        (let ((due (array/find @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))))
+          (when (!= @due null)
+            (do
+              (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key @due.key))))
+              (emit ELAPSED { key: @due.key, waitedMs: @due.waitedMs })
+              (when (array/some @entity.keyed (fn d (and (!= @d.key @due.key) (not (time/isBefore @now @d.deadline)))))
+                (emit KEYED_DUE { left: (- (array/len @entity.keyed) 1) })))))
+      KEYED_DUE -> waiting when (and (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))) (<= (array/len @entity.keyed) 1))
+        (let ((due (array/find @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))))
+          (when (!= @due null)
+            (do
+              (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key @due.key))))
+              (emit ELAPSED { key: @due.key, waitedMs: @due.waitedMs })
+              (when (array/some @entity.keyed (fn d (and (!= @d.key @due.key) (not (time/isBefore @now @d.deadline)))))
+                (emit KEYED_DUE { left: (- (array/len @entity.keyed) 1) })))))
+      KEYED_DUE -> keyedWaiting when (not (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))))
     }
 
     emits {
@@ -96,10 +147,10 @@ orbital DelayOrbital {
     }
 
     ticks {
-      deadlineCheck every 100ms in waiting [background]
+      deadlineCheck every 100ms in waiting, keyedWaiting [background]
         when (and (!= @entity.deadline null) (not (time/isBefore @now (default @entity.deadline @now))))
         (emit TIMER_DUE { })
-      keyedCheck every 100ms [background]
+      keyedCheck every 100ms in keyed, keyedWaiting [background]
         when (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))
         (emit KEYED_DUE { left: (array/len @entity.keyed) })
     }

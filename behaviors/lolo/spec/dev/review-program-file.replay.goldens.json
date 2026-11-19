@@ -1,0 +1,37 @@
+{
+  "atom": "dev/atoms/std-review-pins.lolo",
+  "trait": "ReviewProgramFile",
+  "note": "A review link's prebuilt program is handed to the stage with the reach its integrations knob states.",
+  "cases": [
+    {
+      "id": "a read program is handed on with mock integrations by default",
+      "steps": [
+        {
+          "event": "PROGRAM_FILE_READ",
+          "payload": { "result": { "program": { "name": "project-friday-m1-1", "orbitals": [] } } },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              { "event": "REVIEW_PROGRAM", "payload": { "program": { "name": "project-friday-m1-1", "orbitals": [] }, "integrations": "mock" } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an unreadable file is refused and hands on no program",
+      "steps": [
+        {
+          "event": "PROGRAM_FILE_FAILED",
+          "payload": { "error": "no such file" },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              { "event": "REVIEW_REFUSED", "payload": { "title": "This review could not be opened", "message": "no such file" } }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
