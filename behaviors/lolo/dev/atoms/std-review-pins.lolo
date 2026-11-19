@@ -6,7 +6,9 @@ app std-review-pins [
 ;; @capabilities "pin feedback on a live app, review comments on a prototype, client questions on a page, design review pins, annotate a running screen"
 
 type ReviewPinRow = { id : string!, subject : string!, route : string!, x : number!, y : number!, kind : "feedback" | "question"!, body : string!, authorId : string!, authorName : string!, status : "open" | "resolved"!, parentId : string!, createdAt : string! }
-type ReviewLink = { name : string!, version : string!, behavior : string!, label : string!, route : string! }
+type ReviewLink = { name : string!, version : string!, behavior : string!, label : string!, route : string!, path : string? }
+type ReviewProgram = { name : string, orbitals : [orbital] }
+type ReviewProgramRead = { program : ReviewProgram! }
 type ReviewLeaf = { package : string!, topic : string!, behavior : string!, kind : string!, value : behavior! }
 type ReviewMediaPin = { id : string!, x : number, y : number, time : number, label : string, resolved : boolean }
 
@@ -376,6 +378,7 @@ orbital ReviewPinsOrbital {
     listed : boolean @description "Whether the catalog has listed its tree at least once." = false
     openedBehavior : string @description "The behavior the review link opened, kept so a lost guest can be opened again." = ""
     openedRoute : string @description "The route the review link opened the guest on." = ""
+    openedPath : string @description "The prebuilt program file the review link opened, when its row names one." = ""
   }
 
   trait ReviewOpener -> ReviewOpenerView [client] {
@@ -384,7 +387,15 @@ orbital ReviewPinsOrbital {
     state idle {
       INIT -> idle when (or (= (default ?version "") "") (not (array/some @config.reviews (fn r (= @r.name (default ?name ""))))))
         (emit REVIEW_REFUSED { title: @config.unknownTitle, message: (str/concat (default ?name "") " " (default ?version "")) })
-      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (= @r.name (default ?name "")))))
+      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (and (= @r.name (default ?name "")) (!= (default @r.path "") "")))))
+        (let ((link (array/find @config.reviews (fn r (= @r.name ?name)))))
+          (do
+            (set @entity.openedPath (default @link.path ""))
+            (set @entity.openedRoute @link.route)
+            (emit GUEST_START_ROUTE { route: @link.route })
+            (emit REVIEW_OPEN { subject: (str/concat @link.name "/" ?version), route: @link.route })
+            (emit LOAD_PROGRAM_FILE { path: (default @link.path "") })))
+      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (and (= @r.name (default ?name "")) (= (default @r.path "") "")))))
         (let ((link (array/find @config.reviews (fn r (= @r.name ?name)))))
           (do
             (set @entity.openedBehavior @link.behavior)
@@ -399,12 +410,15 @@ orbital ReviewPinsOrbital {
               (if @entity.listed
                 (emit REVIEW_REFUSED { title: @config.missingTitle, message: @link.behavior })
                 (set @entity.wanted @link.behavior)))))
-      REOPEN -> idle when (and (!= @entity.openedBehavior "") (array/some @entity.leaves (fn l (= @l.behavior @entity.openedBehavior))))
+      REOPEN -> idle when (!= @entity.openedPath "")
+        (emit GUEST_START_ROUTE { route: @entity.openedRoute })
+        (emit LOAD_PROGRAM_FILE { path: @entity.openedPath })
+      REOPEN -> idle when (and (= @entity.openedPath "") (!= @entity.openedBehavior "") (array/some @entity.leaves (fn l (= @l.behavior @entity.openedBehavior))))
         (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior @entity.openedBehavior)))))
           (do
             (emit GUEST_START_ROUTE { route: @entity.openedRoute })
             (emit LOAD_BEHAVIOR { behavior: @leaf.behavior, value: @leaf.value })))
-      REOPEN -> idle when (not (and (!= @entity.openedBehavior "") (array/some @entity.leaves (fn l (= @l.behavior @entity.openedBehavior)))))
+      REOPEN -> idle when (and (= @entity.openedPath "") (not (and (!= @entity.openedBehavior "") (array/some @entity.leaves (fn l (= @l.behavior @entity.openedBehavior))))))
       TREE_LISTED -> idle when (and (!= @entity.wanted "") (array/some ?data (fn l (= @l.behavior @entity.wanted))))
         (set @entity.leaves ?data)
         (set @entity.listed true)
@@ -433,6 +447,10 @@ orbital ReviewPinsOrbital {
         value : behavior!
       }
         @description "Ask the loader for the behavior of the review link, as the catalog lists it."
+      LOAD_PROGRAM_FILE -> external {
+        path : string!
+      }
+        @description "Ask for the prebuilt program file the review link names, instead of looking the behavior up in the catalog."
       GUEST_START_ROUTE -> external {
         route : string!
       }
@@ -469,6 +487,51 @@ orbital ReviewPinsOrbital {
         @tier "presentation"
       missingTitle : string = "The reviewed behavior is not installed"
         @tier "presentation"
+    }
+  }
+
+  entity ReviewProgramFileView [runtime] {
+    id : string!
+  }
+
+  ;; Reads a review link's prebuilt program file (program/read resolve on its path) so the stage opens it without listing the catalog.
+  trait ReviewProgramFile -> ReviewProgramFileView [server] {
+    initial: idle
+
+    state idle {
+      LOAD_PROGRAM_FILE -> idle
+        (program/read "" { resolve: true, text: false, path: ?path } { emit: { success: PROGRAM_FILE_READ, failure: PROGRAM_FILE_FAILED } })
+      PROGRAM_FILE_READ -> idle
+        (emit REVIEW_PROGRAM { program: ?result.program })
+      PROGRAM_FILE_FAILED -> idle
+        (emit REVIEW_REFUSED { title: "This review could not be opened", message: (default ?error "") })
+    }
+
+    emits {
+      REVIEW_PROGRAM -> external {
+        program : ReviewProgram!
+      }
+        @description "The review link's prebuilt program, read and ready to open on the stage."
+      REVIEW_REFUSED -> external {
+        title : string!
+        message : string!
+      }
+        @description "The prebuilt program file could not be read."
+    }
+
+    listens {
+      LOAD_PROGRAM_FILE -> input {
+        path : string!
+      }
+        @description "Read this prebuilt program file."
+      PROGRAM_FILE_READ {
+        result : ReviewProgramRead!
+      }
+        @tier "internal"
+      PROGRAM_FILE_FAILED {
+        error : string
+      }
+        @tier "internal"
     }
   }
 

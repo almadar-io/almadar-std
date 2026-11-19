@@ -1,458 +1,106 @@
 {
- "atom": "dev/atoms/std-review-pins.lolo",
- "trait": "ReviewOpener",
- "note": "A review link opens the behavior its row names; the version it passes scopes the pins, so each version keeps its history.",
- "cases": [
-  {
-   "id": "the current version opens with its own subject",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "steps": [
+  "atom": "dev/atoms/std-review-pins.lolo",
+  "trait": "ReviewOpener",
+  "cases": [
     {
-     "event": "INIT",
-     "payload": {
-      "name": "project-friday",
-      "version": "1.1.0"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "REVIEW_REFUSED"
-      ],
-      "emits": [
-       {
-        "event": "GUEST_START_ROUTE",
-        "payload": {
-         "route": "/projects"
+      "id": "a review row that names a program file opens that file without the catalog",
+      "config": {
+        "reviews": [
+          {
+            "name": "friday",
+            "version": "1.1.0",
+            "behavior": "pkg/friday",
+            "label": "Friday",
+            "route": "/projects",
+            "path": "/srv/orb/apps/friday/current/app.orb"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "name": "friday",
+            "version": "1.1.0"
+          },
+          "entity": {
+            "id": "o",
+            "wanted": "",
+            "leaves": [],
+            "listed": false,
+            "openedBehavior": "",
+            "openedRoute": "",
+            "openedPath": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_START_ROUTE",
+                "payload": {
+                  "route": "/projects"
+                }
+              },
+              {
+                "event": "LOAD_PROGRAM_FILE",
+                "payload": {
+                  "path": "/srv/orb/apps/friday/current/app.orb"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LOAD_BEHAVIOR"
+            ]
+          }
         }
-       },
-       {
-        "event": "REVIEW_OPEN",
-        "payload": {
-         "subject": "project-friday/1.1.0",
-         "route": "/projects"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an earlier version opens the same behavior under its own subject",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "steps": [
+    },
     {
-     "event": "INIT",
-     "payload": {
-      "name": "project-friday",
-      "version": "1.0.0"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "REVIEW_REFUSED"
-      ],
-      "emits": [
-       {
-        "event": "GUEST_START_ROUTE",
-        "payload": {
-         "route": "/projects"
+      "id": "CONTROL a review row without a program file waits for the catalog",
+      "config": {
+        "reviews": [
+          {
+            "name": "friday",
+            "version": "1.1.0",
+            "behavior": "pkg/friday",
+            "label": "Friday",
+            "route": "/projects"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "name": "friday",
+            "version": "1.1.0"
+          },
+          "entity": {
+            "id": "o",
+            "wanted": "",
+            "leaves": [],
+            "listed": false,
+            "openedBehavior": "",
+            "openedRoute": "",
+            "openedPath": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_START_ROUTE"
+              }
+            ],
+            "neverEmits": [
+              "LOAD_PROGRAM_FILE"
+            ]
+          }
         }
-       },
-       {
-        "event": "REVIEW_OPEN",
-        "payload": {
-         "subject": "project-friday/1.0.0",
-         "route": "/projects"
-        }
-       }
       ]
-     }
     }
-   ]
-  },
-  {
-   "id": "CONTROL an unknown review name is refused",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "INIT",
-     "payload": {
-      "name": "other",
-      "version": "1.1.0"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "REVIEW_OPEN",
-       "LOAD_BEHAVIOR",
-       "GUEST_START_ROUTE"
-      ],
-      "emits": [
-       {
-        "event": "REVIEW_REFUSED",
-        "payload": {
-         "title": "This review is not known",
-         "message": "other 1.1.0"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "CONTROL a link with no version is refused",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "INIT",
-     "payload": {
-      "name": "project-friday",
-      "version": ""
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "REVIEW_OPEN",
-       "GUEST_START_ROUTE"
-      ],
-      "emits": [
-       {
-        "event": "REVIEW_REFUSED"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a listed tree without the behavior is refused",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "entity": {
-    "wanted": "almadar-behaviors/project-friday-m1-1",
-    "leaves": []
-   },
-   "steps": [
-    {
-     "event": "TREE_LISTED",
-     "payload": {
-      "data": []
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "LOAD_BEHAVIOR"
-      ],
-      "emits": [
-       {
-        "event": "REVIEW_REFUSED",
-        "payload": {
-         "title": "The reviewed behavior is not installed",
-         "message": "almadar-behaviors/project-friday-m1-1"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "CONTROL a listed tree with nothing wanted loads nothing",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "entity": {
-    "wanted": "",
-    "leaves": []
-   },
-   "steps": [
-    {
-     "event": "TREE_LISTED",
-     "payload": {
-      "data": []
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "LOAD_BEHAVIOR",
-       "REVIEW_REFUSED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a link opened after an empty tree was listed is refused at once",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "entity": {
-    "wanted": "",
-    "leaves": [],
-    "listed": true
-   },
-   "steps": [
-    {
-     "event": "INIT",
-     "payload": {
-      "name": "project-friday",
-      "version": "1.1.0"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "LOAD_BEHAVIOR"
-      ],
-      "emits": [
-       {
-        "event": "REVIEW_REFUSED",
-        "payload": {
-         "title": "The reviewed behavior is not installed",
-         "message": "almadar-behaviors/project-friday-m1-1"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "CONTROL a link opened before any tree waits for it",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "entity": {
-    "wanted": "",
-    "leaves": [],
-    "listed": false
-   },
-   "steps": [
-    {
-     "event": "INIT",
-     "payload": {
-      "name": "project-friday",
-      "version": "1.1.0"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "LOAD_BEHAVIOR",
-       "REVIEW_REFUSED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a lost guest reopens the same subject on the same route",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "REOPEN",
-     "payload": {
-      "guest": "guest-9"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "GUEST_START_ROUTE",
-        "payload": {
-         "route": "/projects"
-        }
-       },
-       {
-        "event": "LOAD_BEHAVIOR",
-        "payload": {
-         "behavior": "almadar-behaviors/project-friday-m1-1",
-         "value": "almadar-behaviors/project-friday-m1-1"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "openedBehavior": "almadar-behaviors/project-friday-m1-1",
-    "openedRoute": "/projects",
-    "leaves": [
-     {
-      "package": "almadar-behaviors",
-      "topic": "project-friday",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "kind": "organism",
-      "value": "almadar-behaviors/project-friday-m1-1"
-     }
-    ],
-    "listed": true,
-    "wanted": ""
-   }
-  },
-  {
-   "id": "a guest session reopen ask with no guest reopens the same subject on the same route",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "REOPEN",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "GUEST_START_ROUTE",
-        "payload": {
-         "route": "/projects"
-        }
-       },
-       {
-        "event": "LOAD_BEHAVIOR",
-        "payload": {
-         "behavior": "almadar-behaviors/project-friday-m1-1",
-         "value": "almadar-behaviors/project-friday-m1-1"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "openedBehavior": "almadar-behaviors/project-friday-m1-1",
-    "openedRoute": "/projects",
-    "leaves": [
-     {
-      "package": "almadar-behaviors",
-      "topic": "project-friday",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "kind": "organism",
-      "value": "almadar-behaviors/project-friday-m1-1"
-     }
-    ],
-    "listed": true,
-    "wanted": ""
-   }
-  },
-  {
-   "id": "control a reopen before anything opened starts nothing",
-   "config": {
-    "reviews": [
-     {
-      "name": "project-friday",
-      "version": "1.1.0",
-      "behavior": "almadar-behaviors/project-friday-m1-1",
-      "label": "Project Friday",
-      "route": "/projects"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "REOPEN",
-     "payload": {
-      "guest": "guest-9"
-     },
-     "expect": {
-      "neverEmits": [
-       "GUEST_START_ROUTE",
-       "LOAD_BEHAVIOR"
-      ]
-     }
-    }
-   ]
-  }
- ]
+  ]
 }
