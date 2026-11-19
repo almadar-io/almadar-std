@@ -76,10 +76,14 @@ orbital ThreadPostOrbital {
           offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
-      ThreadPostLoaded -> browsing
+      ThreadPostLoaded -> browsing when (> ?totalCount @config.pageSize)
         (render-ui main <Stack direction={vertical} gap={md}>
           {@config.bodyContent}
-          <Pagination currentPage={@entity.threadPage} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+          <Pagination currentPage={@entity.threadPage} totalPages={(math/ceil (/ ?totalCount @config.pageSize))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+        </Stack>)
+      ThreadPostLoaded -> browsing when (<= ?totalCount @config.pageSize)
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.bodyContent}
         </Stack>)
       ThreadPostLoadFailed -> error
         (render-ui main {
@@ -120,10 +124,14 @@ orbital ThreadPostOrbital {
           offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
-      ThreadPostLoaded -> browsing
+      ThreadPostLoaded -> browsing when (> ?totalCount @config.pageSize)
         (render-ui main <Stack direction={vertical} gap={md}>
           {@config.bodyContent}
-          <Pagination currentPage={@entity.threadPage} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+          <Pagination currentPage={@entity.threadPage} totalPages={(math/ceil (/ ?totalCount @config.pageSize))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+        </Stack>)
+      ThreadPostLoaded -> browsing when (<= ?totalCount @config.pageSize)
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.bodyContent}
         </Stack>)
       ;; Inline reply: when the event already carries the composed text (e.g.
       ;; reply-tree's inline composer), persist directly and stay in `browsing`

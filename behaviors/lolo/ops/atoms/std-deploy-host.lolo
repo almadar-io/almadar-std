@@ -792,7 +792,7 @@ orbital DeployHostOrbital {
       FL_SH_DONE -> resolving when (and (= @payload.stage (str/concat @entity.app "|f-prep")) (= @payload.exitCode 0))
         (emit FL_ORB_RUN { stage: (str/concat @entity.app "|f-resolve"), argv: ["resolve", @entity.program, "-o", (str/concat @entity.stageDir "/release/app.orb")] })
       FL_SH_DONE -> idle when (and (= @payload.stage (str/concat @entity.app "|f-prep")) (!= @payload.exitCode 0))
-        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "prepare: " @payload.stderr)] })
+        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "prepare: " (if (= (str/trim @payload.stderr) "") @payload.stdout @payload.stderr))] })
       FL_SH_FAILED -> idle
         (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "prepare: " @payload.error)] })
     }
@@ -806,7 +806,7 @@ orbital DeployHostOrbital {
         (when (!= @entity.firestoreDatabase "")
           (emit FL_ORB_RUN { stage: (str/concat @entity.app "|f-indexes"), argv: ["firestore-indexes", (str/concat @entity.stageDir "/release/app.orb"), "--out", (str/concat @entity.stageDir "/firestore.indexes.json")] }))
       FL_ORB_DONE -> idle when (and (= @payload.stage (str/concat @entity.app "|f-resolve")) (!= @payload.exitCode 0))
-        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "resolve: " @payload.stderr)] })
+        (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "resolve: " (if (= (str/trim @payload.stderr) "") @payload.stdout @payload.stderr))] })
       FL_ORB_FAILED -> idle
         (emit FL_DONE { app: @entity.app, version: 0, failures: [(str/concat "resolve: " @payload.error)] })
     }
@@ -842,15 +842,15 @@ orbital DeployHostOrbital {
         (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures @payload.error) })
 
       FL_ORB_DONE -> shipping when (and (!= @payload.stage (str/concat @entity.app "|f-resolve")) (!= @payload.exitCode 0) (> @entity.pending 1))
-        (set @entity.failures (array/append @entity.failures (str/concat (default (array/nth (str/split @payload.stage "|f-") 1) "build") ": " @payload.stderr)))
+        (set @entity.failures (array/append @entity.failures (str/concat (default (array/nth (str/split @payload.stage "|f-") 1) "build") ": " (if (= (str/trim @payload.stderr) "") @payload.stdout @payload.stderr))))
         (set @entity.pending (- @entity.pending 1))
       FL_ORB_DONE -> idle when (and (!= @payload.stage (str/concat @entity.app "|f-resolve")) (!= @payload.exitCode 0) (<= @entity.pending 1))
-        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat (default (array/nth (str/split @payload.stage "|f-") 1) "build") ": " @payload.stderr)) })
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat (default (array/nth (str/split @payload.stage "|f-") 1) "build") ": " (if (= (str/trim @payload.stderr) "") @payload.stdout @payload.stderr))) })
       FL_SH_DONE -> shipping when (and (= @payload.stage (str/concat @entity.app "|f-static")) (!= @payload.exitCode 0) (> @entity.pending 1))
-        (set @entity.failures (array/append @entity.failures (str/concat "static: " @payload.stderr)))
+        (set @entity.failures (array/append @entity.failures (str/concat "static: " (if (= (str/trim @payload.stderr) "") @payload.stdout @payload.stderr))))
         (set @entity.pending (- @entity.pending 1))
       FL_SH_DONE -> idle when (and (= @payload.stage (str/concat @entity.app "|f-static")) (!= @payload.exitCode 0) (<= @entity.pending 1))
-        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat "static: " @payload.stderr)) })
+        (emit FL_DONE { app: @entity.app, version: @entity.version, failures: (array/append @entity.failures (str/concat "static: " (if (= (str/trim @payload.stderr) "") @payload.stdout @payload.stderr))) })
       FL_ORB_FAILED -> shipping when (> @entity.pending 1)
         (set @entity.failures (array/append @entity.failures (str/concat "build: " @payload.error)))
         (set @entity.pending (- @entity.pending 1))

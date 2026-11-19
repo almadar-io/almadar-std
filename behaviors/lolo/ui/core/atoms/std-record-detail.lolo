@@ -160,9 +160,11 @@ orbital RecordItemOrbital {
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
+            (if (= @config.detailLook modal)
+              (render-ui main @config.modalBodyContent)
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
-              (render-ui main @config.bodyContent))))
+              (render-ui main @config.bodyContent)))))
       RecordItemSlugLoaded -> editing when (and (> (array/len ?data) 0) (validate/object (array/first ?data)) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
@@ -186,9 +188,11 @@ orbital RecordItemOrbital {
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
+            (if (= @config.detailLook modal)
+              (render-ui main @config.modalBodyContent)
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
-              (render-ui main @config.bodyContent))))
+              (render-ui main @config.bodyContent)))))
       RecordItemLoaded -> error when (not (validate/object ?data))
         (render-ui main { message: (i18n/t "recordNotReadable"), title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
       RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (not (validate/object (array/first ?data))))
@@ -284,9 +288,11 @@ orbital RecordItemOrbital {
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
+            (if (= @config.detailLook modal)
+              (render-ui main @config.modalBodyContent)
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
-              (render-ui main @config.bodyContent))))
+              (render-ui main @config.bodyContent)))))
       RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (validate/object (array/first ?data)))
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
@@ -300,9 +306,11 @@ orbital RecordItemOrbital {
           (render-ui main @config.documentBodyContent)
           (if (= @config.detailLook slide-over)
             (render-ui main @config.slideOverBodyContent)
+            (if (= @config.detailLook modal)
+              (render-ui main @config.modalBodyContent)
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
-              (render-ui main @config.bodyContent))))
+              (render-ui main @config.bodyContent)))))
       RecordItemLoaded -> error when (not (validate/object ?data))
         (render-ui main { message: (i18n/t "recordNotReadable"), title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
       RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (not (validate/object (array/first ?data))))
@@ -569,9 +577,9 @@ orbital RecordItemOrbital {
         @description "init = a routed detail page; the record loads as soon as the page mounts (the default). event = an overlay that stays blank until a row-click OPEN_VIEW hands it an id, which is what a list-embedded slide-over needs — mounting an init-loading surface on a list page would fetch a record it has no id for."
         @synonyms "open on click, slide over, row click, blank until opened, list embedded"
         @tier "policy"
-      detailLook : "panel" | "slide-over" | "page" | "document" = panel
+      detailLook : "panel" | "slide-over" | "modal" | "page" | "document" = panel
         @label "Detail look"
-        @description "Visual treatment for the record surface. panel = an inline detail-panel in the page flow (bodyContent); slide-over = the same panel as a right-hand drawer over the list behind it (slideOverBodyContent); page = a full-width record page with roomier spacing (pageBodyContent); document = a wiki-page/note/article surface — big editable title over a rich-text body, no labelled field rows, click-to-edit with autosave (documentBodyContent / documentEditingContent). Selecting a look swaps which body tree renders after the record loads; any body may still be overridden directly at the call site."
+        @description "Visual treatment for the record surface. panel = an inline detail-panel in the page flow (bodyContent); slide-over = the same panel as a right-hand drawer over the list behind it (slideOverBodyContent); modal = the same panel in a centered dialog over the list, closed by closeEvent (modalBodyContent); page = a full-width record page with roomier spacing (pageBodyContent); document = a wiki-page/note/article surface — big editable title over a rich-text body, no labelled field rows, click-to-edit with autosave (documentBodyContent / documentEditingContent). Selecting a look swaps which body tree renders after the record loads; any body may still be overridden directly at the call site."
         @synonyms "detail style, drawer, slide over, full page, document, wiki page, note, article"
         @tier "presentation"
       recordLook : "panel" | "profile" | "showcase" | "workflow" | "map" | "ledger" | "conversation" | "workspace" = panel
@@ -744,6 +752,39 @@ orbital RecordItemOrbital {
       }
         @label "Slide-over look body"
         @description "Render-ui SExpr rendered after the record loads when detailLook = slide-over: the same panel as a right-hand drawer, so the list behind stays in place. Use when the record is a glance, not a workspace."
+        @tier "internal"
+      modalBodyContent : render-ui = {
+        type: modal
+        size: lg
+        closeEvent: @config.closeEvent
+        children: [{
+          actions: (if @config.showActions (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) [])
+          entity: @entity.loadedRow
+          fields: @config.fields
+          initialData: @entity.loadedRow
+          maxInlineActions: @config.maxInlineActions
+          sections: @config.sections
+          showActions: @config.showActions
+          subtitle: @entity.description
+          title: @entity.name
+          look: @config.recordLook
+          avatarField: @config.avatarField
+          coverField: @config.coverField
+          mediaField: @config.mediaField
+          stageField: @config.stageField
+          stages: @config.stages
+          latitudeField: @config.latitudeField
+          longitudeField: @config.longitudeField
+          lineItems: (if (validate/required @config.lineItemsField) (object/get @entity.loadedRow @config.lineItemsField) null)
+          lineItemColumns: @config.lineItemColumns
+          totals: @config.totals
+          thread: (if (validate/required @config.threadField) (object/get @entity.loadedRow @config.threadField) null)
+          tabs: @config.tabs
+          type: detail-panel
+        }]
+      }
+        @label "Modal look body"
+        @description "Render-ui SExpr rendered after the record loads when detailLook = modal: the same panel in a centered dialog over the list; its close emits closeEvent. Use when the record is a glance and the app opens its other records centered."
         @tier "internal"
       pageBodyContent : render-ui = {
         children: [{

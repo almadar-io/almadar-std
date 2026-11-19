@@ -3510,6 +3510,16 @@
           "expect": {
             "emits": [
               {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "rollback",
+                  "path": ":rollback",
+                  "body": {
+                    "transaction": "tx1"
+                  }
+                }
+              },
+              {
                 "event": "ROWS_WRITTEN",
                 "payload": {
                   "key": "k",
@@ -3525,7 +3535,6 @@
               }
             ],
             "neverEmits": [
-              "FS_WIRE",
               "STORE_FAILED"
             ]
           }
@@ -3734,6 +3743,16 @@
           "expect": {
             "emits": [
               {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "rollback",
+                  "path": ":rollback",
+                  "body": {
+                    "transaction": "tx1"
+                  }
+                }
+              },
+              {
                 "event": "ROWS_WRITTEN",
                 "payload": {
                   "key": "k",
@@ -3745,9 +3764,7 @@
                 }
               }
             ],
-            "neverEmits": [
-              "FS_WIRE"
-            ]
+            "neverEmits": []
           }
         }
       ]
@@ -3815,6 +3832,16 @@
           "expect": {
             "emits": [
               {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "rollback",
+                  "path": ":rollback",
+                  "body": {
+                    "transaction": "tx1"
+                  }
+                }
+              },
+              {
                 "event": "ROWS_WRITTEN",
                 "payload": {
                   "key": "k",
@@ -3829,9 +3856,7 @@
                 }
               }
             ],
-            "neverEmits": [
-              "FS_WIRE"
-            ]
+            "neverEmits": []
           }
         }
       ]
@@ -4904,6 +4929,16 @@
           "expect": {
             "emits": [
               {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "rollback",
+                  "path": ":rollback",
+                  "body": {
+                    "transaction": "tx1"
+                  }
+                }
+              },
+              {
                 "event": "ROWS_WRITTEN",
                 "payload": {
                   "key": "k",
@@ -4915,9 +4950,7 @@
                 }
               }
             ],
-            "neverEmits": [
-              "FS_WIRE"
-            ]
+            "neverEmits": []
           }
         }
       ]
@@ -5521,6 +5554,16 @@
           "expect": {
             "emits": [
               {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "rollback",
+                  "path": ":rollback",
+                  "body": {
+                    "transaction": "tx1"
+                  }
+                }
+              },
+              {
                 "event": "ROWS_WRITTEN",
                 "payload": {
                   "key": "k",
@@ -5532,9 +5575,7 @@
                 }
               }
             ],
-            "neverEmits": [
-              "FS_WIRE"
-            ]
+            "neverEmits": []
           }
         }
       ]
@@ -5593,6 +5634,16 @@
           "expect": {
             "emits": [
               {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "rollback",
+                  "path": ":rollback",
+                  "body": {
+                    "transaction": "tx1"
+                  }
+                }
+              },
+              {
                 "event": "ROWS_WRITTEN",
                 "payload": {
                   "key": "k",
@@ -5608,9 +5659,7 @@
                 }
               }
             ],
-            "neverEmits": [
-              "FS_WIRE"
-            ]
+            "neverEmits": []
           }
         }
       ]
@@ -9434,6 +9483,84 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-write-that-changes-nothing-rolls-its-transaction-back",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "onFailure": "atomic",
+              "ops": [
+                {
+                  "kind": "update",
+                  "entityType": "Stock",
+                  "id": "s1",
+                  "data": {
+                    "stock": 5
+                  }
+                }
+              ]
+            }
+          },
+          "from": "ready",
+          "expect": {
+            "emits": [
+              {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "txread",
+                  "path": ":batchGet",
+                  "body": {
+                    "documents": [
+                      "projects/demo-almadar/databases/(default)/documents/Stock/s1"
+                    ],
+                    "newTransaction": {
+                      "readWrite": {}
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "FS_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "[{\"transaction\":\"tx1\"},{\"found\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Stock/s1\",\"fields\":{\"stock\":{\"integerValue\":\"5\"}}}}]",
+            "key": "k"
+          },
+          "from": "busy",
+          "expect": {
+            "emits": [
+              {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "rollback",
+                  "path": ":rollback",
+                  "body": {
+                    "transaction": "tx1"
+                  }
+                }
+              },
+              {
+                "event": "ROWS_WRITTEN",
+                "payload": {
+                  "key": "k"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STORE_FAILED"
+            ]
+          }
+        }
+      ],
+      "note": "Firestore keeps an unended read-write transaction's locks until it expires, so later writes to the row abort on the lock."
     }
   ],
   "note": " The service-account mode runs over the composed std-http-client with a jwt-bearer credential-connect; emulator, token and metadata modes are unchanged."

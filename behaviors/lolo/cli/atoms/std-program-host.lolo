@@ -290,7 +290,9 @@ orbital ProgramHostOrbital {
           (do
             (os/readlink (str/concat @config.appsDir "/" @a.name "/current") { key: @a.name emit: { success: APP_RELEASE_SEEN, failure: APP_RELEASE_UNSEEN } })
             (emit APP_RELEASE_CHECK { index: (+ @payload.index 1) })))
-      APP_RELEASE_CHECK -> serving when (>= @payload.index (array/len (array/filter @entity.apps (fn a (and (default @a.current true) (not @a.loading))))))
+      APP_RELEASE_CHECK -> serving when (and (>= @payload.index (array/len (array/filter @entity.apps (fn a (and (default @a.current true) (not @a.loading)))))) (= (array/len @config.resident) 0))
+      APP_RELEASE_CHECK -> serving when (and (>= @payload.index (array/len (array/filter @entity.apps (fn a (and (default @a.current true) (not @a.loading)))))) (> (array/len @config.resident) 0))
+        (emit APP_RESIDENT_LOAD { index: 0 })
       APP_RELEASE_SEEN -> serving when (and (array/some @entity.apps (fn a (and (= @a.name (default @payload.key "")) (default @a.current true) (not @a.loading) (!= (default @a.release "") @payload.target)))) (not (array/some @entity.apps (fn a (and (= @a.name (default @payload.key "")) @a.loading)))))
         (set @entity.apps (array/append @entity.apps { name: (default @payload.key "") guest: "" lastUsedMs: (time/now) loading: true current: false release: @payload.target }))
         (os/read-file (str/concat @config.appsDir "/" (default @payload.key "") "/" @payload.target "/app.env") { key: (default @payload.key "") emit: { success: APP_ENV_READ, failure: APP_ENV_UNREAD } })
@@ -436,7 +438,7 @@ orbital ProgramHostOrbital {
         @tier "domain"
       resident : [string] = []
         @label "Resident apps"
-        @description "Apps opened when the host starts and never closed for idleness, for apps whose background work must run with nobody connected."
+        @description "Apps opened when the host starts and never closed for idleness, for apps whose background work must run with nobody connected; one not loaded yet (its release came after the start, or its load failed) is opened again after each release check."
         @tier "domain"
     }
   }

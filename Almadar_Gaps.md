@@ -27,7 +27,23 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 
 - **G-STD-244** — `std-toml` and `std-row-store-postgres` still bound integers at 2^53 (TOML `integer-range`; Postgres int2/4/8 cells beyond it answered as text), now an explicit check since `str/to-int` reads the full 64-bit range (EXEC-EVAL-11). Now actionable: since 2026-11-03 every kernel JSON bound for JavaScript refuses an int beyond 2^53 and names its path (`js_readable`, EXEC-EVAL-11), so both atoms can answer exact ints and let that check refuse what JavaScript cannot hold. almadar-std codec + store atoms [mechanical] — rung: (3) their replay goldens. Severity: medium. Root cause: one-off.
 
-Next code: `G-STD-439`
+Next code: `G-STD-441`
+
+- **G-STD-440** [architectural] — One build of an app cannot point its model endpoint at LM Studio locally and at OpenRouter when deployed. std-http-client can take its host from an environment variable (`host: { anchor: { env: NAME } }`), but its port and TLS are literal knobs, and std-llm's and the embeddings atoms' provider, base path and model have no env form. So inspectorate-agent (TIRS), whose app `config {}` fans the llm* and embed* values out to about ten orbitals, had to pick one.
+  - **History:** before 2026-11-19 the Cloud Run variant was made by `apps/inspectorate/cloud/overrides.py` rewriting the `.lolo` text. On 2026-11-19 the owner ruled that TIRS always uses OpenRouter for now, so local TIRS runs no longer use LM Studio and the LmStudio daemon orbital is removed.
+  - **Wanted** (owner ruling 2026-11-18, `fromEnv` on the owners):
+    - std-http-client: an env-anchored port (the same anchored net-grant form the host already has) and a TLS choice read at INIT;
+    - std-llm and the embeddings atoms: a `fromEnv` knob for provider, basePath and model, mirroring std-firestore's;
+    - inspectorate-agent: back on LM Studio defaults, with OpenRouter named by app.env on the central box.
+  - **Owner:** almadar-std (net, connect), almadar-behaviors (inspectorate). Prevention rung: (1) the knobs' types (a deployment-varying endpoint expressible as data).
+  Severity: high. Root cause: one-off.
+
+- **G-STD-439** [mechanical] — A production boot that std-http-boot-gate refuses is silent: `orb serve` prints none of the problems and exits 0, so a container restart-loops with no explanation.
+  - **Seen** (2026-11-18, the local central stack with `NODE_ENV=production` plus the Auth emulator and a `demo-` project): BootGuard reached `refused` and `BOOT_REFUSED { problems }` was emitted. Nothing in the log at info level named the problems, and the process ended with exit 0. Docker showed only "Restarting (0)", and the cause was found only by bisecting the env.
+  - **Wanted:** the serve host writes each refused problem to stderr and exits non-zero (1). In std-http-server or std-orb-serve, a listener of BOOT_REFUSED writes the lines (os/stderr-write) and ends the run with an exit code.
+  - **Reproduce:** `docker run --env-file <env with NODE_ENV=production and FIREBASE_AUTH_EMULATOR_HOST> almadar-central-orb orb serve /srv/orb/central/app.orb`.
+  - **Owner:** almadar-std (net / cli). Prevention rung: (3) the verifiers (a boot that does not bind must say why).
+  Severity: medium. Root cause: one-off.
 
 - **G-STD-438** [mechanical] — Four std-http-server replay golden files are red against the current atoms: `spec/net/server-declared-traits` (0/3), `server-external-inputs` (1 passed, 8 failed, 7 skipped), `server-retargeted-leg` (0/2) and `server-untargeted-discovery` (0/5). The failing steps assert std-http-dispatch's `DISPATCH_PREPARED` options, whose shape changed in checkpoint 6fdfd2f4a (2026-11-16 night) without these cases being updated; seen 2026-11-18 while checking the std-http-server `origin` knob, which none of them touch. Owner: almadar-std (std-http-dispatch goldens). Reproduce: `orb-dev goldens behaviors/lolo/spec/net/server-declared-traits.replay.goldens.json` from packages/almadar-std. Prevention rung: (3) the verifiers — `orb release --check` should run every replay goldens file so a stale golden fails the change that made it stale. Severity: medium. Root cause: one-off.
 

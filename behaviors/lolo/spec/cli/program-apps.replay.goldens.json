@@ -2426,6 +2426,74 @@
           }
         }
       ]
+    },
+    {
+      "id": "a release check that ends retries the resident apps that are not loaded",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps",
+        "resident": [
+          "tirs"
+        ]
+      },
+      "steps": [
+        {
+          "event": "APP_RELEASE_CHECK",
+          "from": "serving",
+          "payload": {
+            "index": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_RESIDENT_LOAD",
+                "payload": {
+                  "index": 0
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: with no resident apps a release check that ends does nothing more",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_RELEASE_CHECK",
+          "from": "serving",
+          "payload": {
+            "index": 0
+          },
+          "entity": {
+            "id": "h",
+            "apps": [],
+            "waiting": [],
+            "pins": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "lastReleaseCheckMs": "1970-01-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "APP_RESIDENT_LOAD"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
