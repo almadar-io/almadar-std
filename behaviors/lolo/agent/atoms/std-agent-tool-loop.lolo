@@ -309,7 +309,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.turnSteps [])
         (set @entity.live (object/get ? live (not @config.quiet)))
         (set @entity.turnMessages ?messages)
-        (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
+        (set @entity.turnInstructions (str/concat (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
         (set @entity.offered (array/len @config.tools))
         (set @entity.turnRole (if (= @user null) "" (default @user.role "")))
         (set @entity.turnTools (let ((all : [AgentTool] @config.tools)) (array/filter @all (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role ""))))))))
@@ -321,7 +321,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.turnSteps [])
         (set @entity.live (object/get ? live false))
         (set @entity.turnMessages ?messages)
-        (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
+        (set @entity.turnInstructions (str/concat (if (= (default ?instructions "") "") @config.instructions ?instructions) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
         (set @entity.offered (array/len (object/get ? tools [])))
         (set @entity.turnRole (if (= @user null) "" (default @user.role "")))
         (set @entity.turnTools (array/filter (object/get ? tools []) (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role "")))))))
@@ -333,7 +333,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.turnSteps [])
         (set @entity.live (object/get ? live (not @config.quiet)))
         (set @entity.turnMessages ?messages)
-        (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
+        (set @entity.turnInstructions (str/concat (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
         (set @entity.turnTools [])
         (set @entity.pendingTools (let ((all : [AgentTool] @config.tools)) @all))
         (emit AGENT_IDENTITY_REQUESTED {})
@@ -344,7 +344,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.turnSteps [])
         (set @entity.live (object/get ? live false))
         (set @entity.turnMessages ?messages)
-        (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
+        (set @entity.turnInstructions (str/concat (if (= (default ?instructions "") "") @config.instructions ?instructions) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
         (set @entity.turnTools [])
         (set @entity.pendingTools (object/get ? tools []))
         (emit AGENT_IDENTITY_REQUESTED {})
@@ -777,6 +777,7 @@ orbital AgentToolLoopOrbital {
       CONVERSE {
         messages : [AgentChatMessage]!
         context : string
+        page : string
         instructions : string
         tools : [AgentToolData]
         ephemeral : boolean

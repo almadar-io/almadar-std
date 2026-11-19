@@ -5860,6 +5860,142 @@
    "credentials": {
     "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
    }
+  },
+  {
+   "id": "a put to a bucket that is public by its own policy answers the permanent public url without signing a get",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "k.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putFileName": "k.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:1",
+         "method": "PUT",
+         "target": "/my-bucket/k.txt?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=6ab61df8a3c1cd4f1f28f91f2b00131c7865011d249b0942dd5b7aeef25d6b5d"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "key": "put:1",
+      "status": 200,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_UPLOADED",
+        "payload": {
+         "key": "k.txt",
+         "bucket": "my-bucket",
+         "size": 2,
+         "etag": "\"e\"",
+         "id": "k.txt",
+         "url": "https://cdn.example/k.txt"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_SIGN"
+      ]
+     },
+     "entity": {
+      "id": "put:1",
+      "verb": "put",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putEtag": "\"e\"",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "bucketPublic": true,
+    "publicUrlBase": "https://cdn.example/"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
   }
  ]
 }

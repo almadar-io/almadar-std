@@ -35,7 +35,9 @@ orbital ScopedListOrbital {
           emit: { failure: ScopedListLoadFailed, success: ScopedListLoaded }
           filter: (or (and (= ?value "") (= @config.whenUnscoped "everything")) (and (!= ?value "") (= (object/get @entity @config.scopeField) ?value)))
         })
-      ScopedListLoaded -> listing
+      ScopedListLoaded -> listing when (and (= @config.whenEmpty "line") (= (array/len (default ?data [])) 0))
+        (render-ui main { content: @config.emptyTitle, color: secondary, type: typography, variant: caption })
+      ScopedListLoaded -> listing when (not (and (= @config.whenEmpty "line") (= (array/len (default ?data [])) 0)))
         (render-ui main {
           entity: ?data
           fields: @config.fields
@@ -86,6 +88,13 @@ orbital ScopedListOrbital {
       }
         @description "A row's delete action was chosen."
         @synonyms "remove, delete"
+        @tier "presentation"
+      TOGGLE -> external {
+        id : string!
+        row : ScopedListItem!
+      }
+        @description "A row's toggle action was chosen (tick or untick a step, switch a flag)."
+        @synonyms "toggle, tick, check, untick, mark done"
         @tier "presentation"
       @config.reorderEvent -> external {
         id : string!
@@ -152,6 +161,11 @@ orbital ScopedListOrbital {
         @tier "presentation"
       emptyIcon : icon = inbox
         @label "Empty-state icon"
+        @tier "presentation"
+      whenEmpty : "state" | "line" = state
+        @label "How does an empty list look?"
+        @description "state = the full empty state (icon, title, description); line = one quiet line holding the empty title, for a list that sits inside a bigger page and should take almost no room while empty."
+        @synonyms "empty look, compact empty, empty line"
         @tier "presentation"
       gap : "none" | "sm" | "md" | "lg" = sm
         @label "Gap between rows"

@@ -1,95 +1,277 @@
 {
- "atom": "../ui/core/atoms/std-thread.lolo",
- "trait": "ThreadPostBrowse",
- "cases": [
-  {
-   "id": "a-reply-stamps-the-task-id-when-the-thread-root-is-a-task",
-   "config": {
-    "rootIsTask": true
-   },
-   "steps": [
+  "atom": "../ui/core/atoms/std-thread.lolo",
+  "trait": "ThreadPostBrowse",
+  "cases": [
     {
-     "event": "REPLY",
-     "payload": {
-      "content": "Looks good"
-     },
-     "entity": {
-      "id": "p",
-      "replyDraft": "",
-      "replyParentId": "",
-      "replyRootId": "task-7",
-      "lastReplyId": "",
-      "threadPage": 1
-     },
-     "from": "browsing",
-     "expect": {
-      "fired": true,
-      "state": "browsing",
-      "effects": [
-       {
-        "type": "persist",
-        "arg0": "create",
-        "arg1": "ThreadPost",
-        "arg2": {
-         "authorId": "@user.id",
-         "authorName": "@user.name",
-         "createdAt": "@now",
-         "content": "@payload.content",
-         "parentId": [
-          "default",
-          "@payload.parentNodeId",
-          "@payload.parentId"
-         ],
-         "threadRootId": [
-          "default",
-          "@entity.replyRootId",
-          [
-           "default",
-           "",
-           "root"
-          ]
-         ],
-         "taskId": [
-          "if",
-          true,
-          [
-           "default",
-           "@entity.replyRootId",
-           ""
-          ],
-          ""
-         ]
+      "id": "a-reply-stamps-the-task-id-when-the-thread-root-is-a-task",
+      "config": {
+        "rootIsTask": true
+      },
+      "steps": [
+        {
+          "event": "REPLY",
+          "payload": {
+            "content": "Looks good"
+          },
+          "entity": {
+            "id": "p",
+            "replyDraft": "",
+            "replyParentId": "",
+            "replyRootId": "task-7",
+            "lastReplyId": "",
+            "threadPage": 1
+          },
+          "from": "browsing",
+          "expect": {
+            "fired": true,
+            "state": "browsing",
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "create",
+                "arg1": "ThreadPost",
+                "arg2": {
+                  "authorId": "@user.id",
+                  "authorName": "@user.name",
+                  "authorAvatarUrl": "",
+                  "createdAt": "@now",
+                  "content": "@payload.content",
+                  "parentId": [
+                    "default",
+                    "@payload.parentNodeId",
+                    "@payload.parentId"
+                  ],
+                  "threadRootId": [
+                    "default",
+                    "@entity.replyRootId",
+                    [
+                      "default",
+                      "",
+                      "root"
+                    ]
+                  ],
+                  "taskId": [
+                    "if",
+                    true,
+                    [
+                      "default",
+                      "@entity.replyRootId",
+                      ""
+                    ],
+                    ""
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-reply-without-text-opens-the-composer-and-writes-no-post",
-   "config": {
-    "rootIsTask": true
-   },
-   "steps": [
+    },
     {
-     "event": "REPLY",
-     "payload": {},
-     "entity": {
-      "id": "p",
-      "replyDraft": "",
-      "replyParentId": "",
-      "replyRootId": "task-7",
-      "lastReplyId": "",
-      "threadPage": 1
-     },
-     "from": "browsing",
-     "expect": {
-      "fired": true,
-      "state": "replying"
-     }
+      "id": "control-a-reply-without-text-opens-the-composer-and-writes-no-post",
+      "config": {
+        "rootIsTask": true
+      },
+      "steps": [
+        {
+          "event": "REPLY",
+          "payload": {},
+          "entity": {
+            "id": "p",
+            "replyDraft": "",
+            "replyParentId": "",
+            "replyRootId": "task-7",
+            "lastReplyId": "",
+            "threadPage": 1
+          },
+          "from": "browsing",
+          "expect": {
+            "fired": true,
+            "state": "replying"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reply-stamps-the-author-picture-the-call-site-binds",
+      "config": {
+        "authorAvatarUrl": "https://i.pravatar.cc/150?img=47"
+      },
+      "steps": [
+        {
+          "event": "REPLY",
+          "payload": {
+            "content": "Looks good"
+          },
+          "entity": {
+            "id": "p",
+            "replyDraft": "",
+            "replyParentId": "",
+            "replyRootId": "task-7",
+            "lastReplyId": "",
+            "threadPage": 1
+          },
+          "from": "browsing",
+          "expect": {
+            "fired": true,
+            "state": "browsing",
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "create",
+                "arg1": "ThreadPost",
+                "arg2": {
+                  "authorId": "@user.id",
+                  "authorName": "@user.name",
+                  "authorAvatarUrl": "https://i.pravatar.cc/150?img=47",
+                  "createdAt": "@now",
+                  "content": "@payload.content",
+                  "parentId": [
+                    "default",
+                    "@payload.parentNodeId",
+                    "@payload.parentId"
+                  ],
+                  "threadRootId": [
+                    "default",
+                    "@entity.replyRootId",
+                    [
+                      "default",
+                      "",
+                      "root"
+                    ]
+                  ],
+                  "taskId": [
+                    "if",
+                    false,
+                    [
+                      "default",
+                      "@entity.replyRootId",
+                      ""
+                    ],
+                    ""
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cancelling-a-comment-remounts-the-list-so-the-typed-text-leaves-the-box",
+      "config": {},
+      "steps": [
+        {
+          "event": "CANCEL_REPLY",
+          "payload": {},
+          "entity": {
+            "id": "p",
+            "replyDraft": "half-typed",
+            "replyParentId": "",
+            "replyRootId": "task-7",
+            "lastReplyId": "",
+            "threadPage": 1
+          },
+          "from": "browsing",
+          "expect": {
+            "fired": true,
+            "state": "loading",
+            "effects": [
+              {
+                "type": "set",
+                "arg0": "@entity.replyDraft",
+                "arg1": ""
+              },
+              {
+                "type": "render-ui",
+                "arg0": "main",
+                "arg1": {
+                  "type": "skeleton",
+                  "variant": "list",
+                  "rows": 6
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "posting-a-comment-remounts-the-list-so-the-box-empties",
+      "config": {},
+      "steps": [
+        {
+          "event": "ThreadPostCreated",
+          "payload": {
+            "id": "c1",
+            "threadRootId": "task-7",
+            "parentId": ""
+          },
+          "entity": {
+            "id": "p",
+            "replyDraft": "half-typed",
+            "replyParentId": "",
+            "replyRootId": "task-7",
+            "lastReplyId": "",
+            "threadPage": 1
+          },
+          "from": "browsing",
+          "expect": {
+            "fired": true,
+            "state": "browsing",
+            "effects": [
+              {
+                "type": "set",
+                "arg0": "@entity.replyDraft",
+                "arg1": ""
+              },
+              {
+                "type": "render-ui",
+                "arg0": "main",
+                "arg1": {
+                  "type": "skeleton",
+                  "variant": "list",
+                  "rows": 6
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-reply-to-a-post-does-not-remount-the-list",
+      "config": {},
+      "steps": [
+        {
+          "event": "ThreadPostCreated",
+          "payload": {
+            "id": "c2",
+            "threadRootId": "task-7",
+            "parentId": "c1"
+          },
+          "entity": {
+            "id": "p",
+            "replyDraft": "half-typed",
+            "replyParentId": "",
+            "replyRootId": "task-7",
+            "lastReplyId": "",
+            "threadPage": 1
+          },
+          "from": "browsing",
+          "expect": {
+            "fired": true,
+            "state": "browsing",
+            "effects": [
+              {
+                "type": "set",
+                "arg0": "@entity.replyDraft",
+                "arg1": ""
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

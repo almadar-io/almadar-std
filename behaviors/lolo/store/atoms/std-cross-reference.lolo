@@ -43,6 +43,13 @@ orbital CrossReferenceOrbital {
         (persist delete CrossRefLink ? {
           emit: { failure: LinkOpFailed, success: LinkRemoved }
         })
+      LinkCreated -> idle
+        (set @entity.leftId ?leftId)
+        (fetch CrossRefLink {
+          filter: { leftId: ?leftId }
+          limit: @config.maxRows
+          emit: { failure: LinkOpFailed, success: LinksFetched }
+        })
       FETCH_LINKS_FOR -> idle
         (when (validate/required ?leftId) (set @entity.leftId ?leftId))
         (fetch CrossRefLink {

@@ -9,6 +9,7 @@ uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type HostOpened = { guest : string! }
+type AppDispatchError = { code : string!, status : number? }
 type HostLazyPage = { orbital : string!, orbRef : string! }
 type HostLazy = { orbital : string!, program : SExpr! }
 type HostKernelGrant = { target : string!, kinds : [string]! }
@@ -293,7 +294,8 @@ orbital ProgramHostOrbital {
       APP_ANSWERED_IN -> serving
         (emit APP_ANSWERED { key: @payload.key, result: @payload.result })
       APP_FAILED_IN -> serving
-        (emit APP_FAILED { key: @payload.key, error: (default @payload.error "") })
+        (let ((first : AppDispatchError? (array/first (default @payload.errors []))))
+          (emit APP_FAILED { key: @payload.key, error: (default @payload.error ""), status: (if (= @first null) null @first.status), code: (if (= @first null) null @first.code) }))
 
       APP_RELEASE_CHECK -> serving when (< @payload.index (array/len (array/filter @entity.apps (fn a (and (default @a.current true) (not @a.loading))))))
         (let ((a (array/nth (array/filter @entity.apps (fn x (and (default @x.current true) (not @x.loading)))) @payload.index)))
@@ -392,7 +394,7 @@ orbital ProgramHostOrbital {
       APP_ANSWERED_IN { key : string!, result : AppValue }
         @description "The keyed dispatch to an app completed."
         @tier "internal"
-      APP_FAILED_IN { key : string!, error : string }
+      APP_FAILED_IN { key : string!, error : string, errors : [AppDispatchError]? }
         @description "The keyed dispatch to an app failed."
         @tier "internal"
       APP_IDLE_SWEEP { swept : number! }

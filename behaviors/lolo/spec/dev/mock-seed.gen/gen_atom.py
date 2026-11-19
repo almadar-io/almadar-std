@@ -452,9 +452,11 @@ def _rel_targets(rv):
     return f'(array/concat (array/map {rf} (fn f (object/get (object/get @f "relation" {{}}) "entity" ""))) (if (> (array/len (object/get {rv} "ownerCols" [])) 0) [@idl] []))'
 def _idl(all_):
     return f'(let ((ir (array/find {all_} (fn q (object/get @q "identity"))))) (if (= @ir null) "" (object/get @ir "label")))'
+ENRICH_EXPR='(array/map @allr0 (fn r (object/set @r "fields" (array/map (object/get @r "fields" []) (fn f (if (object/has @f "mock") @f (let ((src (array/find (array/flatten (array/map (array/filter @allr0 (fn q (and (= (object/get @q "store") (object/get @r "store")) (!= (object/get @q "label") (object/get @r "label"))))) (fn q (object/get @q "fields" [])))) (fn g (and (= (object/get @g "name") (object/get @f "name")) (= (object/get @g "type") (object/get @f "type")) (object/has @g "mock")))))) (if (= @src null) @f (object/set @f "mock" (object/get @src "mock"))))))))))'
 def scoped_regs(regs):
-    return (f'(let ((allr {regs})) (if (= (array/len @entity.dsEntities) 0) @allr '
-            f'(array/filter @allr (fn r (or (and (object/get @r "identity") (= (array/len @entity.dsIdRows) 0)) (array/includes @entity.dsEntities (object/get @r "label")))))))')
+    return (f'(let ((allr0 {regs})) (let ((allr {ENRICH_EXPR})) (if (= (array/len @entity.dsEntities) 0) @allr '
+            f'(array/filter @allr (fn r (or (and (object/get @r "identity") (= (array/len @entity.dsIdRows) 0)) (array/includes @entity.dsEntities (object/get @r "label")) '
+            f'(array/some @allr (fn q (and (array/includes @entity.dsEntities (object/get @q "label")) (= (object/get @q "store") (object/get @r "store")))))))))))')
 SCOPED_REGS=scoped_regs(regs_expr)
 MARKED='(array/includes @entity.dsMarked (object/get @r "label"))'
 TRIM=(f'(let ((idl {_idl("@entity.dsRegsAll")}) (need (array/flatten (array/map (array/filter @entity.dsRegsAll (fn r (not {MARKED}))) (fn r {_rel_targets("@r")}))))) '

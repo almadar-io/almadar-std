@@ -165,6 +165,133 @@
           }
         }
       ]
+    },
+    {
+      "id": "an-empty-list-with-the-line-look-renders-one-quiet-line",
+      "config": {
+        "whenEmpty": "line",
+        "emptyTitle": "No subtasks yet"
+      },
+      "steps": [
+        {
+          "event": "ScopedListLoaded",
+          "payload": {
+            "data": []
+          },
+          "entity": {
+            "id": "s",
+            "name": "",
+            "parentId": "",
+            "scopeValue": "t1"
+          },
+          "from": "listing",
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "effects": [
+              {
+                "type": "render-ui",
+                "arg0": "main",
+                "arg1": {
+                  "content": "No subtasks yet",
+                  "color": "secondary",
+                  "type": "typography",
+                  "variant": "caption"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-line-look-list-with-rows-still-renders-the-data-list",
+      "config": {
+        "whenEmpty": "line"
+      },
+      "steps": [
+        {
+          "event": "ScopedListLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "r1",
+                "name": "A",
+                "parentId": "t1"
+              }
+            ]
+          },
+          "entity": {
+            "id": "s",
+            "name": "",
+            "parentId": "",
+            "scopeValue": "t1"
+          },
+          "from": "listing",
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "effects": [
+              {
+                "type": "render-ui",
+                "arg0": "main",
+                "arg1": {
+                  "entity": "@payload.data",
+                  "fields": [],
+                  "itemActions": [
+                    "array/filter",
+                    "@config.itemActions",
+                    [
+                      "fn",
+                      "item",
+                      [
+                        "or",
+                        [
+                          "=",
+                          [
+                            "array/len",
+                            [
+                              "object/get",
+                              "@item",
+                              "roles",
+                              []
+                            ]
+                          ],
+                          0
+                        ],
+                        [
+                          "array/includes",
+                          [
+                            "object/get",
+                            "@item",
+                            "roles",
+                            []
+                          ],
+                          ""
+                        ]
+                      ]
+                    ]
+                  ],
+                  "itemClickEvent": "VIEW",
+                  "sortBy": "",
+                  "sortDirection": "asc",
+                  "emptyTitle": "Nothing here yet",
+                  "emptyDescription": "",
+                  "emptyIcon": "inbox",
+                  "gap": "sm",
+                  "sortable": [
+                    "!=",
+                    "",
+                    ""
+                  ],
+                  "type": "data-list",
+                  "reorderEvent": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

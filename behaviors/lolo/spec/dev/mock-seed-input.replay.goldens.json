@@ -7352,6 +7352,599 @@
         "MockStream"
       ],
       "now": 1760531445678
+    },
+    {
+      "id": "a page that mounts only an alias of a shared store seeds the store with every entity on it, so the owner's authored rows win (G-CROSS-704)",
+      "steps": [
+        {
+          "event": "DATASET_INPUT",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "mock": "Write the brief, Plan the sprint"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "GanttTask",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lane",
+                        "type": "string",
+                        "mock": "North, South"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "",
+            "ownerPairs": [],
+            "entities": [
+              "GanttTask"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "Task",
+                {
+                  "lane": "North",
+                  "title": "Write the brief",
+                  "id": "Task Id 1"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "tasks": [
+                      {
+                        "lane": "North",
+                        "title": "Write the brief",
+                        "id": "Task Id 1"
+                      },
+                      {
+                        "lane": "South",
+                        "title": "Plan the sprint",
+                        "id": "Task Id 2"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "CONTROL an unscoped seed of a shared store gives the same rows",
+      "steps": [
+        {
+          "event": "DATASET_INPUT",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "mock": "Write the brief, Plan the sprint"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "GanttTask",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lane",
+                        "type": "string",
+                        "mock": "North, South"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "",
+            "ownerPairs": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "Task",
+                {
+                  "lane": "North",
+                  "title": "Write the brief",
+                  "id": "Task Id 1"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "tasks": [
+                      {
+                        "lane": "North",
+                        "title": "Write the brief",
+                        "id": "Task Id 1"
+                      },
+                      {
+                        "lane": "South",
+                        "title": "Plan the sprint",
+                        "id": "Task Id 2"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "a shared store seeded first by an entity with no mock takes the authored mock of a same-named field from another entity in the store (G-CROSS-704, Friday's ProjectTask before Task)",
+      "steps": [
+        {
+          "event": "DATASET_INPUT",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "ProjectTask",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "mock": "Write the brief, Plan the sprint"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "GanttTask",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "",
+            "ownerPairs": [],
+            "entities": [
+              "ProjectTask"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "ProjectTask",
+                {
+                  "title": "Write the brief",
+                  "id": "ProjectTask Id 1"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "tasks": [
+                      {
+                        "title": "Write the brief",
+                        "id": "ProjectTask Id 1"
+                      },
+                      {
+                        "title": "Plan the sprint",
+                        "id": "ProjectTask Id 2"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "CONTROL a same-named field of another type does not take the other entity's mock, so the first entity's generated value stays",
+      "steps": [
+        {
+          "event": "DATASET_INPUT",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "ProjectTask",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "mock": "Write the brief, Plan the sprint"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "GanttTask",
+                    "persistence": "persistent",
+                    "collection": "tasks",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "",
+            "ownerPairs": [],
+            "entities": [
+              "ProjectTask"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "ProjectTask",
+                {
+                  "title": 145,
+                  "id": "ProjectTask Id 1"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "tasks": [
+                      {
+                        "title": 145,
+                        "id": "ProjectTask Id 1"
+                      },
+                      {
+                        "id": "ProjectTask Id 2",
+                        "title": "Plan the sprint"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
     }
   ]
 }

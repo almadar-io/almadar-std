@@ -124,6 +124,14 @@ orbital FirebaseDeployOrbital {
   trait HostingPublish -> HostingRun [optimistic] {
     initial: idle
 
+    config {
+      hostingHeaders : string = "[{\"source\":\"**\",\"headers\":[{\"key\":\"Cache-Control\",\"value\":\"no-cache\"}]},{\"source\":\"/assets/**\",\"headers\":[{\"key\":\"Cache-Control\",\"value\":\"public, max-age=31536000, immutable\"}]}]"
+        @label "Hosting cache headers"
+        @description "The Firebase Hosting headers rules (JSON array) written into each site's config: hashed build assets are cached as immutable, and every other file (index.html, the program, client.json, language.json) is revalidated on each load, so a browser never keeps a client older than the last deploy."
+        @synonyms "cache-control, hosting headers, client cache"
+        @tier "infra"
+    }
+
     state idle {
       INIT -> idle
       HP_START -> checking
@@ -139,7 +147,7 @@ orbital FirebaseDeployOrbital {
       HP_START -> checking
         (emit HP_FAILED { app: @payload.app, error: "busy: a client publish of this app is in flight" })
       HP_FB_DONE -> configuring when (and (= @payload.stage (str/concat @entity.app "|h-get")) (= @payload.exitCode 0))
-        (emit HP_SH_RUN { stage: (str/concat @entity.app "|h-config"), argv: ["-c", "printf '{\"hosting\":{\"site\":\"%s\",\"public\":\"%s\",\"ignore\":[\"firebase.json\",\"**/.*\"],\"rewrites\":[{\"source\":\"**\",\"destination\":\"/index.html\"}]}}\\n' \"$1\" \"$(basename \"$2\")\" > \"$2/../firebase.hosting.json\"", "sh", @entity.site, @entity.dir] })
+        (emit HP_SH_RUN { stage: (str/concat @entity.app "|h-config"), argv: ["-c", "printf '{\"hosting\":{\"site\":\"%s\",\"public\":\"%s\",\"ignore\":[\"firebase.json\",\"**/.*\"],\"headers\":%s,\"rewrites\":[{\"source\":\"**\",\"destination\":\"/index.html\"}]}}\\n' \"$1\" \"$(basename \"$2\")\" \"$3\" > \"$2/../firebase.hosting.json\"", "sh", @entity.site, @entity.dir, @config.hostingHeaders] })
       HP_FB_DONE -> creating when (and (= @payload.stage (str/concat @entity.app "|h-get")) (!= @payload.exitCode 0))
         (emit HP_FB_RUN { stage: (str/concat @entity.app "|h-create"), argv: ["hosting:sites:create", @entity.site, "--project", @entity.project, "--non-interactive"] })
       HP_FB_FAILED -> idle
@@ -155,7 +163,7 @@ orbital FirebaseDeployOrbital {
       HP_START -> creating
         (emit HP_FAILED { app: @payload.app, error: "busy: a client publish of this app is in flight" })
       HP_FB_DONE -> configuring when (= @payload.exitCode 0)
-        (emit HP_SH_RUN { stage: (str/concat @entity.app "|h-config"), argv: ["-c", "printf '{\"hosting\":{\"site\":\"%s\",\"public\":\"%s\",\"ignore\":[\"firebase.json\",\"**/.*\"],\"rewrites\":[{\"source\":\"**\",\"destination\":\"/index.html\"}]}}\\n' \"$1\" \"$(basename \"$2\")\" > \"$2/../firebase.hosting.json\"", "sh", @entity.site, @entity.dir] })
+        (emit HP_SH_RUN { stage: (str/concat @entity.app "|h-config"), argv: ["-c", "printf '{\"hosting\":{\"site\":\"%s\",\"public\":\"%s\",\"ignore\":[\"firebase.json\",\"**/.*\"],\"headers\":%s,\"rewrites\":[{\"source\":\"**\",\"destination\":\"/index.html\"}]}}\\n' \"$1\" \"$(basename \"$2\")\" \"$3\" > \"$2/../firebase.hosting.json\"", "sh", @entity.site, @entity.dir, @config.hostingHeaders] })
       HP_FB_DONE -> idle when (!= @payload.exitCode 0)
         (emit HP_FAILED { app: @entity.app, error: (str/concat "site: " @payload.stderr) })
         (set @entity.app "")

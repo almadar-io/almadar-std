@@ -744,6 +744,16 @@ orbital BoardOrbital {
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
         @tier "presentation"
+      addLabel : string = ""
+        @label "Add button label"
+        @description "Text of the add-item button; empty keeps the board's own wording (Add item on the column board, Add card on the classic kanban)."
+        @synonyms "add button text, new task label, add task, rename add button"
+        @tier "presentation"
+      cardStageVariantBinding : string = @col.variant
+        @label "Card stage badge colour binding"
+        @description "Per-card binding for the stage badge's colour on the classic kanban; defaults to the column's own colour. Bind it to a value derived from a field (e.g. priority) to colour tags by that field."
+        @synonyms "tag colour, badge colour, urgency colour, card tag colour"
+        @tier "presentation"
       addForm : "board" | "external" = board
         @label "Which form adds a card?"
         @description "board (default): Add card opens the board's own add form. external: Add card only emits ADD_CARD, for an app whose own create dialog listens to it, so two forms never open at once."
@@ -823,7 +833,7 @@ orbital BoardOrbital {
           children: [{
             action: ADD_CARD
             icon: plus
-            label: "Add item"
+            label: (if (validate/required @config.addLabel) @config.addLabel "Add item")
             size: sm
             type: button
             variant: secondary
@@ -963,7 +973,7 @@ orbital BoardOrbital {
         }, (if (= @config.addPlacement "floating") {
           action: ADD_CARD
           icon: plus
-          label: "Add item"
+          label: (if (validate/required @config.addLabel) @config.addLabel "Add item")
           type: floating-action-button
           variant: primary
         } {
@@ -983,7 +993,7 @@ orbital BoardOrbital {
           children: [{
             action: ADD_CARD
             icon: plus
-            label: "Add card"
+            label: (if (validate/required @config.addLabel) @config.addLabel "Add card")
             size: sm
             type: button
             variant: secondary
@@ -1102,7 +1112,7 @@ orbital BoardOrbital {
                         label: @config.cardStageBinding
                         size: sm
                         type: badge
-                        variant: @col.variant
+                        variant: @config.cardStageVariantBinding
                       }, {
                         action: OPEN_CARD
                         actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, notes: @config.cardNotesBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
@@ -1146,7 +1156,7 @@ orbital BoardOrbital {
         }, (if (= @config.addPlacement "floating") {
           action: ADD_CARD
           icon: plus
-          label: "Add card"
+          label: (if (validate/required @config.addLabel) @config.addLabel "Add card")
           type: floating-action-button
           variant: primary
         } {

@@ -49,6 +49,7 @@ orbital ThreadPostOrbital {
     taskId : string @description "Identifier of the task this post is a comment on; blank when the thread root is not a task." @synonyms "task, commented task, task link" = ""
     authorId : string! @description "Unique identifier for the post's author." @synonyms "user id, creator id, author"
     authorName : string! @description "The name of the post's author." @synonyms "author, username, poster"
+    authorAvatarUrl : string @description "Picture URL of the post's author, stamped when the post is created; blank shows the author's initials." @synonyms "author picture, author photo, avatar" = ""
     content : string! @description "The main text content of the post." @synonyms "text, message, body"
     createdAt : string
     voteCount : number @description "The number of votes associated with this item." @synonyms "votes, rating, score" = 0
@@ -140,6 +141,7 @@ orbital ThreadPostOrbital {
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
+          authorAvatarUrl: @config.authorAvatarUrl
           createdAt: @now
           content: ?content
           parentId: (default ?parentNodeId ?parentId)
@@ -210,6 +212,7 @@ orbital ThreadPostOrbital {
           limit: @config.pageSize
           offset: 0
         })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       ReplyParentLoaded -> browsing
         (persist update ThreadPost {
           id: ?data.id
@@ -259,6 +262,7 @@ orbital ThreadPostOrbital {
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
+          authorAvatarUrl: @config.authorAvatarUrl
           createdAt: @now
           content: @entity.replyDraft
           parentId: (default @entity.replyParentId "")
@@ -267,9 +271,18 @@ orbital ThreadPostOrbital {
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
-      CANCEL_REPLY -> browsing
+      CANCEL_REPLY -> loading
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
+        (set @entity.threadPage 1)
+        (fetch ThreadPost {
+          emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
+          include: (replies)
+          limit: @config.pageSize
+          offset: 0
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       ;; replying.SUBMIT_REPLY -> browsing lands here before the persist
       ;; resolves; a failure must be caught here too, not just replying's twin arm.
       ThreadPostCreateFailed -> browsing
@@ -316,6 +329,7 @@ orbital ThreadPostOrbital {
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
+          authorAvatarUrl: @config.authorAvatarUrl
           createdAt: @now
           content: @entity.replyDraft
           parentId: (default @entity.replyParentId "")
@@ -324,9 +338,18 @@ orbital ThreadPostOrbital {
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
-      CANCEL_REPLY -> browsing
+      CANCEL_REPLY -> loading
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
+        (set @entity.threadPage 1)
+        (fetch ThreadPost {
+          emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
+          include: (replies)
+          limit: @config.pageSize
+          offset: 0
+        })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       ;; Scoped to the row just created (?threadRootId, flat) — see the twin
       ;; arm in `browsing` for why.
       ThreadPostCreated -> browsing when (not (= (default ?parentId "") ""))
@@ -348,6 +371,7 @@ orbital ThreadPostOrbital {
           limit: @config.pageSize
           offset: 0
         })
+        (render-ui main { type: skeleton, variant: list, rows: 6 })
       ThreadPostCreateFailed -> replying
         (render-ui main {
           message: ?error
@@ -548,6 +572,11 @@ orbital ThreadPostOrbital {
         @description "Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies' threadRootId (blank = all roots, unfiltered)"
         @synonyms "rootId, topLevelId, scope, threadScope"
         @tier "domain"
+      authorAvatarUrl : string = ""
+        @label "Author picture"
+        @description "Picture URL stamped on every post the viewer creates, so the thread shows a photo instead of initials. Bind it at the call site to the viewer's picture (for example `authorAvatarUrl: @user.avatar`); blank keeps initials."
+        @synonyms "author photo, avatar, profile picture, viewer picture"
+        @tier "presentation"
       rootIsTask : boolean = false
         @label "Thread root is a task"
         @description "When on, every post created in this thread also stores its thread root as the task it comments on, so a search hit on the post can open that task."
@@ -561,6 +590,11 @@ orbital ThreadPostOrbital {
         @label "sectionTitle"
         @description "Section header rendered by the default bodyContent when non-empty, along with a standalone composer button — the only REPLY affordance an empty thread has. Blank (the default) keeps the bare post list for embedded threads that bring their own chrome (chat rails, custom comment sections)."
         @synonyms "header, comments title, discussion title"
+        @tier "presentation"
+      inlineComposer : boolean = false
+        @label "inlineComposer"
+        @description "With a sectionTitle, show the comment box inline under the posts (type, then Submit or Cancel) instead of a button that opens the composer."
+        @synonyms "inline comment box, comment field, always-open composer"
         @tier "presentation"
       composerLabel : string = (i18n/t "addComment")
         @label "composerLabel"
@@ -596,7 +630,15 @@ orbital ThreadPostOrbital {
           look: @config.tableLook
           type: data-list
           variant: card
-        }, (if (!= @config.sectionTitle "") <trait.ThreadReplyGate /> {
+        }, (if (!= @config.sectionTitle "") (if @config.inlineComposer <Card look={flat-bordered} padding={md}>
+            <Stack direction={vertical} gap={sm}>
+              <Input label={@config.composerLabel} onChange={EDIT_REPLY} inputType={textarea} rows={3} value={@entity.replyDraft} />
+              <Stack direction={horizontal} gap={sm} justify={end}>
+                <Button action={CANCEL_REPLY} label={(i18n/t "cancel")} size={sm} variant={ghost} />
+                <Button action={SUBMIT_REPLY} icon={send} label={(i18n/t "submit")} size={sm} variant={primary} />
+              </Stack>
+            </Stack>
+          </Card> <trait.ThreadReplyGate />) {
           children: []
           gap: none
           type: stack

@@ -574,9 +574,9 @@ orbital StorageOrbital {
         (set @entity.lastStatus @payload.status)
         (set @entity.lastBody @payload.body)
         (emit STORAGE_RETRY_FAILED { key: (as @payload.key CallKey), error: (str/concat "status " @payload.status) })
-      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) @entity.putPublic)
+      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (or @entity.putPublic @config.bucketPublic))
         (emit STORAGE_PUT_DONE { url: (if (!= @config.publicUrlBase "") (str/concat (if (str/endsWith @config.publicUrlBase "/") (str/slice @config.publicUrlBase 0 (- (str/len @config.publicUrlBase) 1)) @config.publicUrlBase) "/" @entity.reqKey) (str/concat @entity.origin @config.pathPrefix "/" (if @config.pathStyle (str/concat @entity.reqBucket "/") "") @entity.reqKey)) })
-      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not @entity.putPublic))
+      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (or @entity.putPublic @config.bucketPublic)))
         (emit STORAGE_SIGN { tag: @entity.id, mode: "put", method: "GET", bucket: @entity.reqBucket, key: @entity.reqKey, query: [{ name: "x-amz-checksum-mode", value: "ENABLED" }, { name: "x-id", value: "GetObject" }], headers: [], b64: "", expires: 3600 })
       STORAGE_PUT_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
         (emit STORAGE_HTTP_ERROR { text: @payload.body })
@@ -1056,6 +1056,11 @@ orbital StorageOrbital {
         @label "Path prefix"
         @description "A path every request and url sits under, for an S3-compatible service served below a path (for example /s3); empty for AWS."
         @synonyms "base path"
+        @tier "infra"
+      bucketPublic : boolean = false
+        @label "Is the bucket itself publicly readable?"
+        @description "The bucket grants public reads by its own policy (for example a Cloud Storage bucket with uniform access and allUsers as object viewer), so every upload answers its public url (publicUrlBase, else the origin path) and needs no per-object acl, which such a bucket refuses."
+        @synonyms "public bucket, bucket policy public, uniform access"
         @tier "infra"
       publicUrlBase : string = ""
         @label "Public url base"

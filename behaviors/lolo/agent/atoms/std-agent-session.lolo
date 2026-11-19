@@ -122,6 +122,7 @@ orbital AgentConversationOrbital {
     id : string!
     entries : [AgentFeedEntry] @description "The conversation as shown: messages with the assistant's steps between them." = []
     working : boolean @description "The assistant is answering." = false
+    pageContext : string @description "Where the person is in the app now, as the page last stated it (PAGE_CONTEXT); sent with each question." = ""
     chatInstructions : string @description "The ephemeral conversation's own instructions (empty: the assistant's configured ones)." = ""
     chatTools : [AgentToolData] @description "The ephemeral conversation's own tools (empty: none)." = []
     chatHasLive : boolean @description "The ephemeral conversation was started with a `live` flag, so each ask forwards it; absent stays absent." = false
@@ -326,11 +327,13 @@ orbital AgentConversationOrbital {
           gap: sm
           type: stack
         })
+      PAGE_CONTEXT -> idle
+        (set @entity.pageContext (default ?context ""))
       ASK -> idle when (and (not @config.ephemeral) (not @entity.working) (not (= (default ?message "") "")))
         (set @entity.draft "")
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
-        (emit ASSISTANT_SEND { message: ?message })
+        (emit ASSISTANT_SEND { message: ?message, page: @entity.pageContext })
         (render-ui main {
           children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
@@ -380,6 +383,7 @@ orbital AgentConversationOrbital {
         (emit ASSISTANT_EPHEMERAL_SEND {
           messages: (array/map (array/filter @entity.entries (fn item (= @item.type "message"))) (fn item { role: (object/get @item role "user"), content: (object/get @item content "") }))
           instructions: @entity.chatInstructions
+          page: @entity.pageContext
           tools: @entity.chatTools
           ephemeral: true
         })
@@ -432,6 +436,7 @@ orbital AgentConversationOrbital {
         (emit ASSISTANT_EPHEMERAL_SEND {
           messages: (array/map (array/filter @entity.entries (fn item (= @item.type "message"))) (fn item { role: (object/get @item role "user"), content: (object/get @item content "") }))
           instructions: @entity.chatInstructions
+          page: @entity.pageContext
           tools: @entity.chatTools
           ephemeral: true
           live: @entity.chatLive
@@ -977,6 +982,7 @@ orbital AgentConversationOrbital {
       ASSISTANT_EPHEMERAL_SEND -> external {
         messages : [AgentChatMessage]!
         instructions : string
+        page : string
         tools : [AgentToolData]
         ephemeral : boolean!
         live : boolean
@@ -986,6 +992,7 @@ orbital AgentConversationOrbital {
         @tier "domain"
       ASSISTANT_SEND -> external {
         message : string!
+        page : string
       }
         @description "The user asked something; AgentThread stores it and asks the assistant."
         @synonyms "ask, send, submit"
@@ -1029,6 +1036,10 @@ orbital AgentConversationOrbital {
     }
 
     listens {
+      PAGE_CONTEXT -> input { context : string! }
+        @description "Where the person is in the app now, in a sentence or two the page states (the page, and the ids and titles of what it shows); sent with each later question so the assistant acts on what is in front of them."
+        @synonyms "page context, current page, where I am"
+      *.ASSISTANT_PAGE_CONTEXT -> PAGE_CONTEXT
       *.AgentMessagesLoaded -> THREAD_LOADED
       *.ASSISTANT_THREAD_FAILED -> REPLY_FAILED
       *.ASSISTANT_STEP -> STEP
@@ -1118,6 +1129,7 @@ orbital AgentSessionOrbital {
     ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
     content : string! @description "What was said." @synonyms "text, message, body"
+    pageContext : string @description "Where the person was in the app when they asked, as the page stated it; the assistant reads it with the question." @synonyms "page context, where I was" = ""
     createdAt : instant! @description "When it was said." @synonyms "time, timestamp"
     chatId : string @description "The conversation this message belongs to (an AgentChat id)." @synonyms "conversation, thread, session" = ""
   }
@@ -1154,6 +1166,7 @@ orbital AgentSessionOrbital {
           chatId: ?chatId
           role: user
           content: ?message
+          pageContext: (default ?page "")
           createdAt: @now
         } {
           emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
@@ -1169,6 +1182,7 @@ orbital AgentSessionOrbital {
       AgentConversationLoaded -> ready
         (emit CONVERSE {
           messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
+          page: (object/get (default (array/last (array/filter (array/sort ?data createdAt asc) (fn item (= @item.role "user")))) {}) pageContext "")
         })
       REPLY_IN_CHAT -> ready when (!= @user.role "anonymous")
         (persist create AgentMessage {
@@ -1195,6 +1209,7 @@ orbital AgentSessionOrbital {
         @tier "domain"
       CONVERSE -> external {
         messages : [AgentChatMessage]!
+        page : string
       }
         @description "The current conversation to answer, oldest first; the last turn is the request."
         @synonyms "ask, converse, request"
@@ -1251,6 +1266,7 @@ orbital AgentSessionOrbital {
       SEND_IN_CHAT {
         chatId : string!
         message : string!
+        page : string
       }
         @description "Store the user's message in this conversation and ask the assistant."
         @synonyms "ask, message, chat"
@@ -1332,6 +1348,7 @@ orbital AgentChatsOrbital {
     startedAt : instant @description "When the conversation started." @synonyms "created, opened"
     lastActiveAt : instant! @description "When the conversation was last used. The most recent one is the current conversation." @synonyms "last used, updated, recent"
     pendingMessage : string @intrinsic = ""
+    pendingPage : string @intrinsic = ""
     pendingReply : string @intrinsic = ""
     page : number @intrinsic @description "The page the list shows." = 1
   }
@@ -1377,6 +1394,7 @@ orbital AgentChatsOrbital {
         (emit AgentChatsLoadFailed { error: "Sign in to keep a conversation.", code: "AUTH_ERROR" })
       SEND -> ready when (and (not (= (default ?message "") "")) (!= @user.role "anonymous"))
         (set @entity.pendingMessage ?message)
+        (set @entity.pendingPage (default ?page ""))
         (fetch AgentChat {
           filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSend }
@@ -1403,7 +1421,7 @@ orbital AgentChatsOrbital {
           emit: { failure: AgentChatsLoadFailed, success: ChatReadyForSend }
         })
       ChatReadyForSend -> ready
-        (emit ASSISTANT_SEND_IN_CHAT { chatId: ?id, message: @entity.pendingMessage })
+        (emit ASSISTANT_SEND_IN_CHAT { chatId: ?id, message: @entity.pendingMessage, page: @entity.pendingPage })
         (emit ASSISTANT_CHATS_CHANGED {})
       REPLIED -> ready when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
         (set @entity.pendingReply ?reply)
@@ -1483,6 +1501,7 @@ orbital AgentChatsOrbital {
       ASSISTANT_SEND_IN_CHAT -> external {
         chatId : string!
         message : string!
+        page : string
       }
         @description "The user's message, placed in the current conversation."
         @tier "internal"
@@ -1564,6 +1583,7 @@ orbital AgentChatsOrbital {
         @tier "domain"
       SEND {
         message : string!
+        page : string
       }
         @description "The user asked something; place it in the current conversation."
       REPLIED {
