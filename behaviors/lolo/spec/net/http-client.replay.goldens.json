@@ -8137,6 +8137,839 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-pooled-client-puts-a-kept-socket-in-the-pool-instead-of-keeping-it-on-the-row",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "ok": {
+        "entries": []
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw==",
+      "eof": false,
+      "key": "read"
+     },
+     "answers": [
+      {
+       "operator": "kv/put",
+       "ok": {
+        "storedKey": "x"
+       }
+      }
+     ],
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "content-length": "2"
+         },
+         "body": "b2s="
+        }
+       }
+      ],
+      "emitCounts": {
+       "HC_POOLED": 1
+      }
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "control-without-a-pool-a-kept-socket-stays-idle-on-the-row-and-the-next-call-scans-nothing",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "content-length": "2"
+         },
+         "body": "b2s="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_POOLED"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k2",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "sending",
+      "emits": [
+       {
+        "event": "HC_BUILT"
+       }
+      ],
+      "emitCounts": {
+       "HC_POOL_LISTED": 0
+      }
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "a-pooled-call-that-finds-no-idle-socket-connects-fresh",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "ok": {
+        "entries": []
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "a-pooled-call-takes-the-origins-idle-socket-and-sends-on-it-without-connecting",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "ok": {
+        "entries": [
+         {
+          "key": "http://api.example.test:80/9",
+          "value": {
+           "sock": 9,
+           "uses": 2
+          }
+         }
+        ]
+       }
+      },
+      {
+       "operator": "kv/delete",
+       "ok": {
+        "existed": true
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ],
+      "emitCounts": {
+       "HC_POOL_TAKEN": 1
+      },
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw==",
+      "eof": false,
+      "key": "read"
+     },
+     "answers": [
+      {
+       "operator": "kv/put",
+       "ok": {
+        "storedKey": "x"
+       }
+      }
+     ],
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "content-length": "2"
+         },
+         "body": "b2s="
+        }
+       }
+      ],
+      "emitCounts": {
+       "HC_POOLED": 1
+      }
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "control-a-call-that-loses-the-take-to-another-row-connects-fresh",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "ok": {
+        "entries": [
+         {
+          "key": "http://api.example.test:80/9",
+          "value": {
+           "sock": 9,
+           "uses": 2
+          }
+         }
+        ]
+       }
+      },
+      {
+       "operator": "kv/delete",
+       "ok": {
+        "existed": false
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "a-pooled-socket-that-reaches-its-call-limit-is-closed-instead-of-put-back",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "ok": {
+        "entries": [
+         {
+          "key": "http://api.example.test:80/9",
+          "value": {
+           "sock": 9,
+           "uses": 2
+          }
+         }
+        ]
+       }
+      },
+      {
+       "operator": "kv/delete",
+       "ok": {
+        "existed": true
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ],
+      "emitCounts": {
+       "HC_POOL_TAKEN": 1
+      },
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "content-length": "2"
+         },
+         "body": "b2s="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_POOLED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool",
+    "poolUses": 3
+   }
+  },
+  {
+   "id": "control-a-pooled-socket-under-its-call-limit-is-put-back",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "ok": {
+        "entries": [
+         {
+          "key": "http://api.example.test:80/9",
+          "value": {
+           "sock": 9,
+           "uses": 1
+          }
+         }
+        ]
+       }
+      },
+      {
+       "operator": "kv/delete",
+       "ok": {
+        "existed": true
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ],
+      "emitCounts": {
+       "HC_POOL_TAKEN": 1
+      },
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw==",
+      "eof": false,
+      "key": "read"
+     },
+     "answers": [
+      {
+       "operator": "kv/put",
+       "ok": {
+        "storedKey": "x"
+       }
+      }
+     ],
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "content-length": "2"
+         },
+         "body": "b2s="
+        }
+       }
+      ],
+      "emitCounts": {
+       "HC_POOLED": 1
+      }
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool",
+    "poolUses": 3
+   }
+  },
+  {
+   "id": "a-taken-pooled-socket-that-is-stale-retries-on-a-fresh-connection",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "ok": {
+        "entries": [
+         {
+          "key": "http://api.example.test:80/9",
+          "value": {
+           "sock": 9,
+           "uses": 2
+          }
+         }
+        ]
+       }
+      },
+      {
+       "operator": "kv/delete",
+       "ok": {
+        "existed": true
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ],
+      "emitCounts": {
+       "HC_POOL_TAKEN": 1
+      },
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_IO_FAILED",
+     "payload": {
+      "error": "broken pipe",
+      "kind": "closed",
+      "key": "send"
+     },
+     "expect": {
+      "state": "connecting",
+      "neverEmits": [
+       "HTTP_FAILED"
+      ],
+      "entity": {
+       "uses": 0,
+       "reused": false
+      },
+      "effects": [
+       {
+        "type": "os/close"
+       },
+       {
+        "type": "os/tcp-connect"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "a-socket-taken-after-its-call-was-cancelled-is-closed",
+   "steps": [
+    {
+     "event": "HC_POOL_TAKEN",
+     "payload": {
+      "existed": true
+     },
+     "from": "ready",
+     "entity": {
+      "lease": 9
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/close"
+       }
+      ],
+      "entity": {
+       "lease": -1
+      }
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "control-a-take-lost-after-a-cancel-closes-nothing",
+   "steps": [
+    {
+     "event": "HC_POOL_TAKEN",
+     "payload": {
+      "existed": false
+     },
+     "from": "ready",
+     "entity": {
+      "lease": 9
+     },
+     "expect": {
+      "state": "ready",
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "a-pool-store-that-cannot-be-read-fails-the-call-as-io",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "answers": [
+      {
+       "operator": "kv/scan",
+       "error": {
+        "kind": "denied",
+        "message": "kv/scan: denied"
+       }
+      }
+     ],
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "io"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "kv/scan"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
+  },
+  {
+   "id": "a-socket-the-pool-refuses-is-closed",
+   "steps": [
+    {
+     "event": "HC_POOL_PUT_FAILED",
+     "payload": {
+      "error": "kv/put: denied",
+      "kind": "denied"
+     },
+     "from": "ready",
+     "entity": {
+      "parked": 7
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/close"
+       }
+      ],
+      "entity": {
+       "parked": -1
+      }
+     }
+    }
+   ],
+   "config": {
+    "pool": "http-pool"
+   }
   }
  ]
 }

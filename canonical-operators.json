@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-18T04:07:56.910Z",
+  "generated": "2026-11-19T22:15:11.674Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -13440,6 +13440,149 @@
       "evaluation": "strict",
       "examples": [
         "(kernel/stamp) // => { now, dispatch, step, journal }"
+      ],
+      "docsSource": "generated"
+    },
+    "kernel/step": {
+      "category": "std-kernel-read",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "fired": "boolean",
+          "from": "string",
+          "to": "string",
+          "arm": {
+            "kind": "union",
+            "of": [
+              "int",
+              {
+                "kind": "literal",
+                "value": null
+              }
+            ]
+          },
+          "entity": {
+            "kind": "var",
+            "name": "E",
+            "bound": {
+              "kind": "record"
+            }
+          },
+          "emits": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "event": "string",
+                "payload": {
+                  "kind": "sexpr"
+                }
+              }
+            }
+          },
+          "effects": {
+            "kind": "array",
+            "of": {
+              "kind": "sexpr"
+            }
+          },
+          "guards": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "arm": "int",
+                "passed": "boolean"
+              }
+            }
+          },
+          "failure": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "literal",
+                "value": null
+              }
+            ]
+          },
+          "refused": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "io"
+              },
+              {
+                "kind": "literal",
+                "value": null
+              }
+            ]
+          },
+          "asks": {
+            "kind": "array",
+            "of": "string"
+          }
+        }
+      },
+      "description": "Fire one transition of an open guest (the handle program/open answered) and answer it as data (EXEC-METAL-7; grant kernel: { \"guest\": [step] }). The request names the trait, the state it fires from, the event, and optionally the payload, the entity row the step reads (entity), a keyed row (entityId) and the dispatch clock (now, ms; absent: the asking step's). Nothing cascades and the guest is left as it was: its trait is restored and its renders dropped after the step. The answer: fired, from, to, arm (null when none fired), entity (the row after the step), emits ({ event, payload } in order), effects (the step's other resolved effects: render-ui, navigate, navigate-back, log; its sets are in entity and its emits in emits), guards ({ arm, passed } of each arm tried), failure (the thrown effect failure, or null), refused and asks. A transition whose arms hold an ask (persist, fetch, call-service, any os/, program/ or other hosted operator; emit, set, render-ui, navigate, navigate-back, log and notify are not asks) runs nothing and answers refused \"io\" with the asks it would make. Refused with an error: no grant, a handle naming no open guest, a request missing trait, from or event, a trait the guest does not declare.",
+      "module": "kernel",
+      "visual": {
+        "form": "block"
+      },
+      "grant": [
+        {
+          "kind": "kernel",
+          "access": "step"
+        }
+      ],
+      "host": "kernel",
+      "evaluation": "strict",
+      "params": [
+        {
+          "name": "guest",
+          "type": "string",
+          "description": "The guest handle program/open answered"
+        },
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "trait": "string",
+              "from": "string",
+              "event": "string",
+              "payload": {
+                "kind": "var",
+                "name": "P",
+                "bound": {
+                  "kind": "record"
+                }
+              },
+              "entity": {
+                "kind": "var",
+                "name": "E",
+                "bound": {
+                  "kind": "record"
+                }
+              },
+              "entityId": "string",
+              "now": "number"
+            },
+            "optional": [
+              "payload",
+              "entity",
+              "entityId",
+              "now"
+            ]
+          },
+          "description": "The transition to fire: { trait, from, event, payload?, entity?, entityId?, now? }"
+        }
+      ],
+      "examples": [
+        "(kernel/step @entity.guest {\"trait\":\"Src\",\"from\":\"idle\",\"event\":\"GO\",\"payload\":{\"v\":4}}) // => { fired, from, to, arm, entity, emits, effects, guards, failure, refused, asks }"
       ],
       "docsSource": "generated"
     },

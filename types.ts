@@ -175,8 +175,8 @@ export type OsGrantNeed =
   | { kind: 'irq'; access: 'wait' | 'ack'; line: number }
   /** An arena grant: `create` needs the capacity argument (at `capacity`) within the granted maxBytes; `free` needs a target listing free. */
   | { kind: 'mem'; access: 'create' | 'free' | 'atomic'; capacity?: number; arenaKind?: number }
-  /** A kernel grant: `call` needs the operator name argument (at `operator`) covered by an `apply:<pattern>` target; `reorder` the `queue` target; `read` the `introspect` target; `spawn` the `guest` target. */
-  | { kind: 'kernel'; access: 'call' | 'reorder' | 'read' | 'spawn'; operator?: number }
+  /** A kernel grant: `call` needs the operator name argument (at `operator`) covered by an `apply:<pattern>` target; `reorder` the `queue` target; `read` the `introspect` target; `spawn` and `step` the `guest` target. */
+  | { kind: 'kernel'; access: 'call' | 'reorder' | 'read' | 'spawn' | 'step'; operator?: number }
   /** An ffi grant: the library (argument index) and symbol (argument index) must be a granted `ffi` pair. */
   | { kind: 'ffi'; library: number; symbol: number }
   /** A gpu grant: the access kind the call needs on a granted `gpu` device; `commands` is the argument index of a command list whose literal entries derive the requirement. */

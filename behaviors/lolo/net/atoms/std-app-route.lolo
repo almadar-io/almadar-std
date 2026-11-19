@@ -4,7 +4,7 @@ app std-app-route [
 ]
 type AppRouteHeader = { name : string!, value : string! }
 type AppRouteJson = string | number | boolean | [AppRouteJson?] | Map string AppRouteJson?
-type AppRouteBody = { event : string, targetTrait : string, entityId : string, payload : AppRouteJson, clientId : string, locale : string, traits : [AppRouteJson], mount : [AppRouteJson], route : string, delivery : AppRouteJson, dispatchLog : AppRouteJson, entityByTrait : AppRouteJson, framesSince : number }
+type AppRouteBody = { event : string, targetTrait : string, entityId : string, payload : AppRouteJson, clientId : string, locale : string, traits : [AppRouteJson], mount : [AppRouteJson], unmount : [string], route : string, crumb : string, delivery : AppRouteJson, dispatchLog : AppRouteJson, entityByTrait : AppRouteJson, framesSince : number }
 type AppRouteOptions = Map string AppRouteJson?
 type AppRouteHook = { inbound : string!, body : string!, headers : Map string string }
 type AppRouteAddress = string | AppRouteHook
@@ -72,7 +72,9 @@ orbital AppRouteOrbital {
                       event: (object/get @b "event" ""),
                       traits: (object/get @b "traits" null),
                       mount: (object/get @b "mount" []),
+                      unmount: (object/get @b "unmount" []),
                       route: (object/get @b "route" ""),
+                      crumb: (object/get @b "crumb" ""),
                       clientId: (object/get @b "clientId" ""),
                       locale: (object/get @b "locale" ""),
                       delivery: (object/get @b "delivery" {}),

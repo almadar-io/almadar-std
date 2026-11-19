@@ -8,7 +8,7 @@
 
 import type { OperatorTypeRef, OsGrantNeed, StdOperatorMeta } from '../types.js';
 import { arg, osEffect } from './os-common.js';
-import { INT, STRING, list, shape, tv } from '../signature.js';
+import { BOOLEAN, INT, NUMBER, SEXPR, STRING, list, lit, nullable, rec, shape, tv } from '../signature.js';
 
 type KernelParam = NonNullable<StdOperatorMeta['params']>[number];
 
@@ -84,5 +84,27 @@ export const KERNEL_OPERATORS: Record<string, StdOperatorMeta> = {
     returnSemantics: 'applied-operator<0,1>',
     grant: [{ kind: 'kernel', access: 'call', operator: 0 }],
     example: '["kernel/apply", "str/concat", ["a", "b"]] // => "ab"',
+  }),
+  'kernel/step': kernelPure({
+    description: 'Fire one transition of an open guest (the handle program/open answered) and answer it as data (EXEC-METAL-7; grant kernel: { "guest": [step] }). The request names the trait, the state it fires from, the event, and optionally the payload, the entity row the step reads (entity), a keyed row (entityId) and the dispatch clock (now, ms; absent: the asking step\'s). Nothing cascades and the guest is left as it was: its trait is restored and its renders dropped after the step. The answer: fired, from, to, arm (null when none fired), entity (the row after the step), emits ({ event, payload } in order), effects (the step\'s other resolved effects: render-ui, navigate, navigate-back, log; its sets are in entity and its emits in emits), guards ({ arm, passed } of each arm tried), failure (the thrown effect failure, or null), refused and asks. A transition whose arms hold an ask (persist, fetch, call-service, any os/, program/ or other hosted operator; emit, set, render-ui, navigate, navigate-back, log and notify are not asks) runs nothing and answers refused "io" with the asks it would make. Refused with an error: no grant, a handle naming no open guest, a request missing trait, from or event, a trait the guest does not declare.',
+    params: [
+      arg('guest', STRING, 'The guest handle program/open answered'),
+      arg('request', shape({ trait: STRING, from: STRING, event: STRING, payload: rec('P'), entity: rec('E'), entityId: STRING, now: NUMBER }, ['payload', 'entity', 'entityId', 'now']), 'The transition to fire: { trait, from, event, payload?, entity?, entityId?, now? }'),
+    ],
+    returnType: shape({
+      fired: BOOLEAN,
+      from: STRING,
+      to: STRING,
+      arm: nullable(INT),
+      entity: rec('E'),
+      emits: list(shape({ event: STRING, payload: SEXPR })),
+      effects: list(SEXPR),
+      guards: list(shape({ arm: INT, passed: BOOLEAN })),
+      failure: nullable(STRING),
+      refused: nullable(lit('io')),
+      asks: list(STRING),
+    }),
+    grant: [{ kind: 'kernel', access: 'step' }],
+    example: '["kernel/step", "@entity.guest", { "trait": "Src", "from": "idle", "event": "GO", "payload": { "v": 4 } }] // => { fired, from, to, arm, entity, emits, effects, guards, failure, refused, asks }',
   }),
 };

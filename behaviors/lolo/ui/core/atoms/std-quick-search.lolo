@@ -1,6 +1,6 @@
 app std-quick-search [
   version: "1.0.0",
-  description: "std-quick-search — a search box that suggests as the viewer types, for a top bar: the first suggestion opens the full results page for the typed text, the rest are records (each labelled with its kind) matched on the text. The records arrive from the app as QUICK_SEARCH_ROWS events, one per kind, after the box asks for them with QUICK_SEARCH_LOAD; the box holds them, narrows them to the typed text and never reads app data itself. Typing navigates nowhere; only picking a suggestion does."
+  description: "std-quick-search — a search box that suggests as the viewer types, for a top bar: the first suggestion opens the full results page for the typed text, the rest are records (each labelled with its kind) matched on the text. The records arrive from the app as QUICK_SEARCH_ROWS events, one per kind, after the box asks for them with QUICK_SEARCH_LOAD on the first text typed since it mounted (a page that is only looked at reads nothing); the box holds them, narrows them to the typed text and never reads app data itself. Typing navigates nowhere; only picking a suggestion does."
 ]
 type QuickSearchRow = { id : string!, label : string }
 type QuickSearchHit = { key : string!, value : string!, label : string!, description : string! }
@@ -9,6 +9,7 @@ orbital QuickSearchOrbital {
     id : string!
     query : string @description "The text typed in the box." = ""
     hits : [QuickSearchHit] @description "Every record the app handed over, each with the address it opens and its kind." = []
+    asked : boolean @description "Whether the app was asked for its records since the box mounted." = false
   }
 
   trait QuickSearch -> @rebindable QuickSearchData [client] {
@@ -16,10 +17,15 @@ orbital QuickSearchOrbital {
 
     state idle {
       INIT -> idle when @config.enabled
-        (emit QUICK_SEARCH_LOAD { })
+        (set @entity.asked false)
         (emit QUICK_SEARCH_PAINT { })
       INIT -> idle when (not @config.enabled)
         (render-ui main null)
+      QUICK_SEARCH_TYPED -> idle when (and (not @entity.asked) (!= (str/trim (default ?searchTerm "")) ""))
+        (set @entity.query (default ?searchTerm ""))
+        (set @entity.asked true)
+        (emit QUICK_SEARCH_LOAD { })
+        (emit QUICK_SEARCH_PAINT { })
       QUICK_SEARCH_TYPED -> idle
         (set @entity.query (default ?searchTerm ""))
         (emit QUICK_SEARCH_PAINT { })
@@ -41,7 +47,7 @@ orbital QuickSearchOrbital {
 
     emits {
       QUICK_SEARCH_LOAD -> external { }
-        @description "The box mounted and asks the app for the records it can suggest; the app answers with one QUICK_SEARCH_ROWS per kind."
+        @description "The viewer typed their first text since the box mounted, and the box asks the app for the records it can suggest; the app answers with one QUICK_SEARCH_ROWS per kind."
         @tier "domain"
       QUICK_SEARCH_PAINT
         @description "Internal: draw the box with the text and records held now."

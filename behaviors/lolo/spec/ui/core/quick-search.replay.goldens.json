@@ -3,7 +3,7 @@
   "trait": "QuickSearch",
   "cases": [
     {
-      "id": "init-asks-the-app-for-its-records",
+      "id": "mounting-asks-the-app-for-nothing",
       "steps": [
         {
           "trait": "QuickSearch",
@@ -16,9 +16,128 @@
           "expect": {
             "fired": true,
             "state": "idle",
+            "neverEmits": [
+              "QUICK_SEARCH_LOAD"
+            ],
             "emitCounts": {
-              "QUICK_SEARCH_LOAD": 1
+              "QUICK_SEARCH_PAINT": 1
             }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-first-typed-text-asks-the-app-for-its-records-once",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_TYPED",
+          "entity": {
+            "id": "e",
+            "query": "",
+            "hits": [],
+            "asked": false
+          },
+          "payload": {
+            "searchTerm": "ac"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "query": "ac",
+              "asked": true
+            },
+            "emitCounts": {
+              "QUICK_SEARCH_LOAD": 1,
+              "QUICK_SEARCH_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-later-typing-does-not-ask-again",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_TYPED",
+          "entity": {
+            "id": "e",
+            "query": "ac",
+            "hits": [],
+            "asked": true
+          },
+          "payload": {
+            "searchTerm": "acm"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "query": "acm",
+              "asked": true
+            },
+            "neverEmits": [
+              "QUICK_SEARCH_LOAD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-clearing-the-box-before-asking-asks-for-nothing",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "QUICK_SEARCH_TYPED",
+          "entity": {
+            "id": "e",
+            "query": "",
+            "hits": [],
+            "asked": false
+          },
+          "payload": {
+            "searchTerm": "  "
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "asked": false
+            },
+            "neverEmits": [
+              "QUICK_SEARCH_LOAD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-new-mount-asks-again-on-its-first-typed-text",
+      "steps": [
+        {
+          "trait": "QuickSearch",
+          "from": "idle",
+          "event": "INIT",
+          "entity": {
+            "id": "e",
+            "query": "",
+            "hits": [],
+            "asked": true
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "entity": {
+              "asked": false
+            },
+            "neverEmits": [
+              "QUICK_SEARCH_LOAD"
+            ]
           }
         }
       ]
@@ -246,7 +365,8 @@
           "entity": {
             "id": "e",
             "query": "",
-            "hits": []
+            "hits": [],
+            "asked": true
           },
           "payload": {
             "searchTerm": "acme"

@@ -1,6 +1,6 @@
 app std-kv-prefetch [
   version: "1.0.0",
-  description: "std-kv-prefetch — keeps a device's copy of a list of records in its kv store (IndexedDB in a browser), fetched in the background one at a time. The call site hands it the records it wants (WANTED { items }, each an id and a version, in the order to fetch them); it fetches only those whose kept version differs (FETCH { id }), keeps each answer (FETCHED { id, value }) under its id with its version in an index, and skips a record whose fetch fails so the next WANTED retries it. A newer WANTED replaces the records still waiting; config.limit caps how many it keeps; CLEAR (sign-out) empties the store.",
+  description: "std-kv-prefetch — keeps a device's copy of a list of records in its kv store (IndexedDB in a browser), fetched in the background one at a time. The call site hands it the records it wants (WANTED { items }, each an id and a version, in the order to fetch them); it fetches only those whose kept version differs (FETCH { id }), keeps each answer (FETCHED { id, value }) under its id with its version in an index, and skips a record whose fetch fails so the next WANTED retries it. A newer WANTED replaces the records still waiting; config.limit caps how many it keeps; CLEAR (sign-out) empties the store. While a page is open and nothing is being fetched, it asks the call site again every refreshMs (REFRESH), so a record changed elsewhere is fetched in the background; offline, the ask fails and the next refresh tries again.",
   kv: { prefetched: [read, write] }
 ]
 
@@ -16,6 +16,7 @@ orbital KvPrefetchOrbital {
     loaded : boolean @description "The index of kept records has been read from the store." = false
     current : string @description "The record being fetched." = ""
     currentVersion : string = ""
+    wantedAt : instant? @description "When the call site last handed a wanted list; the refresh is counted from it." = null
   }
 
   trait KvPrefetch (a : Type = KeptRecord) -> @rebindable KvPrefetchRun [client] {
@@ -24,9 +25,11 @@ orbital KvPrefetchOrbital {
     state idle {
       INIT -> idle
       WANTED -> reading when (not @entity.loaded)
+        (set @entity.wantedAt @now)
         (set @entity.queue (array/take ?items @config.limit))
         (kv/get @config.store @config.indexKey { emit: { success: INDEX_READ, failure: INDEX_MISSED } })
       WANTED -> ready when @entity.loaded
+        (set @entity.wantedAt @now)
         (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version "")))))))))
         (emit PrefetchStep)
       CLEAR -> clearing
@@ -34,11 +37,15 @@ orbital KvPrefetchOrbital {
         (set @entity.known [])
         (set @entity.loaded false)
         (kv/scan @config.store "" { emit: { success: CLEAR_LISTED, failure: CLEAR_DONE } })
+      REFRESH_DUE -> idle
+        (set @entity.wantedAt @now)
+        (emit REFRESH {})
     }
 
     state reading {
       INIT -> reading
       WANTED -> reading
+        (set @entity.wantedAt @now)
         (set @entity.queue (array/take ?items @config.limit))
       INDEX_READ -> ready
         (set @entity.known (if (and ?found (validate/required ?value)) (object/get (default ?value { items: [] }) items []) []))
@@ -65,6 +72,7 @@ orbital KvPrefetchOrbital {
         (emit FETCH { id: @entity.current })
       PrefetchStep -> idle when (= (array/len @entity.queue) 0)
       WANTED -> ready
+        (set @entity.wantedAt @now)
         (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version "")))))))))
       CLEAR -> clearing
         (set @entity.queue [])
@@ -81,6 +89,7 @@ orbital KvPrefetchOrbital {
       FETCH_FAILED -> ready
         (emit PrefetchStep)
       WANTED -> fetching
+        (set @entity.wantedAt @now)
         (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (and (!= (object/get @i id "") @entity.current) (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version ""))))))))))
       CLEAR -> clearing
         (set @entity.queue [])
@@ -97,6 +106,7 @@ orbital KvPrefetchOrbital {
       KEEP_FAILED -> ready
         (emit PrefetchStep)
       WANTED -> saving
+        (set @entity.wantedAt @now)
         (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (and (!= (object/get @i id "") @entity.current) (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version ""))))))))))
       CLEAR -> clearing
         (set @entity.queue [])
@@ -112,6 +122,7 @@ orbital KvPrefetchOrbital {
       INDEX_KEEP_FAILED -> ready
         (emit PrefetchStep)
       WANTED -> indexing
+        (set @entity.wantedAt @now)
         (set @entity.queue (array/filter (array/take ?items @config.limit) (fn i (not (array/some @entity.known (fn k (and (= (object/get @k id "") (object/get @i id "")) (= (object/get @k version "") (object/get @i version "")))))))))
       CLEAR -> clearing
         (set @entity.queue [])
@@ -128,6 +139,12 @@ orbital KvPrefetchOrbital {
       CLEAR_DONE -> idle
     }
 
+    ticks {
+      refreshCheck every 5s in idle
+        when (and @entity.loaded (> @config.refreshMs 0) (!= @entity.wantedAt null) (not (time/isBefore @now (time/add (default @entity.wantedAt @now) @config.refreshMs "ms"))))
+        (emit REFRESH_DUE {})
+    }
+
     config {
       store : string = "prefetched"
         @label "Store"
@@ -139,12 +156,21 @@ orbital KvPrefetchOrbital {
         @label "Most records"
         @description "Most records kept on the device: the first this many of the wanted list, in the call site's order."
         @tier "policy"
+      refreshMs : number = 60000
+        @label "Refresh every (ms)"
+        @description "While a page is open and nothing is being fetched, ask the call site again for its wanted list this long after the last one (REFRESH), so records changed elsewhere are fetched in the background; 0 never asks."
+        @tier "policy"
     }
 
     emits {
       FETCH -> external { id : string! }
         @description "Fetch one record; the call site maps it to its ask and answers with FETCHED or FETCH_FAILED."
         @tier "primary"
+      REFRESH -> external {}
+        @description "Ask again for the list of records to keep; the call site answers with WANTED, and only records whose version changed are fetched."
+        @tier "primary"
+      REFRESH_DUE -> internal {}
+        @tier "internal"
       PrefetchStep
     }
 
