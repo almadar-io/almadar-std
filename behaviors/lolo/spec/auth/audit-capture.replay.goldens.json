@@ -1,0 +1,23 @@
+{
+ "atom": "auth/atoms/std-audit-capture.lolo",
+ "trait": "AuditCaptureListener",
+ "note": "An audit row and its AuditRecorded carry the time the change was captured, never a placeholder.",
+ "cases": [
+  {
+   "id": "a captured change is stamped with the capture time",
+   "now": 1794916800000,
+   "config": { "enabled": true, "captureEntity": "Task", "captureEventTypes": [] },
+   "steps": [
+    { "from": "idle", "entity": { "id": "" }, "event": "EntityMutated", "payload": { "data": { "id": "t1", "kind": "create" } }, "expect": { "fired": true, "state": "idle", "emits": [ { "event": "AuditRecorded", "payload": { "action": "create", "entityType": "Task", "entityId": "t1", "recordedAt": "2026-11-17T12:00:00.000Z" } } ] } }
+   ]
+  },
+  {
+   "id": "control: a disabled capture writes and announces nothing",
+   "now": 1794916800000,
+   "config": { "enabled": false, "captureEntity": "Task", "captureEventTypes": [] },
+   "steps": [
+    { "from": "idle", "entity": { "id": "" }, "event": "EntityMutated", "payload": { "data": { "id": "t1", "kind": "create" } }, "expect": { "fired": false, "state": "idle", "emits": [] } }
+   ]
+  }
+ ]
+}

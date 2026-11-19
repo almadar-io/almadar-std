@@ -716,8 +716,14 @@ orbital GuestSessionOrbital {
         (emit GUEST_LEG_DONE { guest: ?guest, leg: ?leg, error: "The guest this leg was sent to is closed" })
       GUEST_LEG_ANSWERED -> live
         (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, response: (json/stringify ?result) })
-      GUEST_LEG_FAILED -> live
+      GUEST_LEG_FAILED -> live when (!= (default ?kind "") "closed")
         (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error })
+      GUEST_LEG_FAILED -> live when (= (default ?kind "") "closed")
+        (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error })
+        (when (and (!= @entity.guestHandle "") (!= @entity.guestHandle @entity.guestLostHandle))
+          (do
+            (set @entity.guestLostHandle @entity.guestHandle)
+            (emit GUEST_LOST { guest: @entity.guestHandle })))
       GUEST_LAZY -> live when (= ?guest @entity.guestHandle)
         (program/lazy { guest: ?guest, file: ?file } { key: ?file, emit: { success: GUEST_LAZY_ANSWERED, failure: GUEST_LAZY_FAILED } })
       GUEST_LAZY -> live when (!= ?guest @entity.guestHandle)
@@ -1201,6 +1207,7 @@ orbital GuestSessionOrbital {
       }
       GUEST_LEG_FAILED {
         error : string!
+        kind : string?
       }
       GuestStage.GUEST_LAZY -> GUEST_LAZY
       GUEST_LAZY {

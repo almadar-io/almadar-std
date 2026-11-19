@@ -10314,7 +10314,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace \u00b7 this behavior",
+           "title": "Trace · this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -10559,7 +10559,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "\u2022\u2022\u2022\u20221234"
+                   "content": "••••1234"
                   },
                   {
                    "type": "button",
@@ -10685,7 +10685,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "\u2022\u2022\u2022\u2022abcd"
+                   "content": "••••abcd"
                   },
                   {
                    "type": "button",
@@ -10739,7 +10739,7 @@
                  "type": "typography",
                  "variant": "caption",
                  "color": "muted",
-                 "content": "slot-x \u2014 its name is only known at run time"
+                 "content": "slot-x — its name is only known at run time"
                 }
                ]
               },
@@ -10898,7 +10898,7 @@
                      "type": "badge",
                      "variant": "neutral",
                      "size": "sm",
-                     "label": "\u00d73"
+                     "label": "×3"
                     }
                    ]
                   },
@@ -11098,7 +11098,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace \u00b7 this behavior",
+           "title": "Trace · this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -11343,7 +11343,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "\u2022\u2022\u2022\u20221234"
+                   "content": "••••1234"
                   },
                   null
                  ]
@@ -11579,7 +11579,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace \u00b7 this behavior",
+           "title": "Trace · this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -17350,6 +17350,112 @@
    "config": {
     "followNavigations": true
    }
+  },
+  {
+   "id": "G-CROSS-729: a leg to a guest the server closed (its opener session ended) reports it lost so the host reopens it",
+   "steps": [
+    {
+     "from": "live",
+     "entity": {
+      "id": "g",
+      "guestHandle": "g1",
+      "guestLeg": "leg-7",
+      "guestLostHandle": ""
+     },
+     "event": "GUEST_LEG_FAILED",
+     "payload": {
+      "error": "program/dispatch: no open guest 'g1' (it was never opened or is closed)",
+      "kind": "closed"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "exactEmits": [
+       {
+        "event": "GUEST_LEG_DONE",
+        "payload": {
+         "guest": "g1",
+         "leg": "leg-7"
+        }
+       },
+       {
+        "event": "GUEST_LOST",
+        "payload": {
+         "guest": "g1"
+        }
+       }
+      ]
+     },
+     "trait": "GuestSession"
+    }
+   ]
+  },
+  {
+   "id": "control: any other leg failure only answers the leg",
+   "steps": [
+    {
+     "from": "live",
+     "entity": {
+      "id": "g",
+      "guestHandle": "g1",
+      "guestLeg": "leg-7",
+      "guestLostHandle": ""
+     },
+     "event": "GUEST_LEG_FAILED",
+     "payload": {
+      "error": "boom",
+      "kind": "io"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "exactEmits": [
+       {
+        "event": "GUEST_LEG_DONE",
+        "payload": {
+         "guest": "g1",
+         "leg": "leg-7",
+         "error": "boom"
+        }
+       }
+      ]
+     },
+     "trait": "GuestSession"
+    }
+   ]
+  },
+  {
+   "id": "edge: a guest already reported lost is not reported twice",
+   "steps": [
+    {
+     "from": "live",
+     "entity": {
+      "id": "g",
+      "guestHandle": "g1",
+      "guestLeg": "leg-7",
+      "guestLostHandle": "g1"
+     },
+     "event": "GUEST_LEG_FAILED",
+     "payload": {
+      "error": "gone",
+      "kind": "closed"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "exactEmits": [
+       {
+        "event": "GUEST_LEG_DONE",
+        "payload": {
+         "guest": "g1",
+         "leg": "leg-7"
+        }
+       }
+      ]
+     },
+     "trait": "GuestSession"
+    }
+   ]
   }
  ]
 }

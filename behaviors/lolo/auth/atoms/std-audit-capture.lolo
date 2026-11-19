@@ -5,7 +5,7 @@ app std-audit-capture [
 orbital AuditCaptureOrbital {
     type EntityMutated = Event { data : @entity @config.captureEntity! } "Rename via traitOverrides.events to the upstream mutation event (e.g. ContactSaved, ContactDeleted)."
 
-    type AuditRecorded = Event { actor : string, action : string, entityType : string, entityId : string, recordedAt : number, sourceEvent : string, sourceTrait : string, sourceOrbital : string, sourceTick : string } "Re-emitted after the audit row persists; rename to wire downstream listeners (e.g. AuditDashboardAppended)."
+    type AuditRecorded = Event { actor : string, actorName : string, action : string, entityType : string, entityId : string, recordedAt : instant, sourceEvent : string, sourceTrait : string, sourceOrbital : string, sourceTick : string } "Re-emitted after the audit row persists; rename to wire downstream listeners (e.g. AuditDashboardAppended)."
 
   entity AuditEntry [persistent: audit_entries] {
 
@@ -16,12 +16,13 @@ orbital AuditCaptureOrbital {
     browseTotalCount : number @intrinsic @description "Rows the list's filter matches, across every page." = 0
     browseParentId : string @intrinsic @description "The detail page's :id the list is scoped to when parentField is set." = ""
     actor : string @description "The user or system performing the action." @synonyms "user, source, originator" = ""
-    action : string @description "The specific operation performed on the entity." @synonyms "operation, event, activity, change" = ""
+    action : string @description "The specific operation performed on the entity." @synonyms "operation, event, activity, change" @mock "create, update, update, delete, create, update" = ""
     entityType : string @description "The type of entity that was modified." @synonyms "type, kind, class" = ""
     entityId : string @description "Unique identifier for the entity being audited." @synonyms "entity identifier, record id, item id" = ""
     before : string @description "The state of the entity prior to the modification, as JSON text." @synonyms "previous, original, old value" = ""
     after : string @description "The state of the entity after a modification, as JSON text." @synonyms "new, updated, post, subsequent" = ""
-    recordedAt : number @description "Timestamp indicating when the audit event was recorded." @synonyms "timestamp, date, time" = 0
+    actorName : string @description "The display name of the user who performed the action, as it was when the row was written." @synonyms "user name, who, performed by" = ""
+    recordedAt : instant? @description "When the audit event was recorded." @synonyms "timestamp, date, time"
     sourceEvent : string @description "The event that delivered the change to the audit trail, e.g. ContactSaved." @synonyms "triggering event, cause, origin event" = ""
     sourceTrait : string @description "The behavior that emitted the change." @synonyms "emitter, origin, raised by" = ""
     sourceOrbital : string @description "The module the change came from." @synonyms "origin module, source module" = ""
@@ -33,14 +34,15 @@ orbital AuditCaptureOrbital {
 
     state idle {
       EntityMutated -> idle when @config.enabled
-        (when (and (validate/required ?data) (or (= (array/len @config.captureEventTypes) 0) (array/includes @config.captureEventTypes (object/get ?data kind @event.event)))) (do (set @entity.actor @user.id) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data before {}) @config.excludeFields)) "")) (set @entity.after (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data after {}) @config.excludeFields)) "")) (set @entity.recordedAt 0) (persist create AuditEntry {
+        (when (and (validate/required ?data) (or (= (array/len @config.captureEventTypes) 0) (array/includes @config.captureEventTypes (object/get ?data kind @event.event)))) (do (set @entity.actor @user.id) (set @entity.actorName (default @user.name "")) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data before {}) @config.excludeFields)) "")) (set @entity.after (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data after {}) @config.excludeFields)) "")) (set @entity.recordedAt @now) (persist create AuditEntry {
           action: @entity.action
           actor: @user.id
+          actorName: @entity.actorName
           after: @entity.after
           before: @entity.before
           entityId: @entity.entityId
           entityType: @config.captureEntity
-          recordedAt: 0
+          recordedAt: @now
           sourceEvent: @event.event
           sourceTrait: (default @event.source.trait "")
           sourceOrbital: (default @event.source.orbital "")
@@ -48,9 +50,10 @@ orbital AuditCaptureOrbital {
         } { emit: { failure: AUDIT_WRITE_FAILED } }) (emit AuditRecorded {
           action: @entity.action
           actor: @user.id
+          actorName: @entity.actorName
           entityId: @entity.entityId
           entityType: @config.captureEntity
-          recordedAt: 0
+          recordedAt: @now
           sourceEvent: @event.event
           sourceTrait: (default @event.source.trait "")
           sourceOrbital: (default @event.source.orbital "")
@@ -63,10 +66,11 @@ orbital AuditCaptureOrbital {
     emits {
       AuditRecorded -> external {
         actor : string
+        actorName : string
         action : string
         entityType : string
         entityId : string
-        recordedAt : number
+        recordedAt : instant
         sourceEvent : string
         sourceTrait : string
         sourceOrbital : string

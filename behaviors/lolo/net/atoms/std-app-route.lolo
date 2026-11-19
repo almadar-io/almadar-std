@@ -139,7 +139,7 @@ orbital AppRouteOrbital {
       APP_FAILED -> serving when (array/some @entity.pending (fn q (and (= (default (object/get @q "kind") "") "stream") (= (str/concat @q.key "-guest") @payload.key))))
         (let ((p (array/find @entity.pending (fn q (and (= (default (object/get @q "kind") "") "stream") (= (str/concat @q.key "-guest") @payload.key))))))
           (when (!= @p null)
-            (emit RESPOND { requestId: @p.requestId, status: 502, headers: (array/append @p.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: "APP_FAILED" })) })))
+            (emit RESPOND { requestId: @p.requestId, status: (default @payload.status 502), headers: (array/append @p.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: (default @payload.code "APP_FAILED") })) })))
         (set @entity.pending (array/filter @entity.pending (fn q (not (and (= (default (object/get @q "kind") "") "stream") (= (str/concat @q.key "-guest") @payload.key))))))
 
       STREAM_CLOSED -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "stream"))))
