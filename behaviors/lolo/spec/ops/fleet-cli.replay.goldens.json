@@ -1133,6 +1133,418 @@
           }
         }
       ]
+    },
+    {
+      "id": "--runtime carries every app's origins as CORS_ORIGIN, in apps order without duplicates",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb",
+            "origins": [
+              "https://a.web.app",
+              "https://shared.io"
+            ]
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": "",
+            "origins": [
+              "https://shared.io",
+              "https://b.web.app"
+            ]
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": []
+          },
+          "payload": {
+            "requestId": "runtime-box",
+            "outputs": [
+              "2026\n",
+              "built\n"
+            ],
+            "rawOuts": [
+              "",
+              ""
+            ],
+            "codes": [
+              0,
+              0
+            ],
+            "failures": [
+              "",
+              ""
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "contextDir": "/w/ctx",
+                  "stackDir": "/w/stack",
+                  "tag": "2026",
+                  "env": {
+                    "CORS_ORIGIN": "https://a.web.app,https://shared.io,https://b.web.app"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--runtime lays the target's stackEnv beside CORS_ORIGIN and a shared key takes the target's value",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb",
+            "origins": [
+              "https://a.web.app"
+            ]
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": "",
+            "origins": [
+              "https://b.web.app"
+            ]
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            },
+            "stackEnv": {
+              "CORS_ORIGIN": "http://localhost:5055",
+              "PORT": "8080"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": []
+          },
+          "payload": {
+            "requestId": "runtime-box",
+            "outputs": [
+              "2026\n",
+              "built\n"
+            ],
+            "rawOuts": [
+              "",
+              ""
+            ],
+            "codes": [
+              0,
+              0
+            ],
+            "failures": [
+              "",
+              ""
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "contextDir": "/w/ctx",
+                  "stackDir": "/w/stack",
+                  "tag": "2026",
+                  "env": {
+                    "CORS_ORIGIN": "http://localhost:5055",
+                    "PORT": "8080"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--runtime keeps the target's stackEnv when no app declares an origin",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            },
+            "stackEnv": {
+              "PORT": "8080"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": []
+          },
+          "payload": {
+            "requestId": "runtime-box",
+            "outputs": [
+              "2026\n",
+              "built\n"
+            ],
+            "rawOuts": [
+              "",
+              ""
+            ],
+            "codes": [
+              0,
+              0
+            ],
+            "failures": [
+              "",
+              ""
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "contextDir": "/w/ctx",
+                  "stackDir": "/w/stack",
+                  "tag": "2026",
+                  "env": {
+                    "PORT": "8080"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: --runtime with no origins and no stackEnv carries an empty env",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": []
+          },
+          "payload": {
+            "requestId": "runtime-box",
+            "outputs": [
+              "2026\n",
+              "built\n"
+            ],
+            "rawOuts": [
+              "",
+              ""
+            ],
+            "codes": [
+              0,
+              0
+            ],
+            "failures": [
+              "",
+              ""
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "contextDir": "/w/ctx",
+                  "stackDir": "/w/stack",
+                  "tag": "2026",
+                  "env": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

@@ -38,12 +38,6 @@ Next code: `G-STD-441`
   - **Owner:** almadar-std (net, connect), almadar-behaviors (inspectorate). Prevention rung: (1) the knobs' types (a deployment-varying endpoint expressible as data).
   Severity: high. Root cause: one-off.
 
-- **G-STD-439** [mechanical] — A production boot that std-http-boot-gate refuses is silent: `orb serve` prints none of the problems and exits 0, so a container restart-loops with no explanation.
-  - **Seen** (2026-11-18, the local central stack with `NODE_ENV=production` plus the Auth emulator and a `demo-` project): BootGuard reached `refused` and `BOOT_REFUSED { problems }` was emitted. Nothing in the log at info level named the problems, and the process ended with exit 0. Docker showed only "Restarting (0)", and the cause was found only by bisecting the env.
-  - **Wanted:** the serve host writes each refused problem to stderr and exits non-zero (1). In std-http-server or std-orb-serve, a listener of BOOT_REFUSED writes the lines (os/stderr-write) and ends the run with an exit code.
-  - **Reproduce:** `docker run --env-file <env with NODE_ENV=production and FIREBASE_AUTH_EMULATOR_HOST> almadar-central-orb orb serve /srv/orb/central/app.orb`.
-  - **Owner:** almadar-std (net / cli). Prevention rung: (3) the verifiers (a boot that does not bind must say why).
-  Severity: medium. Root cause: one-off.
 
 - **G-STD-438** [mechanical] — Four std-http-server replay golden files are red against the current atoms: `spec/net/server-declared-traits` (0/3), `server-external-inputs` (1 passed, 8 failed, 7 skipped), `server-retargeted-leg` (0/2) and `server-untargeted-discovery` (0/5). The failing steps assert std-http-dispatch's `DISPATCH_PREPARED` options, whose shape changed in checkpoint 6fdfd2f4a (2026-11-16 night) without these cases being updated; seen 2026-11-18 while checking the std-http-server `origin` knob, which none of them touch. Owner: almadar-std (std-http-dispatch goldens). Reproduce: `orb-dev goldens behaviors/lolo/spec/net/server-declared-traits.replay.goldens.json` from packages/almadar-std. Prevention rung: (3) the verifiers — `orb release --check` should run every replay goldens file so a stale golden fails the change that made it stale. Severity: medium. Root cause: one-off.
 

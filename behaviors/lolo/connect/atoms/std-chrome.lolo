@@ -240,8 +240,15 @@ orbital ChromeOrbital {
       CHROME_DIR_MADE -> starting when (= @entity.stage "mk-download")
         (set @entity.stage "rp-download")
         (os/realpath @config.downloadDir { emit: { success: CHROME_PATH_RESOLVED, failure: CHROME_HOST_FAILED } })
-      CHROME_PATH_RESOLVED -> starting when (= @entity.stage "rp-download")
+      CHROME_PATH_RESOLVED -> starting when (and (= @entity.stage "rp-download") (!= @config.profileLockFile.path ""))
         (set @entity.downloadPath @payload.path)
+        (set @entity.stage "unlock")
+        (os/remove @config.profileLockFile { emit: { success: CHROME_UNLOCKED, failure: CHROME_UNLOCKED } })
+      CHROME_PATH_RESOLVED -> starting when (and (= @entity.stage "rp-download") (= @config.profileLockFile.path ""))
+        (set @entity.downloadPath @payload.path)
+        (set @entity.stage "unlock")
+        (emit CHROME_UNLOCKED {})
+      CHROME_UNLOCKED -> starting when (= @entity.stage "unlock")
         (set @entity.stage "launch")
         (emit DAEMON_START { argv: (array/concat ["--headless=new" (str/concat "--remote-debugging-port=" @config.port) "--no-first-run" "--no-default-browser-check" "--disable-gpu" (str/concat "--window-size=" @config.windowWidth "," @config.windowHeight) (str/concat "--user-data-dir=" @entity.profilePath) "about:blank"] @config.extraArgs) })
       CHROME_DAEMON_READY -> starting when (= @entity.stage "launch")
@@ -824,6 +831,9 @@ orbital ChromeOrbital {
       CHROME_FILE_WROTE -> internal { }
         @description "Internal: os/write-file answered."
         @tier "internal"
+      CHROME_UNLOCKED -> internal { }
+        @description "Internal: the profile's stale SingletonLock was removed, or there was none (a lock left by a Chrome that died, say in a replaced container, makes the next launch refuse the profile)."
+        @tier "internal"
       CHROME_FILE_READ -> internal {
         data : bytes!
       }
@@ -894,6 +904,10 @@ orbital ChromeOrbital {
       preferencesFile : ChromePath
         @label "Preferences file"
         @description "The anchored path of the Preferences file written before launch (profileDir/Default/Preferences); Required, no default."
+        @tier "domain"
+      profileLockFile : ChromePath = { anchor: "cwd", path: "" }
+        @label "Profile lock file"
+        @description "The anchored path of the profile's SingletonLock (profileDir/SingletonLock), removed before launch: a lock left by a Chrome that died (a replaced container, a crash) makes the next launch refuse the profile. An empty path removes nothing."
         @tier "domain"
       keyNavigationWaitMs : number = 1500
         @label "Key navigation wait (ms)"

@@ -8915,6 +8915,99 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-set-profile-lock-file-is-removed-before-launch",
+   "note": "a SingletonLock left by a Chrome that died in a replaced container made every later launch refuse the profile (central box, 2026-11-19)",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "profileLockFile": {
+     "anchor": "cwd",
+     "path": "profile/SingletonLock"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_PATH_RESOLVED",
+     "payload": {
+      "path": "/work/downloads"
+     },
+     "from": "starting",
+     "entity": {
+      "id": "t",
+      "stage": "rp-download"
+     },
+     "expect": {
+      "state": "starting",
+      "effects": [
+       {
+        "type": "os/remove"
+       }
+      ],
+      "entity": {
+       "stage": "launch",
+       "downloadPath": "/work/downloads"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-profile-lock-file-removes-nothing-and-launches",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_PATH_RESOLVED",
+     "payload": {
+      "path": "/work/downloads"
+     },
+     "from": "starting",
+     "entity": {
+      "id": "t",
+      "stage": "rp-download"
+     },
+     "expect": {
+      "state": "starting",
+      "effects": []
+     }
+    }
+   ]
   }
  ]
 }

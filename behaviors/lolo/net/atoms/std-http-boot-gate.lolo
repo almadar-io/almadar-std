@@ -1,5 +1,7 @@
 app std-http-boot-gate [
   version: "1.0.0",
+  stdio: [err],
+  sys: [self-signal],
   env: ["NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE"],
   description: "std-http-boot-gate — the boot gate of the HTTP server program: what the orbital-server boot path does with boot_env_problems. At INIT it reads the declared variables one at a time with os/getenv (an unset one reads as blank) and, when the last is read, asks std-boot-env-check ENV_CHECK { env, production, mock }: production is NODE_ENV equal to production, mock is the mock knob or ALMADAR_INTEGRATIONS_MODE equal to mock. It hears ENV_CHECKED { problems, ok } and CORS_CONFIGURED; when it has heard both and the deployment is cleared it emits BOOT_CLEARED, which tells std-http1 to bind. Under production a non-empty problems list emits BOOT_REFUSED { problems } and the boot never clears; outside production it emits BOOT_WARNED { problems } and clears. A variable the grant does not let the gate read emits BOOT_REFUSED with the reason. With services called and integrations not mocked it asks credential-list and sends std-credential-admin CRED_ADMIN_BOOT_CHECK: the catalog is the registry services, held is the names the store holds plus the declared names the host environment sets (credential-list env). A required credential of a called service in neither is owed: under production the boot is refused naming it, elsewhere it warns. Bound to spec/net/http-boot-gate.lolo and spec/net/http-boot-gate.replay.goldens.json."
 ]
@@ -120,6 +122,8 @@ orbital HttpBootGateOrbital {
       ENV_UNREAD -> refused
         (set @entity.checked "refused")
         (emit BOOT_REFUSED { problems: [@payload.error] })
+        (os/stderr-write (bytes/from-string (str/join (array/map [@payload.error] (fn p (str/concat "boot refused: " @p "\n"))) "")))
+        (os/pid { key: "self", emit: { success: GATE_PID, failure: GATE_END_FAILED } })
 
       ENV_CHECKED -> reading when (and @payload.ok @entity.corsReady)
         (set @entity.checked "clear")
@@ -130,12 +134,16 @@ orbital HttpBootGateOrbital {
         (set @entity.checked "clear")
         (emit BOOT_WARNED { problems: @payload.problems })
         (emit BOOT_CLEARED {})
+        (os/stderr-write (bytes/from-string (str/join (array/map @payload.problems (fn p (str/concat "boot warning: " @p "\n"))) "")))
       ENV_CHECKED -> reading when (and (not @payload.ok) (not @entity.production) (not @entity.corsReady))
         (set @entity.checked "clear")
         (emit BOOT_WARNED { problems: @payload.problems })
+        (os/stderr-write (bytes/from-string (str/join (array/map @payload.problems (fn p (str/concat "boot warning: " @p "\n"))) "")))
       ENV_CHECKED -> refused when (and (not @payload.ok) @entity.production)
         (set @entity.checked "refused")
         (emit BOOT_REFUSED { problems: @payload.problems })
+        (os/stderr-write (bytes/from-string (str/join (array/map @payload.problems (fn p (str/concat "boot refused: " @p "\n"))) "")))
+        (os/pid { key: "self", emit: { success: GATE_PID, failure: GATE_END_FAILED } })
 
       CORS_CONFIGURED -> reading when (= @entity.checked "clear")
         (set @entity.corsReady true)
@@ -146,6 +154,11 @@ orbital HttpBootGateOrbital {
 
     state refused {
       INIT -> refused
+      GATE_PID -> refused
+        (os/kill @payload.pid "TERM" { key: "boot-refused", emit: { success: GATE_ENDING, failure: GATE_END_FAILED } })
+      GATE_ENDING -> refused
+      GATE_END_FAILED -> refused
+        (os/stderr-write (bytes/from-string (str/concat "boot refused: the process was not ended: " (default @payload.error "") "\n")))
       ENV_CHECKED -> refused
       CORS_CONFIGURED -> refused
     }
@@ -227,6 +240,20 @@ orbital HttpBootGateOrbital {
         kind : string
       }
         @description "Internal: an os/getenv failed."
+        @tier "internal"
+      GATE_PID {
+        pid : number!
+      }
+        @description "Internal: the os/pid answer for the process the refused boot ends."
+        @tier "internal"
+      GATE_ENDING {
+      }
+        @description "Internal: the refused boot's os/kill TERM was sent."
+        @tier "internal"
+      GATE_END_FAILED {
+        error : string
+      }
+        @description "Internal: the process id or the TERM could not be had; the gate stays refused."
         @tier "internal"
       ENV_CHECK -> external {
         env : GateEnv!
@@ -312,6 +339,14 @@ orbital HttpBootGateOrbital {
       ENV_UNREAD {
         error : string!
         kind : string
+      }
+      GATE_PID {
+        pid : number!
+      }
+      GATE_ENDING {
+      }
+      GATE_END_FAILED {
+        error : string
       }
       ENV_CHECKED {
         requestId : number

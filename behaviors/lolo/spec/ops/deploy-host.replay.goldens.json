@@ -2120,6 +2120,688 @@
           }
         }
       ]
+    },
+    {
+      "id": "a runtime deploy keeps the env, writes each key as one line and saves the .env before",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "CORS_ORIGIN": "https://a.web.app,https://b.app",
+              "TZ_X": "UTC"
+            }
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|context"
+                }
+              }
+            ],
+            "entity": {
+              "runtimeEnv": {
+                "CORS_ORIGIN": "https://a.web.app,https://b.app",
+                "TZ_X": "UTC"
+              }
+            }
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime",
+            "image": "almadar-central-orb:20261118",
+            "prevImage": "almadar-central-orb:20261117",
+            "runtimeEnv": {
+              "CORS_ORIGIN": "https://a.web.app,https://b.app",
+              "TZ_X": "UTC"
+            }
+          },
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "almadar-central-orb:20261117\n",
+            "stdoutBytes": "",
+            "stderr": "",
+            "stage": "#runtime|build"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|start",
+                  "cmd": "cd '/srv/orb/stack' && cp -p .env .env.prev && { grep -v -E '^(ORB_IMAGE|CORS_ORIGIN|TZ_X)=' .env > .env.next || true; } && printf '%s\\n' 'CORS_ORIGIN=https://a.web.app,https://b.app' 'TZ_X=UTC' >> .env.next && echo 'ORB_IMAGE=almadar-central-orb:20261118' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an empty env leaves the .env alone",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {}
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|context"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime",
+            "image": "almadar-central-orb:20261118",
+            "prevImage": "almadar-central-orb:20261117",
+            "runtimeEnv": {}
+          },
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "almadar-central-orb:20261117\n",
+            "stdoutBytes": "",
+            "stderr": "",
+            "stage": "#runtime|build"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|start",
+                  "cmd": "cd '/srv/orb/stack' && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=almadar-central-orb:20261118' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d"
+                }
+              }
+            ],
+            "neverEmits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime deploy with a lowercase key is refused before any step",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "cors_origin": "x"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "",
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN",
+              "DH_REMOTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime deploy with a key with a dash is refused before any step",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "A-B": "x"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "",
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN",
+              "DH_REMOTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime deploy with a key starting with a digit is refused before any step",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "1A": "x"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "",
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN",
+              "DH_REMOTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime deploy with a value with a single quote is refused before any step",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "A": "it's"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "",
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN",
+              "DH_REMOTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime deploy with a value with a newline is refused before any step",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "A": "x\ny"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "",
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN",
+              "DH_REMOTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime deploy with a value with a backslash is refused before any step",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "A": "x\\y"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "",
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN",
+              "DH_REMOTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a runtime deploy with one bad key among good ones is refused before any step",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {
+              "A": "1",
+              "b": "2"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DEPLOY_FAILED",
+                "payload": {
+                  "app": "",
+                  "step": "config"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DH_RSYNC_RUN",
+              "DH_REMOTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unhealthy runtime puts the saved .env back with the previous image",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime",
+            "image": "almadar-central-orb:20261118",
+            "prevImage": "almadar-central-orb:20261117",
+            "runtimeEnv": {
+              "CORS_ORIGIN": "https://a.web.app,https://b.app",
+              "TZ_X": "UTC"
+            }
+          },
+          "event": "DH_CURL_DONE",
+          "payload": {
+            "exitCode": 22,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "502",
+            "stage": "#runtime|health"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|undo",
+                  "cmd": "cd '/srv/orb/stack' && { [ ! -d ../central.prev ] || { rm -rf ../central && mv ../central.prev ../central; }; } && { [ ! -f .env.prev ] || mv .env.prev .env; } && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=almadar-central-orb:20261117' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d"
+                }
+              }
+            ],
+            "neverEmits": [
+              "RUNTIME_DEPLOYED"
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "",
+            "stage": "#runtime|undo"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RUNTIME_ROLLED_BACK",
+                "payload": {
+                  "error": "502"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed start puts the saved .env back with the previous image",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime",
+            "image": "almadar-central-orb:20261118",
+            "prevImage": "almadar-central-orb:20261117",
+            "runtimeEnv": {
+              "CORS_ORIGIN": "https://a.web.app,https://b.app",
+              "TZ_X": "UTC"
+            }
+          },
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "compose failed",
+            "stage": "#runtime|start"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|undo",
+                  "cmd": "cd '/srv/orb/stack' && { [ ! -d ../central.prev ] || { rm -rf ../central && mv ../central.prev ../central; }; } && { [ ! -f .env.prev ] || mv .env.prev .env; } && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=almadar-central-orb:20261117' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an unhealthy runtime with an empty env restores no .env",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health"
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime",
+            "image": "almadar-central-orb:20261118",
+            "prevImage": "almadar-central-orb:20261117",
+            "runtimeEnv": {}
+          },
+          "event": "DH_CURL_DONE",
+          "payload": {
+            "exitCode": 22,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "502",
+            "stage": "#runtime|health"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|undo",
+                  "cmd": "cd '/srv/orb/stack' && { [ ! -d ../central.prev ] || { rm -rf ../central && mv ../central.prev ../central; }; } && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=almadar-central-orb:20261117' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

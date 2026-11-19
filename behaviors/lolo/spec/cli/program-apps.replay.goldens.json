@@ -1,7 +1,7 @@
 {
   "atom": "cli/atoms/std-program-host.lolo",
   "trait": "ProgramApps",
-  "note": "Host answers (program/read, open, dispatch, close) are the next step's event; with no substrate host a step's asks fail inside the step, so each step seeds its own row.",
+  "note": "Host answers (program/read, open, dispatch, close) are the next step's event; with no substrate host a step's asks fail inside the step, so each step seeds its own row. Since 2026-11-19 an app opens by path (program/open null { path, split, declared, program, withhold, env }): the host reads and opens it off the lane, so no APP_PROGRAM_READ step carries the program.",
   "cases": [
     {
       "id": "first request reads the app file, then opens it, then replays the request",
@@ -37,16 +37,11 @@
           }
         },
         {
-          "event": "APP_PROGRAM_READ",
+          "event": "APP_ENV_UNREAD",
           "from": "serving",
           "payload": {
-            "result": {
-              "program": {
-                "name": "p",
-                "orbitals": []
-              },
-              "lazy": []
-            },
+            "error": "no such file",
+            "kind": "not-found",
             "key": "a"
           },
           "entity": {
@@ -75,12 +70,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "let",
-                "nested": [
-                  {
-                    "type": "program/open"
-                  }
-                ]
+                "type": "program/open"
               }
             ]
           }
@@ -392,7 +382,9 @@
                   "app": "a",
                   "address": "O.T.E",
                   "payload": {},
-                  "options": {}
+                  "options": {},
+                  "clientId": "",
+                  "mounting": false
                 }
               ]
             }
@@ -455,7 +447,9 @@
                   "app": "a",
                   "address": "O.T.E",
                   "payload": {},
-                  "options": {}
+                  "options": {},
+                  "clientId": "",
+                  "mounting": false
                 }
               ]
             }
@@ -1199,7 +1193,7 @@
                 "type": "let"
               },
               {
-                "type": "program/read"
+                "type": "program/open"
               }
             ]
           }
@@ -1247,7 +1241,7 @@
             "state": "serving",
             "effects": [
               {
-                "type": "program/read"
+                "type": "program/open"
               }
             ]
           }
@@ -1743,7 +1737,8 @@
             "address": "O.T.E",
             "payload": {},
             "options": {},
-            "clientId": "c2"
+            "clientId": "c2",
+            "mounting": true
           },
           "entity": {
             "id": "h",
@@ -2490,6 +2485,512 @@
             "fired": true,
             "neverEmits": [
               "APP_RESIDENT_LOAD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unpinned client sending a non-mount request is answered session ended and pinned",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k1",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {},
+            "clientId": "c1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "pins": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "emits": [
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "error": "session ended: mount again with the frames the client holds",
+                  "status": 409,
+                  "code": "SESSION_ENDED"
+                }
+              }
+            ],
+            "entity": {
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the retry of a client pinned by the session ended answer dispatches",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k2",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {},
+            "clientId": "c1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "let",
+                    "nested": [
+                      {
+                        "type": "let",
+                        "nested": [
+                          {
+                            "type": "do",
+                            "nested": [
+                              {
+                                "type": "program/dispatch"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an unpinned client sending a mounting request is pinned and dispatched",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k1",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {},
+            "clientId": "c1",
+            "mounting": true
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "pins": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "let",
+                    "nested": [
+                      {
+                        "type": "let",
+                        "nested": [
+                          {
+                            "type": "do",
+                            "nested": [
+                              {
+                                "type": "program/dispatch"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a request with no client dispatches and pins nothing",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_REQUEST",
+          "from": "serving",
+          "payload": {
+            "key": "k1",
+            "app": "a",
+            "address": "O.T.E",
+            "payload": {},
+            "options": {}
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true
+              }
+            ],
+            "waiting": [],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "pins": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "let",
+                    "nested": [
+                      {
+                        "type": "let",
+                        "nested": [
+                          {
+                            "type": "do",
+                            "nested": [
+                              {
+                                "type": "program/dispatch"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "entity": {
+              "pins": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a waiting request of an unpinned non-mounting client is answered session ended at drain and pins it",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_DRAIN",
+          "from": "serving",
+          "payload": {
+            "app": "a",
+            "guest": "g1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {},
+                "clientId": "c1",
+                "mounting": false
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "pins": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "effects": [],
+            "emits": [
+              {
+                "event": "APP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "error": "session ended: mount again with the frames the client holds",
+                  "status": 409,
+                  "code": "SESSION_ENDED"
+                }
+              },
+              {
+                "event": "APP_DRAIN",
+                "payload": {
+                  "app": "a",
+                  "guest": "g1"
+                }
+              }
+            ],
+            "entity": {
+              "waiting": [],
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a waiting mounting request of an unpinned client dispatches at drain and pins it",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_DRAIN",
+          "from": "serving",
+          "payload": {
+            "app": "a",
+            "guest": "g1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {},
+                "clientId": "c1",
+                "mounting": true
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "pins": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "entity": {
+              "waiting": [],
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/dispatch"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a waiting request of an already pinned client dispatches at drain",
+      "now": 1000,
+      "config": {
+        "appsDir": "/apps"
+      },
+      "steps": [
+        {
+          "event": "APP_DRAIN",
+          "from": "serving",
+          "payload": {
+            "app": "a",
+            "guest": "g1"
+          },
+          "entity": {
+            "id": "h",
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "lastUsedMs": "1970-01-01T00:00:00.000Z",
+                "loading": false,
+                "current": true
+              }
+            ],
+            "waiting": [
+              {
+                "key": "k1",
+                "app": "a",
+                "address": "O.T.E",
+                "payload": {},
+                "options": {},
+                "clientId": "c1",
+                "mounting": false
+              }
+            ],
+            "lastSweepMs": "1970-01-01T00:00:00.000Z",
+            "pins": [
+              {
+                "clientId": "c1",
+                "app": "a",
+                "guest": "g1"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "serving",
+            "entity": {
+              "waiting": [],
+              "pins": [
+                {
+                  "clientId": "c1",
+                  "app": "a",
+                  "guest": "g1"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "do",
+                    "nested": [
+                      {
+                        "type": "program/dispatch"
+                      }
+                    ]
+                  }
+                ]
+              }
             ]
           }
         }

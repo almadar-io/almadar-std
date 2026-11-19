@@ -1522,6 +1522,315 @@
           }
         }
       ]
+    },
+    {
+      "id": "an-events-request-with-mounts-in-its-body-is-emitted-as-mounting",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "key": "7",
+            "valid": true,
+            "app": "shop",
+            "orbital": "Cart",
+            "body": "eyJldmVudCI6IkFERCIsInRhcmdldFRyYWl0IjoiQ2FydEZsb3ciLCJjbGllbnRJZCI6ImMxIiwibW91bnQiOlt7InRyYWl0IjoiQ2FydEZsb3cifV0sInBheWxvYWQiOnt9fQ==",
+            "responseHeaders": [],
+            "authorization": "",
+            "awaitingAuth": false,
+            "request": {
+              "key": "",
+              "app": "",
+              "address": "",
+              "payload": {},
+              "options": {}
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 7,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_REQUEST",
+                "payload": {
+                  "key": "7",
+                  "app": "shop",
+                  "address": "Cart.CartFlow.ADD",
+                  "mounting": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESPOND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-events-request-with-an-empty-mount-list-is-not-mounting",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "key": "7",
+            "valid": true,
+            "app": "shop",
+            "orbital": "Cart",
+            "body": "eyJldmVudCI6IkFERCIsInRhcmdldFRyYWl0IjoiQ2FydEZsb3ciLCJjbGllbnRJZCI6ImMxIiwibW91bnQiOltdLCJwYXlsb2FkIjp7fX0=",
+            "responseHeaders": [],
+            "authorization": "",
+            "awaitingAuth": false,
+            "request": {
+              "key": "",
+              "app": "",
+              "address": "",
+              "payload": {},
+              "options": {}
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 7,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_REQUEST",
+                "payload": {
+                  "key": "7",
+                  "app": "shop",
+                  "address": "Cart.CartFlow.ADD",
+                  "mounting": false
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESPOND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-events-request-with-no-mount-list-is-not-mounting",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "key": "7",
+            "valid": true,
+            "app": "shop",
+            "orbital": "Cart",
+            "body": "eyJldmVudCI6IkFERCIsInRhcmdldFRyYWl0IjoiQ2FydEZsb3ciLCJjbGllbnRJZCI6ImMxIiwicGF5bG9hZCI6e319",
+            "responseHeaders": [],
+            "authorization": "",
+            "awaitingAuth": false,
+            "request": {
+              "key": "",
+              "app": "",
+              "address": "",
+              "payload": {},
+              "options": {}
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "ROUTE_EXTERNAL",
+          "payload": {
+            "requestId": 7,
+            "responseHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "APP_REQUEST",
+                "payload": {
+                  "key": "7",
+                  "app": "shop",
+                  "address": "Cart.CartFlow.ADD",
+                  "mounting": false
+                }
+              }
+            ],
+            "neverEmits": [
+              "RESPOND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "app-failed-with-status-and-code-answers-them-as-409-session-ended",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "key": "7",
+            "valid": true,
+            "app": "shop",
+            "orbital": "Cart",
+            "body": "",
+            "responseHeaders": [],
+            "authorization": "",
+            "awaitingAuth": false,
+            "request": {
+              "key": "",
+              "app": "",
+              "address": "",
+              "payload": {},
+              "options": {}
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "APP_FAILED",
+          "payload": {
+            "key": "7",
+            "error": "session ended",
+            "status": 409,
+            "code": "SESSION_ENDED"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 409
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-app-failed-without-status-and-code-still-answers-502",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "key": "7",
+            "valid": true,
+            "app": "shop",
+            "orbital": "Cart",
+            "body": "",
+            "responseHeaders": [],
+            "authorization": "",
+            "awaitingAuth": false,
+            "request": {
+              "key": "",
+              "app": "",
+              "address": "",
+              "payload": {},
+              "options": {}
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "APP_FAILED",
+          "payload": {
+            "key": "7",
+            "error": "no app"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 502
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "auth-failed-session-ended-answers-409-and-drops-the-held-request",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 9,
+            "key": "9",
+            "valid": true,
+            "app": "shop",
+            "orbital": "Cart",
+            "body": "eyJldmVudCI6IkFERCIsInRhcmdldFRyYWl0IjoiQ2FydEZsb3ciLCJjbGllbnRJZCI6ImMxIiwicGF5bG9hZCI6eyJza3UiOiJhIn19",
+            "responseHeaders": [],
+            "authorization": "Bearer t1",
+            "awaitingAuth": true,
+            "request": {
+              "key": "9",
+              "app": "shop",
+              "address": "Cart.CartFlow.ADD",
+              "payload": {
+                "sku": "a"
+              },
+              "options": {
+                "wire": true,
+                "clientId": "c1"
+              }
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "serving",
+          "event": "APP_FAILED",
+          "payload": {
+            "key": "9-auth",
+            "error": "session ended",
+            "status": 409,
+            "code": "SESSION_ENDED"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 9,
+                  "status": 409
+                }
+              }
+            ],
+            "neverEmits": [
+              "APP_REQUEST"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

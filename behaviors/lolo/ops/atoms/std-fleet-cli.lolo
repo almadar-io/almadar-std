@@ -1,15 +1,15 @@
 app std-fleet-cli [
   version: "1.0.0",
   inbound: ["cli-fleet"],
-  description: "std-fleet-cli — a deploy command over std-deploy-host fleets: `orb <command> deploy [--target <name>] [--only <app>[,<app>…]] [--runtime]`. The apps knob lists every app the command deploys ({ name, program, site, staticDir, env, firestoreDatabase }, std-deploy-host's FleetAppSpec), and the targets knob the places it deploys to ({ name, env, indexes }): a target's env is laid over each app's env (a target name wins), and a target with indexes false deploys no store indexes (an emulator needs none). FLEET_CALLED { rawBody } (the cli hook, `{ argv, cwd }`) parses the words with std-args; a first word other than deploy, an unknown flag, an unknown target or an --only name the apps knob does not list answers the usage or the error (status 400). Otherwise it emits FLEET_DEPLOY { target, apps, only } once, which the composer routes to the std-deploy-host of that target as DEPLOY_FLEET, and answers when that host's FLEET_DONE arrives: one line per app (`ok <app> release <n>` or `failed <app>: <step error>; …`), status 200 when every app is ok, else 500. With --runtime the target's runtime record ({ steps, context, stack }) is built first: FLEET_RUNTIME_BUILD runs its steps as sh -c through std-step-runner (the first step prints the image tag), FLEET_RUNTIME_DEPLOY then starts that image on the target (std-deploy-host DEPLOY_RUNTIME from context and stack), and the apps deploy only once FLEET_RUNTIME_UP arrives; a failed step or a runtime that did not come up answers status 500 and deploys no app. A target without a runtime record refuses --runtime (400). The target defaults to the defaultTarget knob. One call at a time: a call while one runs answers status 409."
+  description: "std-fleet-cli — a deploy command over std-deploy-host fleets: `orb <command> deploy [--target <name>] [--only <app>[,<app>…]] [--runtime]`. The apps knob lists every app the command deploys ({ name, program, site, staticDir, env, firestoreDatabase, origins }, std-deploy-host's FleetAppSpec), and the targets knob the places it deploys to ({ name, env, indexes, stackEnv }): a target's env is laid over each app's env (a target name wins), and a target with indexes false deploys no store indexes (an emulator needs none). FLEET_CALLED { rawBody } (the cli hook, `{ argv, cwd }`) parses the words with std-args; a first word other than deploy, an unknown flag, an unknown target or an --only name the apps knob does not list answers the usage or the error (status 400). Otherwise it emits FLEET_DEPLOY { target, apps, only } once, which the composer routes to the std-deploy-host of that target as DEPLOY_FLEET, and answers when that host's FLEET_DONE arrives: one line per app (`ok <app> release <n>` or `failed <app>: <step error>; …`), status 200 when every app is ok, else 500. With --runtime the target's runtime record ({ steps, context, stack }) is built first: FLEET_RUNTIME_BUILD runs its steps as sh -c through std-step-runner (the first step prints the image tag), FLEET_RUNTIME_DEPLOY then starts that image on the target (std-deploy-host DEPLOY_RUNTIME from context, stack and env: CORS_ORIGIN, every app's origins in apps order without duplicates joined with a comma, under the target's stackEnv, which wins on a shared key), and the apps deploy only once FLEET_RUNTIME_UP arrives; a failed step or a runtime that did not come up answers status 500 and deploys no app. A target without a runtime record refuses --runtime (400). The target defaults to the defaultTarget knob. One call at a time: a call while one runs answers status 409."
 ]
 uses Args from "std/behaviors/std-args"
 
 type FleetCommandArgs = { argv : [string]!, cwd : string! }
 type FleetCliFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
-type FleetCliApp = { name : string!, program : string!, site : string, staticDir : string, env : Map string string, firestoreDatabase : string }
+type FleetCliApp = { name : string!, program : string!, site : string, staticDir : string, env : Map string string, firestoreDatabase : string, origins : [string] }
 type FleetCliRuntime = { steps : [string]!, context : string!, stack : string! }
-type FleetCliTarget = { name : string!, env : Map string string, indexes : boolean!, runtime : FleetCliRuntime? }
+type FleetCliTarget = { name : string!, env : Map string string, indexes : boolean!, runtime : FleetCliRuntime?, stackEnv : Map string string }
 type FleetCliStep = { scope : string!, args : [string]!, stdin : string!, feed : boolean!, tolerate : boolean!, raw : boolean! }
 type FleetCliResult = { app : string!, version : number!, ok : boolean!, failures : [string]! }
 
@@ -34,12 +34,12 @@ orbital FleetCliOrbital {
     config {
       apps : [FleetCliApp] = []
         @label "Apps"
-        @description "Every app the command deploys: its name, its program (a .lolo or .orb path from the directory the command runs in), its hosting site (empty: no web client), its static folder copied beside the client, the env it is opened with and its Firestore database (empty: no indexes)."
+        @description "Every app the command deploys: its name, its program (a .lolo or .orb path from the directory the command runs in), its hosting site (empty: no web client), its static folder copied beside the client, the env it is opened with, its Firestore database (empty: no indexes) and its origins, the browser origins of its clients."
         @synonyms "fleet, app list, deployment manifest"
         @tier "domain"
       targets : [FleetCliTarget] = []
         @label "Targets"
-        @description "The places the command deploys to by name, each with the env laid over every app's env there and whether store indexes are deployed there."
+        @description "The places the command deploys to by name, each with the env laid over every app's env there, whether store indexes are deployed there and the stackEnv lines written to the runtime stack's .env."
         @synonyms "environments, box, local"
         @tier "domain"
       defaultTarget : string = "local"
@@ -78,7 +78,8 @@ orbital FleetCliOrbital {
                       (emit FLEET_DEPLOY { target: @target, only: @only, apps: (array/map @config.apps (fn a (object/merge @a { env: (object/merge (default @a.env {}) (default @t.env {})), firestoreDatabase: (if @t.indexes (default @a.firestoreDatabase "") "") }))) }))))))))
       FLEET_RUNTIME_BUILT -> ready
         (let ((t (array/find @config.targets (fn x (= @x.name @entity.target)))))
-          (emit FLEET_RUNTIME_DEPLOY { target: @entity.target, contextDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "context") ""), stackDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "stack") ""), tag: (str/trim (default (array/first @payload.outputs) "")) }))
+          (let ((origins (array/unique (array/flatten (array/map @config.apps (fn a (default @a.origins [])))))))
+            (emit FLEET_RUNTIME_DEPLOY { env: (object/merge (if (> (array/len @origins) 0) { CORS_ORIGIN: (str/join @origins ",") } {}) (default (object/get (default @t {}) "stackEnv") {})), target: @entity.target, contextDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "context") ""), stackDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "stack") ""), tag: (str/trim (default (array/first @payload.outputs) "")) })))
       FLEET_RUNTIME_BUILD_FAILED -> ready
         (set @entity.busy false)
         (emit FLEET_ANSWERED { status: 500, body: (str/concat "failed runtime build step " @payload.index ": " @payload.stderr) })
@@ -100,7 +101,7 @@ orbital FleetCliOrbital {
       FLEET_RUNTIME_BUILD -> external { requestId : string!  steps : [FleetCliStep]!  prefix : [string]!  env : Map string string  rootDir : string!  repoDir : string!  dirFlag : string!  rawInputs : [bytes]! }
         @description "Build the target's runtime context: its runtime steps, each run as sh -c, in order (std-step-runner's STEPS_RUN); the first step prints the image tag."
         @tier "primary"
-      FLEET_RUNTIME_DEPLOY -> external { target : string!  contextDir : string!  stackDir : string!  tag : string! }
+      FLEET_RUNTIME_DEPLOY -> external { target : string!  contextDir : string!  stackDir : string!  tag : string!  env : Map string string }
         @description "Start the built runtime on the target; the composer routes it to that target's std-deploy-host as DEPLOY_RUNTIME and its RUNTIME_DEPLOYED back as FLEET_RUNTIME_UP, its RUNTIME_ROLLED_BACK or runtime DEPLOY_FAILED as FLEET_RUNTIME_DOWN."
         @tier "primary"
       FLEET_DEPLOY -> external { target : string!  apps : [FleetCliApp]!  only : [string]! }

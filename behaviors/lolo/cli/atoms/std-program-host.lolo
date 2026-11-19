@@ -22,7 +22,7 @@ type AppLoaded = { name : string!, guest : string!, lastUsedMs : instant!, loadi
 type AppPin = { clientId : string!, app : string!, guest : string! }
 type AppHook = { inbound : string!, body : string!, headers : Map string string }
 type AppAddress = string | AppHook
-type AppWaiting = { key : string!, app : string!, address : AppAddress!, payload : AppValue, options : Map string AppValue, guestOnly : boolean }
+type AppWaiting = { key : string!, app : string!, address : AppAddress!, payload : AppValue, options : Map string AppValue, guestOnly : boolean, clientId : string, mounting : boolean }
 type HostGrants = { fs : [HostFsGrant]?, exec : [string]?, net : [HostNetGrant]?, credentials : [string]? }
 
 orbital ProgramHostOrbital {
@@ -196,7 +196,12 @@ orbital ProgramHostOrbital {
 
       APP_REQUEST -> serving when (or (= @payload.app "") (= @config.appsDir ""))
         (emit APP_FAILED { key: @payload.key, error: "no app or appsDir named for the request" })
-      APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading)))))
+      APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading)))) (and (!= (default @payload.clientId "") "") (not (default @payload.mounting false)) (not (array/some @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId (default @payload.clientId ""))))))))
+        (let ((cur (array/find @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading))))))
+          (do
+            (set @entity.pins (array/append @entity.pins { clientId: (default @payload.clientId "") app: @payload.app guest: @cur.guest }))
+            (emit APP_FAILED { key: @payload.key, error: "session ended: mount again with the frames the client holds", status: 409, code: "SESSION_ENDED" })))
+      APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading)))) (not (and (!= (default @payload.clientId "") "") (not (default @payload.mounting false)) (not (array/some @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId (default @payload.clientId "")))))))))
         (let ((cid (default @payload.clientId "")))
           (let ((pin (array/find @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId @cid) (!= @cid ""))))) (cur (array/find @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading))))))
             (let ((g (if (and (!= @pin null) (array/some @entity.apps (fn a (and (= @a.guest @pin.guest) (not @a.loading))))) @pin.guest @cur.guest)))
@@ -206,10 +211,10 @@ orbital ProgramHostOrbital {
                   (set @entity.pins (array/append @entity.pins { clientId: @cid app: @payload.app guest: @g })))
                 (program/dispatch @payload.address @payload.payload (object/merge (default @payload.options {}) { guest: @g }) { key: @payload.key emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } })))))
       APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (not (array/some @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading))))) (array/some @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) @a.loading))))
-        (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) }))
+        (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) clientId: (default @payload.clientId "") mounting: (default @payload.mounting false) }))
       APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (not (array/some @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true))))))
         (set @entity.apps (array/append @entity.apps { name: @payload.app guest: "" lastUsedMs: (time/now) loading: true current: true release: "" }))
-        (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) }))
+        (set @entity.waiting (array/append @entity.waiting { key: @payload.key app: @payload.app address: @payload.address payload: @payload.payload options: (default @payload.options {}) clientId: (default @payload.clientId "") mounting: (default @payload.mounting false) }))
         (os/readlink (str/concat @config.appsDir "/" @payload.app "/current") { key: @payload.app emit: { success: APP_LINK_READ, failure: APP_LINK_UNREAD } })
       APP_GUEST -> serving when (or (= @payload.app "") (= @config.appsDir ""))
         (emit APP_FAILED { key: @payload.key, error: "no app or appsDir named for the request" })
@@ -240,14 +245,11 @@ orbital ProgramHostOrbital {
         (let ((lines (str/split (default (bytes/to-string @payload.data) "") "\n")))
           (let ((env (object/fromEntries (array/map (array/filter (array/map @lines (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#")) (str/includes @l "=")))) (fn l (let ((parts (str/split @l "="))) [(str/trim (default (array/first @parts) "")) (str/join (array/drop @parts 1) "=")]))))))
             (set @entity.apps (array/map @entity.apps (fn x (if (and (= @x.name (default @payload.key "")) @x.loading) (object/set @x "env" @env) @x))))))
-        (program/read "" { resolve: true text: false path: (str/concat @config.appsDir "/" (default @payload.key "") "/" (default (object/get (default (array/find @entity.apps (fn a (and (= @a.name (default @payload.key "")) @a.loading))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "release") "current") "/app.orb") } { key: (default @payload.key "") emit: { success: APP_PROGRAM_READ, failure: APP_LOAD_FAILED } })
+        (program/open null { path: (str/concat @config.appsDir "/" (default @payload.key "") "/" (default (object/get (default (array/find @entity.apps (fn a (and (= @a.name (default @payload.key "")) @a.loading))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "release") "current") "/app.orb"), split: true, declared: true, program: "declared", withhold: ["listen", "self-signal"], env: (default (object/get (default (array/find @entity.apps (fn a (and (= @a.name (default @payload.key "")) @a.loading))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "env") {}) } { key: (default @payload.key "") emit: { success: APP_OPENED, failure: APP_LOAD_FAILED } })
       APP_ENV_UNREAD -> serving when (= (default @payload.kind "") "not-found")
-        (program/read "" { resolve: true text: false path: (str/concat @config.appsDir "/" (default @payload.key "") "/" (default (object/get (default (array/find @entity.apps (fn a (and (= @a.name (default @payload.key "")) @a.loading))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "release") "current") "/app.orb") } { key: (default @payload.key "") emit: { success: APP_PROGRAM_READ, failure: APP_LOAD_FAILED } })
+        (program/open null { path: (str/concat @config.appsDir "/" (default @payload.key "") "/" (default (object/get (default (array/find @entity.apps (fn a (and (= @a.name (default @payload.key "")) @a.loading))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "release") "current") "/app.orb"), split: true, declared: true, program: "declared", withhold: ["listen", "self-signal"], env: (default (object/get (default (array/find @entity.apps (fn a (and (= @a.name (default @payload.key "")) @a.loading))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "env") {}) } { key: (default @payload.key "") emit: { success: APP_OPENED, failure: APP_LOAD_FAILED } })
       APP_ENV_UNREAD -> serving when (!= (default @payload.kind "") "not-found")
         (emit APP_LOAD_FAILED { key: (default @payload.key ""), error: (str/concat "app.env could not be read: " (default @payload.error "")) })
-      APP_PROGRAM_READ -> serving
-        (let ((env (default (object/get (default (array/find @entity.apps (fn a (and (= @a.name @payload.key) @a.loading))) { name: "", guest: "", lastUsedMs: (time/now), loading: false }) "env") {})) (program (array/some (default (object/get (default @payload.result.program.osGrants {}) "kernel") []) (fn g (and (= @g.target "guest") (array/includes @g.kinds "program"))))))
-          (program/open (if (= (array/len (default @payload.result.lazy [])) 0) @payload.result.program (object/set @payload.result.program "lazyPrograms" (object/fromEntries (array/map (default @payload.result.lazy []) (fn l [(object/get (default (array/find (default @payload.result.program.lazyPages []) (fn p (= @p.orbital @l.orbital))) { orbital: "", orbRef: "" }) "orbRef") @l.program]))))) { split: true, declared: true, env: @env, program: @program } { key: @payload.key emit: { success: APP_OPENED, failure: APP_LOAD_FAILED } }))
       APP_OPENED -> serving when (not (array/some @entity.apps (fn a (and (= @a.name @payload.key) (not @a.loading)))))
         (set @entity.apps (array/map @entity.apps (fn x (if (and (= @x.name @payload.key) @x.loading) (object/merge @x { guest: @payload.result.guest lastUsedMs: (time/now) loading: false current: true }) @x))))
         (emit APP_DRAIN { app: @payload.key, guest: @payload.result.guest })
@@ -261,10 +263,18 @@ orbital ProgramHostOrbital {
             (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
             (emit APP_DRAIN { app: @payload.app, guest: @payload.guest })
             (emit APP_GUEST_ANSWERED { key: @w.key, guest: @payload.guest })))
-      APP_DRAIN -> serving when (and (array/some @entity.waiting (fn w (= @w.app @payload.app))) (not (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "guestOnly") false)))
+      APP_DRAIN -> serving when (and (array/some @entity.waiting (fn w (= @w.app @payload.app))) (not (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "guestOnly") false)) (and (!= (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "clientId") "") "") (not (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "mounting") false)) (not (array/some @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "clientId") ""))))))))
+        (let ((w (default (array/find @entity.waiting (fn x (= @x.app @payload.app))) { key: "" app: "" address: "" payload: "" options: {} clientId: "" })))
+          (do
+            (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
+            (set @entity.pins (array/append @entity.pins { clientId: (default (object/get @w "clientId") "") app: @payload.app guest: @payload.guest }))
+            (emit APP_FAILED { key: @w.key, error: "session ended: mount again with the frames the client holds", status: 409, code: "SESSION_ENDED" })
+            (emit APP_DRAIN { app: @payload.app, guest: @payload.guest })))
+      APP_DRAIN -> serving when (and (array/some @entity.waiting (fn w (= @w.app @payload.app))) (not (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "guestOnly") false)) (not (and (!= (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "clientId") "") "") (not (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "mounting") false)) (not (array/some @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "clientId") "")))))))))
         (let ((w (default (array/find @entity.waiting (fn x (= @x.app @payload.app))) { key: "" app: "" address: "" payload: "" options: {} })))
           (do
             (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
+            (when (and (!= (default (object/get @w "clientId") "") "") (not (array/some @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId (default (object/get @w "clientId") ""))))))) (set @entity.pins (array/append @entity.pins { clientId: (default (object/get @w "clientId") "") app: @payload.app guest: @payload.guest })))
             (program/dispatch @w.address @w.payload (object/merge (default @w.options {}) { guest: @payload.guest }) { key: @w.key emit: { success: APP_ANSWERED_IN, failure: APP_FAILED_IN } })
             (emit APP_DRAIN { app: @payload.app, guest: @payload.guest })))
       APP_LOAD_FAILED -> serving when (array/some @entity.apps (fn a (and (= @a.name @payload.key) (not @a.loading))))
@@ -343,8 +353,8 @@ orbital ProgramHostOrbital {
         @description "A hosted app's answer to an APP_REQUEST, under the request's key."
       APP_GUEST_ANSWERED -> external { key : string!  guest : string! }
         @description "The guest handle of a hosted app, answering an APP_GUEST under its key."
-      APP_FAILED -> external { key : string!  error : string! }
-        @description "An APP_REQUEST that could not be answered: no app named, the app's file unreadable or refused at open, or the dispatch failed."
+      APP_FAILED -> external { key : string!  error : string!  status : number?  code : string? }
+        @description "An APP_REQUEST that could not be answered: no app named, the app's file unreadable or refused at open, or the dispatch failed, or (status 409, code SESSION_ENDED) a request from a client with no pin that is not mounting: the client is pinned and must send its mounts again."
       APP_UNLOADED -> external { app : string! }
         @description "A hosted app was closed: by APP_UNLOAD or because it sat unused past idleMs."
       APP_RELEASED -> external { app : string!  release : string! }
@@ -365,7 +375,6 @@ orbital ProgramHostOrbital {
       APP_ENV_UNREAD { error : string, kind : string, key : string }
         @description "An app's app.env could not be read: not-found opens the app with no env of its own, anything else fails its load."
         @tier "internal"
-      APP_PROGRAM_READ { result : HostResolved!, key : string }
         @description "An app's program resolved."
         @tier "internal"
       APP_OPENED { result : HostOpened!, key : string }
@@ -407,7 +416,7 @@ orbital ProgramHostOrbital {
     }
 
     listens {
-      APP_REQUEST { key : string!, app : string!, address : AppAddress!, payload : AppValue, options : Map string AppValue, clientId : string? }
+      APP_REQUEST { key : string!, app : string!, address : AppAddress!, payload : AppValue, options : Map string AppValue, clientId : string?, mounting : boolean? }
         @description "Run an event on a hosted app, loading the app from appsDir when it is not open; a request naming a clientId stays on the release that client first used."
       APP_GUEST { key : string!, app : string!, clientId : string? }
         @description "Ask for the guest handle of a hosted app (the release the clientId is pinned to, else the current one), loading the app from appsDir when it is not open; answered as APP_GUEST_ANSWERED, or APP_FAILED under the key."

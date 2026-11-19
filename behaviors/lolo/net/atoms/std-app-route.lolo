@@ -9,7 +9,7 @@ type AppRouteOptions = Map string AppRouteJson?
 type AppRouteHook = { inbound : string!, body : string!, headers : Map string string }
 type AppRouteAddress = string | AppRouteHook
 type AppRouteHookAnswer = { status : number!, body : string! }
-type AppRouteRequest = { key : string!, app : string!, address : AppRouteAddress!, payload : AppRouteJson, options : AppRouteOptions, clientId : string }
+type AppRouteRequest = { key : string!, app : string!, address : AppRouteAddress!, payload : AppRouteJson, options : AppRouteOptions, clientId : string, mounting : boolean! }
 type AppRoutePending = { requestId : number!, key : string!, valid : boolean!, app : string!, orbital : string!, body : bytes!, responseHeaders : [AppRouteHeader]!, authorization : string!, awaitingAuth : boolean!, request : AppRouteRequest!, kind : string, ticket : string, clientId : string, hook : string, hookHeaders : Map string string }
 
 orbital AppRouteOrbital {
@@ -41,7 +41,7 @@ orbital AppRouteOrbital {
                 (mint (and (= (str/upper @payload.method) "POST") (= (array/len @parts) 4) (!= (array/nth @parts 0) "") (= (array/nth @parts 1) "api") (= (array/nth @parts 2) "events") (= (array/nth @parts 3) "ticket")))
                 (stream (and (= (str/upper @payload.method) "GET") (= (array/len @parts) 3) (!= (array/nth @parts 0) "") (= (array/nth @parts 1) "api") (= (array/nth @parts 2) "events")))
                 (hook (and (= (str/upper @payload.method) "POST") (= (array/len @parts) 4) (!= (array/nth @parts 0) "") (= (array/nth @parts 1) "api") (= (array/nth @parts 2) "hooks") (!= (array/nth @parts 3) ""))))
-            (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, key: (json/stringify @payload.requestId), valid: @ok, app: (if (or @ok @mint @stream @hook) (array/nth @parts 0) ""), orbital: (if @ok (array/nth @parts 3) ""), body: (default @payload.body (bytes/from-string "")), responseHeaders: [], authorization: (default (object/get (default @payload.headers {}) "authorization") ""), awaitingAuth: false, request: { key: "", app: "", address: "", payload: {}, options: {} }, kind: (if @mint "mint" (if @stream "stream" (if @hook "hook" ""))), hook: (if @hook (array/nth @parts 3) ""), hookHeaders: (default @payload.headers {}), ticket: (str/replace (default (array/find @params (fn q (str/startsWith @q "ticket="))) "") "ticket=" ""), clientId: (str/replace (default (array/find @params (fn q (str/startsWith @q "clientId="))) "") "clientId=" "") }))))
+            (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, key: (json/stringify @payload.requestId), valid: @ok, app: (if (or @ok @mint @stream @hook) (array/nth @parts 0) ""), orbital: (if @ok (array/nth @parts 3) ""), body: (default @payload.body (bytes/from-string "")), responseHeaders: [], authorization: (default (object/get (default @payload.headers {}) "authorization") ""), awaitingAuth: false, request: { key: "", app: "", address: "", payload: {}, options: {}, mounting: false }, kind: (if @mint "mint" (if @stream "stream" (if @hook "hook" ""))), hook: (if @hook (array/nth @parts 3) ""), hookHeaders: (default @payload.headers {}), ticket: (str/replace (default (array/find @params (fn q (str/startsWith @q "ticket="))) "") "ticket=" ""), clientId: (str/replace (default (array/find @params (fn q (str/startsWith @q "clientId="))) "") "clientId=" "") }))))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (not @p.valid) (= (default (object/get @p "kind") "") ""))))
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
@@ -61,6 +61,7 @@ orbital AppRouteOrbital {
                     key: @q.key,
                     app: @q.app,
                     clientId: (object/get @b "clientId" ""),
+                    mounting: (> (array/len (default @b.mount [])) 0),
                     address: (str/concat @q.orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" "")),
                     payload: (object/get @b "payload" {}),
                     options: {
@@ -83,8 +84,8 @@ orbital AppRouteOrbital {
                   (let ((r (array/find @entity.pending (fn q (= @q.requestId @payload.requestId)))))
                     (when (!= @r null)
                       (if @r.awaitingAuth
-                        (emit APP_REQUEST { key: (str/concat @r.key "-auth"), app: @r.app, address: "BEARER_PRESENT", clientId: (object/get @b "clientId" ""), payload: { requestId: @r.requestId, authorization: @r.authorization, clientId: (object/get @b "clientId" "") }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })
-                        (emit APP_REQUEST { key: @r.request.key, app: @r.request.app, clientId: (default @r.request.clientId ""), address: @r.request.address, payload: (object/get @r.request "payload" {}), options: (object/get @r.request "options" {}) }))))))))))
+                        (emit APP_REQUEST { key: (str/concat @r.key "-auth"), app: @r.app, address: "BEARER_PRESENT", mounting: @r.request.mounting, clientId: (object/get @b "clientId" ""), payload: { requestId: @r.requestId, authorization: @r.authorization, clientId: (object/get @b "clientId" "") }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })
+                        (emit APP_REQUEST { key: @r.request.key, app: @r.request.app, clientId: (default @r.request.clientId ""), mounting: @r.request.mounting, address: @r.request.address, payload: (object/get @r.request "payload" {}), options: (object/get @r.request "options" {}) }))))))))))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "mint") (= @p.authorization ""))))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
@@ -92,7 +93,7 @@ orbital AppRouteOrbital {
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "mint") (!= @p.authorization ""))))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
-        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (when (!= @p null) (emit APP_REQUEST { key: (str/concat @p.key "-mintauth"), app: @p.app, address: "BEARER_PRESENT", clientId: @p.clientId, payload: { requestId: @p.requestId, authorization: @p.authorization, clientId: @p.clientId }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })))
+        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (when (!= @p null) (emit APP_REQUEST { key: (str/concat @p.key "-mintauth"), app: @p.app, address: "BEARER_PRESENT", mounting: false, clientId: @p.clientId, payload: { requestId: @p.requestId, authorization: @p.authorization, clientId: @p.clientId }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "stream") (= @p.ticket ""))))
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
@@ -150,19 +151,24 @@ orbital AppRouteOrbital {
       APP_ANSWERED -> serving when (array/some @entity.pending (fn p (and @p.awaitingAuth (= (str/concat @p.key "-auth") @payload.key))))
         (let ((p (array/find @entity.pending (fn q (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key))))))
           (when (!= @p null)
-            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, clientId: (default @p.request.clientId ""), address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
+            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, clientId: (default @p.request.clientId ""), mounting: @p.request.mounting, address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
         (set @entity.pending (array/map @entity.pending (fn q (if (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key)) (object/merge @q { awaitingAuth: false }) @q))))
 
-      APP_FAILED -> serving when (array/some @entity.pending (fn p (and @p.awaitingAuth (= (str/concat @p.key "-auth") @payload.key))))
+      APP_FAILED -> serving when (array/some @entity.pending (fn p (and @p.awaitingAuth (= (str/concat @p.key "-auth") @payload.key) (= (default @payload.code "") "SESSION_ENDED"))))
+        (let ((p (array/find @entity.pending (fn q (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key))))))
+          (when (!= @p null) (emit RESPOND { requestId: @p.requestId, status: (default @payload.status 502), headers: (array/append @p.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: @payload.code })) })))
+        (set @entity.pending (array/filter @entity.pending (fn q (not (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key))))))
+
+      APP_FAILED -> serving when (array/some @entity.pending (fn p (and @p.awaitingAuth (= (str/concat @p.key "-auth") @payload.key) (!= (default @payload.code "") "SESSION_ENDED"))))
         (let ((p (array/find @entity.pending (fn q (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key))))))
           (when (!= @p null)
-            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, clientId: (default @p.request.clientId ""), address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
+            (emit APP_REQUEST { key: @p.request.key, app: @p.request.app, clientId: (default @p.request.clientId ""), mounting: @p.request.mounting, address: @p.request.address, payload: (object/get @p.request "payload" {}), options: (object/get @p.request "options" {}) })))
         (set @entity.pending (array/map @entity.pending (fn q (if (and @q.awaitingAuth (= (str/concat @q.key "-auth") @payload.key)) (object/merge @q { awaitingAuth: false }) @q))))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "hook"))))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
         (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId)))))
-          (when (!= @p null) (emit APP_REQUEST { key: @p.key, app: @p.app, address: { inbound: (default @p.hook ""), body: (default (bytes/to-string @p.body) ""), headers: (default @p.hookHeaders {}) }, payload: {}, options: {} })))
+          (when (!= @p null) (emit APP_REQUEST { key: @p.key, app: @p.app, address: { inbound: (default @p.hook ""), body: (default (bytes/to-string @p.body) ""), headers: (default @p.hookHeaders {}) }, payload: {}, mounting: false, options: {} })))
 
       APP_ANSWERED -> serving when (array/some @entity.pending (fn p (and (= (default (object/get @p "kind") "") "hook") (= @p.key @payload.key))))
         (let ((p (array/find @entity.pending (fn q (= @q.key @payload.key)))) (r (as @payload.result AppRouteHookAnswer)))
@@ -181,7 +187,7 @@ orbital AppRouteOrbital {
 
       APP_FAILED -> serving when (array/some @entity.pending (fn p (and @p.valid (= @p.key @payload.key))))
         (let ((p (array/find @entity.pending (fn q (= @q.key @payload.key)))))
-          (when (!= @p null) (emit RESPOND { requestId: (object/get @p "requestId"), status: 502, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: "APP_FAILED" })) })))
+          (when (!= @p null) (emit RESPOND { requestId: (object/get @p "requestId"), status: (default @payload.status 502), headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: (default @payload.code "APP_FAILED") })) })))
         (set @entity.pending (array/filter @entity.pending (fn q (!= @q.key @payload.key))))
     }
 
@@ -197,6 +203,7 @@ orbital AppRouteOrbital {
         key : string!
         app : string!
         clientId : string?
+        mounting : boolean?
         address : AppRouteAddress!
         payload : AppRouteJson
         options : Map string AppRouteJson?
@@ -262,6 +269,8 @@ orbital AppRouteOrbital {
       APP_FAILED {
         key : string!
         error : string!
+        status : number?
+        code : string?
       }
         @description "A hosted app's failure under the request's key."
       APP_GUEST_ANSWERED {
