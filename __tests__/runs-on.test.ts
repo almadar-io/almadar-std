@@ -21,7 +21,7 @@ const OS_ANY = ['os/close', 'os/fetch', 'os/recv'];
 
 const MEM_EFFECTS = ['mem/alloc', 'mem/arena-drop', 'mem/arena-new', 'mem/atomic-add', 'mem/atomic-cas', 'mem/atomic-load', 'mem/atomic-store', 'mem/borrow', 'mem/free', 'mem/freeze', 'mem/release', 'mem/write'];
 const KERNEL_EFFECTS = ['kernel/queue-back', 'kernel/queue-front'];
-const KERNEL_PURE = ['kernel/apply', 'kernel/frame', 'kernel/stamp', 'kernel/worklist'];
+const KERNEL_PURE = ['kernel/apply', 'kernel/frame', 'kernel/stamp', 'kernel/step', 'kernel/worklist'];
 const FFI_EFFECTS = ['ffi/call'];
 const GPU_EFFECTS = ['gpu/bind-group-create', 'gpu/buffer-create', 'gpu/device-close', 'gpu/device-open', 'gpu/pipeline-create', 'gpu/query-create', 'gpu/release', 'gpu/sampler-create', 'gpu/shader-create', 'gpu/submit', 'gpu/texture-create'];
 const MEM_PURE = ['mem/length', 'mem/read', 'mem/read-int', 'mem/read-uint'];

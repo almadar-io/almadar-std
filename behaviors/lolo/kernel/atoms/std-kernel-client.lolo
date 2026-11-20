@@ -1,0 +1,71 @@
+app std-kernel-client [
+  version: "0.1.0",
+  kernel: { "guest": [step] },
+  description: "std-kernel-client — the .lolo kernel a browser runs its client dispatches through (P-044 Part B). Composed into a split guest's client program by std-guest-session when the guest runs on the .lolo kernel, and named by the program's dispatchKernel (program/open { kernel: \"lolo\", clientKernel }), which mounts its three traits when the browser loads the program. ClientKernelSelf reads the program the browser loaded (program/self { loaded: true }) and attaches ClientKernel to the browser's own kernel (guest \"self\"); from then on each client dispatch is KERNEL_DISPATCH to ClientKernel, which steps the browser's traits with kernel/step \"self\", each step committed and joining the client dispatch, while the browser kernel builds the dispatch's server legs and folds their answers as it does natively. ClientKernelMachine is std-machine's Machine, read by ClientKernel for the program's transition rows and delivery facts. A failed read leaves the browser on its native cascade for this program and says why in CLIENT_KERNEL_FAILED."
+]
+;; @capabilities "lolo kernel in the browser, client dispatch through the lolo kernel"
+
+uses Kernel from "std/behaviors/std-kernel-dispatch"
+uses Machine from "std/behaviors/std-machine"
+
+orbital ClientKernelOrbital {
+  entity ClientKernelRun [runtime] {
+    id : string!
+    error : string! = ""
+  }
+
+  trait ClientKernelMachine = Machine.traits.Machine [client] {
+    listens {
+      ClientKernel.KERNEL_MACHINE_READ -> MACHINE_READ
+      ClientKernel.KERNEL_FACTS_READ -> MACHINE_FACTS_READ
+    }
+  }
+
+  trait ClientKernel = Kernel.traits.KernelDispatch [client] {
+    listens {
+      ClientKernelSelf.CLIENT_KERNEL_ATTACH -> KERNEL_ATTACH
+      ClientKernelMachine.MACHINE_ANSWERED -> KERNEL_ROWS
+      ClientKernelMachine.MACHINE_FACTS -> KERNEL_FACTS
+    }
+  }
+
+  trait ClientKernelSelf -> ClientKernelRun [client] {
+    initial: reading
+
+    state reading {
+      INIT -> reading
+        (program/self { loaded: true, emit: { success: CLIENT_PROGRAM_READ, failure: CLIENT_PROGRAM_UNREAD } })
+      CLIENT_PROGRAM_READ -> attached
+        (emit CLIENT_KERNEL_ATTACH { program: ?result, guest: "self", browser: [] })
+      CLIENT_PROGRAM_UNREAD -> failed
+        (set @entity.error (default ?error "the program could not be read"))
+        (emit CLIENT_KERNEL_FAILED { error: @entity.error })
+    }
+
+    state attached {
+      INIT -> attached
+    }
+
+    state failed {
+      INIT -> failed
+    }
+
+    emits {
+      CLIENT_KERNEL_ATTACH -> internal { program : SExpr!, guest : string!, browser : [string]! }
+        @description "Attach the .lolo kernel to the browser's own kernel with the program it loaded."
+      CLIENT_KERNEL_FAILED -> external { error : string! }
+        @description "The browser's program could not be read, so its client dispatches stay on the native cascade."
+    }
+
+    listens {
+      CLIENT_PROGRAM_READ {
+        result : SExpr!
+      }
+      CLIENT_PROGRAM_UNREAD {
+        error : string
+      }
+    }
+  }
+
+  page boot as ClientKernelBoot -> ClientKernelMachine, ClientKernel, ClientKernelSelf
+}

@@ -121,7 +121,7 @@ orbital KernelDispatchOrbital {
         (emit KERNEL_MACHINE_READ { program: ?result.program })
         (emit KERNEL_FACTS_READ { program: ?result.program })
         (if (= (default ?result.guest "") "")
-          (program/open ?result.program {} { emit: { success: KERNEL_GUEST, failure: KERNEL_OPEN_FAILED } })
+          (emit KERNEL_OPEN_ASK { program: ?result.program })
           (emit KERNEL_GUEST { result: { guest: (default ?result.guest ""), outcomes: [] } }))
       KERNEL_GUEST -> reading
         (set @entity.guest ?result.guest)
@@ -341,6 +341,7 @@ orbital KernelDispatchOrbital {
 
     emits {
       KERNEL_MACHINE_READ -> internal { program : SExpr! }
+      KERNEL_OPEN_ASK -> internal { program : SExpr! }
       KERNEL_FACTS_READ -> internal { program : SExpr! }
       KERNEL_RUN -> internal { items : [KItem]!, next : [KItem]!, pending : [string]! }
       KERNEL_READ -> internal { result : KReadAnswer! }
@@ -362,7 +363,7 @@ orbital KernelDispatchOrbital {
         @description "Load a resolved program (.orb IR, as program/read { resolve } answers it) on the .lolo kernel."
       KERNEL_MOUNT -> input { route : string!, boot : boolean! }
         @description "Mount a page by its path, or boot for the boot pages; boot true mounts the boot pages in the same batch, as opening a program on a route does."
-      KERNEL_DISPATCH -> input { trait : string!, event : string!, payload : SExpr! }
+      KERNEL_DISPATCH -> input { trait : string!, event : string!, payload : SExpr? }
         @description "Dispatch one event to a trait."
       KERNEL_ATTACH -> input { program : SExpr!, guest : string!, browser : [string]? }
         @description "Adopt a hosted guest already opened with program/open { mount: false } for the .lolo kernel to run: read its program as KERNEL_LOAD does, without opening another; from then on every step commits (kernel/step { commit: true }), so the guest keeps what the kernel runs. browser names the traits the guest's viewer runs (program/open's browserRuns): no listener delivery goes to them on this kernel, as a split guest's own kernel leaves them to the browser (EXEC-ENDPOINT-3a)."
@@ -385,6 +386,42 @@ orbital KernelDispatchOrbital {
       KernelMachine.MACHINE_ANSWERED -> KERNEL_ROWS
       KernelMachine.MACHINE_FACTS -> KERNEL_FACTS
       KernelMachine.MACHINE_UNREAD -> KERNEL_MACHINE_UNREAD
+      KernelOpener.KERNEL_OPENER_GUEST -> KERNEL_GUEST
+      KernelOpener.KERNEL_OPENER_FAILED -> KERNEL_OPEN_FAILED
+    }
+  }
+
+  trait KernelOpener -> KernelRun [server] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      KERNEL_OPEN_ASK -> ready
+        (program/open ?program {} { emit: { success: KERNEL_OPENER_OPENED, failure: KERNEL_OPENER_REFUSED } })
+      KERNEL_OPENER_OPENED -> ready
+        (emit KERNEL_OPENER_GUEST { result: ?result })
+      KERNEL_OPENER_REFUSED -> ready
+        (emit KERNEL_OPENER_FAILED { error: (default ?error "the program could not be opened") })
+    }
+
+    emits {
+      KERNEL_OPENER_GUEST -> internal { result : KOpenAnswer! }
+        @description "The guest KERNEL_LOAD's program opened as, for the kernel to step."
+      KERNEL_OPENER_FAILED -> internal { error : string! }
+        @description "The program could not be opened as a guest."
+    }
+
+    listens {
+      KernelDispatch.KERNEL_OPEN_ASK -> KERNEL_OPEN_ASK
+      KERNEL_OPEN_ASK {
+        program : SExpr!
+      }
+      KERNEL_OPENER_OPENED {
+        result : KOpenAnswer!
+      }
+      KERNEL_OPENER_REFUSED {
+        error : string
+      }
     }
   }
 
@@ -506,5 +543,5 @@ orbital KernelDispatchOrbital {
     }
   }
 
-  page boot as KernelDispatchStart -> KernelDispatch, KernelMachine, KernelParity
+  page boot as KernelDispatchStart -> KernelDispatch, KernelMachine, KernelOpener, KernelParity
 }

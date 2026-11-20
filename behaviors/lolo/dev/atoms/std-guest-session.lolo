@@ -128,6 +128,7 @@ orbital GuestSessionOrbital {
     guestKernelThen : string @description "What the .lolo kernel's work in flight answers when it ends (leg, viewer, stepped, personas, identity-seeded, persona-acted, viewer-credential, credential, run, attach, boot, mount); empty while the kernel is free." = ""
     guestKernelQueue : [GuestKernelWork] @description "The .lolo kernel's work waiting for the work in flight to end, in arrival order." = []
     guestKernelBrowser : [string] @description "The traits a .lolo-kernel guest's viewer runs (program/open browserRuns), which its kernel leaves to the browser." = []
+    guestKernelClient : behavior? @description "std-kernel-client resolved, which a .lolo-kernel guest's open adds to the client program its viewer runs (program/open clientKernel)."
     guestKernelOpened : GuestOpened? @description "A .lolo-kernel guest's open answer, held until the kernel has run its boot mounts."
     guestViewer : string @description "A split guest's viewer kernel: the client session its legs name, signed in as the guest's persona before its first leg runs; empty until one posts." = ""
     guestViewerOrbital : string @description "The orbital the viewer kernel's legs name, which a persona sign-in into its session names too." = ""
@@ -439,7 +440,12 @@ orbital GuestSessionOrbital {
         (emit GUEST_ERROR { message: ?error })
       GUEST_PREPARE -> idle when (!= @entity.guestKernelRefusal "")
         (emit GUEST_ERROR { message: @entity.guestKernelRefusal })
-      GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (= @entity.guestIntegrations "live"))
+      GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (= @entity.guestKernel "lolo") (= @entity.guestKernelClient null))
+        (behavior/resolve { behavior: "std/behaviors/std-kernel-client" } {} { emit: { success: GUEST_KERNEL_CLIENT_READ, failure: GUEST_FAILED } })
+      GUEST_KERNEL_CLIENT_READ -> opening
+        (set @entity.guestKernelClient ?result)
+        (emit GUEST_PREPARE {})
+      GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (or (= @entity.guestKernel "native") (!= @entity.guestKernelClient null)) (= @entity.guestIntegrations "live"))
         (os/mkdir (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) true { key: "guest-live-dir", emit: { success: GUEST_LIVE_DIR_READY, failure: GUEST_FAILED } })
       GUEST_LIVE_DIR_READY -> opening
         (os/exists (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") "/node_modules") { key: "guest-live-link", emit: { success: GUEST_LIVE_CHECKED, failure: GUEST_FAILED } })
@@ -450,25 +456,25 @@ orbital GuestSessionOrbital {
       GUEST_LIVE_CHECKED -> opening when @payload.ok
         (set @entity.guestSeeded false)
         (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_LIVE_LINKED -> opening
         (set @entity.guestSeeded false)
         (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
-      GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (= @entity.guestIntegrations "mock") (= @entity.guestSeed null) (not (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
+      GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (or (= @entity.guestKernel "native") (!= @entity.guestKernelClient null)) (= @entity.guestIntegrations "mock") (= @entity.guestSeed null) (not (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
         (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_FAILED } })
       GUEST_SEED_RESOLVED -> opening when (= @entity.guestSeed null)
         (set @entity.guestSeed ?result)
         (emit GUEST_PREPARE {})
       GUEST_SEED_RESOLVED -> opening when (!= @entity.guestSeed null)
-      GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (= @entity.guestIntegrations "mock") (or (!= @entity.guestSeed null) (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
+      GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (or (= @entity.guestKernel "native") (!= @entity.guestKernelClient null)) (= @entity.guestIntegrations "mock") (or (!= @entity.guestSeed null) (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
         (emit GUEST_SEED_ASK { program: @entity.guestProgram })
       GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "server"))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
         (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
         (set @entity.guestSeed null)
       GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "client"))
@@ -507,7 +513,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestComposed ?result)
         (set @entity.guestComposedKey @entity.guestOpenKey)
         (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") (as ?result GuestProgram) null))
-        (program/open ?result { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open ?result { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_COMPOSED -> opening when (= @config.runs "client")
         (set @entity.guestComposed ?result)
         (set @entity.guestComposedKey @entity.guestOpenKey)
@@ -1310,6 +1316,10 @@ orbital GuestSessionOrbital {
         error : string!
       }
         @description "The launchpad's bound host could not be read."
+      GUEST_KERNEL_CLIENT_READ {
+        result : behavior!
+      }
+        @description "std-kernel-client resolved, for the .lolo-kernel guest's client program."
       GUEST_COMPOSED {
         result : behavior!
       }

@@ -363,7 +363,7 @@ export function effectSiteFor(
 ): RunsOn | undefined {
   const meta = STD_OPERATORS[operator];
   const site = meta?.runsOn;
-  if ((operator === 'program/live' && isTraceSubscription(args[0])) || (operator === 'program/self' && isMountedReflection(args[0])) || operator === 'cancel-call') return 'any';
+  if ((operator === 'program/live' && isTraceSubscription(args[0])) || (operator === 'program/self' && (isMountedReflection(args[0]) || isLoadedReflection(args[0]))) || operator === 'cancel-call') return 'any';
   if (operator === 'call-service' && site === 'server') {
     const service = args[0];
     return typeof service === 'string' && !service.startsWith('@') && isBrowserOnlyService(service) ? 'client' : 'server';
@@ -381,6 +381,11 @@ function isTraceSubscription(options: unknown): boolean {
 /** A `program/self` options object naming `mounted: true` and no `guest`: the kernel the step runs on answers it (EXEC-DIST-15); a guest's tree is the server's. */
 function isMountedReflection(options: unknown): boolean {
   return typeof options === 'object' && options !== null && !Array.isArray(options) && 'mounted' in options && options.mounted === true && !('guest' in options);
+}
+
+/** A `program/self` options object naming `loaded: true` and no `guest`: the kernel the step runs on answers it with the program it loaded. */
+function isLoadedReflection(options: unknown): boolean {
+  return typeof options === 'object' && options !== null && !Array.isArray(options) && 'loaded' in options && options.loaded === true && !('guest' in options);
 }
 
 /** Effect operators whose declared execution site is `site`, sorted. */

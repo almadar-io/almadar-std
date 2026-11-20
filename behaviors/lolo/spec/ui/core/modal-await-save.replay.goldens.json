@@ -174,6 +174,80 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-confirmed-save-shows-a-success-message",
+   "config": {
+    "awaitSave": true,
+    "mode": "edit",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": "r1",
+      "saveInFlight": true
+     },
+     "event": "SAVED",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "closed",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "render-ui"
+       },
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-refused-save-shows-no-success-message",
+   "config": {
+    "awaitSave": true,
+    "mode": "edit",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": "r1",
+      "saveInFlight": true
+     },
+     "event": "SAVE_REJECTED",
+     "payload": {
+      "error": "no"
+     },
+     "expect": {
+      "fired": true,
+      "state": "open",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }
