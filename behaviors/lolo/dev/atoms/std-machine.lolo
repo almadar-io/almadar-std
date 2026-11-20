@@ -1,6 +1,6 @@
 app std-machine [
   version: "1.0.0",
-  description: "std-machine — a program's state machine as data. MACHINE_READ carries a resolved program (the .orb IR program/read answers once its imports are inlined) and MACHINE_ANSWERED returns one row per transition of every inline trait, orbital by orbital in declaration order. Transitions sharing a (from, event) are one group: with no guard anywhere in the group there is one row per distinct target and guarded is false; with any guard there is one row per arm and guarded says whether that arm carries its own. A transition whose from is a list of states joins the group of each listed state, in the listed order, and a trait with no transitions has no rows. Each row carries the payload slots its event declares (name, type, required, optional values and entity). The walk is bounded array maps in one event, no cascade."
+  description: "std-machine — a program's state machine as data. MACHINE_READ carries a resolved program (the .orb IR program/read answers once its imports are inlined) and MACHINE_ANSWERED returns one row per transition of every inline trait, orbital by orbital in declaration order. Transitions sharing a (from, event) are one group: with no guard anywhere in the group there is one row per distinct target and guarded is false; with any guard there is one row per arm and guarded says whether that arm carries its own. A transition whose from is a list of states joins the group of each listed state, in the listed order, and a trait with no transitions has no rows. Each row carries the payload slots its event declares (name, type, required, optional values and entity). The walk is bounded array maps in one event, no cascade. MACHINE_FACTS_READ carries the same resolved program and MACHINE_FACTS returns its delivery facts: routes, one per listens entry of every inline trait in declaration order (orbital, trait, at the entry's position among the trait's listens, trigger as the triggers field or else the event, event, sourceKind any for a wildcard or no source, trait for a trait-name source, orbital for Orbital.Trait, sourceOrbital which for a trait-name source is the listener's own orbital and empty for any, sourceTrait, and keyed, guarded, mapped for the per key, when guard and with mapping); and mounts, one per page of every orbital in declaration order (orbital, page, path and protocol defaulting to empty, listed as the trait refs of the page in order, and embedded as the traits of the same orbital named by an @trait.Name string in a listed trait's config or state machine, naming a trait of any orbital of the program other than itself, followed transitively breadth first, each once in the order first met and never repeating a listed trait; ticks and listens are not read, as the kernel's route mount reads them); and hosts, one per trait that something embeds, in trait-name order, with its chain of embedding traits innermost first, as the kernel's seed bubble reads it (EXEC-SEED-3): a trait's direct host is the first trait in name order whose traitEmbedIds names its id, else the first in name order naming it by an @trait.Name string in its config or state machine, and the chain follows direct hosts until one repeats. A program without orbitals answers MACHINE_FACTS_UNREAD."
 ]
 ;; @capabilities "state machine as data, transition rows, program machine, guarded transitions, payload slots"
 uses Spec from "almadar-std/machine"
@@ -10,16 +10,34 @@ type MachineEventDecl = { key : string!, payloadSchema : [MachineField] }
 type MachineArm = { from : (string | [string])!, event : string!, to : string!, guard : SExpr }
 type MachineSources = [string]
 type MachineGraph = { events : [MachineEventDecl], transitions : [MachineArm] }
-type MachineTrait = { name : string!, stateMachine : MachineGraph }
-type MachineOrbital = { name : string!, traits : [MachineTrait] }
+type MachineSource = { kind : string, orbital : string, trait : string }
+type MachineListen = { event : string!, triggers : string, source : MachineSource, key : SExpr, guard : SExpr, payloadMapping : SExpr }
+type MachinePageTrait = { ref : string!, refId : string }
+type MachinePage = { name : string!, path : string, protocol : string, traits : [MachinePageTrait] }
+type MachineTrait = { name : string!, id : string, traitEmbedIds : Map string string, stateMachine : MachineGraph, listens : [MachineListen], config : SExpr }
+type MachineOrbital = { name : string!, traits : [MachineTrait], pages : [MachinePage] }
 type MachineProgram = { orbitals : [MachineOrbital]! }
 type MachineSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
+type MachineShape = string | number | boolean | [MachineShape?] | Map string MachineShape?
+type MachineHit = { path : string!, node : MachineShape! }
+type MachineHits = Map string [MachineHit]
+type MachineRoute = { orbital : string!, trait : string!, at : number!, trigger : string!, event : string!, sourceKind : "any" | "trait" | "orbital", sourceOrbital : string!, sourceTrait : string!, keyed : boolean!, guarded : boolean!, mapped : boolean! }
+type MachineMount = { orbital : string!, page : string!, path : string!, protocol : string!, listed : [string]!, embedded : [string]! }
+type MachineStr = string
+type MachineRefs = { name : string!, refs : [string]! }
+type MachineHost = { trait : string!, chain : [string]! }
+type MachineEdge = { child : string!, host : string! }
+type MachineWalk = { chain : [string]!, cur : string!, seen : [string]!, done : boolean! }
 type MachineRow = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : [MachineSlot]! }
 
 orbital MachineOrbital {
   entity MachineRun [runtime] {
     id : string!
     rows : [MachineRow]! = []
+    routes : [MachineRoute]! = []
+    mounts : [MachineMount]! = []
+    refs : [MachineRefs]! = []
+    hosts : [MachineHost]! = []
   }
 
   trait Machine -> MachineRun [client] {
@@ -51,11 +69,81 @@ orbital MachineOrbital {
                               (let ((withValues (if (object/has @p "values") (object/set @slot "values" (object/get @p "values")) @slot)))
                                 (if (object/has @p "entity") (object/set @withValues "entity" (object/get @p "entity")) @withValues))))) })))))))))))))))))
         (emit MACHINE_ANSWERED { rows: @entity.rows })
+      MACHINE_FACTS_READ -> ready when (= (as @payload.program MachineProgram) null)
+        (emit MACHINE_FACTS_UNREAD { })
+      MACHINE_FACTS_READ -> ready when (!= (as @payload.program MachineProgram) null)
+        (set @entity.routes (array/flatten (array/map (object/get (as @payload.program MachineProgram) "orbitals") (fn o
+          (array/flatten (array/map (object/get @o "traits" []) (fn t
+            (let ((ls (object/get @t "listens" [])))
+              (array/map (array/range 0 (array/len @ls)) (fn i
+                (let ((l (array/nth @ls @i)))
+                 (let ((src : MachineSource (default (object/get @l "source" null) { kind: "any", orbital: "", trait: "" })))
+                  (let ((kind (object/get @src "kind" "any")))
+                    { orbital: (object/get @o "name"), trait: (object/get @t "name"), at: @i, trigger: (object/get @l "triggers" (object/get @l "event")), event: (object/get @l "event"),
+                      sourceKind: @kind,
+                      sourceOrbital: (if (= @kind "trait") (object/get @o "name") (if (= @kind "orbital") (object/get @src "orbital" "") "")),
+                      sourceTrait: (object/get @src "trait" ""),
+                      keyed: (object/has @l "key"), guarded: (object/has @l "guard"), mapped: (object/has @l "payloadMapping") })))))))))))))
+        (set @entity.refs
+          (array/map (array/flatten (array/map (object/get (as @payload.program MachineProgram) "orbitals") (fn o (object/get @o "traits" [])))) (fn t
+            { name: (object/get @t "name"),
+              refs: (array/filter (array/unique (array/map (array/filter (array/flatten (object/values (default (as (tree/index [(object/get @t "config" null) (object/get @t "stateMachine" null)] [] { prefixes: [(quote "@trait.")] }) MachineHits) {})))
+                (fn c (validate/string (object/get @c "node" null))))
+                (fn c (default (array/first (str/split (str/slice (default (as (object/get @c "node") MachineStr) "") 7 (str/len (default (as (object/get @c "node") MachineStr) ""))) ".")) ""))) ) (fn n (!= @n (object/get @t "name")))) })))
+        (set @entity.mounts
+          (let ((all (object/get (as @payload.program MachineProgram) "orbitals")))
+           (let ((traits (array/flatten (array/map @all (fn o (object/get @o "traits" []))))))
+          (let ((refs : [MachineRefs] @entity.refs)
+                (names (array/map @traits (fn t (object/get @t "name")))))
+           (array/flatten (array/map @all (fn o
+            (array/map (object/get @o "pages" []) (fn pg
+              (let ((listed : [string] (array/map (object/get @pg "traits" []) (fn r (object/get @r "ref")))))
+                (let ((known (array/reduce (array/range 0 (array/len @names)) { all: @listed, frontier: @listed }
+                                (fn (acc k)
+                                  (let ((fresh (array/filter (array/unique (array/flatten (array/map (object/get @acc "frontier")
+                                                  (fn n (object/get (default (array/find @refs (fn r (= (object/get @r "name") @n))) { refs: [] }) "refs" [])))))
+                                                  (fn n (and (array/includes @names @n) (not (array/includes (object/get @acc "all") @n)))))))
+                                    { all: (array/concat (object/get @acc "all") @fresh), frontier: @fresh })))))
+                  { orbital: (object/get @o "name"), page: (object/get @pg "name"), path: (object/get @pg "path" ""), protocol: (object/get @pg "protocol" ""), listed: @listed,
+                    embedded: (array/filter (object/get @known "all") (fn n (not (array/includes @listed @n)))) })))))))))))
+        (set @entity.hosts
+          (let ((traits : [MachineTrait] (array/flatten (array/map (object/get (as @payload.program MachineProgram) "orbitals") (fn o (object/get @o "traits" []))))))
+           (let ((names : [string] (array/sort (array/map @traits (fn t (object/get @t "name")))))
+                 (idName : Map string string (object/fromEntries (array/map (array/filter @traits (fn t (object/has @t "id"))) (fn t [(object/get @t "id" "") (object/get @t "name")])))))
+            (let ((edges : [MachineEdge]
+                    (array/concat
+                      (array/flatten (array/map @names (fn h
+                        (array/map (array/filter (array/sort (object/values (object/get (default (array/find @traits (fn x (= (object/get @x "name") @h))) { name: @h }) "traitEmbedIds" {}))) (fn id (object/has @idName @id)))
+                          (fn id { child: (object/get @idName @id ""), host: @h })))))
+                      (array/flatten (array/map @names (fn h
+                        (array/map (array/filter (array/sort (object/get (default (array/find @entity.refs (fn r (= (object/get @r "name") @h))) { name: @h, refs: [] }) "refs" [])) (fn c (array/includes @names @c)))
+                          (fn c { child: @c, host: @h })))))))
+                  (none : Map string string {}))
+             (let ((direct : Map string string (array/reduce @edges @none (fn (acc e) (if (object/has @acc @e.child) @acc (object/set @acc @e.child @e.host))))))
+              (array/filter
+                (array/map @names (fn n
+                  (let ((start : MachineWalk { chain: [], cur: @n, seen: [], done: false }))
+                    (let ((walked : MachineWalk (array/reduce (array/range 0 (array/len @names)) @start
+                             (fn (w k)
+                               (if (or @w.done (array/includes @w.seen @w.cur))
+                                 { chain: @w.chain, cur: @w.cur, seen: @w.seen, done: true }
+                                 (if (object/has @direct @w.cur)
+                                   { chain: (array/concat @w.chain [(object/get @direct @w.cur "")]), cur: (object/get @direct @w.cur ""), seen: (array/concat @w.seen [@w.cur]), done: false }
+                                   { chain: @w.chain, cur: @w.cur, seen: @w.seen, done: true }))))))
+                      { trait: @n, chain: @walked.chain }))))
+                (fn h (> (array/len @h.chain) 0))))))))
+        (emit MACHINE_FACTS { routes: @entity.routes, mounts: @entity.mounts, hosts: @entity.hosts })
     }
 
     emits {
       MACHINE_ANSWERED -> external { rows : [MachineRow]! }
         @description "The program's transition rows."
+        @tier "domain"
+      MACHINE_FACTS -> external { routes : [MachineRoute]!, mounts : [MachineMount]!, hosts : [MachineHost]! }
+        @description "The program's delivery facts: one route per listens entry, one mount per page, and each embedded trait's chain of embedding traits."
+        @tier "domain"
+      MACHINE_FACTS_UNREAD -> external { }
+        @description "The program did not have the shape of a resolved program, so no facts were read."
         @tier "domain"
       MACHINE_UNREAD -> external { }
         @description "The program did not have the shape of a resolved program, so no rows were read."
@@ -66,6 +154,9 @@ orbital MachineOrbital {
       MACHINE_READ -> input { program : SExpr! }
         @description "Read a resolved program's state machine as rows."
         @synonyms "program machine, transitions of a program, state machine rows"
+      MACHINE_FACTS_READ -> input { program : SExpr! }
+        @description "Read a resolved program's delivery facts: listens routes and page mounts."
+        @synonyms "program routes, page mounts, listens of a program, embedded traits"
     }
   }
 

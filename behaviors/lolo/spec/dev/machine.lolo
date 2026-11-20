@@ -1,20 +1,27 @@
 app machine-spec [
   version: "1.0.0",
-  description: "Design contract for std-machine: a program's state machine read as data. One MACHINE_READ with a resolved program (.orb IR) answers MACHINE_ANSWERED with one row per transition of every inline trait, orbital by orbital: its orbital, trait, from state, event, to state, whether the transition carries a guard of its own, and the payload slots its event declares. Sibling unguarded transitions sharing (from, event) are one group with one row per distinct target; a group with any guard has one row per arm; a trait with no transitions has no rows. These are the rows the retired program/machine operator answered."
+  description: "Design contract for std-machine: a program's state machine read as data. One MACHINE_READ with a resolved program (.orb IR) answers MACHINE_ANSWERED with one row per transition of every inline trait, orbital by orbital: its orbital, trait, from state, event, to state, whether the transition carries a guard of its own, and the payload slots its event declares. Sibling unguarded transitions sharing (from, event) are one group with one row per distinct target; a group with any guard has one row per arm; a trait with no transitions has no rows. These are the rows the retired program/machine operator answered. One MACHINE_FACTS_READ with a resolved program answers MACHINE_FACTS with the program's delivery facts (P-044, the facts the .lolo kernel and the wiring and mount lint rules read): one route per listens entry of every inline trait, in declaration order (orbital, trait, its position among the trait's listens, the trigger it fires, the event it hears, the source as written: any for a wildcard or no source, trait for a trait name, orbital for Orbital.Trait; the source orbital, which for a trait-name source is the listener's own orbital (EXEC-QUEUE-6) and empty for any; whether it carries a per key, a when guard and a with mapping); and one mount per page of every orbital, in declaration order (orbital, page, path, protocol, the traits the page lists in order, and the traits those embed through @trait.<Name> anywhere in their config or state machine (a trait of any orbital of the program, never the trait itself; ticks and listens are not read, as the kernel's mount reads them), followed transitively and listed once each in the order first met); and one host entry per trait that something embeds, in trait-name order, with its chain of embedding traits innermost first, as the kernel's seed bubble reads it (EXEC-SEED-3): its direct host is the first trait in name order whose traitEmbedIds names its id, else the first in name order naming it by an @trait.Name string in its config or state machine (never itself), and the chain follows direct hosts until one repeats."
 ]
 
 type MachineSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
 type MachineRow = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : [MachineSlot]! }
+type MachineRoute = { orbital : string!, trait : string!, at : number!, trigger : string!, event : string!, sourceKind : "any" | "trait" | "orbital", sourceOrbital : string!, sourceTrait : string!, keyed : boolean!, guarded : boolean!, mapped : boolean! }
+type MachineMount = { orbital : string!, page : string!, path : string!, protocol : string!, listed : [string]!, embedded : [string]! }
+type MachineHost = { trait : string!, chain : [string]! }
 
 orbital MachineSpec {
   expects entity MachineRun [runtime] {
     id : string!
     rows : [MachineRow]!
+    routes : [MachineRoute]!
+    mounts : [MachineMount]!
+    hosts : [MachineHost]!
   }
   expects trait Machine {
     state ready
     emits {
       MACHINE_ANSWERED { rows : [MachineRow]! }
+      MACHINE_FACTS { routes : [MachineRoute]!, mounts : [MachineMount]!, hosts : [MachineHost]! }
     }
   }
   expects page boot -> Machine

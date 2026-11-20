@@ -4,7 +4,7 @@ app std-behavior-playground [
   locales: [en, ar, sl],
   description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its .lolo source file reads in a code view, and the right dock draws the state machine of the guest's current page with std-live-machine (the page-root trait's source beside its machine, moved by the transitions the running guest takes; it follows the guest as it navigates). The guest seeds each page's entities with sampled rows on the page's first visit. The tree lists each package's topics and, as a topic opens, its behaviors from std-behavior-catalog's data trait, prefetched whole in one listing (scope, starting topic and labels are knobs); a click on a behavior opens it and moves the URL to /<package>/<behavior> (a link to that route opens the playground with it loaded), and the stage shows a prompt until one is open; the frame is std-workspace-layout with the live machine dock on the right. It runs as a tab of std-launchpad.",
   net: { "openrouter.ai:443": [tcp] },
-  kernel: { "guest": [spawn, declared] },
+  kernel: { "guest": [spawn, declared, step] },
   env: ["ORB_LAUNCHPAD_HOST", "FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS"],
 ]
 uses NotFound from "std/behaviors/std-not-found"
@@ -630,6 +630,8 @@ orbital BehaviorPlayground {
   trait GuestSession = Guest.traits.GuestSession {}
 
   trait GuestMarks = Guest.traits.GuestMarks {}
+  trait GuestKernelMachine = Guest.traits.GuestKernelMachine {}
+  trait GuestKernel = Guest.traits.GuestKernel {}
   trait GuestStage = Guest.traits.GuestStage {
     config {
       className: "h-full"
@@ -667,8 +669,8 @@ orbital BehaviorPlayground {
     }
   }
 
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, GuestOpener, GuestSession, GuestMarks, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
-  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, GuestOpener, GuestSession, GuestMarks, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, GuestOpener, GuestSession, GuestMarks, GuestKernelMachine, GuestKernel, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
+  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, GuestOpener, GuestSession, GuestMarks, GuestKernelMachine, GuestKernel, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
 }
 
 orbital NotFound = NotFound.orbitals.NotFoundOrbital {

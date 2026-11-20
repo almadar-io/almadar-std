@@ -1,0 +1,843 @@
+{
+  "atom": "dev/atoms/std-machine.lolo",
+  "trait": "Machine",
+  "note": "Hand-computed from spec/dev/machine.lolo: routes per listens entry, mounts per page with transitive @trait.Name embeds, and the unchanged MACHINE_READ rows.",
+  "cases": [
+    {
+      "id": "routes-all-source-kinds-and-modifiers",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "Alpha",
+                  "traits": [
+                    {
+                      "name": "Listener",
+                      "listens": [
+                        {
+                          "event": "E_ANY"
+                        },
+                        {
+                          "event": "E_W",
+                          "triggers": "DO_W",
+                          "source": {
+                            "kind": "any"
+                          }
+                        },
+                        {
+                          "event": "E_T",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Peer"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Peer"
+                    }
+                  ]
+                },
+                {
+                  "name": "Beta",
+                  "traits": [
+                    {
+                      "name": "Remote",
+                      "listens": [
+                        {
+                          "event": "E_O",
+                          "source": {
+                            "kind": "orbital",
+                            "orbital": "Alpha",
+                            "trait": "Peer"
+                          }
+                        },
+                        {
+                          "event": "E_K",
+                          "triggers": "GO",
+                          "key": "@payload.id",
+                          "guard": [
+                            "=",
+                            "@payload.x",
+                            1
+                          ],
+                          "payloadMapping": {
+                            "a": "@payload.a"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "routes": [
+                    {
+                      "orbital": "Alpha",
+                      "trait": "Listener",
+                      "at": 0,
+                      "trigger": "E_ANY",
+                      "event": "E_ANY",
+                      "sourceKind": "any",
+                      "sourceOrbital": "",
+                      "sourceTrait": "",
+                      "keyed": false,
+                      "guarded": false,
+                      "mapped": false
+                    },
+                    {
+                      "orbital": "Alpha",
+                      "trait": "Listener",
+                      "at": 1,
+                      "trigger": "DO_W",
+                      "event": "E_W",
+                      "sourceKind": "any",
+                      "sourceOrbital": "",
+                      "sourceTrait": "",
+                      "keyed": false,
+                      "guarded": false,
+                      "mapped": false
+                    },
+                    {
+                      "orbital": "Alpha",
+                      "trait": "Listener",
+                      "at": 2,
+                      "trigger": "E_T",
+                      "event": "E_T",
+                      "sourceKind": "trait",
+                      "sourceOrbital": "Alpha",
+                      "sourceTrait": "Peer",
+                      "keyed": false,
+                      "guarded": false,
+                      "mapped": false
+                    },
+                    {
+                      "orbital": "Beta",
+                      "trait": "Remote",
+                      "at": 0,
+                      "trigger": "E_O",
+                      "event": "E_O",
+                      "sourceKind": "orbital",
+                      "sourceOrbital": "Alpha",
+                      "sourceTrait": "Peer",
+                      "keyed": false,
+                      "guarded": false,
+                      "mapped": false
+                    },
+                    {
+                      "orbital": "Beta",
+                      "trait": "Remote",
+                      "at": 1,
+                      "trigger": "GO",
+                      "event": "E_K",
+                      "sourceKind": "any",
+                      "sourceOrbital": "",
+                      "sourceTrait": "",
+                      "keyed": true,
+                      "guarded": true,
+                      "mapped": true
+                    }
+                  ],
+                  "mounts": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "routes-control-trait-without-listens",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "Solo",
+                  "traits": [
+                    {
+                      "name": "Quiet"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "routes": [],
+                  "mounts": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mount-embeds-transitively-through-trait-refs",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "Shell",
+                  "traits": [
+                    {
+                      "name": "Main",
+                      "config": {
+                        "tab": {
+                          "type": "string",
+                          "default": "@trait.Mid"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Mid",
+                      "stateMachine": {
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "event": "INIT",
+                            "to": "idle",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Main",
+                                    {
+                                      "type": "box",
+                                      "child": "@trait.Leaf.view"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Leaf",
+                      "stateMachine": {
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "event": "INIT",
+                            "to": "idle",
+                            "effects": [
+                              [
+                                "emit",
+                                "X",
+                                {
+                                  "to": "@trait.Ghost"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Other"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "home",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "Main",
+                          "refId": "m"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "routes": [],
+                  "mounts": [
+                    {
+                      "orbital": "Shell",
+                      "page": "home",
+                      "path": "/home",
+                      "protocol": "",
+                      "listed": [
+                        "Main"
+                      ],
+                      "embedded": [
+                        "Mid",
+                        "Leaf"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mount-control-plain-string-is-not-an-embed",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "Shell",
+                  "traits": [
+                    {
+                      "name": "Main",
+                      "config": {
+                        "tab": {
+                          "type": "string",
+                          "default": "Leaf"
+                        },
+                        "note": {
+                          "type": "string",
+                          "default": "see trait Mid and Leaf"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Mid",
+                      "stateMachine": {
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "event": "INIT",
+                            "to": "idle",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Main",
+                                    {
+                                      "type": "box",
+                                      "child": "@trait.Leaf.view"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Leaf",
+                      "stateMachine": {
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "event": "INIT",
+                            "to": "idle",
+                            "effects": [
+                              [
+                                "emit",
+                                "X",
+                                {
+                                  "to": "@trait.Ghost"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Other"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "home",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "Main",
+                          "refId": "m"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "routes": [],
+                  "mounts": [
+                    {
+                      "orbital": "Shell",
+                      "page": "home",
+                      "path": "/home",
+                      "protocol": "",
+                      "listed": [
+                        "Main"
+                      ],
+                      "embedded": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "facts-read-of-unreadable-program-answers-unread",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {}
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS_UNREAD",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "facts-read-control-empty-orbitals-is-readable",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": []
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "routes": [],
+                  "mounts": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "machine-read-rows-unchanged",
+      "steps": [
+        {
+          "event": "MACHINE_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "GO",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "event": "GO",
+                            "to": "b"
+                          },
+                          {
+                            "from": "a",
+                            "event": "GO",
+                            "to": "b"
+                          },
+                          {
+                            "from": "b",
+                            "event": "BACK",
+                            "to": "a",
+                            "guard": [
+                              "=",
+                              1,
+                              1
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_ANSWERED",
+                "payload": {
+                  "rows": [
+                    {
+                      "orbital": "O",
+                      "trait": "T",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "guarded": false,
+                      "payload": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ]
+                    },
+                    {
+                      "orbital": "O",
+                      "trait": "T",
+                      "from": "b",
+                      "event": "BACK",
+                      "to": "a",
+                      "guarded": true,
+                      "payload": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "machine-read-control-unreadable-program",
+      "steps": [
+        {
+          "event": "MACHINE_READ",
+          "payload": {
+            "program": {}
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_UNREAD",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mount-embeds-across-orbitals-and-not-from-ticks",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "Host",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Far"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "t",
+                          "effects": [
+                            [
+                              "render-ui",
+                              "main",
+                              "@trait.TickOnly"
+                            ]
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "TickOnly",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "protocol": "route",
+                      "traits": [
+                        {
+                          "ref": "Host"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "traits": [
+                    {
+                      "name": "Far",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "routes": [],
+                  "mounts": [
+                    {
+                      "orbital": "A",
+                      "page": "Home",
+                      "path": "/",
+                      "protocol": "route",
+                      "listed": [
+                        "Host"
+                      ],
+                      "embedded": [
+                        "Far"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hosts-chain-innermost-first-stamped-ids-before-config-refs-in-name-order",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "One",
+                  "traits": [
+                    {
+                      "name": "Delta",
+                      "id": "d1",
+                      "config": {
+                        "body": "@trait.Cee"
+                      }
+                    },
+                    {
+                      "name": "Bee",
+                      "id": "b1",
+                      "config": {
+                        "child": "@trait.Cee.view"
+                      }
+                    },
+                    {
+                      "name": "Ay",
+                      "id": "a1",
+                      "traitEmbedIds": {
+                        "Bee": "b1",
+                        "Gone": "zz9"
+                      }
+                    },
+                    {
+                      "name": "Cee",
+                      "id": "c1"
+                    },
+                    {
+                      "name": "Ee",
+                      "id": "e1",
+                      "config": {
+                        "me": "@trait.Ee"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "hosts": [
+                    {
+                      "trait": "Bee",
+                      "chain": [
+                        "Ay"
+                      ]
+                    },
+                    {
+                      "trait": "Cee",
+                      "chain": [
+                        "Bee",
+                        "Ay"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hosts-control-no-embeds-answers-no-hosts",
+      "steps": [
+        {
+          "event": "MACHINE_FACTS_READ",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "name": "One",
+                  "traits": [
+                    {
+                      "name": "Solo",
+                      "id": "s1",
+                      "config": {
+                        "title": "@trait"
+                      }
+                    },
+                    {
+                      "name": "Other",
+                      "id": "o1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACHINE_FACTS",
+                "payload": {
+                  "hosts": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

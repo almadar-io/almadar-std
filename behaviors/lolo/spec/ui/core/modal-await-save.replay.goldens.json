@@ -1,0 +1,179 @@
+{
+ "atom": "../ui/core/atoms/std-modal.lolo",
+ "trait": "ModalRecordModal",
+ "note": "With awaitSave the form stays open until the save is confirmed, and a refusal comes back into the same form.",
+ "cases": [
+  {
+   "id": "an-awaited-save-keeps-the-form-open",
+   "config": {
+    "awaitSave": true,
+    "mode": "create",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": ""
+     },
+     "event": "SAVE",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "name": "Draft"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "open",
+      "entity": {
+       "saveError": "",
+       "saveInFlight": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-awaitsave-the-form-closes-on-save",
+   "config": {
+    "awaitSave": false,
+    "mode": "create",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": ""
+     },
+     "event": "SAVE",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "name": "Draft"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "closed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-confirmed-save-closes-the-form",
+   "config": {
+    "awaitSave": true,
+    "mode": "create",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": "",
+      "saveInFlight": true
+     },
+     "event": "SAVED",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "closed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-save-reopens-the-form-with-the-reason",
+   "config": {
+    "awaitSave": true,
+    "mode": "create",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": "",
+      "pendingRow": {
+       "id": "r1",
+       "name": "Draft"
+      },
+      "saveInFlight": true
+     },
+     "event": "SAVE_REJECTED",
+     "payload": {
+      "error": "An estimate must be above 0 hours."
+     },
+     "expect": {
+      "fired": true,
+      "state": "open",
+      "entity": {
+       "saveError": "An estimate must be above 0 hours.",
+       "saveInFlight": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-a-refusal-with-no-save-in-flight-changes-nothing",
+   "config": {
+    "awaitSave": true,
+    "mode": "create",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": "",
+      "saveInFlight": false
+     },
+     "event": "SAVE_REJECTED",
+     "payload": {
+      "error": "late"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-a-late-confirmation-with-no-save-in-flight-changes-nothing",
+   "config": {
+    "awaitSave": true,
+    "mode": "create",
+    "fields": [
+     "name"
+    ]
+   },
+   "steps": [
+    {
+     "from": "open",
+     "entity": {
+      "id": "",
+      "saveInFlight": false
+     },
+     "event": "SAVED",
+     "payload": {},
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  }
+ ]
+}

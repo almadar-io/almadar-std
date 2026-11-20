@@ -28,6 +28,9 @@ orbital ModalRecordOrbital {
     description : string @description "A textual explanation of the modal's content or function." @synonyms "details, explanation, notes, summary"
     status : "active" | "inactive" | "pending" @description "Current operational state of the record." @synonyms "state, condition, flag" = active
     seedRow : ModalRecord @intrinsic @description "The row an edit-mode OPEN pre-fills from when its payload carries no row. Stashed by SEED — hosts route the surface's loaded event here (e.g. a document look's RecordItemLoaded) so scalar-only action events ({ id }) can still open a fully seeded settings form."
+    pendingRow : ModalRecord @intrinsic @description "What the form submitted while its save is being decided (awaitSave); a refused save reopens the form with it."
+    saveError : string @intrinsic @description "The reason the last save was refused (awaitSave); empty when none." = ""
+    saveInFlight : boolean @intrinsic @description "Whether a submitted save is still being decided (awaitSave)." = false
     createdAt : string
   }
 
@@ -88,8 +91,43 @@ orbital ModalRecordOrbital {
       CLOSE -> closed
         (render-ui @config.detailSlot null)
         (notify info Cancelled)
+      ;; awaitSave: the form stays painted while the save is decided; a refusal comes back into it
+      SAVE -> open when @config.awaitSave
+        (set @entity.pendingRow ?data)
+        (set @entity.saveError "")
+        (set @entity.saveInFlight true)
       SAVE -> closed
         (render-ui @config.detailSlot null)
+      SAVED -> closed when @entity.saveInFlight
+        (set @entity.saveInFlight false)
+        (render-ui @config.detailSlot null)
+      SAVE_REJECTED -> open when @entity.saveInFlight
+        (set @entity.saveInFlight false)
+        (set @entity.saveError (default ?error ""))
+        (render-ui @config.detailSlot {
+          children: [{
+            children: [{ name: @config.icon, size: lg, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            cancelEvent: CLOSE
+            entity: (default @entity.pendingRow {})
+            error: { message: (default ?error "") }
+            fieldOverrides: @config.fieldOverrides
+            fields: @config.fields
+            mode: @config.mode
+            submitEvent: SAVE
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: @config.detailPattern
+        })
     }
 
     emits {
@@ -133,6 +171,16 @@ orbital ModalRecordOrbital {
         @description "Indicates a successful data submission or confirmation."
         @synonyms "submit, confirm, accept, persist"
         @tier "domain"
+      SAVED
+        @description "The save the form is waiting on went through (awaitSave); the form closes."
+        @synonyms "save confirmed, persisted, written"
+        @tier "domain"
+      SAVE_REJECTED {
+        error : string
+      }
+        @description "The save the form is waiting on was refused (awaitSave); the form reopens with the reason and what was typed."
+        @synonyms "save failed, validation failed, refused, invalid"
+        @tier "domain"
       ModalRecordLoadFailed {
         error : string
         code : string
@@ -163,6 +211,11 @@ orbital ModalRecordOrbital {
         @description "Per-field label/placeholder/hint overrides, keyed by field name. Types, options and required-ness stay entity-schema-driven (declare once on the entity); override only display copy the entity's @description doesn't fit."
         @synonyms "field labels, custom labels, help text overrides, placeholder text"
         @tier "presentation"
+      awaitSave : boolean = false
+        @label "Keep the form open until the save is confirmed?"
+        @description "false closes the form on Save. true keeps it open until SAVED arrives, and SAVE_REJECTED puts the reason inside the form with what was typed."
+        @synonyms "inline errors, wait for save, validation in form, stay open on error"
+        @tier "domain"
       mode : "create" | "edit" = create
         @label "Is this for creating or editing?"
         @description "create = blank form; edit = pre-filled from the selected row."

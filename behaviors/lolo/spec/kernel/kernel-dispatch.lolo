@@ -1,0 +1,31 @@
+app kernel-dispatch-spec [
+  version: "1.0.0",
+  description: "Design contract for std-kernel-dispatch (P-044): the .lolo kernel, run beside the native kernel and never replacing it. KERNEL_LOAD with a resolved program opens it as a guest that only steps and answers KERNEL_OPENED with each trait's initial state, or KERNEL_FAILED. KERNEL_MOUNT with a page path (or boot) runs the INIT batch of the traits that page lists and embeds as one dispatch, and KERNEL_DISPATCH runs one event from one trait, and KERNEL_TICK runs the ticks a host's clock found due over the trait's rows; both answer KERNEL_DISPATCHED with the states, the outcomes in order (trait, event, from, to, fired, as a native guest dispatch reports them), the emits, the deliveries collapsed as repeats, whether the 2000-delivery cap cut the queue, and the refusal that stopped the dispatch, empty when none: the dispatched event's payload breaking the event its trait declares (checked before anything runs), or a step emitting a payload that breaks its emitter's declaration (EXEC-EVAL-10). PARITY_RUN with a program, a route and a script (each step an event, or a tick pass: program/tick { guest } on the native side and its ran ticks on the .lolo side) runs it on the native kernel and on the .lolo kernel side by side and answers PARITY_ANSWERED, equal when every step's states and outcomes match, and a step the native kernel refuses is refused by the .lolo kernel with the same reason; or PARITY_FAILED when the program cannot be opened."
+]
+
+type KOutcome = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
+type KEmit = { trait : string!, event : string!, payload : SExpr }
+type KItem = { trait : string!, event : string!, payload : SExpr, at : number!, seed : boolean!, row : string! }
+type KNativeOutcome = { trait : string!, event : string, from : string!, to : string!, fired : boolean! }
+type KCompare = { step : number!, trait : string!, event : string!, equal : boolean!, nativeStates : Map string string!, loloStates : Map string string!, nativeOutcomes : [KNativeOutcome]!, loloOutcomes : [KOutcome]!, nativeRefused : string!, loloRefused : string! }
+
+orbital KernelDispatchSpec {
+  expects trait KernelDispatch {
+    state idle
+    state reading
+    state ready
+    emits {
+      KERNEL_OPENED { initial : Map string string! }
+      KERNEL_FAILED { error : string! }
+      KERNEL_DISPATCHED { states : Map string string!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KItem]!, cut : boolean!, refused : string! }
+    }
+  }
+  expects trait KernelParity {
+    state idle
+    emits {
+      PARITY_ANSWERED { equal : boolean!, results : [KCompare]! }
+      PARITY_FAILED { error : string! }
+    }
+  }
+  expects page boot -> KernelDispatch, KernelParity
+}

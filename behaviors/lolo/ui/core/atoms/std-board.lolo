@@ -449,6 +449,13 @@ orbital BoardOrbital {
         @description "Signals a request to edit the currently open card. The board renders no edit form itself — consumers override cardActionsContent with an Edit button and wire this emit to their edit modal/form trait."
         @synonyms "edit, modify, update, change"
         @tier "domain"
+      QUICK_EDIT_CARD -> external {
+        id : string
+        row : @entity
+      }
+        @description "A card's Edit button was pressed on the board; carries the card's id and row for the consumer's edit form."
+        @synonyms "edit card, quick edit, edit from board"
+        @tier "domain"
       BoardItemsLoaded {
         data : [@entity]!
         totalCount : number!
@@ -744,6 +751,11 @@ orbital BoardOrbital {
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
         @tier "presentation"
+      cardQuickEdit : boolean = false
+        @label "Show an Edit button on each card?"
+        @description "true adds an Edit button beside Open on every card; it emits QUICK_EDIT_CARD with the card's id and row, which the consumer wires to its edit form. false keeps the single Open button."
+        @synonyms "edit from board, inline edit, edit card, quick edit"
+        @tier "presentation"
       addLabel : string = ""
         @label "Add button label"
         @description "Text of the add-item button; empty keeps the board's own wording (Add item on the column board, Add card on the classic kanban)."
@@ -938,14 +950,28 @@ orbital BoardOrbital {
                       variant: caption
                     }, {
                       align: center
-                      children: [{
+                      children: (if @config.cardQuickEdit [{
+                        action: QUICK_EDIT_CARD
+                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        icon: edit
+                        aria-label: "Edit"
+                        type: button
+                        variant: ghost
+                      }, {
                         action: OPEN_CARD
                         actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, notes: @config.cardNotesBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
                         icon: arrow-right
                         label: Open
                         type: button
                         variant: ghost
-                      }]
+                      }] [{
+                        action: OPEN_CARD
+                        actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, notes: @config.cardNotesBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
+                        icon: arrow-right
+                        label: Open
+                        type: button
+                        variant: ghost
+                      }])
                       direction: horizontal
                       gap: xs
                       type: stack
@@ -1012,7 +1038,7 @@ orbital BoardOrbital {
             children: [{ name: kanban-square, size: xl, type: icon }, {
               content: @config.title
               type: typography
-              variant: h2
+              variant: h1
             }]
             className: px-card-md
             direction: horizontal
@@ -1096,10 +1122,32 @@ orbital BoardOrbital {
                 renderItem: (fn item {
                   children: [{
                     children: [{
-                      content: @config.cardTitleBinding
-                      type: typography
-                      variant: body
-                      weight: medium
+                      align: start
+                      children: (if @config.cardQuickEdit [{
+                        className: "flex-1 min-w-0"
+                        content: @config.cardTitleBinding
+                        type: typography
+                        variant: body
+                        weight: medium
+                      }, {
+                        action: QUICK_EDIT_CARD
+                        actionPayload: { id: @config.cardIdBinding, row: @item }
+                        aria-label: "Edit"
+                        icon: edit
+                        size: sm
+                        type: button
+                        variant: ghost
+                      }] [{
+                        className: "flex-1 min-w-0"
+                        content: @config.cardTitleBinding
+                        type: typography
+                        variant: body
+                        weight: medium
+                      }])
+                      direction: horizontal
+                      gap: xs
+                      justify: between
+                      type: stack
                     }, {
                       className: line-clamp-2
                       color: muted
@@ -1141,6 +1189,7 @@ orbital BoardOrbital {
                 sortable: @config.draggable
                 itemEnter: @config.cardEnter
                 type: data-list
+                emptyTitle: "Nothing here yet"
               }]
               direction: vertical
               gap: none
