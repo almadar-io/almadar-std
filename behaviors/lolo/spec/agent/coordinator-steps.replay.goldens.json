@@ -1,0 +1,587 @@
+{
+  "atom": "agent/atoms/std-agent-coordinator.lolo",
+  "trait": "AgentCoordinator",
+  "note": "declared steps for a workflow (P-030): a caller that writes the step rows itself may mark a step held (the run stops before it and says so, and starts again when the caller clears the mark and sends TASK_START) and may limit a step to some of the configured tools. Written before the atom change; rows that name neither behave as before.",
+  "cases": [
+    {
+      "id": "a-held-step-stops-the-run-before-it-and-says-which",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "from": "working",
+          "entity": {
+            "id": "r",
+            "taskId": "t1",
+            "task": "claims intake",
+            "instructions": [
+              "read the documents",
+              "write the letter"
+            ],
+            "results": [
+              "read"
+            ],
+            "index": 1,
+            "total": 2,
+            "stepRules": [
+              {
+                "hold": false,
+                "limited": false,
+                "tools": []
+              },
+              {
+                "hold": true,
+                "limited": false,
+                "tools": []
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_HELD",
+                "payload": {
+                  "taskId": "t1",
+                  "index": 1,
+                  "total": 2,
+                  "result": "read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_FAILED",
+              "TASK_DONE"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ]
+    },
+    {
+      "id": "control-a-step-not-held-runs",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "from": "working",
+          "entity": {
+            "id": "r",
+            "taskId": "t1",
+            "task": "claims intake",
+            "instructions": [
+              "read the documents",
+              "write the letter"
+            ],
+            "results": [
+              "read"
+            ],
+            "index": 1,
+            "total": 2,
+            "stepRules": [
+              {
+                "hold": false,
+                "limited": false,
+                "tools": []
+              },
+              {
+                "hold": false,
+                "limited": false,
+                "tools": []
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "t1",
+                  "index": 1,
+                  "total": 2,
+                  "status": "running"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_HELD"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ]
+    },
+    {
+      "id": "a-limited-step-is-offered-only-the-tools-it-names",
+      "config": {
+        "tools": [
+          {
+            "read": "Claim",
+            "roles": [
+              "member"
+            ]
+          },
+          {
+            "read": "Letter",
+            "roles": [
+              "member"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "from": "working",
+          "entity": {
+            "id": "r",
+            "taskId": "t2",
+            "task": "claims intake",
+            "instructions": [
+              "read the claim"
+            ],
+            "results": [],
+            "index": 0,
+            "total": 1,
+            "stepRules": [
+              {
+                "hold": false,
+                "limited": true,
+                "tools": [
+                  "Claim"
+                ]
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "t2",
+                  "index": 0
+                }
+              },
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "tools": [
+                    {
+                      "read": "Claim",
+                      "roles": [
+                        "member"
+                      ]
+                    }
+                  ],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ]
+    },
+    {
+      "id": "control-a-step-that-is-not-limited-is-offered-every-configured-tool",
+      "config": {
+        "tools": [
+          {
+            "read": "Claim",
+            "roles": [
+              "member"
+            ]
+          },
+          {
+            "read": "Letter",
+            "roles": [
+              "member"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "from": "working",
+          "entity": {
+            "id": "r",
+            "taskId": "t2",
+            "task": "claims intake",
+            "instructions": [
+              "read the claim"
+            ],
+            "results": [],
+            "index": 0,
+            "total": 1,
+            "stepRules": []
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "t2",
+                  "index": 0
+                }
+              },
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "tools": [
+                    {
+                      "read": "Claim",
+                      "roles": [
+                        "member"
+                      ]
+                    },
+                    {
+                      "read": "Letter",
+                      "roles": [
+                        "member"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ]
+    },
+    {
+      "id": "stored-step-rows-carry-their-hold-and-tools-into-the-run",
+      "steps": [
+        {
+          "event": "StepsLoaded",
+          "from": "loading",
+          "entity": {
+            "id": "r",
+            "taskId": "t3",
+            "task": "claims intake"
+          },
+          "payload": {
+            "totalCount": 2,
+            "data": [
+              {
+                "id": "t3:0",
+                "taskId": "t3",
+                "index": 0,
+                "instruction": "read the documents",
+                "status": "done",
+                "result": "read",
+                "error": "",
+                "hold": false,
+                "limited": true,
+                "tools": [
+                  "Claim"
+                ]
+              },
+              {
+                "id": "t3:1",
+                "taskId": "t3",
+                "index": 1,
+                "instruction": "write the letter",
+                "status": "pending",
+                "result": "",
+                "error": "",
+                "hold": true,
+                "limited": false,
+                "tools": []
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "starting",
+            "entity": {
+              "index": 1,
+              "total": 2,
+              "stepRules": [
+                {
+                  "hold": false,
+                  "limited": true,
+                  "tools": [
+                    "Claim"
+                  ]
+                },
+                {
+                  "hold": true,
+                  "limited": false,
+                  "tools": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ]
+    },
+    {
+      "id": "a-declared-plan-is-taken-as-given-and-no-model-plans",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "TaskCreated",
+          "from": "planning",
+          "entity": {
+            "id": "r",
+            "taskId": "t4",
+            "task": "claims intake",
+            "declared": [
+              {
+                "instruction": "read the documents",
+                "hold": false,
+                "limited": true,
+                "tools": [
+                  "Claim"
+                ]
+              },
+              {
+                "instruction": "write the letter",
+                "hold": true,
+                "limited": false,
+                "tools": []
+              }
+            ]
+          },
+          "payload": {
+            "id": "t4"
+          },
+          "expect": {
+            "fired": true,
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ"
+              }
+            ],
+            "neverEmits": [
+              "LLM_EXTRACT"
+            ],
+            "entity": {
+              "instructions": [
+                "read the documents",
+                "write the letter"
+              ],
+              "stepRules": [
+                {
+                  "hold": false,
+                  "limited": true,
+                  "tools": [
+                    "Claim"
+                  ]
+                },
+                {
+                  "hold": true,
+                  "limited": false,
+                  "tools": []
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-with-no-declared-plan-the-model-plans",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "TaskCreated",
+          "from": "planning",
+          "entity": {
+            "id": "r",
+            "taskId": "t5",
+            "task": "claims intake",
+            "declared": []
+          },
+          "payload": {
+            "id": "t5"
+          },
+          "expect": {
+            "fired": true,
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT"
+              }
+            ],
+            "neverEmits": [
+              "PLAN_READ"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-task-started-with-steps-holds-them-as-its-declared-plan",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "TASK_START",
+          "from": "idle",
+          "payload": {
+            "taskId": "t6",
+            "task": "claims intake",
+            "steps": [
+              {
+                "instruction": "read the documents",
+                "hold": false,
+                "limited": false,
+                "tools": []
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "loading",
+            "entity": {
+              "declared": [
+                {
+                  "instruction": "read the documents",
+                  "hold": false,
+                  "limited": false,
+                  "tools": []
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "releasing-a-held-step-clears-its-mark-and-says-so",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "TASK_RELEASE",
+          "from": "idle",
+          "payload": {
+            "taskId": "t7",
+            "index": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepReleased",
+          "payload": {
+            "id": "t7:1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_RELEASED",
+                "payload": {
+                  "stepId": "t7:1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

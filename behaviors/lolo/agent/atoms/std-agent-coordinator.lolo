@@ -1,6 +1,6 @@
 app std-agent-coordinator [
   version: "1.0.0",
-  description: "std-agent-coordinator — runs a long assistant task on a model with a small context window, crash-safely. TASK_START { taskId, task } plans the task with std-llm (LLM_EXTRACT, answer { steps: [string] }, at most `maxSteps`; a longer plan is refused, never cut), persists one AgentTaskStep row per step, then runs each step as a fresh conversation through std-agent-tool-loop (quiet, ephemeral: no earlier transcript). A step sees only the task, `stepInstructions` and the stored results of the finished steps, bounded by std-agent-context (COMPACT keeps the last `keepMessages` turns and summarizes older ones) so the prompt fits `contextTokens`. Each step's reply is stored whole on its row. A last std-llm LLM_GENERATE over the task and the step results is the answer. TASK_START is idempotent: when step rows already exist for the taskId the run resumes at the first step that is not done (a crashed job resumes this way after its runner retries it); finished steps are never run again. Outputs: TASK_PROGRESS { taskId, index, total, status }, TASK_DONE { taskId, answer, steps }, TASK_FAILED { taskId, index, error }; index is -1 when the failure is not a step (planning, storage, the final answer). A failed step marks its row failed and fails the task; a retry resumes at that step. One task at a time: a TASK_START while another runs is answered with TASK_FAILED for the new taskId. Headless; the rows are written as the program, so a background job needs no signed-in user.",
+  description: "std-agent-coordinator — runs a long assistant task on a model with a small context window, crash-safely. TASK_START { taskId, task } plans the task with std-llm (LLM_EXTRACT, answer { steps: [string] }, at most `maxSteps`; a longer plan is refused, never cut), persists one AgentTaskStep row per step, then runs each step as a fresh conversation through std-agent-tool-loop (quiet, ephemeral: no earlier transcript). A step sees only the task, `stepInstructions` and the stored results of the finished steps, bounded by std-agent-context (COMPACT keeps the last `keepMessages` turns and summarizes older ones) so the prompt fits `contextTokens`. Each step's reply is stored whole on its row. A last std-llm LLM_GENERATE over the task and the step results is the answer. TASK_START is idempotent: when step rows already exist for the taskId the run resumes at the first step that is not done (a crashed job resumes this way after its runner retries it); finished steps are never run again. Outputs: TASK_PROGRESS { taskId, index, total, status }, TASK_DONE { taskId, answer, steps }, TASK_FAILED { taskId, index, error }; index is -1 when the failure is not a step (planning, storage, the final answer). A failed step marks its row failed and fails the task; a retry resumes at that step. One task at a time: a TASK_START while another runs is answered with TASK_FAILED for the new taskId. A caller may declare the plan: TASK_START { taskId, task, steps } with steps [{ instruction, hold, limited, tools }] stores exactly those steps for a new task and asks no model to plan (the same checks apply: no empty step, at most maxSteps). A step marked `hold` stops the run before it: TASK_HELD { taskId, index, total, result } carries the result of the step before, the coordinator returns to idle, and TASK_RELEASE { taskId, index } clears the mark (TASK_RELEASED { stepId }) so the next TASK_START with that taskId runs it. A step marked `limited` is offered only the configured tools its `tools` names (event addresses and entity names); a step that is not limited is offered every configured tool. Headless; the rows are written as the program, so a background job needs no signed-in user.",
   net: { "api.openai.com:443": [tcp] },
 ]
 
@@ -92,6 +92,17 @@ type AgentUsage = {
 type CoordinatorPlan = {
   steps : [string]!
 }
+type CoordDeclaredStep = {
+  instruction : string!
+  hold : boolean
+  limited : boolean
+  tools : [string]
+}
+type CoordStepRule = {
+  hold : boolean!
+  limited : boolean!
+  tools : [string]!
+}
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
@@ -138,6 +149,9 @@ orbital AgentCoordinatorOrbital {
     status : "pending" | "done" | "failed" @description "Where the step is." = pending
     result : string @description "The step's reply, stored whole, set when it is done." = ""
     error : string @description "Why the step failed." = ""
+    hold : boolean @description "The run stops before this step and says so (TASK_HELD) until the caller clears the mark and starts the task again." = false
+    limited : boolean @description "The step is offered only the configured tools `tools` names; off, it is offered every configured tool." = false
+    tools : [string] @description "For a limited step: the event addresses and entity names of the configured tools it may use." = []
   }
 
   entity AgentCoordinatorRun [runtime] {
@@ -146,6 +160,8 @@ orbital AgentCoordinatorOrbital {
     task : string @description "What the task asks." = ""
     instructions : [string] @description "The plan's steps, in order." = []
     results : [string] @description "The results of the finished steps, in order." = []
+    stepRules : [CoordStepRule] @description "For each step in order, whether the run stops before it and which tools it is limited to; empty for a planned task." = []
+    declared : [CoordDeclaredStep] @description "The plan the caller declared with TASK_START; empty when the model plans the task." = []
     index : number @description "The step being run." = 0
     total : number @description "How many steps the plan has." = 0
     saveCursor : number @description "The step row being written while a plan is stored." = 0
@@ -310,11 +326,21 @@ orbital AgentCoordinatorOrbital {
 
     state idle {
       INIT -> idle
+      TASK_RELEASE -> idle
+        (persist update AgentTaskStep { id: (str/concat ?taskId ":" ?index), hold: false } {
+          emit: { failure: StepReleaseFailed, success: StepReleased }
+        })
+      StepReleased -> idle
+        (emit TASK_RELEASED { stepId: ?id })
+      StepReleaseFailed -> idle
+        (emit TASK_FAILED { taskId: "", index: -1, error: (str/concat "the held step could not be released: " (default ?error "")) })
       TASK_START -> loading
         (set @entity.taskId ?taskId)
         (set @entity.task ?task)
+        (set @entity.declared (default ?steps []))
         (set @entity.instructions [])
         (set @entity.results [])
+        (set @entity.stepRules [])
         (set @entity.index 0)
         (set @entity.total 0)
         (set @entity.saveCursor 0)
@@ -347,6 +373,7 @@ orbital AgentCoordinatorOrbital {
           (do
             (set @entity.total (array/len ?data))
             (set @entity.instructions (array/map ?data (fn s @s.instruction)))
+            (set @entity.stepRules (array/map ?data (fn s { hold: (default @s.hold false), limited: (default @s.limited false), tools: (default @s.tools []) })))
             (set @entity.index (if (< @open 0) (array/len ?data) @open))
             (set @entity.results (array/map (array/take ?data (if (< @open 0) (array/len ?data) @open)) (fn s @s.result)))))
         (persist update AgentTask { id: @entity.taskId, status: "working", error: "" } {
@@ -370,7 +397,12 @@ orbital AgentCoordinatorOrbital {
         (set @entity.failIndex -1)
         (set @entity.failError (str/concat "the task could not be stored: " ?error))
         (emit TASK_FAIL {})
-      TaskCreated -> planning
+      TaskCreated -> planning when (> (array/len @entity.declared) 0)
+        (set @entity.planParsed true)
+        (set @entity.instructions (array/map @entity.declared (fn d @d.instruction)))
+        (set @entity.stepRules (array/map @entity.declared (fn d { hold: (default @d.hold false), limited: (default @d.limited false), tools: (default @d.tools []) })))
+        (emit PLAN_READ {})
+      TaskCreated -> planning when (= (array/len @entity.declared) 0)
         (emit LLM_EXTRACT {
           text: (str/concat @config.planInstructions "\n\nAt most " @config.maxSteps " steps.\n\nTask:\n" @entity.task)
           schema: "{\"type\":\"object\",\"properties\":{\"steps\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"steps\"],\"additionalProperties\":false}"
@@ -402,7 +434,7 @@ orbital AgentCoordinatorOrbital {
       PLAN_READ -> planning when (and @entity.planParsed (> (array/len @entity.instructions) 0) (<= (array/len @entity.instructions) @config.maxSteps) (= (array/count @entity.instructions (fn s (= (str/trim @s) ""))) 0))
         (set @entity.total (array/len @entity.instructions))
         (set @entity.saveCursor 0)
-        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":0"), taskId: @entity.taskId, index: 0, instruction: (array/nth @entity.instructions 0), status: "pending", result: "", error: "" } {
+        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":0"), taskId: @entity.taskId, index: 0, instruction: (array/nth @entity.instructions 0), status: "pending", result: "", error: "", hold: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.hold), limited: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.limited), tools: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.tools) } {
           emit: { failure: StepSaveFailed, success: StepSaved }
         })
       StepSaveFailed -> failing
@@ -411,7 +443,7 @@ orbital AgentCoordinatorOrbital {
         (emit TASK_FAIL {})
       StepSaved -> planning when (< (+ @entity.saveCursor 1) @entity.total)
         (set @entity.saveCursor (+ @entity.saveCursor 1))
-        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.saveCursor), taskId: @entity.taskId, index: @entity.saveCursor, instruction: (default (array/nth @entity.instructions @entity.saveCursor) ""), status: "pending", result: "", error: "" } {
+        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.saveCursor), taskId: @entity.taskId, index: @entity.saveCursor, instruction: (default (array/nth @entity.instructions @entity.saveCursor) ""), status: "pending", result: "", error: "", hold: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.hold), limited: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.limited), tools: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.tools) } {
           emit: { failure: StepSaveFailed, success: StepSaved }
         })
       StepSaved -> starting when (>= (+ @entity.saveCursor 1) @entity.total)
@@ -443,12 +475,14 @@ orbital AgentCoordinatorOrbital {
           systemPrompt: @config.synthesisInstructions
           userPrompt: (str/concat "Task:\n" @entity.task "\n\nResults of the steps:\n\n" (str/join (array/map (array/range 0 (array/len @entity.results) 1) (fn j (str/concat "Step " (+ @j 1) " (" (default (array/nth @entity.instructions @j) "") "):\n" (default (array/nth @entity.results @j) "")))) "\n\n"))
         })
-      STEP_NEXT -> working when (< @entity.index @entity.total)
+      STEP_NEXT -> idle when (and (< @entity.index @entity.total) (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.index) { hold: false, limited: false, tools: [] }))) @r.hold))
+        (emit TASK_HELD { taskId: @entity.taskId, index: @entity.index, total: @entity.total, result: (default (array/last @entity.results) "") })
+      STEP_NEXT -> working when (and (< @entity.index @entity.total) (not (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.index) { hold: false, limited: false, tools: [] }))) @r.hold)))
         (emit TASK_PROGRESS { taskId: @entity.taskId, index: @entity.index, total: @entity.total, status: "running" })
         (emit COMPACT {
           messages: (let ((history (as (array/append (array/flatten (array/map (array/range 0 @entity.index 1) (fn j [{ role: "user", content: (str/concat "Step " (+ @j 1) ": " (default (array/nth @entity.instructions @j) "")) }, { role: "assistant", content: (default (array/nth @entity.results @j) "") }]))) { role: "user", content: (str/concat "Step " (+ @entity.index 1) ": " (default (array/nth @entity.instructions @entity.index) "")) }) AgentChatMessages))) (default @history []))
           instructions: (str/concat @config.stepInstructions "\n\nYour whole context holds about " @config.contextTokens " tokens, so keep the result short enough for a later step to carry.\n\nThe overall task: " @entity.task)
-          tools: (let ((stepTools : [AgentToolData] @config.tools)) @stepTools)
+          tools: (let ((stepTools : [AgentToolData] @config.tools) (r : CoordStepRule (default (array/nth @entity.stepRules @entity.index) { hold: false, limited: false, tools: [] }))) (if @r.limited (array/filter @stepTools (fn t (or (array/includes @r.tools (object/get @t "event" "")) (array/includes @r.tools (object/get @t "read" ""))))) @stepTools))
           ephemeral: true
         })
       StepReplied -> failing when (= (str/trim ?reply) "")
@@ -542,6 +576,20 @@ orbital AgentCoordinatorOrbital {
         @description "The task moved: `planned` once the plan is stored (index 0), `running` as step `index` starts, `done` once that step's result is stored."
         @synonyms "progress, step started, step finished"
         @tier "domain"
+      TASK_RELEASED -> external {
+        stepId : string!
+      }
+        @description "A held step's mark was cleared (its row id is the task id, a colon and the index); send TASK_START with the task id to go on."
+        @tier "domain"
+      TASK_HELD -> external {
+        taskId : string!
+        index : number!
+        total : number!
+        result : string!
+      }
+        @description "The run stopped before step `index`, which its row marks held; `result` is the result of the step before it (empty when it is the first). Clear the mark (TASK_RELEASE) and send TASK_START with the same taskId to go on."
+        @synonyms "paused, waiting for approval, stopped before a step"
+        @tier "domain"
       TASK_DONE -> external {
         taskId : string!
         answer : string!
@@ -587,8 +635,21 @@ orbital AgentCoordinatorOrbital {
       TASK_START {
         taskId : string!
         task : string!
+        steps : [CoordDeclaredStep]?
       }
-        @description "Run a long task: plan it, run each step in a fresh conversation, answer it. When step rows already exist for `taskId` the run resumes at the first step that is not done."
+        @description "Run a long task: plan it, run each step in a fresh conversation, answer it. When step rows already exist for `taskId` the run resumes at the first step that is not done. `steps`, when given for a new task, is the plan as declared (each step its instruction, whether the run stops before it, and the tools it is limited to): the model is not asked to plan."
+      TASK_RELEASE {
+        taskId : string!
+        index : number!
+      }
+        @description "Clear the held mark of one step of a task, so the next TASK_START runs it."
+      StepReleased {
+        id : string
+      }
+      StepReleaseFailed {
+        error : string
+        code : string
+      }
         @synonyms "start task, run job, long task, resume task"
       CoordLlm.LLM_EXTRACT_RESULT -> PlanExtracted
       CoordLlm.LLM_GENERATE_RESULT -> AnswerGenerated

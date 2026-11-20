@@ -1,0 +1,133 @@
+{
+  "atom": "net/atoms/std-http-request.lolo",
+  "trait": "HttpRequest",
+  "note": "the hostEnv knob of std-http-request (G-STD-440): std-http-client's env-anchored host needs its caller to name the host text in HTTP_SEND, and this atom is the caller of every request built through it. With hostEnv set, the first request reads that environment variable once, keeps the text, and every HTTP_SEND carries it as host; an unset or empty variable fails the request by name and sends nothing. Written before the atom change; with hostEnv empty nothing changes.",
+  "cases": [
+    {
+      "id": "with-hostenv-the-first-request-reads-the-variable-and-sends-nothing-yet",
+      "config": { "hostEnv": "LLM_HOST" },
+      "steps": [
+        {
+          "event": "HTTP_REQUEST",
+          "payload": { "key": "r1", "method": "GET", "path": "/v1/models", "query": {}, "headers": {}, "form": {}, "multipartParts": [], "stream": "none", "retryMax": 0, "retryOn": [], "retryOnFailure": [], "retryDelaysMs": [], "paginate": "none", "maxPages": 1 },
+          "expect": {
+            "state": "awaiting",
+            "neverEmits": [ "HTTP_SEND", "HTTP_REQUEST_REFUSED", "HTTP_REQUEST_FAILED" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-build-step-asks-for-the-variable-while-no-host-is-held",
+      "config": { "hostEnv": "LLM_HOST" },
+      "steps": [
+        {
+          "event": "HC_BUILD",
+          "from": "awaiting",
+          "payload": { "n": 1 },
+          "expect": {
+            "state": "awaiting",
+            "effects": [ { "type": "os/getenv", "key": "host-env", "optionsAt": 1 } ],
+            "neverEmits": [ "HTTP_SEND" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-variable-read-is-the-host-of-the-send",
+      "config": { "hostEnv": "LLM_HOST" },
+      "steps": [
+        {
+          "event": "HTTP_REQUEST",
+          "payload": { "key": "r1", "method": "GET", "path": "/v1/models", "query": {}, "headers": {}, "form": {}, "multipartParts": [], "stream": "none", "retryMax": 0, "retryOn": [], "retryOnFailure": [], "retryDelaysMs": [], "paginate": "none", "maxPages": 1 }
+        },
+        {
+          "event": "HC_HOST_READ",
+          "payload": { "value": "192.168.5.2" },
+          "expect": {
+            "state": "awaiting",
+            "emits": [
+              { "event": "HTTP_SEND", "payload": { "key": "r1", "method": "GET", "target": "/v1/models", "headers": [], "body": "", "stream": "none", "host": "192.168.5.2" } }
+            ],
+            "neverEmits": [ "HTTP_REQUEST_FAILED" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-already-read-is-sent-with-the-next-request-and-not-read-again",
+      "config": { "hostEnv": "LLM_HOST" },
+      "steps": [
+        {
+          "event": "HTTP_REQUEST",
+          "from": "ready",
+          "entity": { "id": "f", "host": "192.168.5.2" },
+          "payload": { "key": "r2", "method": "GET", "path": "/x", "query": {}, "headers": {}, "form": {}, "multipartParts": [], "stream": "none", "retryMax": 0, "retryOn": [], "retryOnFailure": [], "retryDelaysMs": [], "paginate": "none", "maxPages": 1 },
+          "expect": {
+            "state": "awaiting",
+            "emits": [
+              { "event": "HTTP_SEND", "payload": { "key": "r2", "method": "GET", "target": "/x", "headers": [], "body": "", "stream": "none", "host": "192.168.5.2" } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-variable-fails-the-request-by-name-and-sends-nothing",
+      "config": { "hostEnv": "LLM_HOST" },
+      "steps": [
+        {
+          "event": "HTTP_REQUEST",
+          "payload": { "key": "r1", "method": "GET", "path": "/x", "query": {}, "headers": {}, "form": {}, "multipartParts": [], "stream": "none", "retryMax": 0, "retryOn": [], "retryOnFailure": [], "retryDelaysMs": [], "paginate": "none", "maxPages": 1 }
+        },
+        {
+          "event": "HC_HOST_READ",
+          "payload": { "value": "" },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              { "event": "HTTP_REQUEST_FAILED", "payload": { "key": "r1", "error": "the host environment variable LLM_HOST is not set", "kind": "refused" } }
+            ],
+            "neverEmits": [ "HTTP_SEND" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-variable-the-host-cannot-read-fails-the-request-by-name",
+      "config": { "hostEnv": "LLM_HOST" },
+      "steps": [
+        {
+          "event": "HTTP_REQUEST",
+          "payload": { "key": "r1", "method": "GET", "path": "/x", "query": {}, "headers": {}, "form": {}, "multipartParts": [], "stream": "none", "retryMax": 0, "retryOn": [], "retryOnFailure": [], "retryDelaysMs": [], "paginate": "none", "maxPages": 1 }
+        },
+        {
+          "event": "HC_HOST_UNREAD",
+          "payload": { "error": "env LLM_HOST is not granted" },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              { "event": "HTTP_REQUEST_FAILED", "payload": { "key": "r1", "error": "the host environment variable LLM_HOST could not be read: env LLM_HOST is not granted", "kind": "refused" } }
+            ],
+            "neverEmits": [ "HTTP_SEND" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-without-hostenv-the-send-carries-no-host-and-nothing-is-read",
+      "steps": [
+        {
+          "event": "HTTP_REQUEST",
+          "payload": { "key": "r1", "method": "GET", "path": "/x", "query": {}, "headers": {}, "form": {}, "multipartParts": [], "stream": "none", "retryMax": 0, "retryOn": [], "retryOnFailure": [], "retryDelaysMs": [], "paginate": "none", "maxPages": 1 },
+          "expect": {
+            "state": "awaiting",
+            "emits": [
+              { "event": "HTTP_SEND", "payload": { "key": "r1", "method": "GET", "target": "/x", "headers": [], "body": "", "stream": "none" } }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

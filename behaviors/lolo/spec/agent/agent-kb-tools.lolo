@@ -1,0 +1,26 @@
+app agent-kb-tools-spec [
+  version: "1.0.0",
+  description: "Design contract for the knowledge-base tools an agent loop offers over a composed std-knowledge-base. Each tool is a declared input the loop dispatches and answers through the loop's TOOL_PENDING callId, and every knowledge-base request of a call carries the key `agent:` followed by that call id, so an answer for another call is ignored. KB_ADD_FILE { path } reads a file of the workspace, hashes it, has std-document-text read it into pages and adds it to the knowledge base under its hash. SEARCH_KB { query, k } answers the nearest passages with their source and page. ASK_KB { question } answers the grounded answer followed by its citations, each with source, page and quote. An empty query or question, a path outside the workspace, an unreadable file or a failed knowledge-base request answers TOOL_FAILED with the reason; nothing is truncated."
+]
+
+orbital AgentKbToolsSpec {
+  expects entity AgentKbCall [runtime] {
+    id : string!
+    callId : string
+    reqKey : string
+  }
+  expects trait AgentKbTools {
+    state ready {
+      KB_ADD_FILE -> readingFile
+      SEARCH_KB -> kbWaiting
+      ASK_KB -> kbWaiting
+    }
+    emits {
+      TOOL_RESULT { callId : string!  result : string! }
+      TOOL_FAILED { callId : string!  error : string! }
+      KB_SEARCH { key : string!  query : string! }
+      KB_ASK { key : string!  question : string! }
+    }
+  }
+  expects page boot -> AgentKbTools
+}

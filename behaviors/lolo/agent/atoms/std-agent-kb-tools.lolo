@@ -1,0 +1,229 @@
+app std-agent-kb-tools [
+  version: "1.0.0",
+  fs: { cwd: "**": [read] },
+  description: "std-agent-kb-tools — the knowledge-base tools an agent loop offers over a composed std-knowledge-base. Each tool is a declared input std-agent-tool-loop dispatches; the atom hears the loop's TOOL_PENDING for the call id and ends that call with TOOL_RESULT or TOOL_FAILED. Every knowledge-base and document request of a call carries the key `agent:` followed by the call id, and an answer with another key is ignored. KB_ADD_FILE { path } reads a file under the rootDir knob, hashes it with SHA-256, has std-document-text read it into pages (DOC_TEXT_READ, answered DOC_TEXT or DOC_TEXT_FAILED) and adds it to the knowledge base under the hash (KB_ADD), with the kind its reader names (the textKind, pdfKind and ocrKind knobs), answering how many chunks were added and how it was read. SEARCH_KB { query, k } forwards to KB_SEARCH and answers each passage under its source and page. ASK_KB { question } forwards to KB_ASK and answers the grounded answer followed by each citation with its source, page and quote; an answer the documents cannot give says so. The words that introduce a source and a page are the sourceWord and pageWord knobs. An empty query or question, a path outside the workspace, a file that cannot be read or hashed, or a failed request answers TOOL_FAILED with the reason. Headless: the composer wires KB_ADD, KB_SEARCH and KB_ASK to its knowledge base and the answers back (KB_ADDED, KB_HITS, KB_ANSWERED, KB_FAILED), DOC_TEXT_READ to std-document-text and DOC_TEXT, DOC_TEXT_FAILED back, and grants the fs read its rootDir names."
+]
+;; @capabilities "add a workspace document to a knowledge base, search a knowledge base, ask a knowledge base a question answered with citations, as agent tools"
+uses Spec from "almadar-std/agent-kb-tools"
+
+type KbToolPage = { page : number!, text : string! }
+type KbToolHit = { docId : string!, source : string!, kind : string!, page : number!, text : string!, score : number! }
+type KbToolCitation = { docId : string!, source : string!, page : number!, quote : string! }
+
+orbital AgentKbToolsOrbital {
+  entity AgentKbCall [runtime] {
+    id : string!
+    callId : string @description "The tool call the loop waits on." = ""
+    reqKey : string @description "The key of every request of the call in flight: `agent:` followed by the call id; an answer with another key is ignored." = ""
+    op : string @description "Which request of the call in flight an answer belongs to: add, search or ask." = ""
+    kbPath : string @description "The workspace path KB_ADD_FILE is adding." = ""
+    sha : string @description "The SHA-256 of the file being added; it is the document id." = ""
+    docMethod : string @description "How std-document-text read the file being added; blank before the read." = ""
+  }
+
+  trait AgentKbTools -> AgentKbCall [optimistic] {
+    config {
+      rootDir : string = ""
+        @label "Workspace root"
+        @description "A directory under the working directory, ending with /, that every KB_ADD_FILE path is relative to; empty is the working directory itself. The composer sets it and grants the fs read it names."
+        @tier "policy"
+      sourceWord : string = "source"
+        @label "Word for a source"
+        @description "The word that introduces a passage's source in a tool answer."
+        @tier "domain"
+      pageWord : string = "page"
+        @label "Word for a page"
+        @description "The word that introduces a passage's page in a tool answer."
+        @tier "domain"
+      textKind : string = "page"
+        @label "Kind of a text file"
+        @description "The knowledge-base kind a file read as plain text is added as."
+        @tier "domain"
+      pdfKind : string = "pdf"
+        @label "Kind of a PDF"
+        @description "The knowledge-base kind a file read by its PDF text layer is added as."
+        @tier "domain"
+      ocrKind : string = "scan"
+        @label "Kind of a scan"
+        @description "The knowledge-base kind a file read by OCR is added as."
+        @tier "domain"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TOOL_PENDING -> ready
+        (set @entity.callId @payload.callId)
+        (set @entity.reqKey (str/concat "agent:" @payload.callId))
+
+      KB_ADD_FILE -> ready when (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../"))
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the path is outside the workspace" })
+      KB_ADD_FILE -> readingFile when (not (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../")))
+        (set @entity.kbPath @payload.path)
+        (os/read-file { anchor: "cwd", path: (str/concat @config.rootDir @payload.path) } { emit: { success: KB_FILE_READ, failure: KB_FILE_FAILED } })
+
+      SEARCH_KB -> ready when (== (str/trim @payload.query) "")
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the query is empty" })
+      SEARCH_KB -> kbWaiting when (!= (str/trim @payload.query) "")
+        (set @entity.op "search")
+        (emit KB_SEARCH { key: @entity.reqKey, query: @payload.query, k: @payload.k })
+
+      ASK_KB -> ready when (== (str/trim @payload.question) "")
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the question is empty" })
+      ASK_KB -> kbWaiting when (!= (str/trim @payload.question) "")
+        (set @entity.op "ask")
+        (emit KB_ASK { key: @entity.reqKey, question: @payload.question })
+    }
+
+    state readingFile {
+      INIT -> ready
+      TOOL_PENDING -> readingFile
+      KB_FILE_READ -> ready when (== (hash/sha 256 @payload.data "hex" "bytes") null)
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the file could not be hashed" })
+      KB_FILE_READ -> kbDocument when (!= (hash/sha 256 @payload.data "hex" "bytes") null)
+        (set @entity.sha (default (hash/sha 256 @payload.data "hex" "bytes") ""))
+        (emit DOC_TEXT_READ { key: @entity.reqKey, path: (str/concat @config.rootDir @entity.kbPath) })
+      KB_FILE_FAILED -> ready
+        (emit TOOL_FAILED { callId: @entity.callId, error: (default @payload.error "the file could not be read") })
+    }
+
+    state kbDocument {
+      INIT -> ready
+      TOOL_PENDING -> kbDocument
+      DOC_TEXT -> kbWaiting when (== @payload.key @entity.reqKey)
+        (set @entity.op "add")
+        (set @entity.docMethod @payload.method)
+        (emit KB_ADD { key: @entity.reqKey, docId: @entity.sha, source: @entity.kbPath, kind: (if (== @payload.method "ocr") @config.ocrKind (if (== @payload.method "text") @config.textKind @config.pdfKind)), sha256: @entity.sha, pages: @payload.pages })
+      DOC_TEXT_FAILED -> ready when (== @payload.key @entity.reqKey)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat @payload.code ": " @payload.error) })
+    }
+
+    state kbWaiting {
+      INIT -> ready
+      TOOL_PENDING -> kbWaiting
+      KB_ADDED -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "add") (> @payload.chunks 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat "added " @entity.kbPath " to the knowledge base as document " @payload.docId " (" @payload.chunks " chunks, read by " @entity.docMethod ")") })
+      KB_ADDED -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "add") (== @payload.chunks 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat @entity.kbPath " adds no chunks: document " @payload.docId " is already in the knowledge base unchanged, or has no text (read by " @entity.docMethod ")") })
+      KB_HITS -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "search") (== (array/len @payload.hits) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: "the knowledge base holds no passage near this query" })
+      KB_HITS -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "search") (> (array/len @payload.hits) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.hits (fn h (str/concat "(" @config.sourceWord ": " @h.source ", " @config.pageWord " " @h.page ")\n" @h.text))) "\n\n") })
+      KB_ANSWERED -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "ask") @payload.refused)
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat "the knowledge base cannot answer this from its documents: " (str/trim @payload.answer)) })
+      KB_ANSWERED -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "ask") (not @payload.refused))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat (str/trim @payload.answer) "\n\n" (str/join (array/map @payload.citations (fn c (str/concat "(" @config.sourceWord ": " @c.source ", " @config.pageWord " " @c.page "): " @c.quote))) "\n")) })
+      KB_FAILED -> ready when (== @payload.key @entity.reqKey)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "the knowledge base failed: " @payload.error) })
+    }
+
+    emits {
+      TOOL_RESULT -> external {
+        callId : string!
+        result : string!
+      }
+        @description "A tool's outcome, which std-agent-tool-loop hands back to the model."
+        @tier "internal"
+      TOOL_FAILED -> external {
+        callId : string!
+        error : string!
+      }
+        @description "A tool failed or was refused; std-agent-tool-loop hands the reason back to the model."
+        @tier "internal"
+      DOC_TEXT_READ -> external {
+        key : string!
+        path : string!
+      }
+        @description "Ask std-document-text to read the file at the workspace path into pages."
+        @tier "secondary"
+      KB_ADD -> external {
+        key : string!
+        docId : string!
+        source : string!
+        kind : string!
+        sha256 : string!
+        pages : [KbToolPage]!
+      }
+        @description "Add a document to the knowledge base, page by page."
+        @tier "secondary"
+      KB_SEARCH -> external {
+        key : string!
+        query : string!
+        k : number?
+      }
+        @description "Ask the knowledge base for the passages nearest in meaning to a query."
+        @tier "secondary"
+      KB_ASK -> external {
+        key : string!
+        question : string!
+      }
+        @description "Ask the knowledge base a question to be answered with citations."
+        @tier "secondary"
+      KB_FILE_READ -> internal {
+        data : bytes!
+      }
+        @description "Internal: the bytes of the file KB_ADD_FILE reads."
+        @tier "internal"
+      KB_FILE_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: the file KB_ADD_FILE reads could not be read."
+        @tier "internal"
+    }
+
+    listens {
+      KB_ADD_FILE -> input {
+        path : string! @description "The file's path inside the workspace, for example policies/terms.pdf"
+      }
+        @description "Read a PDF, scan or text file of the workspace and add it to the knowledge base, so later questions can be answered from it."
+        @synonyms "store document, index file, add to knowledge base, learn this document"
+      SEARCH_KB -> input {
+        query : string! @description "What to look for, in plain words"
+        k : number? @description "How many passages to answer; leave out for the usual number"
+      }
+        @description "Find the passages of the knowledge base nearest in meaning to a query, each with its source and page. Use it to look something up; use ASK_KB when the person wants an answer."
+        @synonyms "search knowledge base, find passages, look up in the documents"
+      ASK_KB -> input {
+        question : string! @description "The person's question, in their own words"
+      }
+        @description "Answer a question from the documents in the knowledge base, with citations to source and page. Use it whenever the person asks about their documents, policies, procedures or rules; give the answer with its citations and never answer such a question from memory."
+        @synonyms "ask knowledge base, grounded answer, what do our documents say, policy question"
+      *.TOOL_PENDING -> TOOL_PENDING
+      TOOL_PENDING {
+        callId : string!
+        tool : string!
+      }
+      KB_ADDED {
+        key : string!
+        docId : string!
+        chunks : number!
+      }
+      KB_FAILED {
+        key : string!
+        error : string!
+      }
+      KB_HITS {
+        key : string!
+        hits : [KbToolHit]!
+      }
+      KB_ANSWERED {
+        key : string!
+        answer : string!
+        citations : [KbToolCitation]!
+        refused : boolean!
+      }
+      DOC_TEXT {
+        key : string!
+        pages : [KbToolPage]!
+        method : string!
+      }
+      DOC_TEXT_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  page boot as AgentKbToolsStart -> AgentKbTools
+}

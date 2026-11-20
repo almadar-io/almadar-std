@@ -1,0 +1,285 @@
+app std-agent-workflow [
+  version: "1.0.0",
+  description: "std-agent-workflow — one business process as declared data, run step by step by an agent through a composed std-agent-coordinator. The knobs name the process (name, instructions), the fields a run asks for (inputFields, each with a name, a label and whether it is required) and the ordered steps: each step has a title, its instructions, the configured tools it may use (event addresses and entity names of the coordinator's tools; an empty list is a step that only reasons and writes its result), and whether a person must approve its result before the run goes on. WORKFLOW_RUN { runId, input } refuses a workflow with no steps and a run whose required field is missing (WORKFLOW_FAILED, index -1, naming the fields), otherwise stores a WorkflowRun row and emits TASK_START { taskId = runId, task, steps } for the coordinator: the task is the name, the instructions and the input, and the steps are the declared ones, each limited to its tools, the step after an approval step held. The plan is never a model's. The coordinator's TASK_PROGRESS is reported as WORKFLOW_STEP { runId, index, total, title, status started | done }. When the coordinator stops before a held step (TASK_HELD), the run waits in awaitingApproval and emits WORKFLOW_APPROVAL_NEEDED { runId, index, title, result } for the step before; WORKFLOW_APPROVED { runId } releases the held step (TASK_RELEASE, then TASK_START again once TASK_RELEASED answers) and WORKFLOW_DENIED { runId, reason } ends the run denied (WORKFLOW_FAILED with the step's index and `denied:` and the reason). A last step marked approval waits the same way on the coordinator's answer before the run is done. TASK_DONE ends the run with WORKFLOW_DONE { runId, answer }; TASK_FAILED with WORKFLOW_FAILED { runId, index, error }. WORKFLOW_CANCEL { runId } ends the run cancelled; the coordinator finishes the step it is on and its later answers are ignored. One run at a time: a WORKFLOW_RUN while another runs or waits is refused by name, never queued. The WorkflowRun row keeps the run's status, input, step, answer and error. Headless: the composer wires TASK_START and TASK_RELEASE to its coordinator and the coordinator's TASK_PROGRESS, TASK_HELD, TASK_RELEASED, TASK_DONE and TASK_FAILED back (TaskProgress, TaskHeld, TaskReleased, TaskDone, TaskFailed), gives the coordinator the tools the steps name, and decides who may approve (std-approval-gate); a workflow is composed into the program whose records it works on, so its tools are that program's own declared inputs."
+]
+;; @capabilities "run a declared business process step by step with an agent, limit each step to named tools, stop for a person's approval, resume, record each run"
+uses Spec from "almadar-std/agent-workflow"
+
+type WorkflowField = { name : string!, label : string!, required : boolean! }
+type WorkflowStep = { title : string!, instructions : string, tools : [string], approval : boolean, kind : "agent" | "approval" }
+type WorkflowPlanned = { title : string!, instruction : string!, tools : [string]!, approval : boolean! }
+type WorkflowDeclared = { instruction : string!, hold : boolean, limited : boolean, tools : [string] }
+type WorkflowInput = Map string string
+
+orbital AgentWorkflowOrbital {
+  entity WorkflowRun [persistent: workflowRuns] {
+    @read none "A binding stub: the app that binds its own entity here states the @read policy; this atom is headless and writes these rows as the program."
+    @create none "A binding stub: the app that binds its own entity here states the @create policy; this headless atom writes these rows as the program."
+    id : string! @description "The run id the caller chose (WORKFLOW_RUN runId)."
+    workflow : string @description "The workflow's name." = ""
+    status : "running" | "awaitingApproval" | "done" | "denied" | "failed" | "cancelled" @description "Where the run is." = running
+    input : WorkflowInput @description "The fields the run was started with." = {}
+    stepIndex : number @description "The step the run is on, from 0." = 0
+    stepTotal : number @description "How many steps the workflow declares." = 0
+    answer : string @description "The run's answer, set when it is done." = ""
+    error : string @description "Why the run failed or was denied." = ""
+    startedAt : instant @description "When the run started."
+    finishedAt : instant? @description "When the run ended." = null
+  }
+
+  entity WorkflowView [runtime] {
+    id : string!
+    runId : string @description "The run in flight; empty when none is." = ""
+    task : string @description "The task text handed to the coordinator, sent again when the run resumes." = ""
+    heldIndex : number @description "The step the coordinator stopped before; the step total when the answer itself waits for approval." = -1
+    awaitingFinal : boolean @description "The run waits for approval of its answer, not of a step." = false
+    finalAnswer : string @description "The coordinator's answer held while it waits for approval." = ""
+    plan : [WorkflowPlanned] @description "The steps the agent does, in order, each with whether a person approves its result: the declared steps without the approval steps, an approval step marking the step before it." = []
+  }
+
+  trait AgentWorkflow -> WorkflowView {
+    config {
+      name : string = ""
+        @label "What is this workflow called?"
+        @description "The process's name, shown to people and told to the agent."
+        @tier "domain"
+      instructions : string = ""
+        @label "What is the process?"
+        @description "What the whole process is for, told to the agent before the steps."
+        @tier "domain"
+      inputFields : [WorkflowField] = []
+        @label "What does a run need to be told?"
+        @description "The fields a run is started with; a run missing a required one is refused."
+        @tier "domain"
+      steps : [WorkflowStep] = []
+        @label "The steps, in order"
+        @description "Each step's title, its instructions, the configured tools it may use and whether a person approves its result before the run goes on."
+        @tier "domain"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      WORKFLOW_RUN -> idle when (= (array/len (array/filter @config.steps (fn s (!= (default @s.kind "agent") "approval")))) 0)
+        (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "the workflow declares no steps" })
+      WORKFLOW_RUN -> idle when (and (> (array/len (array/filter @config.steps (fn s (!= (default @s.kind "agent") "approval")))) 0) (> (array/len (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") ""))))) 0))
+        (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: (str/concat "a required field is missing: " (str/join (array/map (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") "")))) (fn f @f.label)) ", ")) })
+      WORKFLOW_RUN -> running when (and (> (array/len (array/filter @config.steps (fn s (!= (default @s.kind "agent") "approval")))) 0) (= (array/len (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") ""))))) 0))
+        (set @entity.runId ?runId)
+        (set @entity.heldIndex -1)
+        (set @entity.awaitingFinal false)
+        (set @entity.finalAnswer "")
+        (set @entity.plan (array/map (array/filter (array/range 0 (array/len @config.steps) 1) (fn i (let ((s : WorkflowStep (default (array/nth @config.steps @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (!= (default @s.kind "agent") "approval")))) (fn i (let ((s : WorkflowStep (default (array/nth @config.steps @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) { title: @s.title, instruction: (str/concat @s.title ": " (default @s.instructions "")), tools: (default @s.tools []), approval: (or (default @s.approval false) (if (< (+ @i 1) (array/len @config.steps)) (let ((n : WorkflowStep (default (array/nth @config.steps (+ @i 1)) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (= (default @n.kind "agent") "approval")) false)) }))))
+        (set @entity.task (str/concat @config.name "\n" @config.instructions "\n\n" (str/join (array/map (object/entries ?input) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "")))) "\n")))
+        (persist create WorkflowRun { id: ?runId, workflow: @config.name, status: "running", input: ?input, stepIndex: 0, stepTotal: (array/len @entity.plan), answer: "", error: "", startedAt: (time/now) } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit TASK_START {
+          taskId: ?runId
+          task: (str/concat @config.name "\n" @config.instructions "\n\n" (str/join (array/map (object/entries ?input) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "")))) "\n"))
+          steps: (array/map (array/range 0 (array/len @entity.plan) 1) (fn i (let ((p : WorkflowPlanned (default (array/nth @entity.plan @i) { title: "", instruction: "", tools: [], approval: false }))) { instruction: @p.instruction, hold: (if (> @i 0) (let ((q : WorkflowPlanned (default (array/nth @entity.plan (- @i 1)) { title: "", instruction: "", tools: [], approval: false }))) @q.approval) false), limited: true, tools: @p.tools })))
+        })
+      WORKFLOW_APPROVED -> idle
+        (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "no run is waiting for approval" })
+      WORKFLOW_DENIED -> idle
+        (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "no run is waiting for approval" })
+      WORKFLOW_CANCEL -> idle
+        (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "no run is in progress" })
+      RunSaved -> idle
+      RunSaveFailed -> idle
+        (log (str/concat "std-agent-workflow: the run row could not be saved: " (default ?error "")) "warn")
+        (emit WORKFLOW_ROW_FAILED { error: (default ?error "the run row could not be saved") })
+    }
+
+    state running {
+      INIT -> running
+      WORKFLOW_RUN -> running
+        (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: (str/concat "busy with run " @entity.runId) })
+      TaskProgress -> running when (and (= ?taskId @entity.runId) (= ?status "running"))
+        (emit WORKFLOW_STEP { runId: @entity.runId, index: ?index, total: ?total, title: (let ((p : WorkflowPlanned (default (array/nth @entity.plan ?index) { title: "", instruction: "", tools: [], approval: false }))) @p.title), status: "started" })
+        (persist update WorkflowRun { id: @entity.runId, stepIndex: ?index } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+      TaskProgress -> running when (and (= ?taskId @entity.runId) (= ?status "done"))
+        (emit WORKFLOW_STEP { runId: @entity.runId, index: ?index, total: ?total, title: (let ((p : WorkflowPlanned (default (array/nth @entity.plan ?index) { title: "", instruction: "", tools: [], approval: false }))) @p.title), status: "done" })
+      TaskHeld -> awaitingApproval when (= ?taskId @entity.runId)
+        (set @entity.heldIndex ?index)
+        (set @entity.awaitingFinal false)
+        (persist update WorkflowRun { id: @entity.runId, status: "awaitingApproval", stepIndex: (- ?index 1) } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit WORKFLOW_APPROVAL_NEEDED { runId: @entity.runId, index: (- ?index 1), title: (if (> ?index 0) (let ((p : WorkflowPlanned (default (array/nth @entity.plan (- ?index 1)) { title: "", instruction: "", tools: [], approval: false }))) @p.title) ""), result: ?result })
+      TaskReleased -> running when (= ?stepId (str/concat @entity.runId ":" @entity.heldIndex))
+        (emit TASK_START { taskId: @entity.runId, task: @entity.task, steps: [] })
+      TaskDone -> idle when (and (= ?taskId @entity.runId) (not (let ((l : WorkflowPlanned (default (array/last @entity.plan) { title: "", instruction: "", tools: [], approval: false }))) @l.approval)))
+        (persist update WorkflowRun { id: @entity.runId, status: "done", answer: ?answer, finishedAt: (time/now) } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit WORKFLOW_DONE { runId: @entity.runId, answer: ?answer })
+        (set @entity.runId "")
+      TaskDone -> awaitingApproval when (and (= ?taskId @entity.runId) (let ((l : WorkflowPlanned (default (array/last @entity.plan) { title: "", instruction: "", tools: [], approval: false }))) @l.approval))
+        (set @entity.heldIndex (array/len @entity.plan))
+        (set @entity.awaitingFinal true)
+        (set @entity.finalAnswer ?answer)
+        (persist update WorkflowRun { id: @entity.runId, status: "awaitingApproval" } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit WORKFLOW_APPROVAL_NEEDED { runId: @entity.runId, index: (- (array/len @entity.plan) 1), title: (let ((l : WorkflowPlanned (default (array/last @entity.plan) { title: "", instruction: "", tools: [], approval: false }))) @l.title), result: ?answer })
+      TaskFailed -> idle when (= ?taskId @entity.runId)
+        (persist update WorkflowRun { id: @entity.runId, status: "failed", error: ?error, finishedAt: (time/now) } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit WORKFLOW_FAILED { runId: @entity.runId, index: ?index, error: ?error })
+        (set @entity.runId "")
+      WORKFLOW_CANCEL -> idle when (= ?runId @entity.runId)
+        (persist update WorkflowRun { id: @entity.runId, status: "cancelled", finishedAt: (time/now) } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (set @entity.runId "")
+      RunSaved -> running
+      RunSaveFailed -> running
+        (log (str/concat "std-agent-workflow: the run row could not be saved: " (default ?error "")) "warn")
+        (emit WORKFLOW_ROW_FAILED { error: (default ?error "the run row could not be saved") })
+    }
+
+    state awaitingApproval {
+      INIT -> awaitingApproval
+      WORKFLOW_RUN -> awaitingApproval
+        (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: (str/concat "busy with run " @entity.runId) })
+      WORKFLOW_APPROVED -> running when (and (= ?runId @entity.runId) (not @entity.awaitingFinal))
+        (persist update WorkflowRun { id: @entity.runId, status: "running", stepIndex: @entity.heldIndex } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit TASK_RELEASE { taskId: @entity.runId, index: @entity.heldIndex })
+      WORKFLOW_APPROVED -> idle when (and (= ?runId @entity.runId) @entity.awaitingFinal)
+        (persist update WorkflowRun { id: @entity.runId, status: "done", answer: @entity.finalAnswer, finishedAt: (time/now) } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit WORKFLOW_DONE { runId: @entity.runId, answer: @entity.finalAnswer })
+        (set @entity.runId "")
+      WORKFLOW_DENIED -> idle when (= ?runId @entity.runId)
+        (persist update WorkflowRun { id: @entity.runId, status: "denied", error: (default ?reason ""), finishedAt: (time/now) } {
+          emit: { success: RunSaved, failure: RunSaveFailed }
+        })
+        (emit WORKFLOW_FAILED { runId: @entity.runId, index: (- @entity.heldIndex 1), error: (str/concat "denied: " (default ?reason "")) })
+        (set @entity.runId "")
+      RunSaved -> awaitingApproval
+      RunSaveFailed -> awaitingApproval
+        (log (str/concat "std-agent-workflow: the run row could not be saved: " (default ?error "")) "warn")
+        (emit WORKFLOW_ROW_FAILED { error: (default ?error "the run row could not be saved") })
+    }
+
+    emits {
+      TASK_START -> external {
+        taskId : string!
+        task : string!
+        steps : [WorkflowDeclared]!
+      }
+        @description "Hand the run to std-agent-coordinator: the declared steps for a new run, none when a held run resumes."
+        @tier "internal"
+      TASK_RELEASE -> external {
+        taskId : string!
+        index : number!
+      }
+        @description "Ask std-agent-coordinator to clear the held mark of the step an approval was waited for."
+        @tier "internal"
+      WORKFLOW_STEP -> external {
+        runId : string!
+        index : number!
+        total : number!
+        title : string!
+        status : "started" | "done"!
+      }
+        @description "A step of the run started or finished."
+        @tier "domain"
+      WORKFLOW_APPROVAL_NEEDED -> external {
+        runId : string!
+        index : number!
+        title : string!
+        result : string!
+      }
+        @description "The run waits for a person: `result` is what step `index` produced. Answer with WORKFLOW_APPROVED or WORKFLOW_DENIED."
+        @synonyms "needs sign-off, waiting for approval"
+        @tier "domain"
+      WORKFLOW_DONE -> external {
+        runId : string!
+        answer : string!
+      }
+        @description "Every step is done and approved; `answer` is the run's result."
+        @tier "domain"
+      WORKFLOW_FAILED -> external {
+        runId : string!
+        index : number!
+        error : string!
+      }
+        @description "The run ended without finishing: a refused start (index -1), a failed step, or a denied approval (`denied:` and the reason)."
+        @tier "domain"
+      WORKFLOW_ROW_FAILED -> external {
+        error : string!
+      }
+        @description "The run's row could not be saved; the run itself goes on, but its record is incomplete."
+        @tier "secondary"
+      RunSaved {
+        id : string
+      }
+        @tier "internal"
+      RunSaveFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      WORKFLOW_RUN -> input {
+        runId : string! @description "A new id for this run"
+        input : WorkflowInput! @description "The fields the workflow asks for, by name"
+      }
+        @description "Start one run of the workflow with the fields it asks for. The steps are the declared ones; the run stops and asks for approval where a step says so."
+        @synonyms "run the workflow, start the process, do the intake"
+      WORKFLOW_APPROVED -> input {
+        runId : string! @description "The run that is waiting"
+      }
+        @description "Approve what the waiting step produced, so the run goes on."
+        @synonyms "approve, sign off, looks good, continue"
+      WORKFLOW_DENIED -> input {
+        runId : string! @description "The run that is waiting"
+        reason : string? @description "Why it is not approved, in the person's words"
+      }
+        @description "Do not approve what the waiting step produced; the run ends denied with the reason."
+        @synonyms "deny, reject, stop the run"
+      WORKFLOW_CANCEL -> input {
+        runId : string! @description "The run to stop"
+      }
+        @description "Stop a run that is in progress."
+        @synonyms "cancel, abort"
+      TaskProgress {
+        taskId : string!
+        index : number!
+        total : number!
+        status : "planned" | "running" | "done"!
+      }
+      TaskHeld {
+        taskId : string!
+        index : number!
+        total : number!
+        result : string!
+      }
+      TaskReleased {
+        stepId : string!
+      }
+      TaskDone {
+        taskId : string!
+        answer : string!
+        steps : number!
+      }
+      TaskFailed {
+        taskId : string!
+        index : number!
+        error : string!
+      }
+    }
+  }
+
+  page boot as AgentWorkflowPage -> AgentWorkflow
+}

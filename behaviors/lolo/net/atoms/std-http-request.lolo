@@ -18,6 +18,7 @@ orbital HttpRequestOrbital {
     attempt : number @description "Retries made for the current page." = 0
     page : number @description "The page in flight, from 1." = 1
     queue : [HttpReq] @description "Requests asked while another is in flight on this frame, oldest first; each starts when the one before it ends." = []
+    host : string @description "With the hostEnv knob set, the host text read from that variable, sent as the host of every HTTP_SEND; empty until it is read." = ""
   }
 
   trait RequestDelay = Delay.traits.Delay [server] {
@@ -74,6 +75,10 @@ orbital HttpRequestOrbital {
         @label "Paginations"
         @description "The pagination modes a request may ask for."
         @tier "domain"
+      hostEnv : string = ""
+        @label "Host variable"
+        @description "The environment variable holding the host this request's std-http-client is anchored to (its host knob written { anchor: { env: NAME } }). When set, the variable is read once and its text is sent as the host of every HTTP_SEND, which that client writes as the host header and the TLS server name; an unset or empty variable fails the request by name. Empty: no host is sent and the client's literal host is used."
+        @tier "infra"
       timeoutMs : number = 300000
         @label "Request timeout"
         @description "Milliseconds one attempt (one page, one retry) may wait for its reply before the call is aborted with HTTP_CANCEL and counted as a failure of kind timeout; a request that carries its own timeoutMs overrides it, 0 sets none. The deadline is a std-delay wait."
@@ -108,11 +113,22 @@ orbital HttpRequestOrbital {
 
     state awaiting {
       INIT -> awaiting
+      HC_HOST_READ -> awaiting when (!= (default @payload.value "") "")
+        (set @entity.host (default @payload.value ""))
+        (emit HC_BUILD { n: 1 })
+      HC_HOST_READ -> ready when (= (default @payload.value "") "")
+        (emit HTTP_REQUEST_FAILED { key: @entity.req.key, error: (str/concat "the host environment variable " @config.hostEnv " is not set"), kind: "refused" })
+        (emit HTTP_REQUEST_NEXT {})
+      HC_HOST_UNREAD -> ready
+        (emit HTTP_REQUEST_FAILED { key: @entity.req.key, error: (str/concat "the host environment variable " @config.hostEnv " could not be read: " (default @payload.error "")), kind: "refused" })
+        (emit HTTP_REQUEST_NEXT {})
       HTTP_REQUEST_NEXT -> awaiting
       HTTP_REQUEST -> awaiting
         (set @entity.queue (array/append @entity.queue { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages, timeoutMs: @payload.timeoutMs }))
 
-      HC_BUILD -> awaiting
+      HC_BUILD -> awaiting when (and (!= @config.hostEnv "") (= @entity.host ""))
+        (os/getenv @config.hostEnv { key: "host-env", emit: { success: HC_HOST_READ, failure: HC_HOST_UNREAD } })
+      HC_BUILD -> awaiting when (not (and (!= @config.hostEnv "") (= @entity.host "")))
         (set @entity.wire {
           key: @entity.req.key,
           method: @entity.req.method,
@@ -142,7 +158,7 @@ orbital HttpRequestOrbital {
                     (bytes/from-string "")))))),
           stream: @entity.req.stream
         })
-        (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream })
+        (if (= @entity.host "") (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream }) (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream, host: @entity.host }))
         (emit HC_TIMER { delayMs: (default @entity.req.timeoutMs @config.timeoutMs) })
 
       HC_TIMER -> awaiting when (> @payload.delayMs 0)
@@ -218,7 +234,7 @@ orbital HttpRequestOrbital {
       HTTP_REQUEST_CANCEL -> waiting when (!= @payload.key @entity.req.key)
         (set @entity.queue (array/filter @entity.queue (fn q (!= @q.key @payload.key))))
       RETRY_ELAPSED -> awaiting
-        (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream })
+        (if (= @entity.host "") (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream }) (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream, host: @entity.host }))
         (emit HC_TIMER { delayMs: (default @entity.req.timeoutMs @config.timeoutMs) })
     }
 
@@ -250,8 +266,9 @@ orbital HttpRequestOrbital {
         headers : [HttpRequestHeader]!
         body : bytes!
         stream : string!
+        host : string?
       }
-        @description "The wire request for std-http-client."
+        @description "The wire request for std-http-client. `host` is present only with the hostEnv knob: the host text an env-anchored client writes as the host header."
         @tier "primary"
       HTTP_REQUEST_REFUSED -> external {
         key : string!
@@ -330,6 +347,17 @@ orbital HttpRequestOrbital {
         n : number!
       }
         @description "Internal: build the wire request from the request in flight."
+        @tier "internal"
+      HC_HOST_READ -> internal {
+        value : string?
+      }
+        @description "Internal: the os/getenv answer for the hostEnv variable; value is absent when it is unset."
+        @tier "internal"
+      HC_HOST_UNREAD -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the hostEnv variable could not be read."
         @tier "internal"
       RETRY_WAIT -> external {
         delayMs : number!

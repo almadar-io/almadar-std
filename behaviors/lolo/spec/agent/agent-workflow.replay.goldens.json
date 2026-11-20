@@ -1,0 +1,842 @@
+{
+  "atom": "agent/atoms/std-agent-workflow.lolo",
+  "trait": "AgentWorkflow",
+  "spec": "spec/agent/agent-workflow.lolo",
+  "note": "a declared workflow run by the long-task coordinator (P-030). The coordinator's answers (TASK_PROGRESS, TASK_HELD, TASK_RELEASED, TASK_DONE, TASK_FAILED) are played as steps. The example is a claims intake of three steps whose second needs approval.",
+  "cases": [
+    {
+      "id": "a-run-hands-the-declared-steps-to-the-coordinator-limited-and-held-after-an-approval-step",
+      "config": {
+        "name": "Claims intake",
+        "instructions": "Handle one insurance claim.",
+        "inputFields": [
+          {
+            "name": "claimNumber",
+            "label": "Claim number",
+            "required": true
+          }
+        ],
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read the claim's documents.",
+            "tools": [
+              "Claims.ClaimManage.OPEN_CLAIM"
+            ],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check the claim against the checklist.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write the decision letter.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-1",
+            "input": {
+              "claimNumber": "C-2026-17"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "TASK_START",
+                "payload": {
+                  "taskId": "run-1",
+                  "task": "Claims intake\nHandle one insurance claim.\n\nclaimNumber: C-2026-17",
+                  "steps": [
+                    {
+                      "instruction": "Read the documents: Read the claim's documents.",
+                      "hold": false,
+                      "limited": true,
+                      "tools": [
+                        "Claims.ClaimManage.OPEN_CLAIM"
+                      ]
+                    },
+                    {
+                      "instruction": "Check the list: Check the claim against the checklist.",
+                      "hold": false,
+                      "limited": true,
+                      "tools": []
+                    },
+                    {
+                      "instruction": "Write the letter: Write the decision letter.",
+                      "hold": true,
+                      "limited": true,
+                      "tools": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "WORKFLOW_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-run-missing-a-required-field-is-refused-and-nothing-starts",
+      "config": {
+        "name": "Claims intake",
+        "inputFields": [
+          {
+            "name": "claimNumber",
+            "label": "Claim number",
+            "required": true
+          }
+        ],
+        "steps": [
+          {
+            "title": "Read",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-2",
+            "input": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_FAILED",
+                "payload": {
+                  "runId": "run-2",
+                  "index": -1,
+                  "error": "a required field is missing: Claim number"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-workflow-with-no-steps-is-refused",
+      "config": {
+        "name": "Empty",
+        "steps": []
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-3",
+            "input": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_FAILED",
+                "payload": {
+                  "runId": "run-3",
+                  "index": -1,
+                  "error": "the workflow declares no steps"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-second-run-while-one-runs-is-refused-by-name",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Read",
+                "instruction": "Read: Read.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "runId": "run-9",
+            "input": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "WORKFLOW_FAILED",
+                "payload": {
+                  "runId": "run-9",
+                  "index": -1,
+                  "error": "busy with run run-1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-coordinator-stopping-before-a-held-step-asks-for-approval-of-the-step-before",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "TaskHeld",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Read the documents",
+                "instruction": "Read the documents: Read.",
+                "tools": [],
+                "approval": false
+              },
+              {
+                "title": "Check the list",
+                "instruction": "Check the list: Check.",
+                "tools": [],
+                "approval": true
+              },
+              {
+                "title": "Write the letter",
+                "instruction": "Write the letter: Write.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "taskId": "run-1",
+            "index": 2,
+            "total": 3,
+            "result": "Every item on the list is met."
+          },
+          "expect": {
+            "fired": true,
+            "state": "awaitingApproval",
+            "emits": [
+              {
+                "event": "WORKFLOW_APPROVAL_NEEDED",
+                "payload": {
+                  "runId": "run-1",
+                  "index": 1,
+                  "title": "Check the list",
+                  "result": "Every item on the list is met."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WORKFLOW_APPROVED",
+          "payload": {
+            "runId": "run-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "TASK_RELEASE",
+                "payload": {
+                  "taskId": "run-1",
+                  "index": 2
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskReleased",
+          "payload": {
+            "stepId": "run-1:2"
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "TASK_START",
+                "payload": {
+                  "taskId": "run-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-held-notice-for-another-task-is-ignored",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "TaskHeld",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Read",
+                "instruction": "Read: Read.",
+                "tools": [],
+                "approval": true
+              },
+              {
+                "title": "Write",
+                "instruction": "Write: Write.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "taskId": "other",
+            "index": 1,
+            "total": 2,
+            "result": "x"
+          },
+          "expect": {
+            "fired": false,
+            "state": "running",
+            "neverEmits": [
+              "WORKFLOW_APPROVAL_NEEDED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-denied-approval-ends-the-run-with-the-reason",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_DENIED",
+          "from": "awaitingApproval",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "heldIndex": 1,
+            "plan": [
+              {
+                "title": "Read",
+                "instruction": "Read: Read.",
+                "tools": [],
+                "approval": true
+              },
+              {
+                "title": "Write",
+                "instruction": "Write: Write.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "runId": "run-1",
+            "reason": "the amount is wrong"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_FAILED",
+                "payload": {
+                  "runId": "run-1",
+                  "index": 0,
+                  "error": "denied: the amount is wrong"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_RELEASE",
+              "TASK_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-coordinators-answer-ends-the-run-done",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "TaskDone",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Read",
+                "instruction": "Read: Read.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "taskId": "run-1",
+            "answer": "The claim is complete.",
+            "steps": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_DONE",
+                "payload": {
+                  "runId": "run-1",
+                  "answer": "The claim is complete."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-last-step-marked-approval-waits-for-approval-of-the-answer-before-the-run-is-done",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": true
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "TaskDone",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Write the letter",
+                "instruction": "Write the letter: Write.",
+                "tools": [],
+                "approval": true
+              }
+            ]
+          },
+          "payload": {
+            "taskId": "run-1",
+            "answer": "Dear policyholder.",
+            "steps": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "awaitingApproval",
+            "emits": [
+              {
+                "event": "WORKFLOW_APPROVAL_NEEDED",
+                "payload": {
+                  "runId": "run-1",
+                  "index": 0,
+                  "title": "Write the letter",
+                  "result": "Dear policyholder."
+                }
+              }
+            ],
+            "neverEmits": [
+              "WORKFLOW_DONE"
+            ]
+          }
+        },
+        {
+          "event": "WORKFLOW_APPROVED",
+          "payload": {
+            "runId": "run-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_DONE",
+                "payload": {
+                  "runId": "run-1",
+                  "answer": "Dear policyholder."
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_RELEASE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-step-fails-the-run-with-its-index",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "TaskFailed",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Read",
+                "instruction": "Read: Read.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "taskId": "run-1",
+            "index": 0,
+            "error": "the model did not answer"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_FAILED",
+                "payload": {
+                  "runId": "run-1",
+                  "index": 0,
+                  "error": "the model did not answer"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "each-step-the-coordinator-starts-and-finishes-is-reported-with-its-title",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "TaskProgress",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Read the documents",
+                "instruction": "Read the documents: Read.",
+                "tools": [],
+                "approval": false
+              },
+              {
+                "title": "Write the letter",
+                "instruction": "Write the letter: Write.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "taskId": "run-1",
+            "index": 1,
+            "total": 2,
+            "status": "running"
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "WORKFLOW_STEP",
+                "payload": {
+                  "runId": "run-1",
+                  "index": 1,
+                  "total": 2,
+                  "title": "Write the letter",
+                  "status": "started"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-step-of-kind-approval-is-not-run-and-marks-the-step-before-it",
+      "config": {
+        "name": "Purchase request",
+        "instructions": "Handle one purchase request.",
+        "inputFields": [],
+        "steps": [
+          {
+            "title": "Read the request",
+            "instructions": "Read it."
+          },
+          {
+            "title": "Compare with the budget",
+            "instructions": "Compare."
+          },
+          {
+            "title": "Manager approval",
+            "kind": "approval"
+          },
+          {
+            "title": "Write the order",
+            "instructions": "Write."
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-k",
+            "input": {
+              "request": "ten chairs"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "TASK_START",
+                "payload": {
+                  "taskId": "run-k",
+                  "steps": [
+                    {
+                      "instruction": "Read the request: Read it.",
+                      "hold": false,
+                      "limited": true,
+                      "tools": []
+                    },
+                    {
+                      "instruction": "Compare with the budget: Compare.",
+                      "hold": false,
+                      "limited": true,
+                      "tools": []
+                    },
+                    {
+                      "instruction": "Write the order: Write.",
+                      "hold": true,
+                      "limited": true,
+                      "tools": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "plan": [
+                {
+                  "title": "Read the request",
+                  "instruction": "Read the request: Read it.",
+                  "tools": [],
+                  "approval": false
+                },
+                {
+                  "title": "Compare with the budget",
+                  "instruction": "Compare with the budget: Compare.",
+                  "tools": [],
+                  "approval": true
+                },
+                {
+                  "title": "Write the order",
+                  "instruction": "Write the order: Write.",
+                  "tools": [],
+                  "approval": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-workflow-of-only-approval-steps-is-refused",
+      "config": {
+        "name": "Empty",
+        "steps": [
+          {
+            "title": "Manager approval",
+            "kind": "approval"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-e",
+            "input": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_FAILED",
+                "payload": {
+                  "runId": "run-e",
+                  "index": -1,
+                  "error": "the workflow declares no steps"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_START"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

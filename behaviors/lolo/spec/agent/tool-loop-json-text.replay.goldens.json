@@ -1,0 +1,58 @@
+{
+ "atom": "agent/atoms/std-agent-tool-loop.lolo",
+ "trait": "AgentToolLoop",
+ "spec": null,
+ "note": "a model sometimes sends an object or list argument as its JSON text (P-030, seen live 2026-11-20: the generator's FILL got `orbitals` as a string six times, each refused as wrong-type, and the turn ended with no reply). The argument arrives as text, so the loop parses it where the tool's parameter is declared an object or a list; text that does not parse, and an argument declared a string, are passed on as sent. Written before the atom change.",
+ "cases": [
+  {
+   "id": "an-object-argument-sent-as-json-text-is-read-as-the-object",
+   "defaults": ["LoopLlm", "LoopChatRequest", "LoopChatHttp"],
+   "steps": [
+    {
+     "event": "RUN_NEXT",
+     "from": "running",
+     "entity": {
+      "id": "t",
+      "cursor": 0,
+      "session": "s1",
+      "results": [],
+      "turnGuest": "",
+      "guest": "",
+      "table": [{"name": "App__Board__FILL", "description": "Fill", "parameters": {"type": "object", "properties": {"orbitals": {"type": "object"}, "tags": {"type": "array"}, "note": {"type": "string"}}}, "label": "App.Board.FILL", "kind": "input", "address": "App.Board.FILL", "readAny": false, "contracted": false, "fireAndForget": true}],
+      "calls": [{"id": "c1", "name": "App__Board__FILL", "arguments": {"orbitals": "{\"a\": {\"b\": 1}}", "tags": "[\"x\", \"y\"]", "note": "{\"kept\": \"as text\"}"}}]
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "entity": {"current": {"id": "c1", "name": "App__Board__FILL", "arguments": {"orbitals": {"a": {"b": 1}}, "tags": ["x", "y"], "note": "{\"kept\": \"as text\"}"}}}
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-text-that-is-not-json-is-passed-on-as-sent",
+   "defaults": ["LoopLlm", "LoopChatRequest", "LoopChatHttp"],
+   "steps": [
+    {
+     "event": "RUN_NEXT",
+     "from": "running",
+     "entity": {
+      "id": "t",
+      "cursor": 0,
+      "session": "s1",
+      "results": [],
+      "turnGuest": "",
+      "guest": "",
+      "table": [{"name": "App__Board__FILL", "description": "Fill", "parameters": {"type": "object", "properties": {"orbitals": {"type": "object"}}}, "label": "App.Board.FILL", "kind": "input", "address": "App.Board.FILL", "readAny": false, "contracted": false, "fireAndForget": true}],
+      "calls": [{"id": "c1", "name": "App__Board__FILL", "arguments": {"orbitals": "not json at all"}}]
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "entity": {"current": {"id": "c1", "name": "App__Board__FILL", "arguments": {"orbitals": "not json at all"}}}
+     }
+    }
+   ]
+  }
+ ]
+}

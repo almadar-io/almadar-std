@@ -1,0 +1,164 @@
+{
+  "atom": "agent/atoms/std-agent-kb-tools.lolo",
+  "trait": "AgentKbTools",
+  "note": "the knowledge-base tools of an agent loop, lifted from inspectorate-agent-tools (P-030): the loop's call id keys every knowledge-base request, and each answer of the knowledge base is the tool's result. Host and knowledge-base answers are played as the next step's event.",
+  "cases": [
+    {
+      "id": "the-loops-call-id-keys-the-question-sent-to-the-knowledge-base",
+      "steps": [
+        { "event": "TOOL_PENDING", "from": "ready", "payload": { "callId": "c1", "tool": "AgentKbTools.ASK_KB" }, "expect": { "fired": true, "state": "ready" } },
+        {
+          "event": "ASK_KB",
+          "payload": { "question": "What is the notice period?" },
+          "expect": {
+            "fired": true,
+            "state": "kbWaiting",
+            "emits": [ { "event": "KB_ASK", "payload": { "key": "agent:c1", "question": "What is the notice period?" } } ],
+            "neverEmits": [ "TOOL_RESULT", "TOOL_FAILED" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-answer-is-the-result-followed-by-each-citation-with-source-and-page",
+      "steps": [
+        {
+          "event": "KB_ANSWERED",
+          "from": "kbWaiting",
+          "entity": { "id": "k", "callId": "c1", "reqKey": "agent:c1", "op": "ask" },
+          "payload": { "key": "agent:c1", "answer": "Thirty days.", "refused": false, "citations": [ { "docId": "d1", "source": "policy.pdf", "page": 4, "quote": "The notice period is thirty days." } ] },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [ { "event": "TOOL_RESULT", "payload": { "callId": "c1", "result": "Thirty days.\n\n(source: policy.pdf, page 4): The notice period is thirty days." } } ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-answer-the-documents-cannot-give-says-so",
+      "steps": [
+        {
+          "event": "KB_ANSWERED",
+          "from": "kbWaiting",
+          "entity": { "id": "k", "callId": "c1", "reqKey": "agent:c1", "op": "ask" },
+          "payload": { "key": "agent:c1", "answer": "No passage covers this.", "refused": true, "citations": [] },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [ { "event": "TOOL_RESULT", "payload": { "callId": "c1", "result": "the knowledge base cannot answer this from its documents: No passage covers this." } } ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-answer-keyed-for-another-call-is-ignored",
+      "steps": [
+        {
+          "event": "KB_ANSWERED",
+          "from": "kbWaiting",
+          "entity": { "id": "k", "callId": "c1", "reqKey": "agent:c1", "op": "ask" },
+          "payload": { "key": "agent:c0", "answer": "Stale.", "refused": false, "citations": [] },
+          "expect": { "fired": false, "state": "kbWaiting", "neverEmits": [ "TOOL_RESULT", "TOOL_FAILED" ] }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-question-fails-the-call-and-asks-nothing",
+      "steps": [
+        {
+          "event": "ASK_KB",
+          "from": "ready",
+          "entity": { "id": "k", "callId": "c2", "reqKey": "agent:c2" },
+          "payload": { "question": "  " },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [ { "event": "TOOL_FAILED", "payload": { "callId": "c2", "error": "the question is empty" } } ],
+            "neverEmits": [ "KB_ASK" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "found-passages-are-answered-each-under-its-source-and-page",
+      "steps": [
+        {
+          "event": "KB_HITS",
+          "from": "kbWaiting",
+          "entity": { "id": "k", "callId": "c3", "reqKey": "agent:c3", "op": "search" },
+          "payload": { "key": "agent:c3", "hits": [ { "docId": "d1", "source": "policy.pdf", "kind": "pdf", "page": 2, "text": "Claims are filed within ten days.", "score": 0.8 }, { "docId": "d2", "source": "rules.txt", "kind": "page", "page": 1, "text": "Late claims need a reason.", "score": 0.6 } ] },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [ { "event": "TOOL_RESULT", "payload": { "callId": "c3", "result": "(source: policy.pdf, page 2)\nClaims are filed within ten days.\n\n(source: rules.txt, page 1)\nLate claims need a reason." } } ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-passage-found-says-so",
+      "steps": [
+        {
+          "event": "KB_HITS",
+          "from": "kbWaiting",
+          "entity": { "id": "k", "callId": "c3", "reqKey": "agent:c3", "op": "search" },
+          "payload": { "key": "agent:c3", "hits": [] },
+          "expect": { "fired": true, "state": "ready", "emits": [ { "event": "TOOL_RESULT", "payload": { "callId": "c3", "result": "the knowledge base holds no passage near this query" } } ] }
+        }
+      ]
+    },
+    {
+      "id": "a-knowledge-base-failure-fails-the-call-with-its-reason",
+      "steps": [
+        {
+          "event": "KB_FAILED",
+          "from": "kbWaiting",
+          "entity": { "id": "k", "callId": "c4", "reqKey": "agent:c4", "op": "ask" },
+          "payload": { "key": "agent:c4", "error": "the embedder did not answer" },
+          "expect": { "fired": true, "state": "ready", "emits": [ { "event": "TOOL_FAILED", "payload": { "callId": "c4", "error": "the knowledge base failed: the embedder did not answer" } } ] }
+        }
+      ]
+    },
+    {
+      "id": "a-path-outside-the-workspace-is-refused-before-any-file-is-read",
+      "config": { "rootDir": "docs/" },
+      "steps": [
+        {
+          "event": "KB_ADD_FILE",
+          "from": "ready",
+          "entity": { "id": "k", "callId": "c5", "reqKey": "agent:c5" },
+          "payload": { "path": "../secrets.txt" },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [ { "event": "TOOL_FAILED", "payload": { "callId": "c5", "error": "the path is outside the workspace" } } ],
+            "neverEmits": [ "DOC_TEXT_READ", "KB_ADD" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-document-is-added-under-its-hash-with-the-kind-its-reader-names",
+      "config": { "rootDir": "docs/" },
+      "steps": [
+        {
+          "event": "DOC_TEXT",
+          "from": "kbDocument",
+          "entity": { "id": "k", "callId": "c6", "reqKey": "agent:c6", "kbPath": "policy.pdf", "sha": "abc123" },
+          "payload": { "key": "agent:c6", "method": "pdftotext", "pages": [ { "page": 1, "text": "Page one." } ] },
+          "expect": {
+            "fired": true,
+            "state": "kbWaiting",
+            "emits": [ { "event": "KB_ADD", "payload": { "key": "agent:c6", "docId": "abc123", "source": "policy.pdf", "kind": "pdf", "sha256": "abc123", "pages": [ { "page": 1, "text": "Page one." } ] } } ]
+          }
+        },
+        {
+          "event": "KB_ADDED",
+          "payload": { "key": "agent:c6", "docId": "abc123", "chunks": 3 },
+          "expect": { "fired": true, "state": "ready", "emits": [ { "event": "TOOL_RESULT", "payload": { "callId": "c6", "result": "added policy.pdf to the knowledge base as document abc123 (3 chunks, read by pdftotext)" } } ] }
+        }
+      ]
+    }
+  ]
+}
