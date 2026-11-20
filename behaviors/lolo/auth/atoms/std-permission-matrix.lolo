@@ -42,7 +42,7 @@ orbital PermissionMatrixOrbital {
     id : string!
     workspaceId : string @description "Workspace the grant applies to; blank = applies to every workspace." @synonyms "workspace, tenant, org, organization" = ""
     role : string! @description "The role the grant applies to (e.g. admin, manager, contractor)." @synonyms "user role, group, team role"
-    module : string! @description "The module or feature area the grant governs." @synonyms "feature, area, section, screen"
+    module : string! @description "The module or feature area the grant governs; blank = every module, below a grant naming the module." @synonyms "feature, area, section, screen" = ""
     canReadFinance : boolean @description "Whether the role may read finance data in this module." @synonyms "see finance, read financials, view finance, finance access" = false
     canSeeOthersHours : boolean @description "Whether the role may see other people's logged hours in this module." @synonyms "see others hours, view team hours, timesheet visibility, other people's time" = false
     canSeeMargins : boolean @description "Whether the role may see margin / profit figures in this module." @synonyms "see margins, view profit, margin visibility, profitability" = false
@@ -130,7 +130,7 @@ orbital PermissionMatrixOrbital {
             }, {
               action: NEW
               icon: plus
-              label: "New grant"
+              label: @config.newLabel
               type: button
               variant: primary
             }]
@@ -285,6 +285,11 @@ orbital PermissionMatrixOrbital {
     config {}
 
     config {
+      newLabel : string = "New grant"
+        @label "Create button label"
+        @description "The label on the button that opens the create form."
+        @synonyms "new grant label, add button text, new role label"
+        @tier "presentation"
       pageSize : number = 50
         @label "How many grants to fetch per page?"
         @description "Grants fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
@@ -508,7 +513,7 @@ orbital PermissionMatrixOrbital {
         (set @entity.role ?role)
         (set @entity.module ?module)
         (fetch PermissionGrant {
-          filter: (and (= (object/get @entity role) ?role) (= (object/get @entity module) ?module))
+          filter: (and (= (object/get @entity role) ?role) (or (= (object/get @entity module) ?module) (= (default (object/get @entity module) "") "")))
           limit: @config.maxRows
           emit: { failure: GrantCheckFailed, success: GrantCheckLoaded }
         })
@@ -517,15 +522,17 @@ orbital PermissionMatrixOrbital {
       ;; atom reports, it never decides.
       GrantCheckLoaded -> idle when (> ?totalCount (array/len ?data))
         (emit GrantCheckFailed { error: (str/concat "PermissionGrant has " ?totalCount " rows for one role and module, over the maxRows cap of " @config.maxRows), code: "GRANT_OVER_CAP" })
+      ;; The role's row for the module wins over its blank-module row.
       GrantCheckLoaded -> idle
-        (emit GRANT_RESOLVED {
-          role: @entity.role
-          module: @entity.module
-          canReadFinance: (if (> (array/len ?data) 0) (object/get (array/first ?data) canReadFinance false) false)
-          canSeeOthersHours: (if (> (array/len ?data) 0) (object/get (array/first ?data) canSeeOthersHours false) false)
-          canSeeMargins: (if (> (array/len ?data) 0) (object/get (array/first ?data) canSeeMargins false) false)
-          found: (> (array/len ?data) 0)
-        })
+        (let ((grant (default (array/find ?data (fn g (= (default (object/get @g module) "") @entity.module))) (array/find ?data (fn g (= (default (object/get @g module) "") ""))))))
+          (emit GRANT_RESOLVED {
+            role: @entity.role
+            module: @entity.module
+            canReadFinance: (if (= @grant null) false (object/get @grant canReadFinance false))
+            canSeeOthersHours: (if (= @grant null) false (object/get @grant canSeeOthersHours false))
+            canSeeMargins: (if (= @grant null) false (object/get @grant canSeeMargins false))
+            found: (!= @grant null)
+          }))
       GrantCheckFailed -> idle
         (notify error (if (validate/required ?error) (str/concat "Couldn't resolve the permission grant — " ?error) "Couldn't resolve the permission grant"))
     }

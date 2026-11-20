@@ -18551,14 +18551,9 @@
           ]
          }
         }
-       },
-       {
-        "event": "GUEST_KERNEL_ATTACH"
-       },
-        {
-         "event": "MACHINE_ANSWERED"
-        }
-      ]
+       }
+      ],
+      "neverEmits": ["GUEST_READY"]
      }
     }
    ]
@@ -18764,6 +18759,140 @@
         "event": "GUEST_PREPARE"
        }
       ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-the-attach-reads-the-guests-program-by-its-handle-and-holds-no-copy",
+   "config": { "split": true },
+   "defaults": ["GuestKernel", "GuestKernelMachine"],
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_NEXT",
+     "payload": {},
+     "entity": { "id": "g", "guestHandle": "guest-2", "guestKernel": "lolo", "guestKernelThen": "", "guestKernelQueue": [{ "kind": "attach", "then": "attach" }], "guestKernelBrowser": [] },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [{ "event": "GUEST_KERNEL_FAILURE" }],
+      "neverEmits": ["GUEST_KERNEL_ATTACH"]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-the-open-takes-the-client-kernel-and-the-session-holds-no-program",
+   "config": { "split": true },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "opening",
+     "event": "GUEST_LIVE_CHECKED",
+     "payload": { "ok": true },
+     "entity": { "id": "g", "guestHandle": "", "guestKernel": "lolo", "guestKernelRefusal": "", "guestIntegrations": "live", "guestProgram": { "name": "Guest", "orbitals": [] }, "guestKernelClient": { "name": "std-kernel-client", "orbitals": [] } },
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [{ "type": "program/open" }],
+      "entity": { "guestProgram": null, "guestKernelClient": null }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-mocked-guest-denied-a-page-signs-in-with-the-viewers-session-when-mock-sign-in-is-session",
+   "config": { "split": true, "mockSignIn": "session" },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_NAVIGATED",
+     "payload": { "result": { "page": [], "rendered": [], "outcomes": [], "access": { "verdict": "denied", "signIn": "/login", "returnTo": "/tasks" } } },
+     "entity": { "id": "g", "guestHandle": "guest-1", "guestIntegrations": "mock", "guestPersona": "", "guestReturnTo": "" },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [{ "event": "GUEST_SIGN_IN", "payload": { "guest": "guest-1" } }],
+      "neverEmits": ["GUEST_NOTICE"],
+      "entity": { "guestReturnTo": "/tasks" }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-mocked-guest-denied-a-page-asks-for-a-persona-by-default",
+   "config": { "split": true },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_NAVIGATED",
+     "payload": { "result": { "page": [], "rendered": [], "outcomes": [], "access": { "verdict": "denied", "signIn": "/login", "returnTo": "/tasks" } } },
+     "entity": { "id": "g", "guestHandle": "guest-1", "guestIntegrations": "mock", "guestPersona": "", "guestReturnTo": "" },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [{ "event": "GUEST_NOTICE" }],
+      "neverEmits": ["GUEST_SIGN_IN"]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-a-picked-persona-still-answers-a-denied-mocked-page-under-session-sign-in",
+   "config": { "split": true, "mockSignIn": "session" },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_NAVIGATED",
+     "payload": { "result": { "page": [], "rendered": [], "outcomes": [], "access": { "verdict": "denied", "signIn": "/login", "returnTo": "/tasks" } } },
+     "entity": { "id": "g", "guestHandle": "guest-1", "guestIntegrations": "mock", "guestPersona": "p-1", "guestReturnTo": "" },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [{ "event": "GUEST_NOTICE" }],
+      "neverEmits": ["GUEST_SIGN_IN"]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-the-guests-program-read-attaches-the-kernel-with-it",
+   "config": { "split": true },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_PROGRAM_READ",
+     "payload": { "result": { "name": "Guest", "orbitals": [] } },
+     "entity": { "id": "g", "guestHandle": "guest-2", "guestKernel": "lolo", "guestKernelThen": "attach", "guestKernelBrowser": ["Trail"] },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [{ "event": "GUEST_KERNEL_ATTACH", "payload": { "program": { "name": "Guest", "orbitals": [] }, "guest": "guest-2", "browser": ["Trail"] } }]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-control-an-unread-guest-program-fails-the-attach-loudly",
+   "config": { "split": true },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_PROGRAM_UNREAD",
+     "payload": { "error": "program/self: no open guest 'guest-2'" },
+     "entity": { "id": "g", "guestHandle": "guest-2", "guestKernel": "lolo", "guestKernelThen": "attach", "guestKernelBrowser": [] },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [{ "event": "GUEST_KERNEL_FAILURE", "payload": { "error": "program/self: no open guest 'guest-2'" } }],
+      "neverEmits": ["GUEST_KERNEL_ATTACH"]
      }
     }
    ]

@@ -1,24 +1,148 @@
 {
- "atom": "auth/atoms/std-permission-matrix.lolo",
- "trait": "PermissionMatrixAdmin",
- "note": "The grant list takes display labels for roles and modules; the grid shows the label for a known key and the key itself otherwise.",
- "cases": [
-  {
-   "id": "the-list-paints-with-role-and-module-labels",
-   "config": { "roleLabels": { "head_of_department": "Head of department" }, "moduleLabels": { "time": "Time" } },
-   "steps": [
-    { "from": "loading", "entity": { "id": "" }, "event": "PermissionGrantLoaded",
-      "payload": { "data": [{ "id": "g1", "workspaceId": "w", "role": "head_of_department", "module": "time" }], "totalCount": 1 },
-      "expect": { "fired": true, "state": "listing", "effects": [{ "type": "render-ui" }] } }
-   ]
-  },
-  {
-   "id": "control-the-list-paints-without-labels",
-   "steps": [
-    { "from": "loading", "entity": { "id": "" }, "event": "PermissionGrantLoaded",
-      "payload": { "data": [{ "id": "g1", "workspaceId": "w", "role": "owner", "module": "time" }], "totalCount": 1 },
-      "expect": { "fired": true, "state": "listing", "effects": [{ "type": "render-ui" }] } }
-   ]
-  }
- ]
+  "atom": "auth/atoms/std-permission-matrix.lolo",
+  "trait": "PermissionMatrixAdmin",
+  "note": "The grant list takes display labels for roles and modules; the grid shows the label for a known key and the key itself otherwise. The create button takes its label from config.",
+  "cases": [
+    {
+      "id": "the-list-paints-with-role-and-module-labels",
+      "config": {
+        "roleLabels": {
+          "head_of_department": "Head of department"
+        },
+        "moduleLabels": {
+          "time": "Time"
+        }
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "entity": {
+            "id": ""
+          },
+          "event": "PermissionGrantLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "g1",
+                "workspaceId": "w",
+                "role": "head_of_department",
+                "module": "time"
+              }
+            ],
+            "totalCount": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-list-paints-without-labels",
+      "steps": [
+        {
+          "from": "loading",
+          "entity": {
+            "id": ""
+          },
+          "event": "PermissionGrantLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "g1",
+                "workspaceId": "w",
+                "role": "owner",
+                "module": "time"
+              }
+            ],
+            "totalCount": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-create-button-takes-its-label-from-config",
+      "steps": [
+        {
+          "from": "loading",
+          "entity": {
+            "id": ""
+          },
+          "event": "PermissionGrantLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.0.children.1.label": "New role",
+                  "children.0.children.1.action": "NEW"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "config": {
+        "newLabel": "New role"
+      }
+    },
+    {
+      "id": "control-the-create-button-defaults-to-new-grant",
+      "steps": [
+        {
+          "from": "loading",
+          "entity": {
+            "id": ""
+          },
+          "event": "PermissionGrantLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.0.children.1.label": "New grant",
+                  "children.0.children.1.action": "NEW"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    }
+  ]
 }

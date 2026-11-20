@@ -1,0 +1,174 @@
+{
+  "atom": "../ui/core/atoms/std-board.lolo",
+  "trait": "BoardItemBoard",
+  "note": "toolbarActions draws extra buttons in one row with the inline Add button, ahead of it; with the floating Add they get the row to themselves.",
+  "cases": [
+    {
+      "id": "toolbar-actions-sit-beside-the-inline-add-button",
+      "config": {
+        "addPlacement": "inline",
+        "boardLook": "kanban-classic",
+        "addLabel": "Add a task",
+        "toolbarActions": [
+          {
+            "event": "SHOW_TEMPLATES",
+            "icon": "copy",
+            "label": "From template",
+            "variant": "secondary"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "BoardItemsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "viewing_board",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.1.children.0.children.1.direction": "horizontal",
+                  "children.1.children.0.children.1.children.0.action": "SHOW_TEMPLATES",
+                  "children.1.children.0.children.1.children.0.label": "From template",
+                  "children.1.children.0.children.1.children.1.action": "ADD_CARD",
+                  "children.1.children.0.children.1.children.1.label": "Add a task"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-with-the-floating-add-the-toolbar-holds-only-the-actions",
+      "config": {
+        "addPlacement": "floating",
+        "toolbarActions": [
+          {
+            "event": "SHOW_TEMPLATES",
+            "icon": "copy",
+            "label": "From template",
+            "variant": "secondary"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "BoardItemsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "viewing_board",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.1.children.0.children.1.children.0.action": "SHOW_TEMPLATES",
+                  "children.1.children.0.children.1.children.1": null
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-toolbar-actions-keeps-the-add-button-alone",
+      "config": {
+        "addPlacement": "inline"
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "BoardItemsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "viewing_board",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.1.children.0.children.1.children.0.action": "ADD_CARD",
+                  "children.1.children.0.children.1.children.1": null
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-board-without-its-header-keeps-the-toolbar-on-its-own-row",
+      "config": {
+        "addPlacement": "inline",
+        "boardLook": "kanban-classic",
+        "addLabel": "Add a task",
+        "toolbarActions": [
+          {
+            "event": "SHOW_TEMPLATES",
+            "icon": "copy",
+            "label": "From template",
+            "variant": "secondary"
+          }
+        ],
+        "showHeader": false
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "BoardItemsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "viewing_board",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.0.direction": "horizontal",
+                  "children.0.children.0.action": "SHOW_TEMPLATES",
+                  "children.0.children.0.label": "From template",
+                  "children.0.children.1.action": "ADD_CARD",
+                  "children.0.children.1.label": "Add a task"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    }
+  ]
+}

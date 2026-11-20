@@ -1,0 +1,147 @@
+{
+  "atom": "auth/atoms/std-permission-matrix.lolo",
+  "trait": "PermissionGrantQuery",
+  "note": "A grant with a blank module applies to every module: a lookup answers from the role's row for that module when there is one, else from the role's blank-module row.",
+  "cases": [
+    {
+      "id": "a-blank-module-grant-answers-a-module-lookup",
+      "config": {
+        "enabled": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "entity": {
+            "id": "",
+            "role": "team_member",
+            "module": "hours"
+          },
+          "event": "GrantCheckLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "g1",
+                "role": "team_member",
+                "module": "",
+                "canReadFinance": false,
+                "canSeeOthersHours": true,
+                "canSeeMargins": false
+              }
+            ],
+            "totalCount": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GRANT_RESOLVED",
+                "payload": {
+                  "role": "team_member",
+                  "module": "hours",
+                  "canReadFinance": false,
+                  "canSeeOthersHours": true,
+                  "canSeeMargins": false,
+                  "found": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-module-row-wins-over-the-blank-module-row",
+      "config": {
+        "enabled": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "entity": {
+            "id": "",
+            "role": "team_member",
+            "module": "hours"
+          },
+          "event": "GrantCheckLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "g1",
+                "role": "team_member",
+                "module": "",
+                "canReadFinance": true,
+                "canSeeOthersHours": true,
+                "canSeeMargins": true
+              },
+              {
+                "id": "g2",
+                "role": "team_member",
+                "module": "hours",
+                "canReadFinance": false,
+                "canSeeOthersHours": false,
+                "canSeeMargins": false
+              }
+            ],
+            "totalCount": 2
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GRANT_RESOLVED",
+                "payload": {
+                  "role": "team_member",
+                  "module": "hours",
+                  "canReadFinance": false,
+                  "canSeeOthersHours": false,
+                  "canSeeMargins": false,
+                  "found": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-row-is-not-found",
+      "config": {
+        "enabled": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "entity": {
+            "id": "",
+            "role": "team_member",
+            "module": "hours"
+          },
+          "event": "GrantCheckLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GRANT_RESOLVED",
+                "payload": {
+                  "role": "team_member",
+                  "module": "hours",
+                  "canReadFinance": false,
+                  "canSeeOthersHours": false,
+                  "canSeeMargins": false,
+                  "found": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

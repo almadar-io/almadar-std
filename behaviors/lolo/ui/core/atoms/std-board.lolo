@@ -766,6 +766,11 @@ orbital BoardOrbital {
         @description "Per-card binding for the stage badge's colour on the classic kanban; defaults to the column's own colour. Bind it to a value derived from a field (e.g. priority) to colour tags by that field."
         @synonyms "tag colour, badge colour, urgency colour, card tag colour"
         @tier "presentation"
+      toolbarActions : [ItemAction] = []
+        @label "Buttons beside the Add button"
+        @description "Extra buttons drawn in one row above the columns, ahead of the inline Add button (alone in the row when the Add button floats or is hidden); each emits its own event. Give an item `roles` to show it only to those viewer roles."
+        @synonyms "toolbar buttons, header actions, from template button, extra board buttons"
+        @tier "presentation"
       addForm : "board" | "external" = board
         @label "Which form adds a card?"
         @description "board (default): Add card opens the board's own add form. external: Add card only emits ADD_CARD, for an app whose own create dialog listens to it, so two forms never open at once."
@@ -841,15 +846,22 @@ orbital BoardOrbital {
         @description "Actions row of the open-card panel. Default is the Delete button only. Override to add consumer-wired actions — e.g. an Edit button with action: EDIT_CARD and actionPayload: { id: @entity.currentId, row: @entity.currentRow }, listened to by the organism's edit modal. Never leave a button here without a listener."
         @tier "presentation"
       bodyContent : render-ui = {
-        children: [(if (= @config.addPlacement "inline") {
-          children: [{
+        children: [(if (and (not @config.showHeader) (or (= @config.addPlacement "inline") (array/some @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))))) {
+          children: (array/concat (array/map (array/filter @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) (fn a {
+            action: @a.event
+            icon: @a.icon
+            label: @a.label
+            size: sm
+            type: button
+            variant: @a.variant
+          })) (if (= @config.addPlacement "inline") [{
             action: ADD_CARD
             icon: plus
             label: (if (validate/required @config.addLabel) @config.addLabel "Add item")
             size: sm
             type: button
             variant: secondary
-          }]
+          }] []))
           direction: horizontal
           gap: sm
           justify: end
@@ -861,14 +873,46 @@ orbital BoardOrbital {
         }), (if @config.showHeader {
           children: [{
             align: center
-            children: [{ name: kanban-square, size: lg, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }]
+            children: [{
+              align: center
+              children: [{ name: kanban-square, size: lg, type: icon }, {
+                content: @config.title
+                type: typography
+                variant: h3
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, (if (or (= @config.addPlacement "inline") (array/some @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))) {
+            children: (array/concat (array/map (array/filter @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) (fn a {
+              action: @a.event
+              icon: @a.icon
+              label: @a.label
+              size: sm
+              type: button
+              variant: @a.variant
+            })) (if (= @config.addPlacement "inline") [{
+              action: ADD_CARD
+              icon: plus
+              label: (if (validate/required @config.addLabel) @config.addLabel "Add item")
+              size: sm
+              type: button
+              variant: secondary
+            }] []))
             direction: horizontal
             gap: sm
+            justify: end
             type: stack
+            } {
+              children: []
+              gap: none
+              type: stack
+            })]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+            wrap: true
           }, { type: divider }]
           direction: vertical
           gap: md
@@ -1015,15 +1059,22 @@ orbital BoardOrbital {
         @description "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens."
         @tier "internal"
       kanbanClassicBodyContent : render-ui = {
-        children: [(if (= @config.addPlacement "inline") {
-          children: [{
+        children: [(if (and (not @config.showHeader) (or (= @config.addPlacement "inline") (array/some @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))))) {
+          children: (array/concat (array/map (array/filter @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) (fn a {
+            action: @a.event
+            icon: @a.icon
+            label: @a.label
+            size: sm
+            type: button
+            variant: @a.variant
+          })) (if (= @config.addPlacement "inline") [{
             action: ADD_CARD
             icon: plus
             label: (if (validate/required @config.addLabel) @config.addLabel "Add card")
             size: sm
             type: button
             variant: secondary
-          }]
+          }] []))
           direction: horizontal
           gap: sm
           justify: end
@@ -1035,15 +1086,47 @@ orbital BoardOrbital {
         }), (if @config.showHeader {
           children: [{
             align: center
-            children: [{ name: kanban-square, size: xl, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h1
-            }]
-            className: px-card-md
+            children: [{
+              align: center
+              children: [{ name: kanban-square, size: xl, type: icon }, {
+                content: @config.title
+                type: typography
+                variant: h1
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, (if (or (= @config.addPlacement "inline") (array/some @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))) {
+            children: (array/concat (array/map (array/filter @config.toolbarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) (fn a {
+              action: @a.event
+              icon: @a.icon
+              label: @a.label
+              size: sm
+              type: button
+              variant: @a.variant
+            })) (if (= @config.addPlacement "inline") [{
+              action: ADD_CARD
+              icon: plus
+              label: (if (validate/required @config.addLabel) @config.addLabel "Add card")
+              size: sm
+              type: button
+              variant: secondary
+            }] []))
             direction: horizontal
             gap: sm
+            justify: end
             type: stack
+            } {
+              children: []
+              gap: none
+              type: stack
+            })]
+            className: px-card-md
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+            wrap: true
           }, { type: divider }]
           direction: vertical
           gap: md
@@ -1112,7 +1195,7 @@ orbital BoardOrbital {
                 type: stack
               }, {
                 accepts: (if @config.draggable "*" "")
-                className: "p-card-md min-h-[120px]"
+                className: "p-card-md min-h-[120px] flex-1 overflow-y-auto"
                 dragGroup: (if @config.draggable @col.key "")
                 dropEvent: MOVE_CARD
                 entity: @col.items
@@ -1191,15 +1274,17 @@ orbital BoardOrbital {
                 type: data-list
                 emptyTitle: "Nothing here yet"
               }]
+              className: "flex min-h-0 flex-1 flex-col"
               direction: vertical
               gap: none
               type: stack
             }]
-            className: "w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden"
+            className: "w-[300px] max-h-full min-h-0 flex flex-col bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden"
             look: elevated
             padding: none
             type: card
           })
+          fillHeight: true
           scrollX: true
           type: data-grid
         }, (if (= @config.addPlacement "floating") {

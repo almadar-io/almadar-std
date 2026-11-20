@@ -121,15 +121,14 @@ orbital GuestSessionOrbital {
     guestPaints : [GuestPaint] = []
     guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
     guestLeg : string @description "The split guest's server leg being answered: the in-place answer of its program/dispatch names it back to the viewer." = ""
-    guestKernel : "native" | "lolo" @description "The kernel running the open guest's split server legs: native (the orbital-rust kernel), or lolo (std-kernel-dispatch stepping the guest one transition at a time with kernel/step; a testing path). GUEST_OPEN kernel or the stage's kernel switch picks it; it holds for later opens." = native
+    guestKernel : "native" | "lolo" @description "The kernel running the open guest's split server legs: native (the orbital-rust kernel), or lolo (std-kernel-dispatch stepping the guest one transition at a time with kernel/commit; a testing path). GUEST_OPEN kernel or the stage's kernel switch picks it; it holds for later opens." = native
     guestKernelRefusal : string @description "Why the guest asked for cannot open on the .lolo kernel; empty when it can or runs native." = ""
-    guestKernelProgram : GuestProgram? @description "The program a .lolo-kernel guest was opened from, for the kernel to read its machine."
     guestKernelLeg : string @description "The .lolo leg being run: the handle program/dispatch { lolo: begin } answered." = ""
     guestKernelThen : string @description "What the .lolo kernel's work in flight answers when it ends (leg, viewer, stepped, personas, identity-seeded, persona-acted, viewer-credential, credential, run, attach, boot, mount); empty while the kernel is free." = ""
     guestKernelQueue : [GuestKernelWork] @description "The .lolo kernel's work waiting for the work in flight to end, in arrival order." = []
     guestKernelBrowser : [string] @description "The traits a .lolo-kernel guest's viewer runs (program/open browserRuns), which its kernel leaves to the browser." = []
-    guestKernelClient : behavior? @description "std-kernel-client resolved, which a .lolo-kernel guest's open adds to the client program its viewer runs (program/open clientKernel)."
-    guestKernelOpened : GuestOpened? @description "A .lolo-kernel guest's open answer, held until the kernel has run its boot mounts."
+    guestKernelClient : behavior? @description "std-kernel-client resolved, held only until the .lolo-kernel guest's open adds it to the client program its viewer runs (program/open clientKernel)."
+    guestKernelHostAsks : [GuestHostAsk] = []
     guestViewer : string @description "A split guest's viewer kernel: the client session its legs name, signed in as the guest's persona before its first leg runs; empty until one posts." = ""
     guestViewerOrbital : string @description "The orbital the viewer kernel's legs name, which a persona sign-in into its session names too." = ""
     guestClientHeld : GuestProgram? @description "A split guest's client program, held until its persona sign-in settles so the viewer's first leg already runs as that persona."
@@ -248,6 +247,10 @@ orbital GuestSessionOrbital {
         @tier "policy"
       mockAuthProject : string = "demo-almadar"
         @label "Auth project of a mocked guest"
+        @tier "policy"
+      mockSignIn : "persona" | "session" = "persona"
+        @label "How a mocked guest denied a page signs in"
+        @description "persona: the viewer picks a persona (signInNeeded says so); session: the guest is signed in with the viewer's own sign-in, as a live guest is, which holds only when the opener signs in on the Auth project mockAuthProject names. A picked persona is used either way."
         @tier "policy"
       signInNeeded : string = "This page needs a signed-in viewer. Pick a persona to open it."
         @label "Notice when a mocked guest is denied a page"
@@ -417,7 +420,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestClientHeld ?result.client)
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
-        (set @entity.guestKernelOpened ?result)
+        (set @entity.guestKernelHostAsks (default ?result.hostAsks []))
         (set @entity.guestKernelBrowser (default ?result.browserRuns []))
         (emit GUEST_KERNEL_WORK { work: { kind: "attach", then: "attach" } })
         (emit GUEST_KERNEL_WORK { work: { kind: "mount", then: "boot", route: (default ?result.route ""), seeds: (default ?result.seeds []) } })
@@ -455,14 +458,14 @@ orbital GuestSessionOrbital {
         (os/symlink @payload.path (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") "/node_modules") { key: "guest-live-link", emit: { success: GUEST_LIVE_LINKED, failure: GUEST_FAILED } })
       GUEST_LIVE_CHECKED -> opening when @payload.ok
         (set @entity.guestSeeded false)
-        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
         (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
+        (set @entity.guestKernelClient null)
       GUEST_LIVE_LINKED -> opening
         (set @entity.guestSeeded false)
-        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
         (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
+        (set @entity.guestKernelClient null)
       GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (or (= @entity.guestKernel "native") (!= @entity.guestKernelClient null)) (= @entity.guestIntegrations "mock") (= @entity.guestSeed null) (not (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
         (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_FAILED } })
       GUEST_SEED_RESOLVED -> opening when (= @entity.guestSeed null)
@@ -473,9 +476,9 @@ orbital GuestSessionOrbital {
         (emit GUEST_SEED_ASK { program: @entity.guestProgram })
       GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "server"))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
-        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
         (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
+        (set @entity.guestKernelClient null)
         (set @entity.guestSeed null)
       GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "client"))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
@@ -512,8 +515,8 @@ orbital GuestSessionOrbital {
       GUEST_COMPOSED -> opening when (= @config.runs "server")
         (set @entity.guestComposed ?result)
         (set @entity.guestComposedKey @entity.guestOpenKey)
-        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") (as ?result GuestProgram) null))
         (program/open ?result { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (set @entity.guestKernelClient null)
       GUEST_COMPOSED -> opening when (= @config.runs "client")
         (set @entity.guestComposed ?result)
         (set @entity.guestComposedKey @entity.guestOpenKey)
@@ -615,7 +618,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestClientHeld ?result.client)
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
-        (set @entity.guestKernelOpened ?result)
+        (set @entity.guestKernelHostAsks (default ?result.hostAsks []))
         (set @entity.guestKernelBrowser (default ?result.browserRuns []))
         (emit GUEST_KERNEL_WORK { work: { kind: "attach", then: "attach" } })
         (emit GUEST_KERNEL_WORK { work: { kind: "mount", then: "boot", route: (default ?result.route ""), seeds: (default ?result.seeds []) } })
@@ -834,7 +837,7 @@ orbital GuestSessionOrbital {
           (do
             (set @entity.guestKernelQueue (array/drop @entity.guestKernelQueue 1))
             (set @entity.guestKernelThen @w.then)
-            (when (= @w.kind "attach") (emit GUEST_KERNEL_ATTACH { program: (default @entity.guestKernelProgram { name: "guest", orbitals: [] }), guest: @entity.guestHandle, browser: @entity.guestKernelBrowser }))
+            (when (= @w.kind "attach") (program/self { guest: @entity.guestHandle, emit: { success: GUEST_KERNEL_PROGRAM_READ, failure: GUEST_KERNEL_PROGRAM_UNREAD } }))
             (when (= @w.kind "mount") (emit GUEST_KERNEL_MOUNT_SEEDS { route: (default @w.route ""), seeds: (default @w.seeds []) }))
             (when (= @w.kind "leg") (emit GUEST_LEG_AGAIN { guest: @entity.guestHandle, leg: (default @w.leg ""), orbital: (default @w.orbital ""), body: (default @w.body "") }))
             (when (= @w.kind "viewer") (program/dispatch (default @w.address "") { persona: (default @w.persona ""), clientId: (default @w.clientId "") } { guest: @entity.guestHandle, wire: true, orbital: (default @w.orbital ""), targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: (default @w.clientId ""), lolo: "begin" } { emit: { success: GUEST_KERNEL_BEGUN, failure: GUEST_KERNEL_FAILURE } }))
@@ -851,6 +854,10 @@ orbital GuestSessionOrbital {
             (do
               (set @entity.guestKernelLeg (default @begun.leg ""))
               (emit GUEST_KERNEL_LEG { guest: @entity.guestHandle, leg: (default @begun.leg ""), run: @run, states: @held }))))
+      GUEST_KERNEL_PROGRAM_READ -> live
+        (emit GUEST_KERNEL_ATTACH { program: ?result, guest: @entity.guestHandle, browser: @entity.guestKernelBrowser })
+      GUEST_KERNEL_PROGRAM_UNREAD -> live
+        (emit GUEST_KERNEL_FAILURE { error: (default ?error "The guest's program could not be read for the .lolo kernel") })
       GUEST_KERNEL_OPENED -> live
         (set @entity.guestKernelThen "")
         (emit GUEST_KERNEL_NEXT {})
@@ -870,13 +877,13 @@ orbital GuestSessionOrbital {
         (when (!= ?refused "") (emit GUEST_NOTICE { message: ?refused }))
         (emit GUEST_KERNEL_NEXT {})
       GUEST_KERNEL_BOOTED -> live
-        (let ((opened : GuestOpened (default @entity.guestKernelOpened { guest: @entity.guestHandle, page: [], rendered: [], outcomes: [] })))
+        (let ((asks : [GuestHostAsk] @entity.guestKernelHostAsks))
           (do
-            (set @entity.guestKernelOpened null)
+            (set @entity.guestKernelHostAsks [])
             (set @entity.guestPaints (array/reduce ?rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
             (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
             (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
-            (when (> (array/len (default @opened.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default @opened.hostAsks []) }))
+            (when (> (array/len @asks) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: @asks }))
             (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?outcomes })
             (emit GUEST_PERSONAS_ASK {})
             (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
@@ -964,10 +971,10 @@ orbital GuestSessionOrbital {
       GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
         (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "navigate", guest: ?guest, route: ?route }) (program/navigate { mount: (= @entity.guestKernel "native"), guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } }))
       GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
-      GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "live"))
+      GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (or (= @entity.guestIntegrations "live") (and (= @config.mockSignIn "session") (= @entity.guestPersona ""))))
         (set @entity.guestReturnTo (default ?result.access.returnTo ""))
         (emit GUEST_SIGN_IN { guest: @entity.guestHandle })
-      GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock"))
+      GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock") (or (= @config.mockSignIn "persona") (!= @entity.guestPersona "")))
         (emit GUEST_NOTICE { message: @config.signInNeeded })
       GUEST_CREDENTIAL -> live when (and (= ?guest @entity.guestHandle) @config.split (!= @entity.guestViewer ""))
         (set @entity.guestSigningIn true)
@@ -1011,10 +1018,10 @@ orbital GuestSessionOrbital {
         (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
-      GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "live"))
+      GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (or (= @entity.guestIntegrations "live") (and (= @config.mockSignIn "session") (= @entity.guestPersona ""))))
         (set @entity.guestReturnTo (default ?result.access.returnTo ""))
         (emit GUEST_SIGN_IN { guest: @entity.guestHandle })
-      GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock") (= @entity.guestPersona ""))
+      GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock") (= @config.mockSignIn "persona") (= @entity.guestPersona ""))
         (set @entity.guestReturnTo (default ?result.access.returnTo ""))
       GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock") (!= @entity.guestPersona ""))
         (set @entity.guestReturnTo "")
@@ -1440,6 +1447,12 @@ orbital GuestSessionOrbital {
         @description "A split guest's viewer kernel posts a server leg: the events request as JSON text, answered as GUEST_LEG_DONE under the same leg."
       GUEST_LEG_ANSWERED {
         result : GuestJson
+      }
+      GUEST_KERNEL_PROGRAM_READ {
+        result : GuestProgram!
+      }
+      GUEST_KERNEL_PROGRAM_UNREAD {
+        error : string
       }
       GUEST_LEG_FAILED {
         error : string!

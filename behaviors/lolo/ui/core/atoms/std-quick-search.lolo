@@ -1,9 +1,10 @@
 app std-quick-search [
   version: "1.0.0",
-  description: "std-quick-search — a search box that suggests as the viewer types, for a top bar: the first suggestion opens the full results page for the typed text, the rest are records (each labelled with its kind) matched on the text. The records arrive from the app as QUICK_SEARCH_ROWS events, one per kind, after the box asks for them with QUICK_SEARCH_LOAD on the first text typed since it mounted (a page that is only looked at reads nothing); the box holds them, narrows them to the typed text and never reads app data itself. Typing navigates nowhere; only picking a suggestion does."
+  description: "std-quick-search — a search box that suggests as the viewer types, for a top bar: the first suggestion opens the full results page for the typed text, the rest are records (each with a badge naming its kind, in the colour the app gives that kind) matched on the text. The records arrive from the app as QUICK_SEARCH_ROWS events, one per kind, after the box asks for them with QUICK_SEARCH_LOAD on the first text typed since it mounted (a page that is only looked at reads nothing); the box holds them, narrows them to the typed text and never reads app data itself. Typing navigates nowhere; only picking a suggestion does."
 ]
 type QuickSearchRow = { id : string!, label : string }
-type QuickSearchHit = { key : string!, value : string!, label : string!, description : string! }
+type QuickSearchTone = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral"
+type QuickSearchHit = { key : string!, value : string!, label : string!, description : string!, tone : QuickSearchTone! }
 orbital QuickSearchOrbital {
   entity QuickSearchData [runtime] {
     id : string!
@@ -30,7 +31,7 @@ orbital QuickSearchOrbital {
         (set @entity.query (default ?searchTerm ""))
         (emit QUICK_SEARCH_PAINT { })
       QUICK_SEARCH_ROWS -> idle
-        (set @entity.hits (array/concat (array/reject @entity.hits (fn h (= @h.key ?sourceKey))) (array/map (default ?rows []) (fn r { key: ?sourceKey, value: (str/concat ?hrefPrefix @r.id), label: (default @r.label ""), description: ?kindLabel }))))
+        (set @entity.hits (array/concat (array/reject @entity.hits (fn h (= @h.key ?sourceKey))) (array/map (default ?rows []) (fn r { key: ?sourceKey, value: (str/concat ?hrefPrefix @r.id), label: (default @r.label ""), description: ?kindLabel, tone: (default ?kindTone "neutral") }))))
         (emit QUICK_SEARCH_PAINT { })
       QUICK_SEARCH_PAINT -> idle when @config.enabled
         (render-ui main {
@@ -39,7 +40,8 @@ orbital QuickSearchOrbital {
           debounceMs: @config.debounceMs
           event: QUICK_SEARCH_TYPED
           suggestionEvent: QUICK_SEARCH_PICKED
-          suggestions: (if (= (str/trim @entity.query) "") [] (array/concat [{ value: (str/concat "/" (str/slice @config.resultsPath 1) "/" (str/encode-uri-component (str/trim @entity.query))), label: (str/concat "See all results for “" (str/trim @entity.query) "”"), description: @config.resultsLabel }] (array/map (array/take (array/filter @entity.hits (fn h (str/includes (str/lower @h.label) (str/lower (str/trim @entity.query))))) @config.maxSuggestions) (fn h { value: @h.value, label: @h.label, description: @h.description }))))
+          expandOnCompact: @config.expandOnPhone
+          suggestions: (if (= (str/trim @entity.query) "") [] (array/concat [{ value: (str/concat "/" (str/slice @config.resultsPath 1) "/" (str/encode-uri-component (str/trim @entity.query))), label: (str/concat "See all results for “" (str/trim @entity.query) "”"), badge: @config.resultsLabel, badgeVariant: "neutral" }] (array/map (array/take (array/filter @entity.hits (fn h (str/includes (str/lower @h.label) (str/lower (str/trim @entity.query))))) @config.maxSuggestions) (fn h { value: @h.value, label: @h.label, badge: @h.description, badgeVariant: @h.tone }))))
         })
       QUICK_SEARCH_PICKED -> idle when (!= (default ?value "") "")
         (navigate ?value)
@@ -60,9 +62,10 @@ orbital QuickSearchOrbital {
         sourceKey : string!
         kindLabel : string!
         hrefPrefix : string!
+        kindTone : QuickSearchTone
         rows : [QuickSearchRow]
       }
-        @description "The app's records of one kind: their ids and labels, the kind's name and the address prefix a record opens at."
+        @description "The app's records of one kind: their ids and labels, the kind's name, the colour of the kind's badge (neutral when left out) and the address prefix a record opens at."
         @tier "domain"
       QUICK_SEARCH_TYPED {
         searchTerm : string
@@ -101,6 +104,11 @@ orbital QuickSearchOrbital {
         @label "Typing pause"
         @description "How long the box waits after a keystroke before suggesting, in milliseconds."
         @tier "internal"
+      expandOnPhone : boolean = true
+        @label "Open full screen on a phone?"
+        @description "On a phone-width screen the box is a search button that opens a full-screen search with the suggestions listed under it; false keeps the small inline box."
+        @synonyms "mobile search, full screen search, expanded search"
+        @tier "presentation"
       maxSuggestions : number = 8
         @label "Most record suggestions"
         @description "Most records listed under the results suggestion."
