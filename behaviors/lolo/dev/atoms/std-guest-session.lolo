@@ -11,6 +11,7 @@ app std-guest-session [
 uses Spec from "almadar-std/behavior-stage"
 uses Marks from "std/behaviors/std-mock-seed-marks"
 uses Kernel from "std/behaviors/std-kernel-dispatch"
+uses Machine from "std/behaviors/std-machine"
 
 type GuestFsGrant = { glob : string!, modes : [string]! }
 type GuestNetGrant = { target : string!, kinds : [string]! }
@@ -84,7 +85,9 @@ type GuestPaint = { slot : string!, trait : string!, orbital : string?, embedded
 type GuestHostAsk = { trait : string!, op : string!, ask : string! }
 type GuestMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
 type GuestSeed = { trait : string!, event : string! }
-type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, hostAsks : [GuestHostAsk]?, client : GuestProgram?, seeds : [GuestSeed]? }
+type GuestHeldRun = { run : string!, trait : string!, event : string! }
+type GuestKernelWork = { kind : "attach" | "mount" | "leg" | "viewer" | "plain" | "run"!, then : string!, address : string, payload : GuestJson?, orbital : string, leg : string, body : string, run : string, route : string, seeds : [GuestSeed], persona : string, clientId : string }
+type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, hostAsks : [GuestHostAsk]?, client : GuestProgram?, seeds : [GuestSeed]?, browserRuns : [string]? }
 type GuestJson = string | number | boolean | [GuestJson?] | Map string GuestJson?
 type GuestLegBody = { event : string, targetTrait : string, entityId : string, payload : GuestJson, clientId : string, locale : string, traits : [GuestJson], mount : [GuestJson], unmount : [string], route : string, crumb : string, entityByTrait : GuestJson, delivery : GuestJson, dispatchLog : GuestJson, framesSince : number }
 type GuestLegAnswer = { leg : string!, response : string?, error : string? }
@@ -94,11 +97,11 @@ type GuestHostDispatch = { kind : "dispatch" | "push", clientId : string!, targe
 type GuestStagedDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson?, seq : number! }
 type GuestClientProgram = SExpr
 type GuestStates = Map string string
-type GuestLegRun = { kind : "targeted" | "mount" | "discover", trait : string?, event : string?, payload : SExpr?, entityId : string!, seeds : [GuestSeed]?, route : string?, traits : [string]? }
+type GuestLegRun = { kind : "targeted" | "mount" | "discover" | "completion", trait : string?, event : string?, payload : SExpr?, entityId : string!, seeds : [GuestSeed]?, route : string?, traits : [string]?, failure : string?, key : string? }
 type GuestLegBegun = { leg : string?, run : GuestLegRun?, states : Map string string?, answered : GuestJson? }
 type GuestWireAnswer = { emittedEvents : [GuestEmitted]? }
 type GuestAccess = { verdict : string!, signIn : string, returnTo : string, viewer : string }
-type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, access : GuestAccess, hostAsks : [GuestHostAsk]? }
+type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, access : GuestAccess, hostAsks : [GuestHostAsk]?, seeds : [GuestSeed]? }
 type GuestNavigation = { trait : string!, path : string! }
 type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]!, navigations : [GuestNavigation]?, hostAsks : [GuestHostAsk]? }
 type GuestClosed = { closed : boolean! }
@@ -121,10 +124,11 @@ orbital GuestSessionOrbital {
     guestKernel : "native" | "lolo" @description "The kernel running the open guest's split server legs: native (the orbital-rust kernel), or lolo (std-kernel-dispatch stepping the guest one transition at a time with kernel/step; a testing path). GUEST_OPEN kernel or the stage's kernel switch picks it; it holds for later opens." = native
     guestKernelRefusal : string @description "Why the guest asked for cannot open on the .lolo kernel; empty when it can or runs native." = ""
     guestKernelProgram : GuestProgram? @description "The program a .lolo-kernel guest was opened from, for the kernel to read its machine."
-    guestKernelSeeds : [GuestSeed] @description "The boot mounts a .lolo-kernel guest's open left for the kernel to run." = []
-    guestKernelRoute : string @description "The route a .lolo-kernel guest's open resolved." = ""
     guestKernelLeg : string @description "The .lolo leg being run: the handle program/dispatch { lolo: begin } answered." = ""
-    guestKernelAddress : string @description "The address and orbital of the .lolo leg being run, which its finish names again." = ""
+    guestKernelThen : string @description "What the .lolo kernel's work in flight answers when it ends (leg, viewer, stepped, personas, identity-seeded, persona-acted, viewer-credential, credential, run, attach, boot, mount); empty while the kernel is free." = ""
+    guestKernelQueue : [GuestKernelWork] @description "The .lolo kernel's work waiting for the work in flight to end, in arrival order." = []
+    guestKernelBrowser : [string] @description "The traits a .lolo-kernel guest's viewer runs (program/open browserRuns), which its kernel leaves to the browser." = []
+    guestKernelOpened : GuestOpened? @description "A .lolo-kernel guest's open answer, held until the kernel has run its boot mounts."
     guestViewer : string @description "A split guest's viewer kernel: the client session its legs name, signed in as the guest's persona before its first leg runs; empty until one posts." = ""
     guestViewerOrbital : string @description "The orbital the viewer kernel's legs name, which a persona sign-in into its session names too." = ""
     guestClientHeld : GuestProgram? @description "A split guest's client program, held until its persona sign-in settles so the viewer's first leg already runs as that persona."
@@ -204,7 +208,7 @@ orbital GuestSessionOrbital {
     }
   }
 
-  trait GuestKernelMachine = Kernel.traits.KernelMachine {
+  trait GuestKernelMachine = Machine.traits.Machine {
     listens {
       GuestKernel.KERNEL_MACHINE_READ -> MACHINE_READ
       GuestKernel.KERNEL_FACTS_READ -> MACHINE_FACTS_READ
@@ -335,7 +339,7 @@ orbital GuestSessionOrbital {
       GUEST_LIVE_LINKED -> idle
       GUEST_PERSONAS_ASK -> idle
       GUEST_NAVIGATE -> idle when (= @config.runs "server")
-        (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+        (program/navigate { mount: (= @entity.guestKernel "native"), guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_NAVIGATE -> idle when (= @config.runs "client")
       GUEST_SEND -> idle when (= @config.runs "server")
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
@@ -407,11 +411,17 @@ orbital GuestSessionOrbital {
         (set @entity.guestViewer "")
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
-      GUEST_OPENED -> live
+      GUEST_OPENED -> live when (= @entity.guestKernel "lolo")
         (set @entity.guestHandle ?result.guest)
-        (set @entity.guestKernelSeeds (default ?result.seeds []))
-        (set @entity.guestKernelRoute (default ?result.route ""))
-        (when (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_ATTACH { program: (default @entity.guestKernelProgram { name: "guest", orbitals: [] }), guest: ?result.guest }))
+        (set @entity.guestClientHeld ?result.client)
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestKernelOpened ?result)
+        (set @entity.guestKernelBrowser (default ?result.browserRuns []))
+        (emit GUEST_KERNEL_WORK { work: { kind: "attach", then: "attach" } })
+        (emit GUEST_KERNEL_WORK { work: { kind: "mount", then: "boot", route: (default ?result.route ""), seeds: (default ?result.seeds []) } })
+      GUEST_OPENED -> live when (= @entity.guestKernel "native")
+        (set @entity.guestHandle ?result.guest)
         (set @entity.guestClientHeld ?result.client)
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
@@ -423,7 +433,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
         (emit GUEST_READY { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
-        (when (and (!= @entity.guestStartRoute "") (not @entity.guestLocal)) (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
+        (when (and (!= @entity.guestStartRoute "") (not @entity.guestLocal)) (program/navigate { mount: (= @entity.guestKernel "native"), guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
         (when (not @entity.guestLocal) (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } }))
       GUEST_FAILED -> idle
         (emit GUEST_ERROR { message: ?error })
@@ -439,13 +449,13 @@ orbital GuestSessionOrbital {
         (os/symlink @payload.path (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") "/node_modules") { key: "guest-live-link", emit: { success: GUEST_LIVE_LINKED, failure: GUEST_FAILED } })
       GUEST_LIVE_CHECKED -> opening when @payload.ok
         (set @entity.guestSeeded false)
-        (set @entity.guestKernelProgram @entity.guestProgram)
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_LIVE_LINKED -> opening
         (set @entity.guestSeeded false)
-        (set @entity.guestKernelProgram @entity.guestProgram)
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (= @entity.guestIntegrations "mock") (= @entity.guestSeed null) (not (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
         (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_FAILED } })
@@ -457,8 +467,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_SEED_ASK { program: @entity.guestProgram })
       GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "server"))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
-        (set @entity.guestKernelProgram @entity.guestProgram)
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") @entity.guestProgram null))
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
         (set @entity.guestSeed null)
       GUEST_SEED_MARKED -> opening when (and @payload.marked (= @config.runs "client"))
@@ -496,8 +506,8 @@ orbital GuestSessionOrbital {
       GUEST_COMPOSED -> opening when (= @config.runs "server")
         (set @entity.guestComposed ?result)
         (set @entity.guestComposedKey @entity.guestOpenKey)
-        (set @entity.guestKernelProgram (as ?result GuestProgram))
-        (program/open ?result { split: @config.split, mount: (= @entity.guestKernel "native"), program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (set @entity.guestKernelProgram (if (= @entity.guestKernel "lolo") (as ?result GuestProgram) null))
+        (program/open ?result { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, program: @config.program, grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_COMPOSED -> opening when (= @config.runs "client")
         (set @entity.guestComposed ?result)
         (set @entity.guestComposedKey @entity.guestOpenKey)
@@ -520,7 +530,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONA_ACTED -> opening
         (let ((m (array/find (default ?result.outcomes []) (fn o (and (= (default @o.event "") "PERSONA_ACT_AS") @o.fired))))) (when (!= @m null) (set @entity.guestPersonaTrait @m.trait)))
       GUEST_NAVIGATE -> opening
-        (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+        (program/navigate { mount: (= @entity.guestKernel "native"), guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_SEND -> opening
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_LEG -> opening
@@ -590,12 +600,22 @@ orbital GuestSessionOrbital {
         (set @entity.guestViewer "")
         (set @entity.guestClientHeld null)
         (emit GUEST_PREPARE {})
-      GUEST_OPENED -> live
+      GUEST_OPENED -> live when (= @entity.guestKernel "lolo")
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
+        (set @entity.guestKernelQueue [])
+        (set @entity.guestKernelThen "")
+        (set @entity.guestKernelLeg "")
+        (set @entity.guestHandle ?result.guest)
+        (set @entity.guestClientHeld ?result.client)
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestKernelOpened ?result)
+        (set @entity.guestKernelBrowser (default ?result.browserRuns []))
+        (emit GUEST_KERNEL_WORK { work: { kind: "attach", then: "attach" } })
+        (emit GUEST_KERNEL_WORK { work: { kind: "mount", then: "boot", route: (default ?result.route ""), seeds: (default ?result.seeds []) } })
+      GUEST_OPENED -> live when (= @entity.guestKernel "native")
         (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
         (set @entity.guestHandle ?result.guest)
-        (set @entity.guestKernelSeeds (default ?result.seeds []))
-        (set @entity.guestKernelRoute (default ?result.route ""))
-        (when (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_ATTACH { program: (default @entity.guestKernelProgram { name: "guest", orbitals: [] }), guest: ?result.guest }))
         (set @entity.guestClientHeld ?result.client)
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
@@ -607,7 +627,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
         (emit GUEST_READY { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
-        (when (and (!= @entity.guestStartRoute "") (not @entity.guestLocal)) (program/navigate { guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
+        (when (and (!= @entity.guestStartRoute "") (not @entity.guestLocal)) (program/navigate { mount: (= @entity.guestKernel "native"), guest: ?result.guest, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
         (when (not @entity.guestLocal) (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } }))
       GUEST_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -622,9 +642,9 @@ orbital GuestSessionOrbital {
       GUEST_LIVE_LINKED -> live
       GUEST_PERSONAS_ASK -> live when (and @entity.guestSeeded (!= @entity.guestIdentityEntity "") (not @entity.guestIdentitySeeded))
         (set @entity.guestIdentitySeeded true)
-        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "identity-seed", guest: @entity.guestHandle, address: (str/concat @config.seedTrait ".SEED_PAGE"), entities: [@entity.guestIdentityEntity] }) (program/dispatch (str/concat @config.seedTrait ".SEED_PAGE") { page: "", route: "", traits: [], entities: [@entity.guestIdentityEntity] } { guest: @entity.guestHandle, emit: { success: GUEST_IDENTITY_SEEDED, failure: GUEST_IDENTITY_SEED_FAILED } }))
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "identity-seed", guest: @entity.guestHandle, address: (str/concat @config.seedTrait ".SEED_PAGE"), entities: [@entity.guestIdentityEntity] }) (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "identity-seeded", address: (str/concat @config.seedTrait ".SEED_PAGE"), payload: { page: "", route: "", traits: [], entities: [@entity.guestIdentityEntity] } } }) (program/dispatch (str/concat @config.seedTrait ".SEED_PAGE") { page: "", route: "", traits: [], entities: [@entity.guestIdentityEntity] } { guest: @entity.guestHandle, emit: { success: GUEST_IDENTITY_SEEDED, failure: GUEST_IDENTITY_SEED_FAILED } })))
       GUEST_PERSONAS_ASK -> live when (not (and @entity.guestSeeded (!= @entity.guestIdentityEntity "") (not @entity.guestIdentitySeeded)))
-        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-list", guest: @entity.guestHandle, address: (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) }) (program/dispatch (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } }))
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-list", guest: @entity.guestHandle, address: (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) }) (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "personas", address: (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))), payload: {} } }) (program/dispatch (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } })))
       GUEST_IDENTITY_SEEDED -> live
         (emit GUEST_PERSONAS_ASK {})
       GUEST_IDENTITY_SEED_FAILED -> live
@@ -633,7 +653,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONAS_STEPPED -> live when (and (= @entity.guestPersona "") (!= @entity.guestDefaultRole "") (array/some (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))) (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))))
         (set @entity.guestPersonas (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
-        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-act", guest: @entity.guestHandle, address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") }) (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") } { guest: @entity.guestHandle, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } }))
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-act", guest: @entity.guestHandle, address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") }) (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "persona-acted", address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), payload: { persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") } } }) (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") } { guest: @entity.guestHandle, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })))
       GUEST_PERSONAS_STEPPED -> live when (not (and (= @entity.guestPersona "") (!= @entity.guestDefaultRole "") (array/some (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))) (fn r (= (object/get @r "role" "") @entity.guestDefaultRole)))))
         (set @entity.guestPersonas (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") GuestTextPayload) {}) "body") "") GuestPersonasReply) {}) "personas") []))))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
@@ -645,7 +665,7 @@ orbital GuestSessionOrbital {
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_PERSONA_PICK -> live when (= ?guest @entity.guestHandle)
-        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-act", guest: ?guest, address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), persona: ?persona }) (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } }))
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "persona-act", guest: ?guest, address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), persona: ?persona }) (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "persona-acted", address: (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")), payload: { persona: ?persona } } }) (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })))
       GUEST_PERSONA_PICK -> live when (!= ?guest @entity.guestHandle)
       GUEST_KERNEL_PICK -> live when (and (= ?guest @entity.guestHandle) (!= ?kernel @entity.guestKernel))
         (set @entity.guestKernel ?kernel)
@@ -701,7 +721,7 @@ orbital GuestSessionOrbital {
         (let ((m (array/find (default ?result.outcomes []) (fn o (and (= (default @o.event "") "PERSONA_ACT_AS") @o.fired))))) (when (!= @m null) (set @entity.guestPersonaTrait @m.trait)))
         (set @entity.guestPersona (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))) {}) "payload") GuestTextPayload) {}) "subject") ""))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
-        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "navigate", guest: @entity.guestHandle, route: @entity.guestRoute, remount: true }) (program/navigate { guest: @entity.guestHandle, route: @entity.guestRoute, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } }))
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "navigate", guest: @entity.guestHandle, route: @entity.guestRoute, remount: true }) (program/navigate { mount: (= @entity.guestKernel "native"), guest: @entity.guestHandle, route: @entity.guestRoute, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } }))
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_PERSONA_ACTED -> live when (and @config.split (not @entity.guestLocal) (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
@@ -710,35 +730,40 @@ orbital GuestSessionOrbital {
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
-        (when (and (!= @entity.guestViewer "") (!= @entity.guestPersonaTrait "")) (program/dispatch (str/concat @entity.guestViewerOrbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona, clientId: @entity.guestViewer } { guest: @entity.guestHandle, wire: true, orbital: @entity.guestViewerOrbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } }))
+        (when (and (!= @entity.guestViewer "") (!= @entity.guestPersonaTrait "")) (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "viewer", then: "viewer", address: (str/concat @entity.guestViewerOrbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS"), orbital: @entity.guestViewerOrbital, persona: @entity.guestPersona, clientId: @entity.guestViewer } }) (program/dispatch (str/concat @entity.guestViewerOrbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona, clientId: @entity.guestViewer } { guest: @entity.guestHandle, wire: true, orbital: @entity.guestViewerOrbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } })))
         (when (!= @entity.guestViewer "") (emit GUEST_VIEW_RESET { guest: @entity.guestHandle }))
-        (when (!= @entity.guestReturnTo "") (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
+        (when (!= @entity.guestReturnTo "") (program/navigate { mount: (= @entity.guestKernel "native"), guest: @entity.guestHandle, route: @entity.guestReturnTo } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
         (set @entity.guestReturnTo "")
       GUEST_PERSONA_ACTED -> live when (not (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
         (emit GUEST_NOTICE { message: (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGN_IN_REFUSED"))) {}) "payload") GuestTextPayload) {}) "error") "The persona could not be signed in") })
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
-        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "send", guest: ?guest, address: ?address, payload: ?payload }) (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } }))
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "send", guest: ?guest, address: ?address, payload: ?payload }) (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "stepped", address: ?address, payload: (as ?payload GuestJson) } }) (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })))
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
       GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (!= @entity.guestPendingToken "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") ""))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
         (set @entity.guestSigningIn true)
-        (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " @entity.guestPendingToken), clientId: @entity.guestViewer } { guest: ?guest, emit: { success: GUEST_VIEWER_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
+        (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "viewer-credential", address: "BEARER_PRESENT", payload: { requestId: 0, authorization: (str/concat "Bearer " @entity.guestPendingToken), clientId: @entity.guestViewer } } }) (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " @entity.guestPendingToken), clientId: @entity.guestViewer } { guest: ?guest, emit: { success: GUEST_VIEWER_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } }))
         (set @entity.guestPendingToken "")
         (emit GUEST_LEG_AGAIN { guest: ?guest, leg: ?leg, orbital: ?orbital, body: ?body })
       GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (= @entity.guestPendingToken "") (!= @entity.guestPersona "") (!= @entity.guestPersonaTrait "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
-        (program/dispatch (str/concat ?orbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona, clientId: @entity.guestViewer } { guest: ?guest, wire: true, orbital: ?orbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } })
-        (emit GUEST_LEG_AGAIN { guest: ?guest, leg: ?leg, orbital: ?orbital, body: ?body })
+        (if (= @entity.guestKernel "lolo")
+          (do
+            (emit GUEST_KERNEL_WORK { work: { kind: "viewer", then: "viewer", address: (str/concat ?orbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS"), orbital: ?orbital, persona: @entity.guestPersona, clientId: @entity.guestViewer } })
+            (emit GUEST_KERNEL_WORK { work: { kind: "leg", then: "leg", leg: ?leg, orbital: ?orbital, body: ?body } }))
+          (do
+            (program/dispatch (str/concat ?orbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona, clientId: @entity.guestViewer } { guest: ?guest, wire: true, orbital: ?orbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } })
+            (emit GUEST_LEG_AGAIN { guest: ?guest, leg: ?leg, orbital: ?orbital, body: ?body })))
       GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (= @entity.guestPendingToken "") (or (= @entity.guestPersona "") (= @entity.guestPersonaTrait "") (= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer)))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
         (set @entity.guestLeg ?leg)
         (let ((r (object/get (default (json/parse ?body GuestLegBody) {}) "route" ""))) (when (and (!= @r "") (!= @r @entity.guestRoute)) (do (set @entity.guestRoute @r) (emit GUEST_ROUTED { guest: ?guest, route: @r }))))
-        (set @entity.guestKernelAddress (let ((b (default (json/parse ?body GuestLegBody) {}))) (str/concat ?orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" ""))))
+        (when (= @entity.guestKernel "lolo") (set @entity.guestKernelThen "leg"))
         (let ((b (default (json/parse ?body GuestLegBody) {})))
           (program/dispatch (str/concat ?orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" "")) (object/get @b "payload" {}) {
             guest: ?guest,
@@ -763,7 +788,7 @@ orbital GuestSessionOrbital {
       GUEST_LEG_AGAIN -> live
         (set @entity.guestLeg ?leg)
         (let ((r (object/get (default (json/parse ?body GuestLegBody) {}) "route" ""))) (when (and (!= @r "") (!= @r @entity.guestRoute)) (do (set @entity.guestRoute @r) (emit GUEST_ROUTED { guest: ?guest, route: @r }))))
-        (set @entity.guestKernelAddress (let ((b (default (json/parse ?body GuestLegBody) {}))) (str/concat ?orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" ""))))
+        (when (= @entity.guestKernel "lolo") (set @entity.guestKernelThen "leg"))
         (let ((b (default (json/parse ?body GuestLegBody) {})))
           (program/dispatch (str/concat ?orbital "." (object/get @b "targetTrait" "") "." (object/get @b "event" "")) (object/get @b "payload" {}) {
             guest: ?guest,
@@ -792,34 +817,94 @@ orbital GuestSessionOrbital {
         (emit GUEST_LEG_DONE { guest: ?guest, leg: ?leg, error: "The guest this leg was sent to is closed" })
       GUEST_LEG_ANSWERED -> live when (= @entity.guestKernel "native")
         (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, response: (json/stringify ?result) })
-      GUEST_LEG_ANSWERED -> live when (and (= @entity.guestKernel "lolo") (= (default (object/get (default (as ?result GuestLegBegun) {}) "leg") "") ""))
-        (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, response: (json/stringify (object/get (default (as ?result GuestLegBegun) {}) "answered")) })
-      GUEST_LEG_ANSWERED -> live when (and (= @entity.guestKernel "lolo") (!= (default (object/get (default (as ?result GuestLegBegun) {}) "leg") "") ""))
+      GUEST_LEG_ANSWERED -> live when (= @entity.guestKernel "lolo")
+        (emit GUEST_KERNEL_BEGUN { result: ?result })
+      GUEST_KERNEL_WORK -> live
+        (set @entity.guestKernelQueue (array/concat @entity.guestKernelQueue [?work]))
+        (emit GUEST_KERNEL_NEXT {})
+      GUEST_KERNEL_NEXT -> live when (or (!= @entity.guestKernelThen "") (= (array/len @entity.guestKernelQueue) 0))
+      GUEST_KERNEL_NEXT -> live when (and (= @entity.guestKernelThen "") (> (array/len @entity.guestKernelQueue) 0))
+        (let ((w : GuestKernelWork (default (array/first @entity.guestKernelQueue) { kind: "run", then: "run" })))
+          (do
+            (set @entity.guestKernelQueue (array/drop @entity.guestKernelQueue 1))
+            (set @entity.guestKernelThen @w.then)
+            (when (= @w.kind "attach") (emit GUEST_KERNEL_ATTACH { program: (default @entity.guestKernelProgram { name: "guest", orbitals: [] }), guest: @entity.guestHandle, browser: @entity.guestKernelBrowser }))
+            (when (= @w.kind "mount") (emit GUEST_KERNEL_MOUNT_SEEDS { route: (default @w.route ""), seeds: (default @w.seeds []) }))
+            (when (= @w.kind "leg") (emit GUEST_LEG_AGAIN { guest: @entity.guestHandle, leg: (default @w.leg ""), orbital: (default @w.orbital ""), body: (default @w.body "") }))
+            (when (= @w.kind "viewer") (program/dispatch (default @w.address "") { persona: (default @w.persona ""), clientId: (default @w.clientId "") } { guest: @entity.guestHandle, wire: true, orbital: (default @w.orbital ""), targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: (default @w.clientId ""), lolo: "begin" } { emit: { success: GUEST_KERNEL_BEGUN, failure: GUEST_KERNEL_FAILURE } }))
+            (when (= @w.kind "plain") (program/dispatch (default @w.address "") (default @w.payload {}) { guest: @entity.guestHandle, lolo: "begin", plain: true } { emit: { success: GUEST_KERNEL_BEGUN, failure: GUEST_KERNEL_FAILURE } }))
+            (when (= @w.kind "run") (program/dispatch "" {} { guest: @entity.guestHandle, lolo: "begin", run: (default @w.run "") } { emit: { success: GUEST_KERNEL_BEGUN, failure: GUEST_KERNEL_FAILURE } }))))
+      GUEST_KERNEL_BEGUN -> live when (= (as ?result GuestLegBegun) null)
+        (emit GUEST_KERNEL_FAILURE { error: (str/concat "The .lolo kernel could not read the leg it began: " (json/stringify ?result)) })
+      GUEST_KERNEL_BEGUN -> live when (and (!= (as ?result GuestLegBegun) null) (= (default (object/get (default (as ?result GuestLegBegun) {}) "leg") "") ""))
+        (emit GUEST_LEG_FINISHED { result: (object/get (default (as ?result GuestLegBegun) {}) "answered") })
+      GUEST_KERNEL_BEGUN -> live when (and (!= (as ?result GuestLegBegun) null) (!= (default (object/get (default (as ?result GuestLegBegun) {}) "leg") "") ""))
         (let ((begun : GuestLegBegun (default (as ?result GuestLegBegun) {})))
           (let ((run : GuestLegRun (default @begun.run { kind: "targeted", entityId: "" }))
                 (held : GuestStates (default (as (default @begun.states {}) GuestStates) {})))
             (do
               (set @entity.guestKernelLeg (default @begun.leg ""))
               (emit GUEST_KERNEL_LEG { guest: @entity.guestHandle, leg: (default @begun.leg ""), run: @run, states: @held }))))
-      GUEST_KERNEL_OPENED -> live when (> (array/len @entity.guestKernelSeeds) 0)
-        (emit GUEST_KERNEL_MOUNT_SEEDS { route: @entity.guestKernelRoute, seeds: @entity.guestKernelSeeds })
-      GUEST_KERNEL_OPENED -> live when (= (array/len @entity.guestKernelSeeds) 0)
+      GUEST_KERNEL_OPENED -> live
+        (set @entity.guestKernelThen "")
+        (emit GUEST_KERNEL_NEXT {})
       GUEST_KERNEL_RAN -> live when (!= @entity.guestKernelLeg "")
-        (program/dispatch @entity.guestKernelAddress {} { guest: @entity.guestHandle, orbital: @entity.guestViewerOrbital, lolo: "finish", leg: @entity.guestKernelLeg } { emit: { success: GUEST_LEG_FINISHED, failure: GUEST_LEG_FAILED } })
+        (program/dispatch "" {} { guest: @entity.guestHandle, lolo: "finish", leg: @entity.guestKernelLeg, plain: (array/includes ["stepped", "personas", "identity-seeded", "persona-acted", "viewer-credential", "credential"] @entity.guestKernelThen) } { emit: { success: GUEST_LEG_FINISHED, failure: GUEST_KERNEL_FAILURE } })
         (set @entity.guestKernelLeg "")
-      GUEST_KERNEL_RAN -> live when (= @entity.guestKernelLeg "")
+      GUEST_KERNEL_RAN -> live when (and (= @entity.guestKernelLeg "") (= @entity.guestKernelThen "boot"))
+        (set @entity.guestKernelThen "")
+        (emit GUEST_KERNEL_BOOTED { rendered: ?rendered, outcomes: ?outcomes })
+        (emit GUEST_KERNEL_NEXT {})
+      GUEST_KERNEL_RAN -> live when (and (= @entity.guestKernelLeg "") (!= @entity.guestKernelThen "boot"))
+        (set @entity.guestKernelThen "")
+        (set @entity.guestPaints (array/reduce ?rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?outcomes })
         (when (!= ?refused "") (emit GUEST_NOTICE { message: ?refused }))
-      GUEST_KERNEL_FAILED -> live when (!= @entity.guestKernelLeg "")
-        (set @entity.guestKernelLeg "")
-        (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error })
-      GUEST_KERNEL_FAILED -> live when (= @entity.guestKernelLeg "")
-        (emit GUEST_NOTICE { message: ?error })
+        (emit GUEST_KERNEL_NEXT {})
+      GUEST_KERNEL_BOOTED -> live
+        (let ((opened : GuestOpened (default @entity.guestKernelOpened { guest: @entity.guestHandle, page: [], rendered: [], outcomes: [] })))
+          (do
+            (set @entity.guestKernelOpened null)
+            (set @entity.guestPaints (array/reduce ?rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+            (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
+            (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+            (when (> (array/len (default @opened.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default @opened.hostAsks []) }))
+            (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?outcomes })
+            (emit GUEST_PERSONAS_ASK {})
+            (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
+            (emit GUEST_READY { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
+            (when (and (!= @entity.guestStartRoute "") (not @entity.guestLocal)) (program/navigate { mount: false, guest: @entity.guestHandle, route: @entity.guestStartRoute } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
+            (when (not @entity.guestLocal) (program/live { kind: "guest", guest: @entity.guestHandle } { key: (str/concat "guest-ticks-" @entity.guestHandle), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } }))))
       GUEST_LEG_FINISHED -> live
-        (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, response: (json/stringify ?result) })
+        (when (= @entity.guestKernelThen "leg") (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, response: (json/stringify ?result) }))
+        (when (= @entity.guestKernelThen "viewer") (emit GUEST_VIEWER_SIGNED { result: ?result }))
+        (when (= @entity.guestKernelThen "stepped") (emit GUEST_STEPPED { result: (default (as ?result GuestStepped) { rendered: [], outcomes: [] }) }))
+        (when (= @entity.guestKernelThen "personas") (emit GUEST_PERSONAS_STEPPED { result: (default (as ?result GuestAnswered) {}) }))
+        (when (= @entity.guestKernelThen "identity-seeded") (emit GUEST_IDENTITY_SEEDED { result: (default (as ?result GuestAnswered) {}) }))
+        (when (= @entity.guestKernelThen "persona-acted") (emit GUEST_PERSONA_ACTED { result: (default (as ?result GuestAnswered) {}) }))
+        (when (= @entity.guestKernelThen "viewer-credential") (emit GUEST_VIEWER_CREDENTIAL_ANSWERED { result: (default (as ?result GuestAnswered) {}) }))
+        (when (= @entity.guestKernelThen "credential") (emit GUEST_CREDENTIAL_ANSWERED { result: (default (as ?result GuestAnswered) {}) }))
+        (set @entity.guestKernelThen "")
+        (emit GUEST_KERNEL_NEXT {})
+      GUEST_KERNEL_FAILURE -> live
+        (when (= @entity.guestKernelThen "leg") (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error }))
+        (when (array/includes ["viewer", "stepped", "persona-acted"] @entity.guestKernelThen) (emit GUEST_STEP_FAILED { error: ?error }))
+        (when (= @entity.guestKernelThen "personas") (emit GUEST_PERSONAS_FAILED { error: ?error }))
+        (when (= @entity.guestKernelThen "identity-seeded") (emit GUEST_IDENTITY_SEED_FAILED { error: ?error }))
+        (when (array/includes ["viewer-credential", "credential"] @entity.guestKernelThen) (emit GUEST_CREDENTIAL_FAILED { error: ?error }))
+        (when (array/includes ["attach", "boot"] @entity.guestKernelThen) (emit GUEST_ERROR { message: (str/concat "The .lolo kernel could not run this program: " ?error) }))
+        (when (array/includes ["run", "mount"] @entity.guestKernelThen) (emit GUEST_NOTICE { message: ?error }))
+        (set @entity.guestKernelThen "")
+        (set @entity.guestKernelLeg "")
+        (emit GUEST_KERNEL_NEXT {})
       GUEST_LEG_FAILED -> live when (!= (default ?kind "") "closed")
         (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error })
+        (when (= @entity.guestKernel "lolo") (do (set @entity.guestKernelThen "") (set @entity.guestKernelLeg "") (emit GUEST_KERNEL_NEXT {})))
       GUEST_LEG_FAILED -> live when (= (default ?kind "") "closed")
         (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error })
+        (when (= @entity.guestKernel "lolo") (do (set @entity.guestKernelThen "") (set @entity.guestKernelLeg "") (emit GUEST_KERNEL_NEXT {})))
         (when (and (!= @entity.guestHandle "") (!= @entity.guestHandle @entity.guestLostHandle))
           (do
             (set @entity.guestLostHandle @entity.guestHandle)
@@ -847,12 +932,16 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
         (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-        (when (and @config.followNavigations (> (array/len (default ?result.navigations [])) 0)) (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "follow", guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") }) (program/navigate { guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } })))
+        (when (and @config.followNavigations (> (array/len (default ?result.navigations [])) 0)) (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "follow", guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") }) (program/navigate { mount: (= @entity.guestKernel "native"), guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } })))
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_TICKED -> live when (= ?guest @entity.guestHandle)
+        (when (and (= @entity.guestKernel "lolo") (> (array/len (default ?runs [])) 0))
+          (do
+            (set @entity.guestKernelQueue (array/concat @entity.guestKernelQueue (array/map (default ?runs []) (fn r { kind: "run", then: "run", run: @r.run }))))
+            (emit GUEST_KERNEL_NEXT {})))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?outcomes []) })
         (set @entity.guestPaints (array/reduce ?rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
@@ -861,13 +950,13 @@ orbital GuestSessionOrbital {
         (when (and @config.split @entity.guestSigningIn) (emit GUEST_VIEWER_SETTLE { emitted: (default ?emitted []) }))
         (let ((mine : [GuestHostDispatch] (array/filter (default ?dispatches []) (fn d (or (and (= @d.kind "dispatch") (= @d.clientId @entity.guestViewer)) (and (= @d.kind "push") (or (and (= @d.target "origin") (= @d.clientId @entity.guestViewer)) (and (= @d.target "peers") (!= @d.clientId @entity.guestViewer)))))))))
           (when (and @config.split (> (array/len @mine) 0)) (emit GUEST_DISPATCHED { guest: @entity.guestHandle, dispatches: @mine })))
-        (when (and (not @config.split) @entity.guestSigningIn (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (do (set @entity.guestSigningIn false) (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })))
+        (when (and (not @config.split) @entity.guestSigningIn (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (do (set @entity.guestSigningIn false) (program/navigate { mount: (= @entity.guestKernel "native"), guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })))
         (when (and (not @config.split) @entity.guestSigningIn (not (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_REFUSED")))) (do (set @entity.guestSigningIn false) (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?emitted []) (fn e (= @e.event "IDENTITY_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })))
       GUEST_TICKED -> live when (!= ?guest @entity.guestHandle)
       GUEST_TICKS_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
-        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "navigate", guest: ?guest, route: ?route }) (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } }))
+        (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "navigate", guest: ?guest, route: ?route }) (program/navigate { mount: (= @entity.guestKernel "native"), guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } }))
       GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
       GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "live"))
         (set @entity.guestReturnTo (default ?result.access.returnTo ""))
@@ -876,7 +965,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_NOTICE { message: @config.signInNeeded })
       GUEST_CREDENTIAL -> live when (and (= ?guest @entity.guestHandle) @config.split (!= @entity.guestViewer ""))
         (set @entity.guestSigningIn true)
-        (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: @entity.guestViewer } { guest: ?guest, emit: { success: GUEST_VIEWER_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
+        (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "viewer-credential", address: "BEARER_PRESENT", payload: { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: @entity.guestViewer } } }) (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: @entity.guestViewer } { guest: ?guest, emit: { success: GUEST_VIEWER_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } }))
       GUEST_VIEWER_CREDENTIAL_ANSWERED -> live
         (emit GUEST_VIEWER_SETTLE { emitted: (default ?result.emitted []) })
       GUEST_VIEWER_SETTLE -> live when (and @entity.guestSigningIn (array/some ?emitted (fn e (= @e.event "IDENTITY_BOUND"))))
@@ -892,12 +981,12 @@ orbital GuestSessionOrbital {
         (emit GUEST_VIEWER { guest: @entity.guestHandle, signedIn: true })
       GUEST_CREDENTIAL -> live when (and (= ?guest @entity.guestHandle) (not @config.split))
         (set @entity.guestSigningIn true)
-        (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: "", self: true } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
+        (if (= @entity.guestKernel "lolo") (emit GUEST_KERNEL_WORK { work: { kind: "plain", then: "credential", address: "BEARER_PRESENT", payload: { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: "", self: true } } }) (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: "", self: true } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } }))
       GUEST_CREDENTIAL -> live when (!= ?guest @entity.guestHandle)
       GUEST_CREDENTIAL_ANSWERED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_BOUND")))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
         (set @entity.guestSigningIn false)
-        (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+        (program/navigate { mount: (= @entity.guestKernel "native"), guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_REFUSED"))))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
         (set @entity.guestSigningIn false)
@@ -907,6 +996,7 @@ orbital GuestSessionOrbital {
       GUEST_CREDENTIAL_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATED -> live when (!= (default ?result.access.verdict "") "denied")
+        (when (and (= @entity.guestKernel "lolo") (> (array/len (default ?result.seeds [])) 0)) (emit GUEST_KERNEL_WORK { work: { kind: "mount", then: "mount", route: (default ?result.route ""), seeds: (default ?result.seeds []) } }))
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
         (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
@@ -922,8 +1012,9 @@ orbital GuestSessionOrbital {
         (set @entity.guestReturnTo (default ?result.access.returnTo ""))
       GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock") (!= @entity.guestPersona ""))
         (set @entity.guestReturnTo "")
-        (program/navigate { guest: @entity.guestHandle, route: (default ?result.access.returnTo "") } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+        (program/navigate { mount: (= @entity.guestKernel "native"), guest: @entity.guestHandle, route: (default ?result.access.returnTo "") } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_FOLLOWED -> live when (and (!= (default ?result.access.verdict "") "denied") (!= (default ?result.route "") ""))
+        (when (and (= @entity.guestKernel "lolo") (> (array/len (default ?result.seeds [])) 0)) (emit GUEST_KERNEL_WORK { work: { kind: "mount", then: "mount", route: (default ?result.route ""), seeds: (default ?result.seeds []) } }))
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
         (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
@@ -933,6 +1024,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
       GUEST_FOLLOWED -> live when (and (!= (default ?result.access.verdict "") "denied") (= (default ?result.route "") ""))
+        (when (and (= @entity.guestKernel "lolo") (> (array/len (default ?result.seeds [])) 0)) (emit GUEST_KERNEL_WORK { work: { kind: "mount", then: "mount", route: (default ?result.route ""), seeds: (default ?result.seeds []) } }))
       GUEST_NAVIGATE_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_FAIL -> idle
@@ -953,7 +1045,24 @@ orbital GuestSessionOrbital {
     }
 
     emits {
-      GUEST_KERNEL_ATTACH -> internal { program : GuestProgram!, guest : string! }
+      GUEST_KERNEL_ATTACH -> internal { program : GuestProgram!, guest : string!, browser : [string]! }
+      GUEST_KERNEL_WORK -> internal { work : GuestKernelWork! }
+      GUEST_KERNEL_NEXT -> internal { }
+      GUEST_KERNEL_FAILURE -> internal { error : string! }
+      GUEST_KERNEL_BEGUN -> internal { result : GuestJson }
+      GUEST_KERNEL_BOOTED -> internal { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
+      GUEST_LEG_FINISHED -> internal { result : GuestJson? }
+      GUEST_STEPPED -> internal { result : GuestStepped! }
+      GUEST_PERSONAS_STEPPED -> internal { result : GuestAnswered! }
+      GUEST_IDENTITY_SEEDED -> internal { result : GuestAnswered! }
+      GUEST_PERSONA_ACTED -> internal { result : GuestAnswered! }
+      GUEST_VIEWER_CREDENTIAL_ANSWERED -> internal { result : GuestAnswered! }
+      GUEST_CREDENTIAL_ANSWERED -> internal { result : GuestAnswered! }
+      GUEST_VIEWER_SIGNED -> internal { result : GuestJson? }
+      GUEST_STEP_FAILED -> internal { error : string! }
+      GUEST_PERSONAS_FAILED -> internal { error : string! }
+      GUEST_IDENTITY_SEED_FAILED -> internal { error : string! }
+      GUEST_CREDENTIAL_FAILED -> internal { error : string! }
       GUEST_KERNEL_LEG -> internal { guest : string!, leg : string!, run : GuestLegRun!, states : Map string string! }
       GUEST_KERNEL_MOUNT_SEEDS -> internal { route : string!, seeds : [GuestSeed]! }
       GUEST_LOCAL_OP -> external {
@@ -1110,6 +1219,7 @@ orbital GuestSessionOrbital {
       }
       GUEST_TICKED {
         guest : string!
+        runs : [GuestHeldRun]
         rendered : [GuestPaint]!
         emitted : [GuestEmitted]
         outcomes : [GuestMove]
@@ -1254,11 +1364,10 @@ orbital GuestSessionOrbital {
       GuestMarks.MARKS_CHECKED -> GUEST_SEED_MARKED
       GuestKernel.KERNEL_OPENED -> GUEST_KERNEL_OPENED
       GuestKernel.KERNEL_DISPATCHED -> GUEST_KERNEL_RAN
-      GuestKernel.KERNEL_FAILED -> GUEST_KERNEL_FAILED
+      GuestKernel.KERNEL_FAILED -> GUEST_KERNEL_FAILURE
       GUEST_KERNEL_OPENED { }
-      GUEST_KERNEL_RAN { refused : string! }
-      GUEST_KERNEL_FAILED { error : string! }
-      GUEST_LEG_FINISHED { result : GuestJson }
+      GUEST_KERNEL_RAN { refused : string!, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
+      GUEST_KERNEL_FAILURE { error : string! }
       GUEST_SEED_MARKED {
         marked : boolean!
         personas : string!

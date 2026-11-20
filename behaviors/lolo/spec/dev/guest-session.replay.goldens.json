@@ -316,8 +316,13 @@
         "type": "if",
         "nested": [
          {
-          "type": "program/dispatch",
-          "arg0": "@payload.address"
+          "type": "if",
+          "nested": [
+           {
+            "type": "program/dispatch",
+            "arg0": "@payload.address"
+           }
+          ]
          }
         ]
        }
@@ -2827,7 +2832,12 @@
         "type": "if",
         "nested": [
          {
-          "type": "program/dispatch"
+          "type": "if",
+          "nested": [
+           {
+            "type": "program/dispatch"
+           }
+          ]
          }
         ]
        }
@@ -2917,7 +2927,12 @@
         "type": "if",
         "nested": [
          {
-          "type": "program/dispatch"
+          "type": "if",
+          "nested": [
+           {
+            "type": "program/dispatch"
+           }
+          ]
          }
         ]
        }
@@ -3395,7 +3410,12 @@
         "type": "if",
         "nested": [
          {
-          "type": "program/dispatch"
+          "type": "if",
+          "nested": [
+           {
+            "type": "program/dispatch"
+           }
+          ]
          }
         ]
        }
@@ -13610,10 +13630,20 @@
         "type": "set"
        },
        {
-        "type": "program/dispatch"
-       },
-       {
-        "type": "emit"
+        "type": "if",
+        "nested": [
+         {
+          "type": "do",
+          "nested": [
+           {
+            "type": "program/dispatch"
+           },
+           {
+            "type": "emit"
+           }
+          ]
+         }
+        ]
        }
       ],
       "entity": {
@@ -14197,8 +14227,13 @@
         "type": "set"
        },
        {
-        "type": "program/dispatch",
-        "arg0": "BEARER_PRESENT"
+        "type": "if",
+        "nested": [
+         {
+          "type": "program/dispatch",
+          "arg0": "BEARER_PRESENT"
+         }
+        ]
        }
       ]
      }
@@ -16176,7 +16211,12 @@
         "type": "if",
         "nested": [
          {
-          "type": "program/dispatch"
+          "type": "if",
+          "nested": [
+           {
+            "type": "program/dispatch"
+           }
+          ]
          }
         ]
        }
@@ -16214,7 +16254,12 @@
         "type": "if",
         "nested": [
          {
+          "type": "if",
+          "nested": [
+           {
           "type": "program/dispatch"
+         }
+          ]
          }
         ]
        }
@@ -16252,7 +16297,12 @@
         "type": "if",
         "nested": [
          {
+          "type": "if",
+          "nested": [
+           {
           "type": "program/dispatch"
+         }
+          ]
          }
         ]
        }
@@ -17458,82 +17508,6 @@
    ]
   },
   {
-   "id": "lolo-a-begun-leg-goes-to-the-lolo-kernel-and-an-unattached-kernel-answers-it-with-its-error",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_LEG_ANSWERED",
-     "payload": {
-      "result": {
-       "leg": "leg-0",
-       "run": {
-        "kind": "targeted",
-        "trait": "Back",
-        "event": "STORE",
-        "payload": {},
-        "entityId": "default"
-       },
-       "states": {
-        "Back": "idle"
-       }
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "entity": {
-       "guestKernelLeg": ""
-      },
-      "emits": [
-       {
-        "event": "GUEST_KERNEL_LEG",
-        "payload": {
-         "guest": "guest-1",
-         "leg": "leg-0",
-         "run": {
-          "kind": "targeted",
-          "trait": "Back",
-          "event": "STORE",
-          "payload": {},
-          "entityId": "default"
-         },
-         "states": {
-          "Back": "idle"
-         }
-        }
-       },
-       {
-        "event": "GUEST_LEG_DONE",
-        "payload": {
-         "guest": "guest-1",
-         "leg": "guest-1:0:1",
-         "error": "no program is open"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "GuestKernel"
-   ]
-  },
-  {
    "id": "control-native-a-leg-answer-is-the-legs-response",
    "config": {
     "split": true
@@ -17571,298 +17545,6 @@
         }
        }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "lolo-a-leg-answered-before-any-dispatch-is-the-legs-response",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_LEG_ANSWERED",
-     "payload": {
-      "result": {
-       "answered": {
-        "success": true
-       }
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_LEG_DONE",
-        "payload": {
-         "guest": "guest-1",
-         "leg": "guest-1:0:1",
-         "response": "{\"success\":true}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "lolo-the-kernels-run-finishes-the-open-leg",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_KERNEL_RAN",
-     "payload": {
-      "refused": ""
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo",
-      "guestKernelLeg": "leg-0",
-      "guestKernelAddress": "Split.Back.STORE"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "effects": [
-       {
-        "type": "program/dispatch"
-       },
-       {
-        "type": "set"
-       }
-      ],
-      "entity": {
-       "guestKernelLeg": ""
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-lolo-a-run-with-no-open-leg-finishes-nothing",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_KERNEL_RAN",
-     "payload": {
-      "refused": ""
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "effects": [],
-      "emits": []
-     }
-    }
-   ]
-  },
-  {
-   "id": "lolo-a-kernel-failure-during-a-leg-answers-the-leg-with-it",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_KERNEL_FAILED",
-     "payload": {
-      "error": "no program is open"
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo",
-      "guestKernelLeg": "leg-0"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "entity": {
-       "guestKernelLeg": ""
-      },
-      "emits": [
-       {
-        "event": "GUEST_LEG_DONE",
-        "payload": {
-         "leg": "guest-1:0:1",
-         "error": "no program is open"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "lolo-a-finished-leg-is-the-legs-response",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_LEG_FINISHED",
-     "payload": {
-      "result": {
-       "success": true
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_LEG_DONE",
-        "payload": {
-         "guest": "guest-1",
-         "leg": "guest-1:0:1",
-         "response": "{\"success\":true}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "lolo-the-kernel-opened-runs-the-boot-mounts-the-open-left",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_KERNEL_OPENED",
-     "payload": {},
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo",
-      "guestKernelSeeds": [
-       {
-        "trait": "Back",
-        "event": "INIT"
-       }
-      ],
-      "guestKernelRoute": "/"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_KERNEL_MOUNT_SEEDS",
-        "payload": {
-         "route": "/",
-         "seeds": [
-          {
-           "trait": "Back",
-           "event": "INIT"
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "GuestKernel"
-   ]
-  },
-  {
-   "id": "control-lolo-the-kernel-opened-with-no-boot-mounts-runs-nothing",
-   "config": {
-    "split": true
-   },
-   "now": 1760531445678,
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_KERNEL_OPENED",
-     "payload": {},
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": "",
-      "guestLeg": "guest-1:0:1",
-      "guestViewer": "tab-1",
-      "guestViewerOrbital": "Split",
-      "guestKernel": "lolo"
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": []
      }
     }
    ]
@@ -18241,6 +17923,776 @@
       "fired": true,
       "state": "live",
       "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-work-for-a-free-kernel-starts-at-once-and-a-failing-mount-says-so",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_WORK",
+     "payload": {
+      "work": {
+       "kind": "mount",
+       "then": "mount",
+       "route": "/",
+       "seeds": [
+        {
+         "trait": "Back",
+         "event": "INIT"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelThen": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_KERNEL_NEXT"
+       },
+       {
+        "event": "GUEST_KERNEL_MOUNT_SEEDS",
+        "payload": {
+         "route": "/",
+         "seeds": [
+          {
+           "trait": "Back",
+           "event": "INIT"
+          }
+         ]
+        }
+       },
+       {
+        "event": "GUEST_NOTICE",
+        "payload": {
+         "message": "no program is open"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "GuestKernel"
+   ]
+  },
+  {
+   "id": "control-lolo-work-for-a-busy-kernel-waits-its-turn",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_WORK",
+     "payload": {
+      "work": {
+       "kind": "mount",
+       "then": "mount",
+       "route": "/",
+       "seeds": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "leg"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelThen": "leg"
+      },
+      "exactEmits": [
+       {
+        "event": "GUEST_KERNEL_NEXT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-a-leg-answered-before-any-dispatch-is-the-legs-response",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_BEGUN",
+     "payload": {
+      "result": {
+       "answered": {
+        "success": true
+       }
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "leg"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelThen": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_LEG_FINISHED"
+       },
+       {
+        "event": "GUEST_LEG_DONE",
+        "payload": {
+         "guest": "guest-1",
+         "leg": "guest-1:0:1",
+         "response": "{\"success\":true}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-a-begun-leg-goes-to-the-kernel-and-an-unattached-kernel-answers-it-with-its-error",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_BEGUN",
+     "payload": {
+      "result": {
+       "leg": "leg-0",
+       "run": {
+        "kind": "targeted",
+        "trait": "Back",
+        "event": "STORE",
+        "payload": {},
+        "entityId": "default"
+       },
+       "states": {
+        "Back": "idle"
+       }
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "leg"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelLeg": "",
+       "guestKernelThen": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_KERNEL_LEG",
+        "payload": {
+         "leg": "leg-0"
+        }
+       },
+       {
+        "event": "GUEST_LEG_DONE",
+        "payload": {
+         "leg": "guest-1:0:1",
+         "error": "no program is open"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "GuestKernel"
+   ]
+  },
+  {
+   "id": "lolo-a-finished-plain-step-is-heard-as-the-step-it-stands-for",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_LEG_FINISHED",
+     "payload": {
+      "result": {
+       "rendered": [],
+       "outcomes": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "stepped"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelThen": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_STEPPED"
+       },
+       {
+        "event": "GUEST_KERNEL_NEXT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-lolo-a-finished-leg-answers-the-viewers-leg",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_LEG_FINISHED",
+     "payload": {
+      "result": {
+       "success": true
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "leg"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_LEG_DONE",
+        "payload": {
+         "leg": "guest-1:0:1",
+         "response": "{\"success\":true}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-a-failed-persona-list-is-heard-as-the-lists-failure",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_FAILURE",
+     "payload": {
+      "error": "boom"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "personas",
+      "guestKernelLeg": "leg-3"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelThen": "",
+       "guestKernelLeg": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_PERSONAS_FAILED",
+        "payload": {
+         "error": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-the-kernels-run-finishes-the-open-leg",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_RAN",
+     "payload": {
+      "refused": "",
+      "rendered": [],
+      "outcomes": []
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "leg",
+      "guestKernelLeg": "leg-0"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "effects": [
+       {
+        "type": "program/dispatch"
+       },
+       {
+        "type": "set"
+       }
+      ],
+      "entity": {
+       "guestKernelLeg": ""
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-the-boot-run-finishes-the-open-and-the-guest-is-ready",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_RAN",
+     "payload": {
+      "refused": "",
+      "rendered": [],
+      "outcomes": []
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "boot"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_KERNEL_BOOTED"
+       },
+       {
+        "event": "GUEST_READY",
+        "payload": {
+         "guest": "guest-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-held-completions-on-a-tick-run-on-the-kernel",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "runs": [
+       {
+        "run": "run-1",
+        "trait": "Back",
+        "event": "STORE"
+       }
+      ],
+      "rendered": [],
+      "dispatches": []
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_KERNEL_NEXT"
+       },
+       {
+        "event": "GUEST_KERNEL_FAILURE"
+       },
+       {
+        "event": "GUEST_NOTICE"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-native-a-tick-runs-nothing-on-the-kernel",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "runs": [
+       {
+        "run": "run-1",
+        "trait": "Back",
+        "event": "STORE"
+       }
+      ],
+      "rendered": [],
+      "dispatches": []
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "exactEmits": [
+       {
+        "event": "GUEST_MOVED"
+       },
+       {
+        "event": "GUEST_PAINTS"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-an-opened-guest-waits-for-the-kernel-before-it-is-ready",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "defaults": [
+    "GuestKernel",
+    "GuestKernelMachine"
+   ],
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "opening",
+     "event": "GUEST_OPENED",
+     "payload": {
+      "result": {
+       "guest": "guest-2",
+       "page": [],
+       "route": "/",
+       "rendered": [],
+       "outcomes": [],
+       "seeds": [
+        {
+         "trait": "Back",
+         "event": "INIT"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_KERNEL_WORK",
+        "payload": {
+         "work": {
+          "kind": "attach",
+          "then": "attach"
+         }
+        }
+       },
+       {
+        "event": "GUEST_KERNEL_WORK",
+        "payload": {
+         "work": {
+          "kind": "mount",
+          "then": "boot",
+          "route": "/",
+          "seeds": [
+           {
+            "trait": "Back",
+            "event": "INIT"
+           }
+          ]
+         }
+        }
+       },
+       {
+        "event": "GUEST_KERNEL_ATTACH"
+       },
+        {
+         "event": "MACHINE_ANSWERED"
+        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-a-held-completion-begun-goes-to-the-kernel",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_KERNEL_BEGUN",
+     "from": "live",
+     "payload": {
+      "result": {
+       "leg": "leg-5",
+       "run": {
+        "kind": "completion",
+        "trait": "Back",
+        "event": "STORED",
+        "payload": {
+         "key": "k1"
+        },
+        "entityId": "default",
+        "failure": "STORE_FAILED",
+        "key": "k1"
+       },
+       "states": {
+        "Back": "idle"
+       }
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "run"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelLeg": "",
+       "guestKernelThen": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_KERNEL_LEG",
+        "payload": {
+         "guest": "guest-1",
+         "leg": "leg-5",
+         "run": {
+          "kind": "completion",
+          "trait": "Back",
+          "event": "STORED",
+          "payload": {
+           "key": "k1"
+          },
+          "entityId": "default",
+          "failure": "STORE_FAILED",
+          "key": "k1"
+         },
+         "states": {
+          "Back": "idle"
+         }
+        }
+       },
+       {
+        "event": "KERNEL_FAILED",
+        "payload": {
+         "error": "no program is open"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "GuestKernel"
+   ]
+  },
+  {
+   "id": "edge-lolo-a-begun-answer-the-kernel-cannot-read-fails-the-work-instead-of-dropping-it",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_KERNEL_BEGUN",
+     "from": "live",
+     "payload": {
+      "result": {
+       "leg": "leg-6",
+       "run": {
+        "kind": "teleport",
+        "entityId": "default"
+       },
+       "states": {}
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "guest-1:0:1",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "run"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelThen": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_KERNEL_FAILURE"
+       },
+       {
+        "event": "GUEST_NOTICE"
+       }
+      ]
      }
     }
    ]
