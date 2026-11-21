@@ -1694,6 +1694,276 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-trait-name-that-is-not-pascal-case-is-invalid-beside-a-clean-one",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_name",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board_1",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Board2",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_INVALID_NAME",
+                      "path": "orbitals[0].traits[0].name",
+                      "message": "Trait name 'Board_1' is not PascalCase, so no trait value can name it",
+                      "suggestion": "Use PascalCase letters and digits only for trait names (e.g., 'TaskList', 'Board2')",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-program-not-in-english-keeps-its-trait-names",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": false,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_name",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board_1",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-reference-without-a-state-machine-is-not-name-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_name",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board_1",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "ref": "Board_1",
+                      "name": "Board_1"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_INVALID_NAME",
+                      "path": "orbitals[0].traits[0].name",
+                      "message": "Trait name 'Board_1' is not PascalCase, so no trait value can name it",
+                      "suggestion": "Use PascalCase letters and digits only for trait names (e.g., 'TaskList', 'Board2')",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

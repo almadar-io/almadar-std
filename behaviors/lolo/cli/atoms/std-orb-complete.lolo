@@ -2,6 +2,7 @@ app std-orb-complete [
   version: "1.0.0",
   inbound: ["cli-complete"],
   fs: { cwd: "**": [read], "/**": [read] },
+  stdio: [in],
   description: "std-orb-complete — the `orb complete <file.lolo> --offset <n>` command (spec/cli/orb-complete.lolo; port of orbital-lolo complete.rs). It answers one compact JSON line { candidates, context, prefix } (keys in alphabetical order). Offsets count characters, which equals the Rust byte offset for ASCII sources. Served from the source and the installed @almadar/core language tables, found through its package.json orbLanguage block (vocabulary: effects and types; patterns: tags and props): modifier-key and modifier-value (app and page brackets), trait-ref, orbital-ref, config-key, entity-field, trait-embed, pattern-tag, pattern-prop, effect, field-type and keyword. trait-ref, orbital-ref and config-key read the behavior a `uses` line names through behavior/describe. Import-path completion walks every installed package's `orb.source` tree (behavior/packages, each package.json, os/list-dir) and offers the `.lolo` file stems as Rust does; it needs each tree inside the working directory (G-STD-096 item 4). A `pages {}` remap-entry bracket offers the remap keys. --stdin answers status 400 (G-STD-094). The statement-keyword and modifier-key tables are literals here because they are Rust constants of the parser, not installed data (G-STD-096)."
 ]
 uses Spec from "almadar-std/orb-complete"
@@ -38,6 +39,7 @@ orbital OrbCompleteOrbital {
     file : string = ""
     offset : number = 0
     source : string = ""
+    stdinData : bytes = ""
     vocabularyPath : string = ""
     patternsPath : string = ""
     effects : [string] = []
@@ -94,12 +96,12 @@ orbital OrbCompleteOrbital {
 
     state parsing {
       INIT -> parsing
-      COMPLETE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (and (= (array/len @payload.positionals) 0) (not (object/has @payload.flags "stdin"))) (> (array/len @payload.positionals) 1) (not (object/has @payload.flags "offset")) (= (str/to-int (default (array/first (default (object/get @payload.flags "offset") [])) "")) null))
+      COMPLETE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (and (= (array/len @payload.positionals) 0) (not (object/has @payload.flags "stdin"))) (> (array/len @payload.positionals) 1) (and (object/has @payload.flags "stdin") (> (array/len @payload.positionals) 0)) (not (object/has @payload.flags "offset")) (= (str/to-int (default (array/first (default (object/get @payload.flags "offset") [])) "")) null))
         (emit COMPLETE_ANSWERED { status: 400, body: "usage: orb complete <file.lolo> --offset <n>" })
-      COMPLETE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (object/has @payload.flags "stdin"))
-        (emit COMPLETE_ANSWERED { status: 400, body: "orb complete --stdin is pending (G-STD-094)" })
+      COMPLETE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (object/has @payload.flags "stdin") (object/has @payload.flags "offset") (!= (str/to-int (default (array/first (default (object/get @payload.flags "offset") [])) "")) null))
+        (emit COMPLETE_START { file: "", stdin: true, offset: (str/to-int (default (array/first (default (object/get @payload.flags "offset") [])) "")), cwd: @entity.cwd })
       COMPLETE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (not (object/has @payload.flags "stdin")) (object/has @payload.flags "offset") (!= (str/to-int (default (array/first (default (object/get @payload.flags "offset") [])) "")) null))
-        (emit COMPLETE_START { file: (default (array/nth @payload.positionals 0) ""), offset: (str/to-int (default (array/first (default (object/get @payload.flags "offset") [])) "")), cwd: @entity.cwd })
+        (emit COMPLETE_START { file: (default (array/nth @payload.positionals 0) ""), stdin: false, offset: (str/to-int (default (array/first (default (object/get @payload.flags "offset") [])) "")), cwd: @entity.cwd })
     }
 
     state working {
@@ -124,6 +126,7 @@ orbital OrbCompleteOrbital {
         @tier "internal"
       COMPLETE_START {
         file : string!
+        stdin : boolean!
         offset : number!
         cwd : string!
       }
@@ -159,12 +162,17 @@ orbital OrbCompleteOrbital {
 
     state idle {
       INIT -> idle
-      COMPLETE_START -> loading when (not (os/path-is-absolute @payload.file))
+      COMPLETE_START -> loading when @payload.stdin
+        (set @entity.offset @payload.offset)
+        (set @entity.cwd @payload.cwd)
+        (set @entity.stdinData (bytes/from-string ""))
+        (os/stdin-read 65536 { key: "stdin" emit: { success: COMPLETE_CHUNK, failure: COMPLETE_FAILED } })
+      COMPLETE_START -> loading when (and (not @payload.stdin) (not (os/path-is-absolute @payload.file)))
         (set @entity.file @payload.file)
         (set @entity.offset @payload.offset)
         (set @entity.cwd @payload.cwd)
         (os/read-file { anchor: "cwd" path: @payload.file } { key: "source" emit: { success: COMPLETE_SOURCE, failure: COMPLETE_FAILED } })
-      COMPLETE_START -> loading when (os/path-is-absolute @payload.file)
+      COMPLETE_START -> loading when (and (not @payload.stdin) (os/path-is-absolute @payload.file))
         (set @entity.file @payload.file)
         (set @entity.offset @payload.offset)
         (set @entity.cwd @payload.cwd)
@@ -175,6 +183,11 @@ orbital OrbCompleteOrbital {
       INIT -> loading
       COMPLETE_FAILED -> idle
         (emit COMPLETE_ANSWERED { status: 500, body: (str/concat "orb complete: " (default @payload.error "")) })
+      COMPLETE_CHUNK -> loading when (not @payload.eof)
+        (set @entity.stdinData (bytes/concat [@entity.stdinData @payload.data]))
+        (os/stdin-read 65536 { key: "stdin" emit: { success: COMPLETE_CHUNK, failure: COMPLETE_FAILED } })
+      COMPLETE_CHUNK -> loading when @payload.eof
+        (emit COMPLETE_SOURCE { data: (bytes/concat [@entity.stdinData @payload.data]) })
       COMPLETE_SOURCE -> loading when (= (bytes/to-string @payload.data) null)
         (emit COMPLETE_FAILED { error: "the source file is not valid text" })
       COMPLETE_SOURCE -> loading when (!= (bytes/to-string @payload.data) null)
@@ -360,6 +373,12 @@ orbital OrbCompleteOrbital {
       }
         @description "A read failed."
         @tier "internal"
+      COMPLETE_CHUNK {
+        data : bytes!
+        eof : boolean!
+      }
+        @description "os/stdin-read: one chunk of the source on standard input."
+        @tier "internal"
       COMPLETE_SOURCE {
         data : bytes!
       }
@@ -385,6 +404,7 @@ orbital OrbCompleteOrbital {
     listens {
       COMPLETE_START {
         file : string!
+        stdin : boolean!
         offset : number!
         cwd : string!
       }

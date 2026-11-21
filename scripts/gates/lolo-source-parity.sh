@@ -69,7 +69,7 @@ covers() { local gap; gap=$(pending_of "$2" "$1"); [ -z "$gap" ] || { echo "PEND
 models() { # lang ex out shell [server]
   local src; src=$(source_of "$2")
   if [ -n "$src" ]; then "$ORB" compile "$ROOT/$src" -s "$4" --mode client -o "$3"
-  elif [ "${5:-}" = server ]; then "$ORB" compile "$PAR/$2.server.lolo" -s "$4" -o "$3"
+  elif [ "${5:-}" = server ]; then "$ORB" compile "$PAR/$2-server.lolo" -s "$4" -o "$3"
   else "$ORB" compile "$PAR/$2.lolo" -s "$4" $([ "$4" = typescript ] && echo -m client) -o "$3"; fi
 }
 

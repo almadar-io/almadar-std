@@ -5206,6 +5206,7 @@
           "event": "COMPLETE_START",
           "payload": {
             "file": "/tmp/a.lolo",
+            "stdin": false,
             "offset": 0,
             "cwd": "/w"
           },
@@ -5244,6 +5245,7 @@
           "event": "COMPLETE_START",
           "payload": {
             "file": "a.lolo",
+            "stdin": false,
             "offset": 0,
             "cwd": "/w"
           },
@@ -5258,6 +5260,68 @@
                   "path": "@payload.file"
                 },
                 "optionsAt": 1
+              }
+            ]
+          },
+          "trait": "CompleteEngine"
+        }
+      ]
+    },
+    {
+      "id": "with --stdin the source is read from standard input, chunk by chunk, and its end hands it on as the source",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "COMPLETE_START",
+          "payload": {
+            "file": "",
+            "stdin": true,
+            "offset": 4,
+            "cwd": "/w"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "os/stdin-read",
+                "key": "stdin",
+                "arg0": 65536,
+                "optionsAt": 1
+              }
+            ]
+          },
+          "trait": "CompleteEngine"
+        },
+        {
+          "event": "COMPLETE_CHUNK",
+          "payload": {
+            "data": "b3Ji",
+            "eof": false
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "os/stdin-read",
+                "key": "stdin",
+                "arg0": 65536,
+                "optionsAt": 1
+              }
+            ]
+          },
+          "trait": "CompleteEngine"
+        },
+        {
+          "event": "COMPLETE_CHUNK",
+          "payload": {
+            "data": "aQ==",
+            "eof": true
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "COMPLETE_SOURCE"
               }
             ]
           },
