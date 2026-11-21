@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 interface StdManifest {
   orb?: { prefix?: string };
-  orbLanguage?: { compiler?: string; operators?: string };
+  orbLanguage?: { language?: string; operators?: string };
 }
 
 const root = join(__dirname, '..');
@@ -14,7 +14,7 @@ describe('@almadar/std package.json operator-table declaration', () => {
   it('declares the operator table under the top-level `orbLanguage` key, apart from the behavior `orb` block', () => {
     expect(manifest.orb?.prefix).toBe('almadar-std');
     expect(manifest.orb).not.toHaveProperty('operators');
-    expect(manifest.orbLanguage?.compiler).toMatch(/\d+\.\d+\.\d+/);
+    expect(manifest.orbLanguage?.language).toMatch(/^\^\d+\.\d+$/);
     expect(manifest.orbLanguage?.operators).toBe('canonical-operators.json');
   });
 

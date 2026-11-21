@@ -1,6 +1,6 @@
 app std-catalog-vectors [
   version: "1.0.0",
-  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL", "LMSTUDIO_HOST"],
   fs: { cwd: "node_modules/**": [read], "~/.almadar/sidecars/**": [read], "~/.almadar/vectors/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] },
   description: "std-catalog-vectors — the ONE std flow that owns catalog rows with vectors, whole in one orbital: the controller, the texts, the sources, the resolver with its stores and writers and its five embedding provider clients, so a composer aliases the orbital and wires one ask and two answers. Its page is a route, not boot, so each viewer's ask is answered in that viewer's own session (a boot-only trait is program-wide and would answer in the program session, where the asking viewer's traits do not hear it); CatalogVectorsStatus is the small page trait that says what was read. CATALOG_VECTORS_ASK { paths, exposure, traits } lists the installed behaviors under the registry folders with the facts their embedding texts read (`behavior/catalog` with texts: true), builds each row's organism and capability texts (std-behavior-texts), reads where the vectors live and which embedding provider is configured (std-vector-sources), and resolves every text package snapshot first, then the user store, then the configured provider for what no store holds (std-vector-resolve, which writes what it embeds back to the user store), then answers CATALOG_VECTORS_ROWS { rows, model }: each row with its `vectors` keyed `description` and, when the behavior declares capabilities, `capabilities`. A host never attaches vectors to a catalog row, so a consumer that ranks by meaning (a search, a retrieval ladder, a scope listing) asks this atom and never reads `vectors` off a plain `behavior/catalog` answer. Nothing is answered empty: a row whose description has no vector, a package that cannot be read, no vector in any store with no provider configured, or a provider failure answers CATALOG_VECTORS_REFUSED { code, detail }, and the consumer shows it. The provider call is std-llm over std-http-request and std-http-client; a keyed provider's key rides the HttpClient credential knobs, which the host fills into the os/send at the boundary. The composer declares the same fs, env, exec and net grants as this app."
 ]
@@ -91,7 +91,9 @@ orbital CatalogVectorsOrbital {
       ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
       ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLmAt.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLmAt.LLM_FAILED -> LLM_FAILED
       CvWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
       CvWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
       RESOLVE {
@@ -229,6 +231,16 @@ orbital CatalogVectorsOrbital {
       ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
+
+  trait ResolveLlmLmAt = ResolveAtom.traits.ResolveLlmLmAt {
+    listens {
+      CvResolve.LLM_EMBED_LMAT -> LLM_EMBED_LMAT
+      ResolveLmAtWait.WAITED_LMAT -> LLM_EMBED_WAITED
+      ResolveLmAtRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmAtRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmAtRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
   trait ResolveOrSharedWait = ResolveAtom.traits.ResolveOrSharedWait {}
   trait ResolveOrSharedRequest = ResolveAtom.traits.ResolveOrSharedRequest {}
   trait ResolveOrSharedHttp = ResolveAtom.traits.ResolveOrSharedHttp {}
@@ -242,8 +254,11 @@ orbital CatalogVectorsOrbital {
   trait ResolveOaOwnRequest = ResolveAtom.traits.ResolveOaOwnRequest {}
   trait ResolveOaOwnHttp = ResolveAtom.traits.ResolveOaOwnHttp {}
   trait ResolveLmWait = ResolveAtom.traits.ResolveLmWait {}
+  trait ResolveLmAtWait = ResolveAtom.traits.ResolveLmAtWait {}
   trait ResolveLmRequest = ResolveAtom.traits.ResolveLmRequest {}
+  trait ResolveLmAtRequest = ResolveAtom.traits.ResolveLmAtRequest {}
   trait ResolveLmHttp = ResolveAtom.traits.ResolveLmHttp {}
+  trait ResolveLmAtHttp = ResolveAtom.traits.ResolveLmAtHttp {}
 
   trait CatalogVectors -> CatalogVectorsRun [optimistic] {
     initial: idle
@@ -452,5 +467,5 @@ orbital CatalogVectorsOrbital {
     }
   }
 
-  page "/catalog-vectors" as CatalogVectorsPage -> CatalogVectors, CvTexts, CvSources, CvResolve, CvStore, CvWrite, CvQuantize, CvF32, CvSig6, CvBigCmp, CvDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp, CatalogVectorsStatus
+  page "/catalog-vectors" as CatalogVectorsPage -> CatalogVectors, CvTexts, CvSources, CvResolve, CvStore, CvWrite, CvQuantize, CvF32, CvSig6, CvBigCmp, CvDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveLlmLmAt, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmAtWait, ResolveLmRequest, ResolveLmAtRequest, ResolveLmHttp, ResolveLmAtHttp, CatalogVectorsStatus
 }

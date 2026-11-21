@@ -5148,6 +5148,9 @@
                   "model": "text-embedding-bge-base-en-v1.5"
                 }
               }
+            ],
+            "neverEmits": [
+              "LLM_EMBED_LMAT"
             ]
           }
         }
@@ -5939,6 +5942,114 @@
                   ]
                 }
               }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provider kind lmstudio-at embeds through the instance anchored on the host variable",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "lmstudio-at",
+            "embedModel": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "reading",
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VECTOR_LOOKUP_MANY",
+                "payload": {
+                  "stores": [
+                    "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+                    ""
+                  ],
+                  "origins": [
+                    "snapshot 0",
+                    "/u/baai_bge-base-en-v1.5.vec"
+                  ],
+                  "model": "baai/bge-base-en-v1.5",
+                  "texts": [
+                    "zz"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "looking",
+          "event": "VECTOR_RESOLVED",
+          "payload": {
+            "model": "baai/bge-base-en-v1.5",
+            "entries": [
+              {
+                "found": false,
+                "dims": 4,
+                "scale": 0,
+                "record": "",
+                "vector": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MISSES_COMPUTED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "from": "looking",
+          "event": "MISSES_COMPUTED",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_LMAT",
+                "payload": {
+                  "texts": [
+                    "zz"
+                  ],
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EMBED_LM"
             ]
           }
         }

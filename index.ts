@@ -64,7 +64,6 @@ export {
   isStdGuardOperator,
   isStdEffectOperator,
   getOperatorRunsOn,
-  effectSiteFor,
   getOperatorsRunningOn,
   // Extended functions for integration with core operators
   getOperatorMetaExtended,

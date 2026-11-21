@@ -3807,6 +3807,82 @@
           }
         }
       ]
+    },
+    {
+      "id": "the-canvas-motion-preference-is-relayed-to-the-kit",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SURFACE_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_MOTION",
+                "payload": {
+                  "reduced": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-motion-preference-is-relayed-while-a-repaint-is-pending",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "dirty",
+          "event": "SURFACE_MOTION",
+          "payload": {
+            "reduced": false
+          },
+          "expect": {
+            "state": "dirty",
+            "emits": [
+              {
+                "event": "RASM_MOTION",
+                "payload": {
+                  "reduced": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-direction-change-relays-no-motion-preference",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SURFACE_DIRECTION",
+          "payload": {
+            "direction": "rtl"
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_MOTION"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

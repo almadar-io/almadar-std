@@ -1,6 +1,6 @@
 app std-vector-match [
   version: "1.0.0",
-  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL", "LMSTUDIO_HOST"],
   fs: { cwd: "node_modules/**": [read], "~/.almadar/sidecars/**": [read], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp] },
   exec: ["kill"],
@@ -64,6 +64,7 @@ orbital VectorMatchOrbital {
   trait ResolveLlmOaShared = Resolve.traits.ResolveLlmOaShared [server] {}
   trait ResolveLlmOaOwn = Resolve.traits.ResolveLlmOaOwn [server] {}
   trait ResolveLlmLm = Resolve.traits.ResolveLlmLm [server] {}
+  trait ResolveLlmLmAt = Resolve.traits.ResolveLlmLmAt [server] {}
   trait ResolveOrSharedWait = Resolve.traits.ResolveOrSharedWait {}
   trait ResolveOrSharedRequest = Resolve.traits.ResolveOrSharedRequest [server] {}
   trait ResolveOrSharedHttp = Resolve.traits.ResolveOrSharedHttp [server] {}
@@ -77,8 +78,11 @@ orbital VectorMatchOrbital {
   trait ResolveOaOwnRequest = Resolve.traits.ResolveOaOwnRequest [server] {}
   trait ResolveOaOwnHttp = Resolve.traits.ResolveOaOwnHttp [server] {}
   trait ResolveLmWait = Resolve.traits.ResolveLmWait {}
+  trait ResolveLmAtWait = Resolve.traits.ResolveLmAtWait {}
   trait ResolveLmRequest = Resolve.traits.ResolveLmRequest [server] {}
+  trait ResolveLmAtRequest = Resolve.traits.ResolveLmAtRequest [server] {}
   trait ResolveLmHttp = Resolve.traits.ResolveLmHttp [server] {}
+  trait ResolveLmAtHttp = Resolve.traits.ResolveLmAtHttp [server] {}
 
   trait VectorResolve = Resolve.traits.VectorResolve [server] {
     listens {
@@ -95,7 +99,9 @@ orbital VectorMatchOrbital {
       ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
       ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLmAt.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLmAt.LLM_FAILED -> LLM_FAILED
       ResolveWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
       ResolveWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
       RESOLVE {
@@ -272,5 +278,5 @@ orbital VectorMatchOrbital {
     }
   }
 
-  page boot as VectorMatchPage -> VectorMatch, MatchGate, MatchSources, VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
+  page boot as VectorMatchPage -> VectorMatch, MatchGate, MatchSources, VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveLlmLmAt, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmAtWait, ResolveLmRequest, ResolveLmAtRequest, ResolveLmHttp, ResolveLmAtHttp
 }

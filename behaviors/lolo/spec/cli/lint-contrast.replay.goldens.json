@@ -2688,6 +2688,351 @@
           "trait": "OrbLintContrast"
         }
       ]
+    },
+    {
+      "id": "a-style-declaring-an-inline-palette-with-none-in-scope-is-not-flagged",
+      "steps": [
+        {
+          "event": "THEME_PALETTES_HEARD",
+          "from": "ready",
+          "payload": {
+            "palettes": {},
+            "sites": [
+              {
+                "oi": 0,
+                "ti": 0
+              }
+            ],
+            "unread": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          },
+          "trait": "OrbLintContrast"
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "uses": [
+                    {
+                      "from": "std/behaviors/std-rasm-theme",
+                      "as": "T"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Theme",
+                      "ref": "T.traits.RasmTheme",
+                      "config": {
+                        "styles": {
+                          "default": {
+                            "s": {
+                              "looks": {
+                                "surface/ground/idle": {
+                                  "fill": "background"
+                                },
+                                "text/body/idle": {
+                                  "textColor": "muted-foreground",
+                                  "font": "400 16px body"
+                                }
+                              },
+                              "layout": {},
+                              "motion": {},
+                              "palette": "inline"
+                            }
+                          }
+                        },
+                        "base": {
+                          "default": {}
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintContrast"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "contrast",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintContrast"
+        }
+      ]
+    },
+    {
+      "id": "control-a-style-without-a-palette-in-scope-is-theme-unread",
+      "steps": [
+        {
+          "event": "THEME_PALETTES_HEARD",
+          "from": "ready",
+          "payload": {
+            "palettes": {},
+            "sites": [
+              {
+                "oi": 0,
+                "ti": 0
+              }
+            ],
+            "unread": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          },
+          "trait": "OrbLintContrast"
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "uses": [
+                    {
+                      "from": "std/behaviors/std-rasm-theme",
+                      "as": "T"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Theme",
+                      "ref": "T.traits.RasmTheme",
+                      "config": {
+                        "styles": {
+                          "default": {
+                            "s": {
+                              "looks": {
+                                "surface/ground/idle": {
+                                  "fill": "background"
+                                },
+                                "text/body/idle": {
+                                  "textColor": "muted-foreground",
+                                  "font": "400 16px body"
+                                }
+                              },
+                              "layout": {},
+                              "motion": {}
+                            }
+                          }
+                        },
+                        "base": {
+                          "default": {}
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintContrast"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "contrast",
+                  "findings": [
+                    {
+                      "code": "rasm-contrast-theme-unread",
+                      "path": "styles.s",
+                      "message": "Style 's' has no readable theme palette: the installed @almadar/core has no theme 's' with colors",
+                      "suggestion": "Name each style after an installed theme",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintContrast"
+        }
+      ]
+    },
+    {
+      "id": "a-style-declaring-an-inline-palette-is-checked-against-the-inline-colors",
+      "steps": [
+        {
+          "event": "THEME_PALETTES_HEARD",
+          "from": "ready",
+          "payload": {
+            "palettes": {
+              "s": {
+                "light": {
+                  "background": "#ffffff",
+                  "foreground": "#000000",
+                  "card": "#cccccc",
+                  "muted-foreground": "#999999",
+                  "border": "#bbbbbb",
+                  "primary": "#444444"
+                },
+                "dark": {}
+              }
+            },
+            "sites": [
+              {
+                "oi": 0,
+                "ti": 0
+              }
+            ],
+            "unread": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          },
+          "trait": "OrbLintContrast"
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "uses": [
+                    {
+                      "from": "std/behaviors/std-rasm-theme",
+                      "as": "T"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Theme",
+                      "ref": "T.traits.RasmTheme",
+                      "config": {
+                        "styles": {
+                          "default": {
+                            "s": {
+                              "looks": {
+                                "surface/ground/idle": {
+                                  "fill": "background"
+                                },
+                                "text/body/idle": {
+                                  "textColor": "muted-foreground",
+                                  "font": "400 16px body"
+                                }
+                              },
+                              "layout": {},
+                              "motion": {},
+                              "palette": "inline"
+                            }
+                          }
+                        },
+                        "base": {
+                          "default": {}
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintContrast"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "contrast",
+                  "findings": [
+                    {
+                      "code": "rasm-contrast",
+                      "path": "styles.s.looks.text/body/idle",
+                      "message": "Text muted-foreground (#999999) on background (#ffffff) is 2.85:1, below the 4.5:1 that body text needs",
+                      "suggestion": "Darken or lighten the text colour, or change the backdrop it sits on",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintContrast"
+        }
+      ]
     }
   ]
 }

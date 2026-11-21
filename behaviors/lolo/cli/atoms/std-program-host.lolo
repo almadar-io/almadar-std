@@ -9,7 +9,9 @@ uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type HostOpened = { guest : string! }
-type AppDispatchError = { code : string!, status : number? }
+type AppDispatchError = { code : string?, status : number?, kind : string?, message : string? }
+type AppHostCode = { code : string!, category : string!, description : string! }
+type AppHostCodes = { sessionEnded : AppHostCode! }
 type HostLazyPage = { orbital : string!, orbRef : string! }
 type HostLazy = { orbital : string!, program : SExpr! }
 type HostKernelGrant = { target : string!, kinds : [string]! }
@@ -201,7 +203,7 @@ orbital ProgramHostOrbital {
         (let ((cur (array/find @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading))))))
           (do
             (set @entity.pins (array/append @entity.pins { clientId: (default @payload.clientId "") app: @payload.app guest: @cur.guest }))
-            (emit APP_FAILED { key: @payload.key, error: "session ended: mount again with the frames the client holds", status: 409, code: "SESSION_ENDED" })))
+            (emit APP_FAILED { key: @payload.key, error: "session ended: mount again with the frames the client holds", status: 409, code: @config.codes.sessionEnded.code })))
       APP_REQUEST -> serving when (and (!= @payload.app "") (!= @config.appsDir "") (array/some @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading)))) (not (and (!= (default @payload.clientId "") "") (not (default @payload.mounting false)) (not (array/some @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId (default @payload.clientId "")))))))))
         (let ((cid (default @payload.clientId "")))
           (let ((pin (array/find @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId @cid) (!= @cid ""))))) (cur (array/find @entity.apps (fn a (and (= @a.name @payload.app) (default @a.current true) (not @a.loading))))))
@@ -269,7 +271,7 @@ orbital ProgramHostOrbital {
           (do
             (set @entity.waiting (array/filter @entity.waiting (fn x (!= @x.key @w.key))))
             (set @entity.pins (array/append @entity.pins { clientId: (default (object/get @w "clientId") "") app: @payload.app guest: @payload.guest }))
-            (emit APP_FAILED { key: @w.key, error: "session ended: mount again with the frames the client holds", status: 409, code: "SESSION_ENDED" })
+            (emit APP_FAILED { key: @w.key, error: "session ended: mount again with the frames the client holds", status: 409, code: @config.codes.sessionEnded.code })
             (emit APP_DRAIN { app: @payload.app, guest: @payload.guest })))
       APP_DRAIN -> serving when (and (array/some @entity.waiting (fn w (= @w.app @payload.app))) (not (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "guestOnly") false)) (not (and (!= (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "clientId") "") "") (not (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "mounting") false)) (not (array/some @entity.pins (fn p (and (= @p.app @payload.app) (= @p.clientId (default (object/get (default (array/find @entity.waiting (fn w (= @w.app @payload.app))) {}) "clientId") "")))))))))
         (let ((w (default (array/find @entity.waiting (fn x (= @x.app @payload.app))) { key: "" app: "" address: "" payload: "" options: {} })))
@@ -427,6 +429,10 @@ orbital ProgramHostOrbital {
     }
 
     config {
+      codes : AppHostCodes = { sessionEnded: { code: "SESSION_ENDED", category: "session", description: "A request from a client with no pin that is not mounting: the client is pinned and must send its mounts again" } }
+        @label "Failure codes"
+        @description "The codes APP_FAILED carries."
+        @tier "internal"
       appsDir : string = "/srv/orb/apps"
         @label "Apps folder"
         @description "The folder holding one subfolder per app (the std-deploy-host layout under its root /srv/orb; a composer that moves it grants fs read on its own folder), each with its release at <appsDir>/<app>/current (a link to releases/<n>, or a folder), holding app.orb and app.env."

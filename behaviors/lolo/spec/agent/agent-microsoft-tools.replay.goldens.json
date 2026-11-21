@@ -1,0 +1,453 @@
+{
+  "atom": "agent/atoms/std-agent-microsoft-tools.lolo",
+  "trait": "AgentMicrosoftTools",
+  "note": "The Microsoft 365 tools of an agent loop over std-microsoft-graph: the call id tags the connector request, only an answer with that tag ends the call, and sending is refused unless the composer allows it.",
+  "cases": [
+    {
+      "id": "the-loops-call-id-tags-the-mail-request",
+      "steps": [
+        {
+          "event": "TOOL_PENDING",
+          "from": "ready",
+          "payload": {
+            "callId": "c1",
+            "tool": "AgentMicrosoftTools.X"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "MAIL_READ",
+          "payload": {
+            "query": "claim 4471"
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "LIST_MAIL",
+                "payload": {
+                  "tag": "agent:c1",
+                  "query": "claim 4471",
+                  "maxResults": 10
+                }
+              }
+            ],
+            "neverEmits": [
+              "TOOL_RESULT",
+              "TOOL_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-draft-request-carries-the-tag-and-an-empty-reply-id",
+      "steps": [
+        {
+          "event": "TOOL_PENDING",
+          "from": "ready",
+          "payload": {
+            "callId": "c2",
+            "tool": "AgentMicrosoftTools.X"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "MAIL_DRAFT",
+          "payload": {
+            "to": "ana@example.com",
+            "subject": "Claim 4471",
+            "body": "Received."
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "CREATE_DRAFT",
+                "payload": {
+                  "tag": "agent:c2",
+                  "to": "ana@example.com",
+                  "subject": "Claim 4471",
+                  "body": "Received.",
+                  "replyTo": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sending-is-refused-when-the-composer-did-not-allow-it",
+      "steps": [
+        {
+          "event": "TOOL_PENDING",
+          "from": "ready",
+          "payload": {
+            "callId": "c3",
+            "tool": "AgentMicrosoftTools.X"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "MAIL_SEND",
+          "payload": {
+            "draftId": "d1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_FAILED",
+                "payload": {
+                  "callId": "c3",
+                  "error": "sending is turned off here: the draft is in the mailbox for the person to read and send"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SEND_DRAFT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-sending-goes-to-the-connector-when-allowed",
+      "config": {
+        "allowSend": true
+      },
+      "steps": [
+        {
+          "event": "TOOL_PENDING",
+          "from": "ready",
+          "payload": {
+            "callId": "c4",
+            "tool": "AgentMicrosoftTools.X"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "MAIL_SEND",
+          "payload": {
+            "draftId": "d1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "SEND_DRAFT",
+                "payload": {
+                  "tag": "agent:c4",
+                  "draftId": "d1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TOOL_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mail-with-the-calls-tag-ends-the-call-with-its-text",
+      "steps": [
+        {
+          "event": "MAIL_LISTED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c1",
+            "messages": [
+              {
+                "id": "m1",
+                "conversationId": "c",
+                "from": "ana@example.com",
+                "to": "me@example.com",
+                "subject": "Claim 4471",
+                "date": "2026-11-20T09:00:00Z",
+                "messageId": "<m1>",
+                "snippet": "Please",
+                "body": "Please find the claim.",
+                "webLink": "https://outlook.office.com/m1"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_RESULT",
+                "payload": {
+                  "callId": "c1",
+                  "result": "id: m1\nfrom: ana@example.com\nto: me@example.com\ndate: 2026-11-20T09:00:00Z\nsubject: Claim 4471\n\nPlease find the claim."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-mail-with-another-calls-tag-is-ignored",
+      "steps": [
+        {
+          "event": "MAIL_LISTED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c9",
+            "messages": []
+          },
+          "expect": {
+            "fired": false,
+            "state": "waiting",
+            "neverEmits": [
+              "TOOL_RESULT",
+              "TOOL_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-mail-answer-says-so",
+      "steps": [
+        {
+          "event": "MAIL_LISTED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c1",
+            "messages": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_RESULT",
+                "payload": {
+                  "callId": "c1",
+                  "result": "no mail matches"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-draft-answer-says-it-is-not-sent-and-links-it",
+      "steps": [
+        {
+          "event": "DRAFT_CREATED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c1",
+            "draftId": "d1",
+            "conversationId": "c",
+            "webLink": "https://outlook.office.com/d1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_RESULT",
+                "payload": {
+                  "callId": "c1",
+                  "result": "the draft is in the mailbox, not sent (draft id d1): https://outlook.office.com/d1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "events-are-listed-one-per-line",
+      "steps": [
+        {
+          "event": "EVENTS_LISTED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c1",
+            "events": [
+              {
+                "id": "e1",
+                "subject": "Claims review",
+                "start": "2026-11-23T10:00:00",
+                "end": "2026-11-23T10:30:00",
+                "timeZone": "UTC",
+                "location": "Room 2",
+                "organizer": "ana@example.com",
+                "snippet": "",
+                "webLink": "w"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_RESULT",
+                "payload": {
+                  "callId": "c1",
+                  "result": "2026-11-23T10:00:00 to 2026-11-23T10:30:00 (UTC): Claims review, at Room 2, organized by ana@example.com"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "files-tell-a-folder-from-a-file",
+      "steps": [
+        {
+          "event": "FILES_LISTED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c1",
+            "files": [
+              {
+                "id": "f1",
+                "name": "Policy.pdf",
+                "size": 2048,
+                "modified": "2026-11-01T08:00:00Z",
+                "webUrl": "https://x/p",
+                "mimeType": "application/pdf",
+                "isFolder": false
+              },
+              {
+                "id": "f2",
+                "name": "Claims",
+                "size": 0,
+                "modified": "2026-11-02T08:00:00Z",
+                "webUrl": "https://x/c",
+                "mimeType": "",
+                "isFolder": true
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_RESULT",
+                "payload": {
+                  "callId": "c1",
+                  "result": "file: Policy.pdf (changed 2026-11-01T08:00:00Z): https://x/p\nfolder: Claims (changed 2026-11-02T08:00:00Z): https://x/c"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-connector-failure-with-the-calls-tag-fails-the-call",
+      "steps": [
+        {
+          "event": "GRAPH_FAILED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c1",
+            "message": "Access is denied."
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_FAILED",
+                "payload": {
+                  "callId": "c1",
+                  "error": "Microsoft 365 failed: Access is denied."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-connector-failure-of-another-call-is-ignored",
+      "steps": [
+        {
+          "event": "GRAPH_FAILED",
+          "from": "waiting",
+          "entity": {
+            "id": "s",
+            "callId": "c1",
+            "tag": "agent:c1"
+          },
+          "payload": {
+            "tag": "agent:c9",
+            "message": "x"
+          },
+          "expect": {
+            "fired": false,
+            "state": "waiting",
+            "neverEmits": [
+              "TOOL_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

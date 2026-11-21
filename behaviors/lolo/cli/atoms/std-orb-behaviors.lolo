@@ -2,7 +2,7 @@ app std-orb-behaviors [
   version: "1.0.0",
   inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source", "cli-behaviors-which", "cli-behaviors-texts", "cli-behaviors-expects"],
   fs: { "/dev/fd/0": [read], cwd: "**": [read], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], "/**": [read], "~/.orb/node_modules/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
-  env: ["PATH", "ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  env: ["PATH", "ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL", "LMSTUDIO_HOST"],
   exec: [exe, "kill", "orb"],
   net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp] },
   description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]` (`--topics` lists each package and topic once with its count, counted here over the rows) lists the installed behaviors under the scopes (`behavior/catalog`, which lists no vectors; `--no-vectors` reads no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector; a whole-behavior description carries each orbital's `forwards`, the unhandled controls its `emitsScope external` traits leave for the embedder, from the control-unhandled analysis over std-orb-fired-events); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (built by std-behavior-texts; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). With vectors, the catalog lists rows asked for with `texts: true`, builds the organism and capability texts (std-behavior-texts), reads the packages' snapshots and the environment (std-vector-sources) and resolves every text's vector (std-vector-resolve: snapshots, then the user store, then the configured provider); `describe --knob-vectors` does the same for the trait's knob texts, and `texts` builds every kind itself, package by package in first-mention order and path order. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
@@ -252,6 +252,16 @@ orbital OrbBehaviorsOrbital {
       ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
+
+  trait ResolveLlmLmAt = Resolve.traits.ResolveLlmLmAt {
+    listens {
+      BvResolve.LLM_EMBED_LMAT -> LLM_EMBED_LMAT
+      ResolveLmAtWait.WAITED_LMAT -> LLM_EMBED_WAITED
+      ResolveLmAtRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmAtRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmAtRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
   trait ResolveOrSharedWait = Resolve.traits.ResolveOrSharedWait {}
   trait ResolveOrSharedRequest = Resolve.traits.ResolveOrSharedRequest {}
   trait ResolveOrSharedHttp = Resolve.traits.ResolveOrSharedHttp {}
@@ -265,8 +275,11 @@ orbital OrbBehaviorsOrbital {
   trait ResolveOaOwnRequest = Resolve.traits.ResolveOaOwnRequest {}
   trait ResolveOaOwnHttp = Resolve.traits.ResolveOaOwnHttp {}
   trait ResolveLmWait = Resolve.traits.ResolveLmWait {}
+  trait ResolveLmAtWait = Resolve.traits.ResolveLmAtWait {}
   trait ResolveLmRequest = Resolve.traits.ResolveLmRequest {}
+  trait ResolveLmAtRequest = Resolve.traits.ResolveLmAtRequest {}
   trait ResolveLmHttp = Resolve.traits.ResolveLmHttp {}
+  trait ResolveLmAtHttp = Resolve.traits.ResolveLmAtHttp {}
 
   trait BvResolve = Resolve.traits.VectorResolve {
     listens {
@@ -284,7 +297,9 @@ orbital OrbBehaviorsOrbital {
       ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
       ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLmAt.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLmAt.LLM_FAILED -> LLM_FAILED
       BvWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
       BvWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
       RESOLVE {
@@ -1043,5 +1058,5 @@ orbital OrbBehaviorsOrbital {
     }
   }
 
-  page boot as OrbBehaviorsOrbitalStart -> OrbBehaviors, OrbLintControlUnhandled, BehaviorBorrows, OrbLintOrbitalRefClosure, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions, ArgsCli, CatalogVectors, BvTexts, BvSources, BvResolve, BvStore, BvWrite, BvQuantize, BvF32, BvSig6, BvBigCmp, BvDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
+  page boot as OrbBehaviorsOrbitalStart -> OrbBehaviors, OrbLintControlUnhandled, BehaviorBorrows, OrbLintOrbitalRefClosure, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions, ArgsCli, CatalogVectors, BvTexts, BvSources, BvResolve, BvStore, BvWrite, BvQuantize, BvF32, BvSig6, BvBigCmp, BvDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveLlmLmAt, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmAtWait, ResolveLmRequest, ResolveLmAtRequest, ResolveLmHttp, ResolveLmAtHttp
 }

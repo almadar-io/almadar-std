@@ -1,9 +1,10 @@
 app std-vector-resolve [
   version: "1.0.0",
   description: "std-vector-resolve — resolve embedding vectors for a batch of texts the way orb does: package snapshots first, then the user store, then the configured provider for what no store holds. RESOLVE { wanted, snapshots, userDir, userAnchor, providerModel } takes the texts with the caller's keys, the snapshot files as bytes (empty = missing), the user vectors directory ($ALMADAR_VECTORS_DIR or ~/.almadar/vectors, resolved by the caller) and the model the configured provider produces (empty when no provider is configured). The model is the first non-empty snapshot's, else the provider's, else baai/bge-base-en-v1.5; an empty wanted list answers at once. It asks for the user store with USER_STORE_NEEDED { path, model } (userDir/model-slug.vec, characters outside A-Za-z0-9._- become _), the caller answers USER_STORE_READ { data }, and std-vector-store resolves every text across the layers. Texts it holds are answered; the rest are deduplicated and embedded through std-llm in batches of 64. With misses and no provider it refuses ORB_VECTOR_PROVIDER_MISSING naming the count and the first 5 caller keys; a provider whose model differs from the stored model refuses ORB_VECTOR_MODEL_MISMATCH. The embedded vectors are persisted into the user store through std-vector-write (quantized, merged, locked) and the whole lookup is run again, so VECTORS_ANSWERED { model, vectors } carries one { key, vector } per wanted text with the int8-rounded values Rust returns; VECTORS_EMBEDDED { model, texts, vectors } still reports the raw provider vectors; VECTORS_REFUSED { code, detail } carries any refusal, the store's included.",
-  net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp] },
+  net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp], env LMSTUDIO_HOST, 1234: [tcp] },
   fs: { "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
-  exec: ["kill"]
+  exec: ["kill"],
+  env: ["LMSTUDIO_HOST"]
 ]
 uses Spec from "almadar-std/vector-resolve"
 uses Store from "std/behaviors/std-vector-store"
@@ -493,6 +494,88 @@ orbital VectorResolveOrbital {
     }
   }
 
+  ;; the same local provider on the host LMSTUDIO_HOST names, for a program whose model is not on its own loopback
+  trait ResolveLlmLmAt = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_LMAT
+    }
+    config {
+      embedProvider: lmstudio
+      embedBasePath: "/v1"
+      embedModel: "text-embedding-bge-base-en-v1.5"
+    }
+    listens {
+      VectorResolve.LLM_EMBED_LMAT -> LLM_EMBED_LMAT
+      ResolveLmAtWait.WAITED_LMAT -> LLM_EMBED_WAITED
+      ResolveLmAtRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmAtRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmAtRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait ResolveLmAtWait = Delay.traits.Delay {
+    events {
+      ELAPSED: WAITED_LMAT
+    }
+    listens {
+      ResolveLlmLmAt.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait ResolveLmAtRequest = Req.traits.HttpRequest {
+    config {
+      hostEnv: "LMSTUDIO_HOST"
+    }
+    listens {
+      ResolveLmAtRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ResolveLmAtRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
+      ResolveLlmLmAt.LLM_EMBED_WIRE -> HTTP_REQUEST
+      ResolveLlmLmAt.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ResolveLmAtHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ResolveLmAtHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveLmAtRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ResolveLmAtRequest.RETRY_WAIT -> START
+      ResolveLmAtRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveLmAtRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ResolveLmAtRequest.TIMEOUT_START -> START
+      ResolveLmAtRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveLmAtHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ResolveLmAtHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait ResolveLmAtHttp = Http.traits.HttpClient {
+    config {
+      host: { anchor: { env: "LMSTUDIO_HOST" } }
+      port: 1234
+      tls: false
+      serverName: ""
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+      credentialOptional: true
+    }
+    listens {
+      ResolveLmAtRequest.HTTP_SEND -> HTTP_SEND
+      ResolveLmAtRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ResolveLmAtHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ResolveLmAtHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ResolveLmAtHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
   trait VectorResolve -> ResolveRun [client] {
     initial: idle
 
@@ -567,7 +650,9 @@ orbital VectorResolveOrbital {
         (emit LLM_EMBED_OAO { texts: @payload.texts, model: @entity.embedModel })
       EMBED_BATCH -> embedding when (== @entity.providerKind "lmstudio")
         (emit LLM_EMBED_LM { texts: @payload.texts, model: @entity.embedModel })
-      EMBED_BATCH -> idle when (and (!= @entity.providerKind "openrouter-shared") (!= @entity.providerKind "openrouter-own") (!= @entity.providerKind "openai-shared") (!= @entity.providerKind "openai-own") (!= @entity.providerKind "lmstudio"))
+      EMBED_BATCH -> embedding when (== @entity.providerKind "lmstudio-at")
+        (emit LLM_EMBED_LMAT { texts: @payload.texts, model: @entity.embedModel })
+      EMBED_BATCH -> idle when (and (!= @entity.providerKind "openrouter-shared") (!= @entity.providerKind "openrouter-own") (!= @entity.providerKind "openai-shared") (!= @entity.providerKind "openai-own") (!= @entity.providerKind "lmstudio") (!= @entity.providerKind "lmstudio-at"))
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_PROVIDER_KIND", detail: (str/concat "no embedding instance serves the provider kind `" @entity.providerKind "`") })
       LLM_EMBED_RESULT -> idle when (!= (array/len @payload.embeddings) (array/len (default (if (>= @entity.chunkIdx 0) (array/nth @entity.chunks @entity.chunkIdx) null) [])))
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_COUNT", detail: (str/concat "the embedder returned " (array/len @payload.embeddings) " vectors for " (array/len (default (if (>= @entity.chunkIdx 0) (array/nth @entity.chunks @entity.chunkIdx) null) [])) " texts") })
@@ -633,6 +718,11 @@ orbital VectorResolveOrbital {
         model : string
       }
         @tier "secondary"
+      LLM_EMBED_LMAT -> external {
+        texts : [string]!
+        model : string
+      }
+        @tier "secondary"
       VECTOR_WRITE -> external {
         path : string!
         anchor : string!
@@ -676,6 +766,8 @@ orbital VectorResolveOrbital {
       ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
       ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLmAt.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLmAt.LLM_FAILED -> LLM_FAILED
       VECTOR_RESOLVED {
         model : string!
         entries : [StoreEntry]!
@@ -719,5 +811,5 @@ orbital VectorResolveOrbital {
     }
   }
 
-  page boot as VectorResolvePage -> VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedRequestDelay, ResolveOrSharedRequestDeadline, ResolveOrSharedHttp, ResolveOrSharedHttpFrame, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnRequestDelay, ResolveOrOwnRequestDeadline, ResolveOrOwnHttp, ResolveOrOwnHttpFrame, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedRequestDelay, ResolveOaSharedRequestDeadline, ResolveOaSharedHttp, ResolveOaSharedHttpFrame, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnRequestDelay, ResolveOaOwnRequestDeadline, ResolveOaOwnHttp, ResolveOaOwnHttpFrame, ResolveLmWait, ResolveLmRequest, ResolveLmRequestDelay, ResolveLmRequestDeadline, ResolveLmHttp, ResolveLmHttpFrame
+  page boot as VectorResolvePage -> VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveLlmLmAt, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedRequestDelay, ResolveOrSharedRequestDeadline, ResolveOrSharedHttp, ResolveOrSharedHttpFrame, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnRequestDelay, ResolveOrOwnRequestDeadline, ResolveOrOwnHttp, ResolveOrOwnHttpFrame, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedRequestDelay, ResolveOaSharedRequestDeadline, ResolveOaSharedHttp, ResolveOaSharedHttpFrame, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnRequestDelay, ResolveOaOwnRequestDeadline, ResolveOaOwnHttp, ResolveOaOwnHttpFrame, ResolveLmWait, ResolveLmAtWait, ResolveLmRequest, ResolveLmAtRequest, ResolveLmRequestDelay, ResolveLmAtRequestDelay, ResolveLmRequestDeadline, ResolveLmAtRequestDeadline, ResolveLmHttp, ResolveLmAtHttp, ResolveLmHttpFrame, ResolveLmAtHttpFrame
 }

@@ -53,7 +53,7 @@ describe('std-form-advanced wording knobs', () => {
     expect(nodesOfType(effects, 'alert').map((n) => n['message'])).toEqual(['@config.successMessage']);
     expect(nodesOfType(effects, 'button').map((n) => n['label'])).toEqual(['@config.newEntryLabel']);
     expect(trait.config['successTitle'].default).toBe('Form Submitted');
-    expect(trait.config['successMessage'].default).toBe('Your form has been submitted successfully.');
-    expect(trait.config['newEntryLabel'].default).toBe('New Entry');
+    expect(trait.config['successMessage'].default).toEqual(['i18n/t', 'std-form-advanced:submitted']);
+    expect(trait.config['newEntryLabel'].default).toEqual(['i18n/t', 'std-form-advanced:newEntry']);
   });
 });

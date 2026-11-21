@@ -61,12 +61,12 @@ describe('credential-connect grant contract', () => {
   const connect = STD_OPERATORS['credential-connect'];
   const request = connect.params?.[0]?.type;
 
-  it('declares grant as a union of the four literal words and publishes it in the table', () => {
+  it('declares grant as a union of the six literal words and publishes it in the table', () => {
     expect(request).toMatchObject({ kind: 'object', fields: { grant: { kind: 'union' } } });
     const grant = typeof request === 'object' && request.kind === 'object' ? request.fields.grant : undefined;
     const members = typeof grant === 'object' && grant.kind === 'union' ? grant.of : [];
     const words = members.map((member) => (typeof member === 'object' && member.kind === 'literal' ? member.value : null));
-    expect(words).toEqual(['authorization_code', 'refresh_token', 'jwt-bearer', 'json-token']);
+    expect(words).toEqual(['authorization_code', 'refresh_token', 'jwt-bearer', 'json-token', 'client-credentials', 'metadata']);
     expect(canonical.operators['credential-connect'].params[0]).toEqual(connect.params?.[0]);
     expect(canonical.operators['credential-connect'].closedCall).toEqual(connect.closedCall);
   });
@@ -75,11 +75,11 @@ describe('credential-connect grant contract', () => {
     const by = connect.closedCall?.requestKeysByLiteral;
     const fields = Object.keys((request as { fields: Record<string, unknown> }).fields);
     expect(by?.key).toBe('grant');
-    expect(Object.keys(by?.required ?? {})).toEqual(['authorization_code', 'refresh_token', 'jwt-bearer', 'json-token']);
+    expect(Object.keys(by?.required ?? {})).toEqual(['authorization_code', 'refresh_token', 'jwt-bearer', 'json-token', 'client-credentials', 'metadata']);
     for (const keys of Object.values(by?.required ?? {})) {
       for (const key of keys) expect(fields).toContain(key);
     }
-    expect(by?.required['authorization_code']).toEqual(['code', 'redirectUri', 'clientAuth']);
+    expect(by?.required['authorization_code']).toEqual(['tokenEndpoint', 'code', 'redirectUri', 'clientAuth']);
   });
 
   it('control: no other closed call declares per-literal request keys', () => {

@@ -1,129 +1,417 @@
 {
- "atom": "../ui/rasm/atoms/std-rasm-scrub.lolo",
- "trait": "RasmScrub",
- "cases": [
-  {
-   "id": "once-the-anchor-is-placed-and-the-view-sized-the-scrub-sends-its-scroll-range",
-   "config": {
-    "id": "hero",
-    "anchor": "sec",
-    "paints": [
-     "t"
-    ],
-    "enter": 1,
-    "exit": 0,
-    "keyframes": [
-     {
-      "at": 0,
-      "opacity": 0
-     },
-     {
-      "at": 1,
-      "opacity": 1
-     }
-    ]
-   },
-   "entity": {
-    "id": "x"
-   },
-   "steps": [
+  "atom": "../ui/rasm/atoms/std-rasm-scrub.lolo",
+  "trait": "RasmScrub",
+  "cases": [
     {
-     "from": "ready",
-     "event": "RASM_RESIZE",
-     "payload": {
-      "width": 400,
-      "height": 300
-     },
-     "expect": {
-      "state": "ready",
-      "neverEmits": [
-       "RASM_SCRUB"
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_PLACE",
-     "payload": {
-      "placed": [
-       {
-        "id": "sec",
-        "rect": {
-         "x": 0,
-         "y": 1000,
-         "w": 400,
-         "h": 200
-        }
-       }
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_SCRUB",
-        "payload": {
-         "id": "hero",
-         "paints": [
+      "id": "once-the-anchor-is-placed-and-the-view-sized-the-scrub-sends-its-scroll-range",
+      "config": {
+        "id": "hero",
+        "anchor": "sec",
+        "paints": [
           "t"
-         ],
-         "from": 700,
-         "to": 1200,
-         "keyframes": [
+        ],
+        "enter": 1,
+        "exit": 0,
+        "keyframes": [
           {
-           "at": 0,
-           "opacity": 0
+            "at": 0,
+            "opacity": 0
           },
           {
-           "at": 1,
-           "opacity": 1
+            "at": 1,
+            "opacity": 1
           }
-         ]
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 400,
+            "height": 300
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_SCRUB"
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 1000,
+                  "w": 400,
+                  "h": 200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_SCRUB",
+                "payload": {
+                  "id": "hero",
+                  "paints": [
+                    "t"
+                  ],
+                  "from": 700,
+                  "to": 1200,
+                  "keyframes": [
+                    {
+                      "at": 0,
+                      "opacity": 0
+                    },
+                    {
+                      "at": 1,
+                      "opacity": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-another-ids-placement-sends-nothing",
-   "config": {
-    "id": "hero",
-    "anchor": "sec",
-    "paints": [
-     "t"
-    ]
-   },
-   "entity": {
-    "id": "x",
-    "viewH": 300
-   },
-   "steps": [
+    },
     {
-     "from": "ready",
-     "event": "RASM_PLACE",
-     "payload": {
-      "placed": [
-       {
-        "id": "other",
-        "rect": {
-         "x": 0,
-         "y": 1000,
-         "w": 400,
-         "h": 200
+      "id": "control-another-ids-placement-sends-nothing",
+      "config": {
+        "id": "hero",
+        "anchor": "sec",
+        "paints": [
+          "t"
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "viewH": 300
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 0,
+                  "y": 1000,
+                  "w": 400,
+                  "h": 200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_SCRUB"
+            ]
+          }
         }
-       }
       ]
-     },
-     "expect": {
-      "state": "ready",
-      "neverEmits": [
-       "RASM_SCRUB"
+    },
+    {
+      "id": "with-relativeTo-the-offsets-are-fractions-of-that-placed-rect",
+      "config": {
+        "id": "walk",
+        "anchor": "sec",
+        "paints": [
+          "you"
+        ],
+        "enter": 1,
+        "exit": 0,
+        "relativeTo": "plan",
+        "keyframes": [
+          {
+            "at": 0,
+            "offsetX": 0,
+            "offsetY": 0
+          },
+          {
+            "at": 0.5,
+            "offsetX": 0.25,
+            "offsetY": -0.5
+          },
+          {
+            "at": 1,
+            "offsetX": 1,
+            "offsetY": 0
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 400,
+            "height": 300
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_SCRUB"
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plan",
+                "rect": {
+                  "x": 500,
+                  "y": 0,
+                  "w": 600,
+                  "h": 800
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_SCRUB"
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 1000,
+                  "w": 400,
+                  "h": 200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_SCRUB",
+                "payload": {
+                  "id": "walk",
+                  "paints": [
+                    "you"
+                  ],
+                  "from": 700,
+                  "to": 1200,
+                  "keyframes": [
+                    {
+                      "at": 0,
+                      "offsetX": 0,
+                      "offsetY": 0
+                    },
+                    {
+                      "at": 0.5,
+                      "offsetX": 150,
+                      "offsetY": -400
+                    },
+                    {
+                      "at": 1,
+                      "offsetX": 600,
+                      "offsetY": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "control-with-relativeTo-unplaced-the-scrub-waits",
+      "config": {
+        "id": "walk",
+        "anchor": "sec",
+        "paints": [
+          "you"
+        ],
+        "enter": 1,
+        "exit": 0,
+        "relativeTo": "plan",
+        "keyframes": [
+          {
+            "at": 0,
+            "offsetX": 0,
+            "offsetY": 0
+          },
+          {
+            "at": 0.5,
+            "offsetX": 0.25,
+            "offsetY": -0.5
+          },
+          {
+            "at": 1,
+            "offsetX": 1,
+            "offsetY": 0
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 400,
+            "height": 300
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_SCRUB"
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 1000,
+                  "w": 400,
+                  "h": 200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_SCRUB"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-dashOffset-keyframe-passes-through-unscaled",
+      "config": {
+        "id": "draw",
+        "anchor": "sec",
+        "paints": [
+          "route"
+        ],
+        "enter": 1,
+        "exit": 0,
+        "relativeTo": "plan",
+        "keyframes": [
+          {
+            "at": 0,
+            "dashOffset": 1000
+          },
+          {
+            "at": 1,
+            "dashOffset": 0
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 400,
+            "height": 300
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_SCRUB"
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 1000,
+                  "w": 400,
+                  "h": 200
+                }
+              },
+              {
+                "id": "plan",
+                "rect": {
+                  "x": 500,
+                  "y": 0,
+                  "w": 600,
+                  "h": 800
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_SCRUB",
+                "payload": {
+                  "id": "draw",
+                  "paints": [
+                    "route"
+                  ],
+                  "from": 700,
+                  "to": 1200,
+                  "keyframes": [
+                    {
+                      "at": 0,
+                      "dashOffset": 1000
+                    },
+                    {
+                      "at": 1,
+                      "dashOffset": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

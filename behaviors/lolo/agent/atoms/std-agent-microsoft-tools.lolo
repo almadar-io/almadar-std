@@ -1,0 +1,221 @@
+app std-agent-microsoft-tools [
+  version: "1.0.0",
+  description: "std-agent-microsoft-tools — the Microsoft 365 tools an agent loop offers over a composed std-microsoft-graph: read and search mail, draft a mail or a reply, send a draft, read the calendar, add an event, and find files in OneDrive and SharePoint. Each tool is a declared input std-agent-tool-loop dispatches; the atom hears the loop's TOOL_PENDING for the call id, asks the connector under the tag `agent:` plus that id, and ends the call with TOOL_RESULT or TOOL_FAILED when the answer with that tag arrives. Sending is refused unless the composer turns it on."
+]
+;; @capabilities "read and search Outlook mail, draft and send mail, read and add calendar events, find OneDrive and SharePoint files, as agent tools"
+
+type MsToolMessage = { id : string!, conversationId : string!, from : string!, to : string!, subject : string!, date : string!, messageId : string!, snippet : string!, body : string!, webLink : string! }
+type MsToolEvent = { id : string!, subject : string!, start : string!, end : string!, timeZone : string!, location : string!, organizer : string!, snippet : string!, webLink : string! }
+type MsToolFile = { id : string!, name : string!, size : number!, modified : string!, webUrl : string!, mimeType : string!, isFolder : boolean! }
+
+orbital AgentMicrosoftToolsOrbital {
+  entity AgentMicrosoftCall [runtime] {
+    id : string!
+    callId : string @description "The tool call the loop waits on." = ""
+    tag : string @description "The tag of the connector request of the call in flight: `agent:` followed by the call id; an answer with another tag is ignored." = ""
+  }
+
+  trait AgentMicrosoftTools -> AgentMicrosoftCall [optimistic] {
+    config {
+      allowSend : boolean = false
+        @label "The assistant may send mail"
+        @description "Off: MAIL_SEND is refused and a draft stays in the mailbox for the person to read and send. On: the assistant sends a draft it names without a person approving that send."
+        @synonyms "send without approval, free sending"
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TOOL_PENDING -> ready
+        (set @entity.callId @payload.callId)
+        (set @entity.tag (str/concat "agent:" @payload.callId))
+
+      MAIL_READ -> waiting
+        (emit LIST_MAIL { tag: @entity.tag, query: (default @payload.query ""), maxResults: (default @payload.maxResults 10) })
+      MAIL_DRAFT -> waiting
+        (emit CREATE_DRAFT { tag: @entity.tag, to: @payload.to, subject: @payload.subject, body: @payload.body, replyTo: (default @payload.replyTo "") })
+      MAIL_SEND -> ready when (not @config.allowSend)
+        (emit TOOL_FAILED { callId: @entity.callId, error: "sending is turned off here: the draft is in the mailbox for the person to read and send" })
+      MAIL_SEND -> waiting when @config.allowSend
+        (emit SEND_DRAFT { tag: @entity.tag, draftId: @payload.draftId })
+      CALENDAR_READ -> waiting
+        (emit LIST_EVENTS { tag: @entity.tag, from: @payload.from, to: @payload.to, maxResults: 50 })
+      CALENDAR_ADD -> waiting
+        (emit CREATE_EVENT { tag: @entity.tag, subject: @payload.subject, start: @payload.start, end: @payload.end, timeZone: (default @payload.timeZone ""), body: (default @payload.body ""), attendees: (default @payload.attendees []) })
+      FILES_FIND -> waiting
+        (emit LIST_FILES { tag: @entity.tag, path: (default @payload.path ""), query: (default @payload.query "") })
+    }
+
+    state waiting {
+      INIT -> ready
+      TOOL_PENDING -> waiting
+      MAIL_LISTED -> ready when (and (== @payload.tag @entity.tag) (== (array/len @payload.messages) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: "no mail matches" })
+      MAIL_LISTED -> ready when (and (== @payload.tag @entity.tag) (> (array/len @payload.messages) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.messages (fn m (str/concat "id: " @m.id "\nfrom: " @m.from "\nto: " @m.to "\ndate: " @m.date "\nsubject: " @m.subject "\n\n" @m.body))) "\n\n---\n\n") })
+      DRAFT_CREATED -> ready when (== @payload.tag @entity.tag)
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat "the draft is in the mailbox, not sent (draft id " @payload.draftId "): " @payload.webLink) })
+      MAIL_SENT -> ready when (== @payload.tag @entity.tag)
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat "sent draft " @payload.draftId) })
+      EVENTS_LISTED -> ready when (and (== @payload.tag @entity.tag) (== (array/len @payload.events) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: "the calendar has no event in this range" })
+      EVENTS_LISTED -> ready when (and (== @payload.tag @entity.tag) (> (array/len @payload.events) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.events (fn e (str/concat @e.start " to " @e.end " (" @e.timeZone "): " @e.subject (if (!= @e.location "") (str/concat ", at " @e.location) "") (if (!= @e.organizer "") (str/concat ", organized by " @e.organizer) "")))) "\n") })
+      EVENT_CREATED -> ready when (== @payload.tag @entity.tag)
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat "the event is on the calendar: " @payload.webLink) })
+      FILES_LISTED -> ready when (and (== @payload.tag @entity.tag) (== (array/len @payload.files) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: "no file or folder found" })
+      FILES_LISTED -> ready when (and (== @payload.tag @entity.tag) (> (array/len @payload.files) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.files (fn f (str/concat (if @f.isFolder "folder: " "file: ") @f.name " (changed " @f.modified "): " @f.webUrl))) "\n") })
+      GRAPH_FAILED -> ready when (== @payload.tag @entity.tag)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "Microsoft 365 failed: " @payload.message) })
+    }
+
+    emits {
+      TOOL_RESULT -> external {
+        callId : string!
+        result : string!
+      }
+        @description "A tool's outcome, which std-agent-tool-loop hands back to the model."
+        @tier "internal"
+      TOOL_FAILED -> external {
+        callId : string!
+        error : string!
+      }
+        @description "A tool failed or was refused; std-agent-tool-loop hands the reason back to the model."
+        @tier "internal"
+      LIST_MAIL -> external {
+        tag : string!
+        query : string!
+        maxResults : number!
+      }
+        @description "Ask the connector for mail."
+        @tier "secondary"
+      CREATE_DRAFT -> external {
+        tag : string!
+        to : string!
+        subject : string!
+        body : string!
+        replyTo : string!
+      }
+        @description "Ask the connector to create a draft."
+        @tier "secondary"
+      SEND_DRAFT -> external {
+        tag : string!
+        draftId : string!
+      }
+        @description "Ask the connector to send a draft."
+        @tier "secondary"
+      LIST_EVENTS -> external {
+        tag : string!
+        from : string!
+        to : string!
+        maxResults : number!
+      }
+        @description "Ask the connector for the calendar events of a range."
+        @tier "secondary"
+      CREATE_EVENT -> external {
+        tag : string!
+        subject : string!
+        start : string!
+        end : string!
+        timeZone : string!
+        body : string!
+        attendees : [string]!
+      }
+        @description "Ask the connector to create a calendar event."
+        @tier "secondary"
+      LIST_FILES -> external {
+        tag : string!
+        path : string!
+        query : string!
+      }
+        @description "Ask the connector for files."
+        @tier "secondary"
+    }
+
+    listens {
+      MAIL_READ -> input {
+        query : string? @description "Words to search the whole mailbox for, or a search such as from:ana subject:claim; leave out for the newest inbox mail"
+        maxResults : number? @description "How many messages to read; leave out for 10"
+      }
+        @description "Read the person's Outlook mail: the newest inbox messages, or a search of the whole mailbox. Each message comes with its id, sender, date, subject and text."
+        @synonyms "read inbox, check email, search mail, find an email"
+      MAIL_DRAFT -> input {
+        to : string! @description "The recipient's email address"
+        subject : string! @description "The subject line"
+        body : string! @description "The text of the mail"
+        replyTo : string? @description "The id of the message this answers, from MAIL_READ; leave out for a new mail"
+      }
+        @description "Write a mail as a draft in the person's mailbox. It is not sent: the person reads it in Outlook and sends it."
+        @synonyms "draft email, write a reply, prepare a mail"
+      MAIL_SEND -> input {
+        draftId : string! @description "The draft's id, from MAIL_DRAFT"
+      }
+        @description "Send a draft that is in the mailbox. Use it only after the person said to send that draft."
+        @synonyms "send email, send the draft"
+      CALENDAR_READ -> input {
+        from : string! @description "Start of the range as an ISO date-time, for example 2026-11-23T00:00:00Z"
+        to : string! @description "End of the range as an ISO date-time"
+      }
+        @description "Read the person's calendar between two moments, earliest first."
+        @synonyms "what meetings do I have, my schedule, agenda"
+      CALENDAR_ADD -> input {
+        subject : string! @description "The event's title"
+        start : string! @description "Start as a local date-time, for example 2026-11-23T10:00:00"
+        end : string! @description "End as a local date-time"
+        timeZone : string? @description "The time zone of start and end, for example Europe/Ljubljana; leave out for UTC"
+        body : string? @description "A note for the event"
+        attendees : [string]? @description "Email addresses to invite"
+      }
+        @description "Put an event on the person's calendar and invite the attendees."
+        @synonyms "schedule a meeting, book a meeting, add to calendar"
+      FILES_FIND -> input {
+        path : string? @description "A folder path such as Claims 2026/Policies; leave out for the top folder"
+        query : string? @description "Words to search file names and contents for; when given, path is ignored"
+      }
+        @description "Find files and folders in the person's OneDrive and SharePoint: list a folder, or search by words. Each comes with a link that opens it."
+        @synonyms "find a document, list my files, search sharepoint, onedrive"
+      *.TOOL_PENDING -> TOOL_PENDING
+      TOOL_PENDING {
+        callId : string!
+        tool : string!
+      }
+      MAIL_LISTED {
+        tag : string!
+        messages : [MsToolMessage]!
+      }
+      DRAFT_CREATED {
+        tag : string!
+        draftId : string!
+        conversationId : string!
+        webLink : string!
+      }
+      MAIL_SENT {
+        tag : string!
+        draftId : string!
+      }
+      EVENTS_LISTED {
+        tag : string!
+        events : [MsToolEvent]!
+      }
+      EVENT_CREATED {
+        tag : string!
+        eventId : string!
+        webLink : string!
+      }
+      FILES_LISTED {
+        tag : string!
+        files : [MsToolFile]!
+      }
+      GRAPH_FAILED {
+        tag : string!
+        code : string
+        message : string!
+      }
+    }
+  }
+
+  page boot as AgentMicrosoftToolsStart -> AgentMicrosoftTools
+}

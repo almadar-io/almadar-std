@@ -1,0 +1,553 @@
+app std-microsoft-graph [
+  version: "1.0.0",
+  description: "std-microsoft-graph — the Microsoft 365 connector over the Graph REST API (graph.microsoft.com/v1.0): read and search mail, create a draft or a reply draft, send a draft, read and create calendar events, and list or search OneDrive and SharePoint files of the signed-in user. The access token is minted by the host credential store (a refresh_token grant for the user) and carried by one keyed HTTP client, never by an event. Every call runs on its own row under its own key, so concurrent calls never share state. Reads are retried; a write is sent once. A failure answers GRAPH_FAILED with the provider's message.",
+  egress: ["https://graph.microsoft.com", "https://login.microsoftonline.com"],
+  net: { "graph.microsoft.com:443": [tcp] }
+]
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Retry from "std/behaviors/std-retry"
+type HttpHeader = { name : string!, value : string! }
+type GraphMessage = { id : string, conversationId : string, from : string, to : string, subject : string, date : string, messageId : string, snippet : string, body : string, webLink : string }
+type GraphEvent = { id : string, subject : string, start : string, end : string, timeZone : string, location : string, organizer : string, snippet : string, webLink : string }
+type GraphFile = { id : string, name : string, size : number, modified : string, webUrl : string, mimeType : string, isFolder : boolean }
+type GraphAddress = { name : string, address : string }
+type GraphRecipient = { emailAddress : GraphAddress }
+type GraphBody = { contentType : string, content : string }
+type GraphMailItem = { id : string, conversationId : string, subject : string, bodyPreview : string, receivedDateTime : string, internetMessageId : string, webLink : string, from : GraphRecipient, toRecipients : [GraphRecipient], body : GraphBody }
+type GraphMailReply = { value : [GraphMailItem] }
+type GraphDraftReply = { id : string, conversationId : string, webLink : string }
+type GraphTime = { dateTime : string, timeZone : string }
+type GraphPlace = { displayName : string }
+type GraphEventItem = { id : string, subject : string, bodyPreview : string, webLink : string, start : GraphTime, end : GraphTime, location : GraphPlace, organizer : GraphRecipient }
+type GraphEventsReply = { value : [GraphEventItem] }
+type GraphFileFacet = { mimeType : string }
+type GraphFolderFacet = { childCount : number }
+type GraphFileItem = { id : string, name : string, size : number, lastModifiedDateTime : string, webUrl : string, file : GraphFileFacet, folder : GraphFolderFacet }
+type GraphFilesReply = { value : [GraphFileItem] }
+type GraphApiError = { code : string, message : string }
+type GraphErrorReply = { error : GraphApiError }
+orbital GraphOrbital {
+  entity GraphRequest [runtime] {
+    id : string!
+    seq : number @description "The front trait's call counter: each call takes the next number, so its key is distinct from every other call's." = 0
+    op : string @description "The call in flight: mail, draft, send, events, event or files; empty while the row is free." = ""
+    ref : string @description "The id the call in flight acts on (the draft a send sends); empty for the others." = ""
+    tag : string @description "The caller's own mark for the call in flight, returned with its answer so a caller tells its answers from another's; empty when the caller gave none." = ""
+    method : string = ""
+    target : string = ""
+    contentType : string @description "The content type of the request body; empty for none." = ""
+    body : bytes @description "The body of the request in flight." = ""
+    mintTried : boolean @description "True once the credential minted its access token after the store reported none held, so a second not-held answer probes the refresh token instead of looping." = false
+    attempt : number @description "The std-retry attempt in flight for a read; 0 for a write, which is not retried." = 0
+    retrying : boolean @description "True while the request in flight runs under std-retry." = false
+  }
+
+  trait GraphKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      GraphCall.GRAPH_HTTP_SEND -> HTTP_SEND
+      GraphKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait GraphHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "graph.microsoft.com"
+      port: 443
+      tls: true
+      serverName: "graph.microsoft.com"
+      credential: "MICROSOFT_GRAPH_USER_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      GraphKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      GraphKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  ;; reads retry on 1xx, 408, 429, 5xx and on a timeout or transport failure; a write (draft, send, event) is never retried so it does not happen twice
+  trait GraphRetry = Retry.traits.Retry {
+    config {
+      maxAttempts: 4
+      baseDelayMs: 100
+      multiplier: 5
+      maxDelayMs: 1500
+    }
+    listens {
+      GraphCall.GRAPH_RETRY_START -> START per @payload.key
+      GraphCall.GRAPH_RETRY_FAILED -> FAILED per @payload.key
+      GraphCall.GRAPH_RETRY_CANCEL -> CANCEL per @payload.key
+      GraphHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (and (str/startsWith ?key "read:") (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600)))))
+    }
+  }
+
+  trait GraphClient -> GraphRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      LIST_MAIL -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((q (default @payload.query "")) (n (if (= (default @payload.maxResults 0) 0) 20 @payload.maxResults)) (fields "$select=id,conversationId,subject,bodyPreview,receivedDateTime,internetMessageId,webLink,from,toRecipients,body"))
+          (emit GRAPH_READY { key: (str/concat "read:mail:" @q "|" @n "#" @entity.seq), op: "mail", tag: (default @payload.tag ""), ref: "", method: "GET", target: (if (= @q "") (str/concat "/v1.0/me/mailFolders/inbox/messages?$orderby=receivedDateTime%20desc&$top=" @n "&" @fields) (str/concat "/v1.0/me/messages?$search=" (str/encode-uri-component (str/concat "\"" (str/replaceAll @q "\"" "") "\"")) "&$top=" @n "&" @fields)), contentType: "", body: (bytes/from-string ""), retry: true }))
+      CREATE_DRAFT -> idle when (= (default @payload.replyTo "") "")
+        (set @entity.seq (+ @entity.seq 1))
+        (emit GRAPH_READY { key: (str/concat "write:draft:" @payload.to "#" @entity.seq), op: "draft", tag: (default @payload.tag ""), ref: "", method: "POST", target: "/v1.0/me/messages", contentType: "application/json", body: (bytes/from-string (json/stringify { subject: @payload.subject, body: { contentType: "Text", content: @payload.body }, toRecipients: [{ emailAddress: { address: @payload.to } }] })), retry: false })
+      CREATE_DRAFT -> idle when (!= (default @payload.replyTo "") "")
+        (set @entity.seq (+ @entity.seq 1))
+        (emit GRAPH_READY { key: (str/concat "write:reply:" @payload.replyTo "#" @entity.seq), op: "draft", tag: (default @payload.tag ""), ref: "", method: "POST", target: (str/concat "/v1.0/me/messages/" (str/encode-uri-component @payload.replyTo) "/createReply"), contentType: "application/json", body: (bytes/from-string (json/stringify { comment: @payload.body })), retry: false })
+      SEND_DRAFT -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (emit GRAPH_READY { key: (str/concat "write:send:" @payload.draftId "#" @entity.seq), op: "send", tag: (default @payload.tag ""), ref: @payload.draftId, method: "POST", target: (str/concat "/v1.0/me/messages/" (str/encode-uri-component @payload.draftId) "/send"), contentType: "", body: (bytes/from-string ""), retry: false })
+      LIST_EVENTS -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((n (if (= (default @payload.maxResults 0) 0) 50 @payload.maxResults)))
+          (emit GRAPH_READY { key: (str/concat "read:events:" @payload.from "|" @payload.to "#" @entity.seq), op: "events", tag: (default @payload.tag ""), ref: "", method: "GET", target: (str/concat "/v1.0/me/calendarView?startDateTime=" (str/encode-uri-component @payload.from) "&endDateTime=" (str/encode-uri-component @payload.to) "&$orderby=start/dateTime&$top=" @n "&$select=id,subject,bodyPreview,webLink,start,end,location,organizer"), contentType: "", body: (bytes/from-string ""), retry: true }))
+      CREATE_EVENT -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((zone (if (= (default @payload.timeZone "") "") "UTC" (default @payload.timeZone ""))))
+          (emit GRAPH_READY { key: (str/concat "write:event:" @payload.subject "#" @entity.seq), op: "event", tag: (default @payload.tag ""), ref: "", method: "POST", target: "/v1.0/me/events", contentType: "application/json", body: (bytes/from-string (json/stringify { subject: @payload.subject, body: { contentType: "Text", content: (default @payload.body "") }, start: { dateTime: @payload.start, timeZone: @zone }, end: { dateTime: @payload.end, timeZone: @zone }, attendees: (array/map (default @payload.attendees []) (fn a { emailAddress: { address: @a }, type: "required" })) })), retry: false }))
+      LIST_FILES -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((q (default @payload.query "")) (p (default @payload.path "")))
+          (emit GRAPH_READY { key: (str/concat "read:files:" @q "|" @p "#" @entity.seq), op: "files", tag: (default @payload.tag ""), ref: "", method: "GET", target: (if (!= @q "") (str/concat "/v1.0/me/drive/root/search(q='" (str/encode-uri-component (str/replaceAll @q "'" "''")) "')?$top=50") (if (!= @p "") (str/concat "/v1.0/me/drive/root:/" (str/join (array/map (str/split @p "/") (fn s (str/encode-uri-component @s))) "/") ":/children?$top=200") "/v1.0/me/drive/root/children?$top=200")), contentType: "", body: (bytes/from-string ""), retry: true }))
+    }
+
+    emits {
+      GRAPH_FAILED -> external {
+        tag : string!
+        code : string
+        message : string!
+      }
+        @description "A Microsoft 365 action failed: the provider's error message, NOT_CONFIGURED when no credential is set."
+        @synonyms "outlook error, graph failure"
+        @tier "primary"
+      GRAPH_READY {
+        key : string!
+        op : string!
+        tag : string!
+        ref : string!
+        method : string!
+        target : string!
+        contentType : string!
+        body : bytes!
+        retry : boolean!
+      }
+        @description "Internal: a built request, handed to the row of its key in GraphCall."
+        @tier "secondary"
+    }
+
+    listens {
+      LIST_MAIL -> input {
+        tag : string?
+        query : string?
+        maxResults : number?
+      }
+        @description "Read mail: with no query, the newest inbox messages; with a query, a search of the whole mailbox (words, or a Graph search such as from:ana subject:claim). maxResults defaults to 20. Each message carries its plain-text body."
+        @synonyms "read inbox, search mail, outlook mail, recent email"
+      CREATE_DRAFT -> input {
+        tag : string?
+        to : string!
+        subject : string!
+        body : string!
+        replyTo : string?
+      }
+        @description "Create a plain-text draft in the mailbox and do not send it. replyTo is the id of the message answered: the draft is then a reply in its conversation and to and subject come from that message."
+        @synonyms "draft email, draft reply, write mail"
+      SEND_DRAFT -> input {
+        tag : string?
+        draftId : string!
+      }
+        @description "Send a draft that exists in the mailbox. A person should have read the draft first."
+        @synonyms "send email, send draft"
+      LIST_EVENTS -> input {
+        tag : string?
+        from : string!
+        to : string!
+        maxResults : number?
+      }
+        @description "Read the calendar events between two ISO date-times (for example 2026-11-23T00:00:00Z), earliest first; maxResults defaults to 50."
+        @synonyms "calendar, meetings, schedule, agenda"
+      CREATE_EVENT -> input {
+        tag : string?
+        subject : string!
+        start : string!
+        end : string!
+        timeZone : string?
+        body : string?
+        attendees : [string]?
+      }
+        @description "Create a calendar event: start and end are local date-times (2026-11-23T10:00:00) in timeZone (default UTC); attendees are email addresses and are invited."
+        @synonyms "schedule meeting, book meeting, add event"
+      LIST_FILES -> input {
+        tag : string?
+        path : string?
+        query : string?
+      }
+        @description "List the user's OneDrive and SharePoint files: the folder at path (empty for the top folder), or with a query every file whose name or text matches it."
+        @synonyms "onedrive, sharepoint, find document, list files"
+    }
+  }
+
+  trait GraphCall -> GraphRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALL_READY -> idle when (= @payload.retry false)
+        (set @entity.op @payload.op)
+        (set @entity.tag @payload.tag)
+        (set @entity.ref @payload.ref)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.contentType @payload.contentType)
+        (set @entity.body @payload.body)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying false)
+        (emit GRAPH_DISPATCH {})
+      CALL_READY -> idle when (= @payload.retry true)
+        (set @entity.op @payload.op)
+        (set @entity.tag @payload.tag)
+        (set @entity.ref @payload.ref)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.contentType @payload.contentType)
+        (set @entity.body @payload.body)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying true)
+        (emit GRAPH_RETRY_START { key: (as @payload.key CallKey) })
+      GRAPH_ATTEMPT -> idle
+        (set @entity.attempt @payload.attempt)
+        (emit GRAPH_DISPATCH {})
+      GRAPH_DISPATCH -> idle
+        (emit GRAPH_HTTP_SEND { key: @entity.id, method: @entity.method, target: @entity.target, headers: (if (= @entity.contentType "") [{ name: "accept", value: "application/json" }, { name: "prefer", value: "outlook.body-content-type=\"text\"" }] [{ name: "accept", value: "application/json" }, { name: "prefer", value: "outlook.body-content-type=\"text\"" }, { name: "content-type", value: @entity.contentType }]), body: @entity.body, stream: "none" })
+
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "send"))
+        (emit MAIL_SENT { tag: @entity.tag, draftId: @entity.ref })
+        (emit GRAPH_CLEAR {})
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "mail") (= (json/parse @payload.body GraphMailReply) null))
+        (emit GRAPH_FAIL { message: "The Microsoft Graph answer could not be read" })
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "mail") (!= (json/parse @payload.body GraphMailReply) null))
+        (emit MAIL_LISTED { tag: @entity.tag, messages: (array/map (object/get (json/parse @payload.body GraphMailReply) value []) (fn m { id: (default (object/get @m id "") ""), conversationId: (default (object/get @m conversationId "") ""), from: (default (object/get @m "from.emailAddress.address" "") ""), to: (str/join (array/map (object/get @m toRecipients []) (fn r (default (object/get @r "emailAddress.address" "") ""))) ", "), subject: (default (object/get @m subject "") ""), date: (default (object/get @m receivedDateTime "") ""), messageId: (default (object/get @m internetMessageId "") ""), snippet: (default (object/get @m bodyPreview "") ""), body: (default (object/get @m "body.content" "") ""), webLink: (default (object/get @m webLink "") "") })) })
+        (emit GRAPH_CLEAR {})
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "draft") (= (json/parse @payload.body GraphDraftReply) null))
+        (emit GRAPH_FAIL { message: "The Microsoft Graph answer could not be read" })
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "draft") (!= (json/parse @payload.body GraphDraftReply) null))
+        (let ((r (json/parse @payload.body GraphDraftReply)))
+          (emit DRAFT_CREATED { tag: @entity.tag, draftId: (default (object/get @r id "") ""), conversationId: (default (object/get @r conversationId "") ""), webLink: (default (object/get @r webLink "") "") }))
+        (emit GRAPH_CLEAR {})
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "events") (= (json/parse @payload.body GraphEventsReply) null))
+        (emit GRAPH_FAIL { message: "The Microsoft Graph answer could not be read" })
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "events") (!= (json/parse @payload.body GraphEventsReply) null))
+        (emit EVENTS_LISTED { tag: @entity.tag, events: (array/map (object/get (json/parse @payload.body GraphEventsReply) value []) (fn e { id: (default (object/get @e id "") ""), subject: (default (object/get @e subject "") ""), start: (default (object/get @e "start.dateTime" "") ""), end: (default (object/get @e "end.dateTime" "") ""), timeZone: (default (object/get @e "start.timeZone" "") ""), location: (default (object/get @e "location.displayName" "") ""), organizer: (default (object/get @e "organizer.emailAddress.address" "") ""), snippet: (default (object/get @e bodyPreview "") ""), webLink: (default (object/get @e webLink "") "") })) })
+        (emit GRAPH_CLEAR {})
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "event") (= (json/parse @payload.body GraphEventItem) null))
+        (emit GRAPH_FAIL { message: "The Microsoft Graph answer could not be read" })
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "event") (!= (json/parse @payload.body GraphEventItem) null))
+        (let ((r (json/parse @payload.body GraphEventItem)))
+          (emit EVENT_CREATED { tag: @entity.tag, eventId: (default (object/get @r id "") ""), webLink: (default (object/get @r webLink "") "") }))
+        (emit GRAPH_CLEAR {})
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "files") (= (json/parse @payload.body GraphFilesReply) null))
+        (emit GRAPH_FAIL { message: "The Microsoft Graph answer could not be read" })
+      GRAPH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @entity.op "files") (!= (json/parse @payload.body GraphFilesReply) null))
+        (emit FILES_LISTED { tag: @entity.tag, files: (array/map (object/get (json/parse @payload.body GraphFilesReply) value []) (fn f { id: (default (object/get @f id "") ""), name: (default (object/get @f name "") ""), size: (default (object/get @f size 0) 0), modified: (default (object/get @f lastModifiedDateTime "") ""), webUrl: (default (object/get @f webUrl "") ""), mimeType: (default (object/get @f "file.mimeType" "") ""), isFolder: (object/has @f "folder") })) })
+        (emit GRAPH_CLEAR {})
+      GRAPH_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GRAPH_REPLY_ERROR { status: @payload.status, message: (let ((eo (json/parse @payload.body GraphErrorReply))) (let ((m (if (!= @eo null) (default (object/get @eo "error.message" "") "") ""))) (if (!= @m "") @m (str/concat "Request failed with status code " @payload.status)))) })
+      GRAPH_REPLY_ERROR -> idle when (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))))
+        (emit GRAPH_RETRY_FAILED { key: (as @entity.id CallKey), error: @payload.message })
+      GRAPH_REPLY_ERROR -> idle when (not (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))))
+        (emit GRAPH_FAIL { message: @payload.message })
+      GRAPH_GAVE_UP -> idle
+        (emit GRAPH_FAIL { message: (default @payload.error "") })
+
+      GRAPH_REQUEST_FAILED -> idle when (and (= @payload.kind "denied") (= @entity.mintTried false))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.userToken, scope: app, tokenEndpoint: @config.userTokenUrl, grant: "refresh_token", refreshCredential: @config.refreshToken, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: body } { emit: { success: GRAPH_CONNECTED, failure: GRAPH_CONNECT_FAILED } })
+      GRAPH_REQUEST_FAILED -> idle when (and (= @payload.kind "denied") (= @entity.mintTried true))
+        (emit GRAPH_UNCONFIGURED {})
+      GRAPH_REQUEST_FAILED -> idle when (and (!= @payload.kind "denied") @entity.retrying (< @entity.attempt 3))
+        (emit GRAPH_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+      GRAPH_REQUEST_FAILED -> idle when (and (!= @payload.kind "denied") (not (and @entity.retrying (< @entity.attempt 3))))
+        (emit GRAPH_FAIL { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+
+      GRAPH_CONNECTED -> idle when (= @payload.connected true)
+        (emit GRAPH_DISPATCH {})
+      GRAPH_CONNECTED -> idle when (= @payload.connected false)
+        (emit GRAPH_UNCONFIGURED {})
+      GRAPH_CONNECT_FAILED -> idle when (= @payload.kind "unavailable")
+        (emit GRAPH_NOT_CONFIGURED {})
+      GRAPH_CONNECT_FAILED -> idle when (!= @payload.kind "unavailable")
+        (emit GRAPH_FAIL { message: (str/concat "Microsoft token request failed: " @payload.error) })
+
+      GRAPH_UNCONFIGURED -> idle
+        (credential-status { credential: @config.refreshToken, scope: app } { emit: { success: GRAPH_REFRESH_PROBED, failure: GRAPH_PROBE_FAILED } })
+      GRAPH_REFRESH_PROBED -> idle when @payload.connected
+        (emit GRAPH_FAIL { message: (str/concat "Microsoft 365 not configured: the token request found no usable credential; check MICROSOFT_GRAPH_REFRESH_TOKEN, MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET, and that the refresh token was granted " @config.scope) })
+      GRAPH_REFRESH_PROBED -> idle when (not @payload.connected)
+        (emit GRAPH_NOT_CONFIGURED {})
+      GRAPH_PROBE_FAILED -> idle
+        (emit GRAPH_NOT_CONFIGURED {})
+      GRAPH_NOT_CONFIGURED -> idle
+        (emit GRAPH_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: microsoft-graph. Set MICROSOFT_GRAPH_REFRESH_TOKEN, MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET." })
+
+      GRAPH_FAIL -> idle when (and @entity.retrying (= (default @payload.code "") ""))
+        (emit GRAPH_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit GRAPH_FAILED { tag: @entity.tag, message: @payload.message })
+        (emit GRAPH_CLEAR {})
+      GRAPH_FAIL -> idle when (and @entity.retrying (!= (default @payload.code "") ""))
+        (emit GRAPH_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit GRAPH_FAILED { tag: @entity.tag, code: @payload.code, message: @payload.message })
+        (emit GRAPH_CLEAR {})
+      GRAPH_FAIL -> idle when (and (not @entity.retrying) (= (default @payload.code "") ""))
+        (emit GRAPH_FAILED { tag: @entity.tag, message: @payload.message })
+        (emit GRAPH_CLEAR {})
+      GRAPH_FAIL -> idle when (and (not @entity.retrying) (!= (default @payload.code "") ""))
+        (emit GRAPH_FAILED { tag: @entity.tag, code: @payload.code, message: @payload.message })
+        (emit GRAPH_CLEAR {})
+
+      GRAPH_CLEAR -> idle
+        (set @entity.op "")
+        (set @entity.tag "")
+        (set @entity.method "")
+        (set @entity.target "")
+        (set @entity.contentType "")
+        (set @entity.body (bytes/from-string ""))
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying false)
+    }
+
+    emits {
+      MAIL_LISTED -> external {
+        tag : string!
+        messages : [GraphMessage]!
+      }
+        @description "The messages read, newest first for the inbox: each with its plain-text body, sender, recipients, subject, received date, Message-ID, preview, conversation id and a link that opens it in Outlook."
+        @synonyms "inbox messages, mail found"
+        @tier "primary"
+      DRAFT_CREATED -> external {
+        tag : string!
+        draftId : string!
+        conversationId : string!
+        webLink : string!
+      }
+        @description "The created draft's id, its conversation id and a link that opens it in Outlook; the draft is not sent."
+        @synonyms "draft saved, reply drafted"
+        @tier "primary"
+      MAIL_SENT -> external {
+        tag : string!
+        draftId : string!
+      }
+        @description "The draft was handed to Microsoft 365 for sending."
+        @synonyms "email sent"
+        @tier "primary"
+      EVENTS_LISTED -> external {
+        tag : string!
+        events : [GraphEvent]!
+      }
+        @description "The calendar events in the asked range, earliest first: subject, start, end and their time zone, location, organizer, preview and a link that opens the event."
+        @synonyms "calendar events, meetings"
+        @tier "primary"
+      EVENT_CREATED -> external {
+        tag : string!
+        eventId : string!
+        webLink : string!
+      }
+        @description "The created event's id and a link that opens it."
+        @synonyms "meeting booked"
+        @tier "primary"
+      FILES_LISTED -> external {
+        tag : string!
+        files : [GraphFile]!
+      }
+        @description "The files and folders found: name, size in bytes, last change, a link that opens the item, its media type (empty for a folder) and whether it is a folder."
+        @synonyms "documents found, folder contents"
+        @tier "primary"
+      GRAPH_FAILED -> external {
+        tag : string!
+        code : string
+        message : string!
+      }
+        @description "A Microsoft 365 action failed: the provider's error message, NOT_CONFIGURED when no credential is set."
+        @synonyms "outlook error, graph failure"
+        @tier "primary"
+      GRAPH_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the Graph request under the user token, for its keyed HTTP client."
+        @tier "secondary"
+      GRAPH_RETRY_START { key : CallKey! }
+        @description "Internal: hand an inbox read to std-retry."
+        @tier "secondary"
+      GRAPH_RETRY_FAILED { key : CallKey!  error : string }
+        @description "Internal: tell std-retry the attempt failed with a retryable outcome."
+        @tier "secondary"
+      GRAPH_RETRY_CANCEL { key : CallKey! }
+        @description "Internal: end std-retry's run for this key without another attempt."
+        @tier "secondary"
+      GRAPH_DISPATCH -> internal { }
+        @description "Internal: send the request in flight, again after a retry attempt or a minted token."
+        @tier "secondary"
+      GRAPH_REPLY_ERROR -> internal {
+        status : number!
+        message : string!
+      }
+        @description "Internal: a non-2xx Microsoft Graph reply with the provider's message."
+        @tier "secondary"
+      GRAPH_UNCONFIGURED -> internal { }
+        @description "Internal: the user token is not held after a mint; probe the refresh token."
+        @tier "secondary"
+      GRAPH_NOT_CONFIGURED -> internal { }
+        @description "Internal: no Microsoft 365 credential is configured."
+        @tier "secondary"
+      GRAPH_FAIL -> internal {
+        code : string
+        message : string!
+      }
+        @description "Internal: end the request in flight with a failure, cancelling its std-retry run."
+        @tier "secondary"
+      GRAPH_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "secondary"
+      GRAPH_CONNECT_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the credential store could not mint the access token."
+        @tier "secondary"
+      GRAPH_REFRESH_PROBED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: whether the user refresh token is configured."
+        @tier "secondary"
+      GRAPH_PROBE_FAILED -> internal {
+        error : string!
+      }
+        @description "Internal: the credential store could not tell whether the user refresh token is configured."
+        @tier "secondary"
+      GRAPH_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
+        @tier "secondary"
+    }
+
+    listens {
+      CALL_READY {
+        key : string!
+        op : string!
+        tag : string!
+        ref : string!
+        method : string!
+        target : string!
+        contentType : string!
+        body : bytes!
+        retry : boolean!
+      }
+        @description "A built request from the front trait, taken by the row of its key."
+      GRAPH_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "The keyed HTTP client answered the request in flight."
+      GRAPH_REQUEST_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "The keyed HTTP client could not answer: unconfigured token, timeout or transport failure."
+      GRAPH_DISPATCH
+      GRAPH_REPLY_ERROR {
+        status : number!
+        message : string!
+      }
+      GRAPH_UNCONFIGURED
+      GRAPH_NOT_CONFIGURED
+      GRAPH_FAIL {
+        code : string
+        message : string!
+      }
+      GRAPH_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      GRAPH_CONNECT_FAILED {
+        error : string!
+        kind : string!
+      }
+      GRAPH_REFRESH_PROBED {
+        connected : boolean!
+        label : string
+      }
+      GRAPH_PROBE_FAILED {
+        error : string!
+      }
+      GRAPH_CLEAR
+      GRAPH_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+        @description "std-retry starts another attempt of the request in flight."
+      GRAPH_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+        @description "std-retry spent its attempts on retryable outcomes."
+      GraphClient.GRAPH_READY -> CALL_READY per @payload.key
+      GraphHttp.HTTP_REPLIED -> GRAPH_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      GraphHttp.HTTP_FAILED -> GRAPH_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      GraphRetry.ATTEMPT -> GRAPH_ATTEMPT per @payload.key
+      GraphRetry.GAVE_UP -> GRAPH_GAVE_UP per @payload.key
+    }
+
+    config {
+      scope : string = "offline_access Mail.ReadWrite Mail.Send Calendars.ReadWrite Files.Read.All"
+        @label "OAuth scopes"
+        @description "The delegated permissions the user's refresh token must have been granted; a refresh_token grant carries them from the consent, so this names what the credential has to hold."
+        @synonyms "graph scopes, permissions"
+        @tier "infra"
+      refreshToken : secret = "MICROSOFT_GRAPH_REFRESH_TOKEN"
+        @label "User refresh-token credential"
+        @description "Name of the credential holding the user's OAuth refresh token; the credential store builds the user access token from it."
+        @synonyms "refresh token, user token"
+        @tier "infra"
+      clientId : secret = "MICROSOFT_CLIENT_ID"
+        @label "App registration client id credential"
+        @description "Name of the credential holding the client id of the company's app registration."
+        @synonyms "client id, application id"
+        @tier "infra"
+      clientSecret : secret = "MICROSOFT_CLIENT_SECRET"
+        @label "App registration client secret credential"
+        @description "Name of the credential holding the client secret of the company's app registration."
+        @synonyms "client secret"
+        @tier "infra"
+      userToken : secret = "MICROSOFT_GRAPH_USER_TOKEN"
+        @label "User token credential"
+        @description "Host credential name the minted user access token lives under; the composed GraphHttp trait carries the same name, restate it there when this knob changes."
+        @synonyms "user token name, access token name"
+        @tier "infra"
+      userTokenUrl : url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+        @label "User token endpoint"
+        @description "The Microsoft identity token endpoint the credential store exchanges the refresh token at; replace common with the company's tenant id for a single-tenant app registration. Must be declared in the app egress list."
+        @synonyms "refresh endpoint, tenant token url"
+        @tier "infra"
+    }
+  }
+
+  page boot as GraphPage -> GraphClient, GraphCall, GraphKeyed, GraphHttp, GraphRetry
+}

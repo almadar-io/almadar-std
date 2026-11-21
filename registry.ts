@@ -7,7 +7,6 @@
  * @packageDocumentation
  */
 
-import { isBrowserOnlyService } from '@almadar/core/patterns';
 import type { OperatorMeta, OperatorVisualForm, RunsOn, StdOperatorMeta, StdModule } from './types.js';
 import { isStdOperator, getModuleFromOperator, STD_MODULES } from './types.js';
 
@@ -346,46 +345,6 @@ export function isStdEffectOperator(operator: string): boolean {
 /** Declared execution site of an effect operator; `undefined` for a pure or unknown one. */
 export function getOperatorRunsOn(operator: string): RunsOn | undefined {
   return STD_OPERATORS[operator]?.runsOn;
-}
-
-/**
- * Where one effect call runs: its declared `runsOn`, except a data effect
- * (`entityArgPosition`) whose target entity stores its rows in the browser
- * (core's `storesRowsInBrowser` over the program's entities), or a
- * `call-service` to a browser-only service (core's `isBrowserOnlyService`),
- * Undefined for a pure op. Twin of Rust
- * `effects::effect_site`.
- */
-export function effectSiteFor(
-  operator: string,
-  args: readonly unknown[],
-  storesRowsInBrowser: (entityName: string) => boolean,
-): RunsOn | undefined {
-  const meta = STD_OPERATORS[operator];
-  const site = meta?.runsOn;
-  if ((operator === 'program/live' && isTraceSubscription(args[0])) || (operator === 'program/self' && (isMountedReflection(args[0]) || isLoadedReflection(args[0]))) || operator === 'cancel-call') return 'any';
-  if (operator === 'call-service' && site === 'server') {
-    const service = args[0];
-    return typeof service === 'string' && !service.startsWith('@') && isBrowserOnlyService(service) ? 'client' : 'server';
-  }
-  if (site !== 'server' || meta.entityArgPosition === undefined) return site;
-  const entity = args[meta.entityArgPosition];
-  return typeof entity === 'string' && !entity.startsWith('@') && storesRowsInBrowser(entity) ? 'client' : 'server';
-}
-
-/** A `program/live` options object naming `kind: "trace"`: it runs where its traits run (EXEC-DIST-14), placed at run time. */
-function isTraceSubscription(options: unknown): boolean {
-  return typeof options === 'object' && options !== null && !Array.isArray(options) && 'kind' in options && options.kind === 'trace';
-}
-
-/** A `program/self` options object naming `mounted: true` and no `guest`: the kernel the step runs on answers it (EXEC-DIST-15); a guest's tree is the server's. */
-function isMountedReflection(options: unknown): boolean {
-  return typeof options === 'object' && options !== null && !Array.isArray(options) && 'mounted' in options && options.mounted === true && !('guest' in options);
-}
-
-/** A `program/self` options object naming `loaded: true` and no `guest`: the kernel the step runs on answers it with the program it loaded. */
-function isLoadedReflection(options: unknown): boolean {
-  return typeof options === 'object' && options !== null && !Array.isArray(options) && 'loaded' in options && options.loaded === true && !('guest' in options);
 }
 
 /** Effect operators whose declared execution site is `site`, sorted. */

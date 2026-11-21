@@ -723,7 +723,8 @@
                 "name": "app",
                 "orbitals": []
               },
-              "lazy": []
+              "lazy": [],
+              "placements": {}
             }
           },
           "expect": {
@@ -838,7 +839,8 @@
                 "name": "app",
                 "orbitals": []
               },
-              "lazy": []
+              "lazy": [],
+              "placements": {}
             }
           },
           "expect": {
@@ -930,7 +932,8 @@
                     ]
                   }
                 }
-              ]
+              ],
+              "placements": {}
             }
           },
           "expect": {
@@ -4074,7 +4077,8 @@
               "program": {
                 "orbitals": []
               },
-              "lazy": []
+              "lazy": [],
+              "placements": {}
             }
           },
           "expect": {
@@ -15939,7 +15943,8 @@
                     ]
                   }
                 }
-              ]
+              ],
+              "placements": {}
             }
           },
           "expect": {
@@ -16201,7 +16206,8 @@
                   }
                 ]
               },
-              "lazy": []
+              "lazy": [],
+              "placements": {}
             }
           },
           "expect": {
@@ -16541,6 +16547,204 @@
                 "payload": {}
               }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-inline-theme-seeds-its-style-palette-without-reading-a-file",
+      "entity": {
+        "file": "a.lolo",
+        "raw": "app x [\n]\n",
+        "latin": false
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_THEMES_READ",
+          "payload": {
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "theme": {
+                    "name": "s",
+                    "tokens": {
+                      "colors": {
+                        "background": "#ffffff"
+                      }
+                    },
+                    "variants": {
+                      "dark": {
+                        "colors": {
+                          "background": "#000000"
+                        }
+                      }
+                    }
+                  },
+                  "traits": [
+                    {
+                      "sourceBehavior": {
+                        "behavior": "std/behaviors/std-rasm-theme"
+                      },
+                      "config": {
+                        "styles": {
+                          "default": {
+                            "s": {
+                              "looks": {},
+                              "layout": {},
+                              "motion": {},
+                              "palette": "inline"
+                            }
+                          },
+                          "type": "[RasmStyle]"
+                        }
+                      },
+                      "name": "T0"
+                    }
+                  ],
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "entity": {
+              "themeQueue": []
+            },
+            "emits": [
+              {
+                "event": "LINT_THEME_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_THEME_NEXT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "LINT_THEMES_DONE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_THEMES_DONE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_THEME_PALETTES",
+                "payload": {
+                  "palettes": {
+                    "s": {
+                      "light": {
+                        "background": "#ffffff"
+                      },
+                      "dark": {
+                        "background": "#000000"
+                      }
+                    }
+                  },
+                  "sites": [
+                    {
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ],
+                  "unread": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-theme-reference-still-queues-the-style-file",
+      "entity": {
+        "file": "a.lolo",
+        "raw": "app x [\n]\n",
+        "latin": false
+      },
+      "steps": [
+        {
+          "trait": "OrbLintInput",
+          "from": "reading",
+          "event": "LINT_THEMES_READ",
+          "payload": {
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "theme": "s-light",
+                  "traits": [
+                    {
+                      "sourceBehavior": {
+                        "behavior": "std/behaviors/std-rasm-theme"
+                      },
+                      "config": {
+                        "styles": {
+                          "default": {
+                            "s": {
+                              "looks": {},
+                              "layout": {},
+                              "motion": {},
+                              "palette": "inline"
+                            }
+                          },
+                          "type": "[RasmStyle]"
+                        }
+                      },
+                      "name": "T0"
+                    }
+                  ],
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "entity": {
+              "themeQueue": [
+                "s"
+              ]
+            },
+            "emits": [
+              {
+                "event": "LINT_THEME_NEXT",
+                "payload": {}
+              }
+            ]
+          },
+          "entity": {
+            "themesDir": "themes",
+            "coreRoot": "/core"
           }
         }
       ]

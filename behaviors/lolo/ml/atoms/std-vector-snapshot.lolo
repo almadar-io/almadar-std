@@ -150,6 +150,16 @@ orbital VectorSnapshotOrbital {
       ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
+
+  trait ResolveLlmLmAt = Resolve.traits.ResolveLlmLmAt {
+    listens {
+      SnapResolve.LLM_EMBED_LMAT -> LLM_EMBED_LMAT
+      ResolveLmAtWait.WAITED_LMAT -> LLM_EMBED_WAITED
+      ResolveLmAtRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmAtRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmAtRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
   trait ResolveOrSharedWait = Resolve.traits.ResolveOrSharedWait {}
   trait ResolveOrSharedRequest = Resolve.traits.ResolveOrSharedRequest {}
   trait ResolveOrSharedHttp = Resolve.traits.ResolveOrSharedHttp {}
@@ -163,8 +173,11 @@ orbital VectorSnapshotOrbital {
   trait ResolveOaOwnRequest = Resolve.traits.ResolveOaOwnRequest {}
   trait ResolveOaOwnHttp = Resolve.traits.ResolveOaOwnHttp {}
   trait ResolveLmWait = Resolve.traits.ResolveLmWait {}
+  trait ResolveLmAtWait = Resolve.traits.ResolveLmAtWait {}
   trait ResolveLmRequest = Resolve.traits.ResolveLmRequest {}
+  trait ResolveLmAtRequest = Resolve.traits.ResolveLmAtRequest {}
   trait ResolveLmHttp = Resolve.traits.ResolveLmHttp {}
+  trait ResolveLmAtHttp = Resolve.traits.ResolveLmAtHttp {}
 
   trait SnapResolve = Resolve.traits.VectorResolve {
     listens {
@@ -181,7 +194,9 @@ orbital VectorSnapshotOrbital {
       ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
       ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLmAt.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
       ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLmAt.LLM_FAILED -> LLM_FAILED
       SnapWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
       SnapWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
       RESOLVE {
@@ -462,5 +477,5 @@ orbital VectorSnapshotOrbital {
     }
   }
 
-  page boot as VectorSnapshotPage -> Snapshot, SnapResolve, SnapStore, SnapWrite, SnapQuantize, SnapF32, SnapSig6, SnapBigCmp, SnapDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
+  page boot as VectorSnapshotPage -> Snapshot, SnapResolve, SnapStore, SnapWrite, SnapQuantize, SnapF32, SnapSig6, SnapBigCmp, SnapDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveLlmLmAt, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmAtWait, ResolveLmRequest, ResolveLmAtRequest, ResolveLmHttp, ResolveLmAtHttp
 }

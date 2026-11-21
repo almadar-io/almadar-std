@@ -39,7 +39,7 @@ orbital RasmMirrorOrbital {
       MIRROR_PAINT -> ready
         (let ((r @entity.rect) (look (default (object/get @entity.looks (str/concat "mirror/" @config.intent "/idle") null) {})))
           (when (!= @r null)
-            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: (str/concat @config.id ":body"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring }, { type: draw-group, id: (str/concat @config.id ":source"), position: { x: @r.x, y: @r.y, z: @config.z }, target: { id: (str/concat @config.id ":target"), width: @config.sourceWidth, height: @config.sourceHeight }, items: @config.source }, { type: draw-sprite, id: @config.id, texture: (str/concat "target:" @config.id ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.inset)), height: (- @r.h (* 2 @config.inset)), flipX: @config.flip, opacity: @config.opacity }] })))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":body"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring }] (let ((none : [node] [])) (if (= @config.of "") [{ type: draw-group, id: (str/concat @config.id ":source"), position: { x: @r.x, y: @r.y, z: @config.z }, target: { id: (str/concat @config.id ":target"), width: @config.sourceWidth, height: @config.sourceHeight }, items: @config.source }] @none)) [(if (= @config.view null) { type: draw-sprite, id: @config.id, texture: (str/concat "target:" (if (= @config.of "") @config.id @config.of) ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.inset)), height: (- @r.h (* 2 @config.inset)), flipX: @config.flip, opacity: @config.opacity } { type: draw-sprite, id: @config.id, texture: (str/concat "target:" (if (= @config.of "") @config.id @config.of) ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.inset)), height: (- @r.h (* 2 @config.inset)), flipX: @config.flip, opacity: @config.opacity, frame: (default @config.view { x: 0, y: 0, w: @config.sourceWidth, h: @config.sourceHeight }) })]) })))
     }
 
     emits {
@@ -87,6 +87,14 @@ orbital RasmMirrorOrbital {
         @label "Source height"
         @description "Height of the render target in whole pixels."
         @tier "domain"
+      of : string = ""
+        @label "Of"
+        @description "Another std-rasm-mirror's id whose render target this sprite shows instead of painting its own source: one drawing painted once, shown in many rects (crops with `view`, thumbnails). Empty paints this mirror's own source."
+        @tier "presentation"
+      view : RasmRect? = null
+        @label "View"
+        @description "A window of the source box (x, y, w, h in source units) the sprite shows, stretched to the rect inside the inset; unset shows the whole source. One drawing, many crops."
+        @tier "presentation"
       flip : boolean = false
         @label "Flip"
         @description "Show the target flipped left to right, a mirror image."

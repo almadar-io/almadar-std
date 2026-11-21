@@ -1,9 +1,7 @@
 // A data effect runs where its entity lives: `fetch`/`persist` declare which
 // argument names the entity, and the site follows that entity's residence.
 import { describe, expect, it } from 'vitest';
-import { STD_OPERATORS, effectSiteFor } from '../registry.js';
-
-const resident = (name: string) => name === 'LocalInvoice';
+import { STD_OPERATORS } from '../registry.js';
 
 describe('entityArgPosition', () => {
   it('fetch and persist declare their entity argument', () => {
@@ -17,58 +15,3 @@ describe('entityArgPosition', () => {
   });
 });
 
-describe('effectSiteFor', () => {
-  it('fetch on a browser-stored entity runs on the client', () => {
-    expect(effectSiteFor('fetch', ['LocalInvoice', {}], resident)).toBe('client');
-  });
-
-  it('persist reads its entity from argument 1', () => {
-    expect(effectSiteFor('persist', ['create', 'LocalInvoice', {}], resident)).toBe('client');
-  });
-
-  it('control: fetch on a server entity stays on the server', () => {
-    expect(effectSiteFor('fetch', ['Invoice', {}], resident)).toBe('server');
-    expect(effectSiteFor('persist', ['update', 'Invoice', {}], resident)).toBe('server');
-  });
-
-  it('control: an entity argument that is not a literal name stays on the server', () => {
-    expect(effectSiteFor('fetch', ['@config.entity', {}], resident)).toBe('server');
-  });
-
-  it('a program/live trace subscription is placed at run time by its traits (EXEC-DIST-14); any other feed stays on the server', () => {
-    expect(effectSiteFor('program/live', [{ kind: 'trace', traits: ['Board'] }], resident)).toBe('any');
-    expect(effectSiteFor('program/live', [{ clientId: 'tab-a' }], resident)).toBe('server');
-    expect(effectSiteFor('program/live', [], resident)).toBe('server');
-    expect(effectSiteFor('cancel-call', ['machine-Board'], resident)).toBe('any');
-  });
-
-  it('a program/self mounted reflection is answered where it runs (EXEC-DIST-15); the whole program stays on the server', () => {
-    expect(effectSiteFor('program/self', [{ mounted: true }], resident)).toBe('any');
-    expect(effectSiteFor('program/self', [{ mounted: false }], resident)).toBe('server');
-    expect(effectSiteFor('program/self', [{ mounted: true, guest: '@entity.guest' }], resident)).toBe('server');
-    expect(effectSiteFor('program/self', [], resident)).toBe('server');
-  });
-
-  it('control: call-service never follows residence', () => {
-    expect(effectSiteFor('call-service', ['llm', 'call', {}], resident)).toBe('server');
-  });
-
-  it('control: a service that also runs on node, or a binding, stays on the server', () => {
-    expect(effectSiteFor('call-service', ['llm', 'classify', {}], resident)).toBe('server');
-    expect(effectSiteFor('call-service', ['webhook', 'send', {}], resident)).toBe('server');
-    expect(effectSiteFor('call-service', ['@config.service', 'pageview', {}], resident)).toBe('server');
-  });
-
-  it('http is not an operator, so it has no site', () => {
-    expect(effectSiteFor('http', ['GET', 'https://api.example.com', '/x'], resident)).toBeUndefined();
-  });
-
-  it('control: client and any effects keep their declared site', () => {
-    expect(effectSiteFor('render-ui', ['main', {}], resident)).toBe('client');
-    expect(effectSiteFor('emit', ['DONE'], resident)).toBe('any');
-  });
-
-  it('a pure or unknown operator has no site', () => {
-    expect(effectSiteFor('math/abs', [1], resident)).toBeUndefined();
-  });
-});

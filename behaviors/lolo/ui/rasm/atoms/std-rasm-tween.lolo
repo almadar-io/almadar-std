@@ -1,7 +1,10 @@
 app std-rasm-tween [
   version: "1.0.0",
-  description: "std-rasm-tween — drives a number from one value to another over a duration with an easing, for choreography beyond springs. RASM_TWEEN_START for its id begins a run { from, to, durationMs }; a 16 ms tick advances it, and each step emits the configured step event with { id, value, t } where t is the eased progress; the last step lands exactly on the target and emits the done event with { id, value }. RASM_TWEEN_CANCEL stops a run where it is. Easings are linear, ease-in, ease-out and ease-in-out. A new start while running restarts from the new values."
+  description: "std-rasm-tween — drives a number from one value to another over a duration with an easing, for choreography beyond springs. RASM_TWEEN_START for its id begins a run { from, to, durationMs }; a 16 ms tick advances it, and each step emits the configured step event with { id, value, t } where t is the eased progress; the last step lands exactly on the target and emits the done event with { id, value }. RASM_TWEEN_CANCEL stops a run where it is. Easings are linear, ease-in, ease-out and ease-in-out. A new start while running restarts from the new values. With `startOn` set, a std-rasm-presence RASM_ENTER whose order names that id starts a run from the configured startFrom, startTo and startMs, so a number counts up as its section arrives. Under reduced motion (RASM_MOTION { reduced: true }, relayed by std-rasm-surface) every start lands on its target at once."
 ]
+
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
+type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
 
 orbital RasmTweenOrbital {
   entity RasmTweenItem [runtime] {
@@ -11,6 +14,7 @@ orbital RasmTweenOrbital {
     durationMs : number = 0
     elapsed : number = 0
     value : number = 0
+    reduced : boolean = false
   }
 
   trait RasmTween -> RasmTweenItem [client] {
@@ -18,36 +22,68 @@ orbital RasmTweenOrbital {
 
     state idle {
       INIT -> idle
-      RASM_TWEEN_START -> running when (and (= ?id @config.id) (> ?durationMs 0))
+      RASM_TWEEN_START -> running when (and (= ?id @config.id) (> ?durationMs 0) (not @entity.reduced))
         (set @entity.from ?from)
         (set @entity.to ?to)
         (set @entity.durationMs ?durationMs)
         (set @entity.elapsed 0)
         (set @entity.value ?from)
         (emit @config.step { id: @config.id, value: ?from, t: 0 })
-      RASM_TWEEN_START -> idle when (and (= ?id @config.id) (<= ?durationMs 0))
+      RASM_TWEEN_START -> idle when (and (= ?id @config.id) (or (<= ?durationMs 0) @entity.reduced))
         (set @entity.from ?from)
         (set @entity.to ?to)
         (set @entity.value ?to)
         (emit @config.step { id: @config.id, value: ?to, t: 1 })
         (emit @config.done { id: @config.id, value: ?to })
+      RASM_ENTER -> running when (and (!= @config.startOn "") (array/includes ?order @config.startOn) (> @config.startMs 0) (not @entity.reduced))
+        (set @entity.from @config.startFrom)
+        (set @entity.to @config.startTo)
+        (set @entity.durationMs @config.startMs)
+        (set @entity.elapsed 0)
+        (set @entity.value @config.startFrom)
+        (emit @config.step { id: @config.id, value: @config.startFrom, t: 0 })
+      RASM_ENTER -> idle when (and (!= @config.startOn "") (array/includes ?order @config.startOn) (or (<= @config.startMs 0) @entity.reduced))
+        (set @entity.from @config.startFrom)
+        (set @entity.to @config.startTo)
+        (set @entity.value @config.startTo)
+        (emit @config.step { id: @config.id, value: @config.startTo, t: 1 })
+        (emit @config.done { id: @config.id, value: @config.startTo })
+      RASM_ENTER -> idle when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
+      RASM_MOTION -> idle
+        (set @entity.reduced ?reduced)
     }
 
     state running {
       INIT -> idle
-      RASM_TWEEN_START -> running when (and (= ?id @config.id) (> ?durationMs 0))
+      RASM_TWEEN_START -> running when (and (= ?id @config.id) (> ?durationMs 0) (not @entity.reduced))
         (set @entity.from ?from)
         (set @entity.to ?to)
         (set @entity.durationMs ?durationMs)
         (set @entity.elapsed 0)
         (set @entity.value ?from)
         (emit @config.step { id: @config.id, value: ?from, t: 0 })
-      RASM_TWEEN_START -> idle when (and (= ?id @config.id) (<= ?durationMs 0))
+      RASM_TWEEN_START -> idle when (and (= ?id @config.id) (or (<= ?durationMs 0) @entity.reduced))
         (set @entity.from ?from)
         (set @entity.to ?to)
         (set @entity.value ?to)
         (emit @config.step { id: @config.id, value: ?to, t: 1 })
         (emit @config.done { id: @config.id, value: ?to })
+      RASM_ENTER -> running when (and (!= @config.startOn "") (array/includes ?order @config.startOn) (> @config.startMs 0) (not @entity.reduced))
+        (set @entity.from @config.startFrom)
+        (set @entity.to @config.startTo)
+        (set @entity.durationMs @config.startMs)
+        (set @entity.elapsed 0)
+        (set @entity.value @config.startFrom)
+        (emit @config.step { id: @config.id, value: @config.startFrom, t: 0 })
+      RASM_ENTER -> idle when (and (!= @config.startOn "") (array/includes ?order @config.startOn) (or (<= @config.startMs 0) @entity.reduced))
+        (set @entity.from @config.startFrom)
+        (set @entity.to @config.startTo)
+        (set @entity.value @config.startTo)
+        (emit @config.step { id: @config.id, value: @config.startTo, t: 1 })
+        (emit @config.done { id: @config.id, value: @config.startTo })
+      RASM_ENTER -> running when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
+      RASM_MOTION -> running
+        (set @entity.reduced ?reduced)
       RASM_TWEEN_CANCEL -> idle when (= ?id @config.id)
       RASM_TWEEN_FRAME -> running when (< (+ @entity.elapsed ?dtMs) @entity.durationMs)
         (set @entity.elapsed (+ @entity.elapsed ?dtMs))
@@ -82,6 +118,10 @@ orbital RasmTweenOrbital {
         @description "Stop the run where it is; no done event follows."
       RASM_TWEEN_FRAME { dtMs : number! }
         @description "One animation frame of the run; the tick sends it, and a program may drive it itself."
+      RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
+        @description "An entry choreography played; an order naming startOn starts a run from the configured values."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference; reduced, every start lands on its target at once."
     }
 
     emits {
@@ -112,6 +152,22 @@ orbital RasmTweenOrbital {
       easing : string = "linear"
         @label "Easing"
         @description "linear, ease-in, ease-out or ease-in-out."
+        @tier "presentation"
+      startOn : string = ""
+        @label "Start on"
+        @description "An id whose entry (std-rasm-presence RASM_ENTER naming it) starts a run from startFrom to startTo over startMs; empty starts only on RASM_TWEEN_START."
+        @tier "presentation"
+      startFrom : number = 0
+        @label "From"
+        @description "Where a startOn run begins."
+        @tier "presentation"
+      startTo : number = 0
+        @label "To"
+        @description "Where a startOn run lands."
+        @tier "presentation"
+      startMs : number = 0
+        @label "Duration"
+        @description "How long a startOn run takes, in ms; 0 lands at once."
         @tier "presentation"
       step : event = RASM_TWEEN_STEP
         @label "Step"

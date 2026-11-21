@@ -1,7 +1,7 @@
 app std-vector-sources [
   version: "1.0.0",
   description: "std-vector-sources — read where orb's embedding vectors live and which embedding provider is configured. SOURCES { paths } reads the environment the Rust embedder read (ALMADAR_VECTORS_DIR, HOME, EMBEDDING_PROVIDER, EMBEDDING_API_KEY, OPENAI_API_KEY, OPEN_ROUTER_API_KEY, EMBEDDING_MODEL, LMSTUDIO_EMBEDDING_MODEL) and each package snapshot path in order (a file that does not exist is an empty bytes value; any other read failure is a refusal), then answers SOURCES_READY { snapshots, snapshotPaths, userDir, userAnchor, providerModel, providerKind, embedModel } for std-vector-resolve: userDir is ALMADAR_VECTORS_DIR, else HOME/.almadar/vectors, and userAnchor says which (`env` or `home`), the anchor the user store is addressed under; providerKind selects the embedding instance (openrouter-shared, openrouter-own, openai-shared, openai-own, lmstudio, empty without a provider; openai and openrouter need a key); providerModel is the model it produces and embedModel the name it is asked for. USER_STORE_NEEDED { model, path } answers USER_STORE_READ { data } with the user store file (empty bytes when it does not exist), read under ALMADAR_VECTORS_DIR when set, else under ~/.almadar/vectors. SOURCES_REFUSED { code, detail } carries a failed read.",
-  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL", "LMSTUDIO_HOST"],
   fs: { cwd: "node_modules/**": [read], "~/.almadar/sidecars/**": [read], "~/.almadar/vectors/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] }
 ]
 uses Spec from "almadar-std/vector-sources"
@@ -22,6 +22,7 @@ orbital VectorSourcesOrbital {
     envRouter : string = ""
     envModel : string = ""
     envLm : string = ""
+    envLmHost : string = ""
     userDir : string = ""
     userAnchor : string = ""
     providerKind : string = ""
@@ -48,6 +49,7 @@ orbital VectorSourcesOrbital {
         (os/getenv "OPEN_ROUTER_API_KEY" { key: "OPEN_ROUTER_API_KEY" emit: { success: SRC_SECRET, failure: SRC_FAILED } })
         (os/getenv "EMBEDDING_MODEL" { key: "EMBEDDING_MODEL" emit: { success: SRC_ENV, failure: SRC_FAILED } })
         (os/getenv "LMSTUDIO_EMBEDDING_MODEL" { key: "LMSTUDIO_EMBEDDING_MODEL" emit: { success: SRC_ENV, failure: SRC_FAILED } })
+        (os/getenv "LMSTUDIO_HOST" { key: "LMSTUDIO_HOST" emit: { success: SRC_ENV, failure: SRC_FAILED } })
       USER_STORE_NEEDED -> idle when (!= @entity.envDir "")
         (os/read-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (os/path-base @payload.path) } { key: @payload.path emit: { success: SRC_USER_READ, failure: SRC_USER_ABSENT } })
       USER_STORE_NEEDED -> idle when (== @entity.envDir "")
@@ -67,10 +69,10 @@ orbital VectorSourcesOrbital {
         (emit SRC_ENV { key: (default @payload.key ""), value: (if (!= (default @payload.value "") "") "set" "") })
       SRC_FAILED -> idle
         (emit SOURCES_REFUSED { code: "ORB_VECTOR_ENV", detail: (str/concat "cannot read the environment: " @payload.error) })
-      SRC_ENV -> envs when (< @entity.idx 7)
+      SRC_ENV -> envs when (< @entity.idx 8)
         (set @entity.vars (default (object/merge @entity.vars (default (object/fromEntries [[(default @payload.key ""), (default @payload.value "")]]) {})) @entity.vars))
         (set @entity.idx (+ @entity.idx 1))
-      SRC_ENV -> snapshots when (>= @entity.idx 7)
+      SRC_ENV -> snapshots when (>= @entity.idx 8)
         (set @entity.vars (default (object/merge @entity.vars (default (object/fromEntries [[(default @payload.key ""), (default @payload.value "")]]) {})) @entity.vars))
         (set @entity.envDir (default (object/get @entity.vars "ALMADAR_VECTORS_DIR") ""))
         (set @entity.envProv (if (!= (default (object/get @entity.vars "EMBEDDING_PROVIDER") "") "") (default (object/get @entity.vars "EMBEDDING_PROVIDER") "") "openrouter"))
@@ -79,9 +81,10 @@ orbital VectorSourcesOrbital {
         (set @entity.envRouter (default (object/get @entity.vars "OPEN_ROUTER_API_KEY") ""))
         (set @entity.envModel (default (object/get @entity.vars "EMBEDDING_MODEL") ""))
         (set @entity.envLm (default (object/get @entity.vars "LMSTUDIO_EMBEDDING_MODEL") ""))
+        (set @entity.envLmHost (default (object/get @entity.vars "LMSTUDIO_HOST") ""))
         (set @entity.userDir (if (!= @entity.envDir "") @entity.envDir (str/concat (default (object/get @entity.vars "HOME") "") "/.almadar/vectors")))
         (set @entity.userAnchor (if (!= @entity.envDir "") "env" "home"))
-        (set @entity.providerKind (if (== @entity.envProv "openai") (if (!= @entity.envKey "") "openai-shared" (if (!= @entity.envOpenai "") "openai-own" "")) (if (== @entity.envProv "openrouter") (if (!= @entity.envKey "") "openrouter-shared" (if (!= @entity.envRouter "") "openrouter-own" "")) "lmstudio")))
+        (set @entity.providerKind (if (== @entity.envProv "openai") (if (!= @entity.envKey "") "openai-shared" (if (!= @entity.envOpenai "") "openai-own" "")) (if (== @entity.envProv "openrouter") (if (!= @entity.envKey "") "openrouter-shared" (if (!= @entity.envRouter "") "openrouter-own" "")) (if (!= @entity.envLmHost "") "lmstudio-at" "lmstudio"))))
         (set @entity.providerModel (if (== @entity.providerKind "") "" (if (== @entity.envProv "lmstudio") "baai/bge-base-en-v1.5" (if (!= @entity.envModel "") @entity.envModel "baai/bge-base-en-v1.5"))))
         (set @entity.embedModel (if (== @entity.providerKind "") "" (if (== @entity.envProv "lmstudio") (if (!= @entity.envLm "") @entity.envLm "text-embedding-bge-base-en-v1.5") @entity.providerModel)))
         (emit SRC_NEXT { })
