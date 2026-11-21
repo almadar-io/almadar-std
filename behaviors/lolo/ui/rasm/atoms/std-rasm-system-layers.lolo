@@ -1,0 +1,101 @@
+app std-rasm-system-layers [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-layers — one design system's layers, held once and handed over on request. Its knobs are the layers a std ui/rasm/systems file sets on its page (looks, breakpoint looks, palette, fonts, layout, motion, sounds, sound base). RASM_SYSTEM_ASK { name } naming this system answers RASM_SYSTEM_SET with every layer, for std-rasm-theme (surface, palette, fonts) and std-rasm-trend (layout, motion); a name that is not this system answers nothing. std-rasm-page composes it as its Layers trait, so a page that switches systems at run time imports another system file's Layers alone with `uses lazy` and `only { Layers }`, and that file loads the first time the viewer asks for it."
+]
+
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLight = { color : string!, intensity : number! }
+type RasmKeyLight = { color : string!, intensity : number!, position : [number]! }
+type RasmLighting = { ambient : RasmLight!, directional : RasmKeyLight!, hemisphere : RasmLight! }
+type RasmLook = { lighting : RasmLighting, inset : RasmInset, fill : string, stroke : string, strokeWidth : number, strokeDash : [number], corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmFont = { family : string!, file : string!, generic : "serif" | "sans-serif" | "monospace"! }
+type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
+type RasmMotion = { signature : string!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmSound = { path : string!, volume : number, loop : boolean, poolSize : number, autostart : boolean, crossfade : boolean, crossfadeDurationMs : number }
+
+orbital RasmSystemLayersOrbital {
+  entity RasmSystemLayersRun [runtime] {
+    id : string!
+  }
+
+  trait RasmSystemLayers -> RasmSystemLayersRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_SYSTEM_ASK -> ready when (and (!= @config.system "") (= ?name @config.system))
+        (emit RASM_SYSTEM_SET { name: @config.system, looks: @config.looks, breakpointLooks: @config.systemBreakpointLooks, palette: @config.palette, fonts: @config.fonts, layout: @config.layout, motion: @config.motion, sounds: @config.sounds, soundBase: @config.soundBase })
+      RASM_SYSTEM_ASK -> ready when (not (and (!= @config.system "") (= ?name @config.system)))
+    }
+
+    emits {
+      RASM_SYSTEM_SET -> external {
+        name : string!
+        looks : Map string RasmLook!
+        breakpointLooks : Map string (Map string RasmLook)!
+        palette : Map string string!
+        fonts : Map string RasmFont!
+        layout : RasmLayout?
+        motion : RasmMotion?
+        sounds : Map string RasmSound!
+        soundBase : string!
+      }
+        @description "This system's layers, for the theme (looks, breakpoint looks, palette, fonts) and the trend (layout, motion), and the sound layer."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_SYSTEM_ASK { name : string! }
+        @description "Wear the named design system: answered by the system of that name."
+        @synonyms "switch design system"
+    }
+
+    config {
+      system : string = ""
+        @label "System"
+        @description "The name of the design system these layers are."
+        @tier "presentation"
+      looks : Map string RasmLook = {}
+        @label "Looks"
+        @description "The system's surface layer: its look table."
+        @tier "presentation"
+      systemBreakpointLooks : Map string (Map string RasmLook) = {}
+        @label "Breakpoint looks"
+        @description "The system's looks per breakpoint name."
+        @tier "presentation"
+      palette : Map string string = {}
+        @label "Palette"
+        @description "The system's colour layer, by theme colour name."
+        @tier "presentation"
+      fonts : Map string RasmFont = {}
+        @label "Fonts"
+        @description "The system's type layer: the face and font file of each role."
+        @tier "presentation"
+      layout : RasmLayout? = null
+        @label "Layout"
+        @description "The system's composition layer."
+        @tier "presentation"
+      motion : RasmMotion? = null
+        @label "Motion"
+        @description "The system's motion layer."
+        @tier "presentation"
+      sounds : Map string RasmSound = {}
+        @label "Sounds"
+        @description "The system's sound layer, by cue name."
+        @tier "presentation"
+      soundBase : string = ""
+        @label "Sound base"
+        @description "The URL prefix of the system's sound files."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmSystemLayersStart -> RasmSystemLayers
+}

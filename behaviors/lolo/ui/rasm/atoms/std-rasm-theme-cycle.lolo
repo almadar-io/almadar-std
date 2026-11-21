@@ -16,26 +16,26 @@ orbital RasmThemeCycleOrbital {
 
     state ready {
       INIT -> ready
-        (set @entity.index (math/max 0 (array/indexOf @config.styles @config.start)))
-      RASM_BOOT -> ready when (> (array/len @config.themes) 0)
+        (set @entity.index (math/max 0 (if (> (array/len @config.systems) 0) (array/indexOf @config.systems @config.start) (array/indexOf @config.styles @config.start))))
+      RASM_BOOT -> ready when (and (= (array/len @config.systems) 0) (> (array/len @config.themes) 0))
         (emit RASM_TEXT_KEY { id: @config.labelId, key: (let ((ls : [MessageKey] @config.labels)) (default (array/nth @ls @entity.index) @config.refused)) })
-      RASM_THEME_NEXT -> ready when (> (array/len @config.themes) 0)
+      RASM_THEME_NEXT -> ready when (and (= (array/len @config.systems) 0) (> (array/len @config.themes) 0))
         (let ((to (math/mod (+ @entity.index 1) (array/len @config.themes))))
           (do
             (set @entity.pending @to)
             (theme/set (default (array/nth @config.themes @to) "") { emit: { success: RASM_THEME_BOUND, failure: RASM_THEME_REFUSED } })))
-      RASM_THEME_NEXT -> ready when (<= (array/len @config.themes) 0)
-      RASM_THEME_PREV -> ready when (> (array/len @config.themes) 0)
+      RASM_THEME_NEXT -> ready when (and (= (array/len @config.systems) 0) (<= (array/len @config.themes) 0))
+      RASM_THEME_PREV -> ready when (and (= (array/len @config.systems) 0) (> (array/len @config.themes) 0))
         (let ((to (math/mod (+ @entity.index (- (array/len @config.themes) 1)) (array/len @config.themes))))
           (do
             (set @entity.pending @to)
             (theme/set (default (array/nth @config.themes @to) "") { emit: { success: RASM_THEME_BOUND, failure: RASM_THEME_REFUSED } })))
-      RASM_THEME_PREV -> ready when (<= (array/len @config.themes) 0)
-      RASM_THEME_SELECT -> ready when (and (>= ?index 0) (< ?index (array/len @config.themes)))
+      RASM_THEME_PREV -> ready when (and (= (array/len @config.systems) 0) (<= (array/len @config.themes) 0))
+      RASM_THEME_SELECT -> ready when (and (= (array/len @config.systems) 0) (>= ?index 0) (< ?index (array/len @config.themes)))
         (do
           (set @entity.pending ?index)
           (theme/set (default (array/nth @config.themes ?index) "") { emit: { success: RASM_THEME_BOUND, failure: RASM_THEME_REFUSED } }))
-      RASM_THEME_SELECT -> ready when (not (and (>= ?index 0) (< ?index (array/len @config.themes))))
+      RASM_THEME_SELECT -> ready when (and (= (array/len @config.systems) 0) (not (and (>= ?index 0) (< ?index (array/len @config.themes)))))
       RASM_THEME_BOUND -> ready when (>= @entity.pending 0)
         (let ((at @entity.pending))
           (do
@@ -51,9 +51,32 @@ orbital RasmThemeCycleOrbital {
           (set @entity.problem (str/concat ?kind ": " ?error))
           (emit RASM_TEXT_KEY { id: @config.labelId, key: @config.refused }))
       RASM_THEME_REFUSED -> ready when (< @entity.pending 0)
+      RASM_BOOT -> ready when (> (array/len @config.systems) 0)
+        (emit RASM_TEXT_KEY { id: @config.labelId, key: (let ((ls : [MessageKey] @config.systemLabels)) (default (array/nth @ls @entity.index) @config.refused)) })
+      RASM_THEME_NEXT -> ready when (> (array/len @config.systems) 0)
+        (emit SYSTEM_STEP { to: (math/mod (+ @entity.index 1) (array/len @config.systems)) })
+      RASM_THEME_PREV -> ready when (> (array/len @config.systems) 0)
+        (emit SYSTEM_STEP { to: (math/mod (+ @entity.index (- (array/len @config.systems) 1)) (array/len @config.systems)) })
+      RASM_THEME_SELECT -> ready when (and (> (array/len @config.systems) 0) (>= ?index 0) (< ?index (array/len @config.systems)))
+        (emit SYSTEM_STEP { to: ?index })
+      RASM_THEME_SELECT -> ready when (and (> (array/len @config.systems) 0) (not (and (>= ?index 0) (< ?index (array/len @config.systems)))))
+      SYSTEM_STEP -> ready
+        (set @entity.index ?to)
+        (emit RASM_SYSTEM_ASK { name: (default (array/nth @config.systems ?to) "") })
+        (emit RASM_TEXT_KEY { id: @config.labelId, key: (let ((ls : [MessageKey] @config.systemLabels)) (default (array/nth @ls ?to) @config.refused)) })
     }
 
     emits {
+      SYSTEM_STEP -> internal {
+        to : number!
+      }
+        @description "Wear the design system at this position of `systems`."
+        @tier "internal"
+      RASM_SYSTEM_ASK -> external {
+        name : string!
+      }
+        @description "The design system to wear, for std-rasm-system-layers: the one of that name answers with its layers."
+        @tier "domain"
       RASM_THEME_SET -> external {
         name : string!
       }
@@ -98,6 +121,14 @@ orbital RasmThemeCycleOrbital {
       start : string = ""
         @label "Start style"
         @description "The style of the art direction the page starts in; the first when no style matches."
+        @tier "presentation"
+      systems : [string] = []
+        @label "Systems"
+        @description "The std design systems to step through, by name (std-rasm-system-<name>): set, the cycle asks for the system at each step with RASM_SYSTEM_ASK instead of binding a program theme, and `themes`, `styles` and `labels` are not read."
+        @tier "presentation"
+      systemLabels : [MessageKey] = []
+        @label "System labels"
+        @description "The catalog key of each system's label, in the order of systems."
         @tier "presentation"
       labelId : string = "themeLabel"
         @label "Label id"

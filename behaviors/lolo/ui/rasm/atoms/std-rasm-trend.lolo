@@ -8,6 +8,18 @@ type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offset
 type RasmMotion = { signature : string!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
 type RasmEntry = { enterMs : number!, keyframes : [RasmEntryKey]! }
 type RasmTrend = { layout : RasmLayout!, motion : RasmMotion! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLight = { color : string!, intensity : number! }
+type RasmKeyLight = { color : string!, intensity : number!, position : [number]! }
+type RasmLighting = { ambient : RasmLight!, directional : RasmKeyLight!, hemisphere : RasmLight! }
+type RasmLook = { lighting : RasmLighting, inset : RasmInset, fill : string, stroke : string, strokeWidth : number, strokeDash : [number], corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmFont = { family : string!, file : string!, generic : "serif" | "sans-serif" | "monospace"! }
+type RasmSound = { path : string!, volume : number, loop : boolean, poolSize : number, autostart : boolean, crossfade : boolean, crossfadeDurationMs : number }
 
 orbital RasmTrendOrbital {
   entity RasmTrendRun [runtime] {
@@ -32,6 +44,13 @@ orbital RasmTrendOrbital {
             (do
               (set @entity.active (if (= (object/get @config.trends @config.trend null) null) "default" @config.trend))
               (emit RASM_TREND { name: @entity.active, layout: @tr.layout, motion: (let ((m : RasmMotion @tr.motion)) (let ((s (object/get @config.signatures @m.signature null))) (if (= @s null) @m { signature: @m.signature, stiffness: @m.stiffness, damping: @m.damping, stagger: @m.stagger, enterMs: @s.enterMs, keyframes: @s.keyframes }))) })))))
+      RASM_SYSTEM_SET -> ready when (and (!= ?layout null) (!= ?motion null))
+        (let ((ol : RasmLayout ?layout)
+              (om : RasmMotion ?motion))
+          (do
+            (set @entity.active ?name)
+            (emit RASM_TREND { name: ?name, layout: @ol, motion: @om })))
+      RASM_SYSTEM_SET -> ready when (not (and (!= ?layout null) (!= ?motion null)))
     }
 
     emits {
@@ -45,6 +64,8 @@ orbital RasmTrendOrbital {
     }
 
     listens {
+      RASM_SYSTEM_SET { name : string!  looks : Map string RasmLook!  breakpointLooks : Map string (Map string RasmLook)!  palette : Map string string!  fonts : Map string RasmFont!  layout : RasmLayout?  motion : RasmMotion?  sounds : Map string RasmSound!  soundBase : string! }
+        @description "Wear another design system (std-rasm-system-layers): with layout and motion both given, they are announced as the trend."
       RASM_BOOT { }
         @description "The surface mounted: announce the configured trend."
     }

@@ -9,47 +9,57 @@ uses Shell from "std/behaviors/std-rasm-page"
 orbital RasmPage = Shell.orbitals.RasmPage {
   config {
     system: "swiss-poster"
-    palette: {background: "#FFFFFF", foreground: "#000000", card: "#FFFFFF", "card-foreground": "#000000", surface: "#F7F7F7", muted: "#EBEBEB", "muted-foreground": "#525252", border: "#8C8C8C", input: "#808080", primary: "#E30613", "primary-hover": "#C10510", "primary-foreground": "#FFFFFF", secondary: "#FFFFFF", "secondary-foreground": "#000000", "secondary-hover": "#E0E0E0", accent: "#E30613", "accent-foreground": "#FFFFFF", ring: "#E30613", "series-1": "#E30613", "series-2": "#7D030A", "series-3": "#F0767D", "series-4": "#4D4D4D", "series-5": "#B14349"}
+    palette: {background: "#FFFFFF", foreground: "#000000", card: "#FFFFFF", "card-foreground": "#000000", surface: "#F7F7F7", muted: "#EBEBEB", "muted-foreground": "#525252", border: "#767676", input: "#6B6B6B", primary: "#E30613", "primary-hover": "#C10510", "primary-foreground": "#FFFFFF", secondary: "#FFFFFF", "secondary-foreground": "#000000", "secondary-hover": "#E0E0E0", accent: "#E30613", "accent-foreground": "#FFFFFF", ring: "#E30613", "series-1": "#E30613", "series-2": "#7D030A", "series-3": "#F0767D", "series-4": "#4D4D4D", "series-5": "#B14349"}
     fonts: { display: { family: "Schibsted Grotesk", file: "https://almadar-kflow-assets.web.app/fonts/schibstedgrotesk/SchibstedGrotesk%5Bwght%5D.ttf", generic: "sans-serif" }, body: { family: "Inter", file: "https://almadar-kflow-assets.web.app/fonts/inter/Inter%5Bopsz%2Cwght%5D.ttf", generic: "sans-serif" } }
     looks: {
-        "surface/ground/idle": { fill: "background", material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> { let l = dot(px.color.rgb, vec3<f32>(0.299, 0.587, 0.114)); let s = select(1.0, -1.0, l > 0.5); let p = px.local; let cw = px.size.x / 12.0; let fx = fract(p.x / cw); let dl = min(fx, 1.0 - fx) * cw; let by = fract(p.y / 24.0) * 24.0; let ty = fract(p.y / 192.0) * 192.0; let tdy = min(ty, 192.0 - ty); var d = (1.0 - smoothstep(0.3, 0.9, dl)) * 0.05 + (1.0 - smoothstep(0.3, 0.9, by)) * 0.012; let tick = (1.0 - smoothstep(0.4, 1.0, dl)) * (1.0 - smoothstep(5.0, 6.0, tdy)) + (1.0 - smoothstep(0.4, 1.0, tdy)) * (1.0 - smoothstep(5.0, 6.0, dl)); d = d + clamp(tick, 0.0, 1.0) * 0.12; let ctr = vec2<f32>(px.size.x * 0.78, px.size.y * 0.4 + px.scroll * 60.0); let ring = (1.0 - smoothstep(0.5, 1.4, abs(length(p - ctr) - px.size.x * 0.3))) * 0.05; let red = vec3<f32>(0.9, 0.1, 0.1); let h = 240.0 + px.scroll * 600.0; let bar = step(p.x, cw) * (1.0 - smoothstep(h - 1.0, h, p.y)); let c = mix(px.color.rgb + vec3<f32>(s * (d + ring)), red, bar * 0.07); return vec4<f32>(c, px.color.a); }", params: [0.0, 0.0, 0.0, 0.0], live: false } },
-        "stack/card/idle": { fill: "card", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(0,0,0,0.16)", blur: 24, offsetX: 0, offsetY: 10 } },
-        "card/surface/idle": { fill: "card", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(0,0,0,0.16)", blur: 24, offsetX: 0, offsetY: 10 }, spring: { stiffness: 320, damping: 32 } },
-        "card/surface/hovered": { fill: "surface", stroke: "primary", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 320, damping: 32 } },
-        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 320, damping: 32 } },
-        "card/surface/pressed": { fill: "surface", stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 400, damping: 34 } },
-        "card/header/idle": { fill: "surface", textColor: "foreground", font: "700 13px body", corners: { radius: [0, 0, 0, 0], kind: "round" }, on: "card/header/idle" },
-        "card/divider/idle": { stroke: "foreground", strokeWidth: 1 },
+        "surface/ground/idle": { fill: "background" },
+        "stack/card/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "stack/panel/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "stack/hero/idle": { corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "stack/bar/idle": { fill: "background", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "pressable/primary/idle": { textColor: "foreground", font: "700 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "pressable/primary/hovered": { fill: "primary", textColor: "primary-foreground", font: "700 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "pressable/primary/pressed": { fill: "foreground", textColor: "background", font: "700 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 460, damping: 42 } },
+        "pressable/primary/focused": { stroke: "ring", strokeWidth: 3, textColor: "foreground", font: "700 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "pressable/secondary/idle": { textColor: "foreground", font: "500 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "pressable/secondary/hovered": { fill: "foreground", textColor: "background", font: "500 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "pressable/secondary/pressed": { fill: "primary", textColor: "primary-foreground", font: "500 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 460, damping: 42 } },
+        "pressable/secondary/focused": { stroke: "ring", strokeWidth: 3, textColor: "foreground", font: "500 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "pressable/secondary/disabled": { textColor: "muted-foreground", font: "500 18px display", corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "text/display/idle": { textColor: "foreground", font: "900 120px display" },
+        "text/poster/idle": { textColor: "foreground", font: "800 176px display" },
+        "text/title/idle": { textColor: "foreground", font: "800 40px display" },
+        "text/eyebrow/idle": { textColor: "primary", font: "700 13px body" },
+        "text/body/idle": { textColor: "foreground", font: "400 17px body" },
+        "text/card/idle": { textColor: "card-foreground", font: "700 22px display", on: "card/surface/idle" },
+        "text/numeral/idle": { textColor: "foreground", font: "900 200px display" },
+        "text/label/idle": { textColor: "foreground", font: "700 13px body" },
+        "text/caption/idle": { textColor: "muted-foreground", font: "500 13px body" },
+        "text/inverse/idle": { textColor: "foreground", font: "700 22px display", on: "section/band/idle" },
+        "card/surface/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "card/surface/hovered": { fill: "background", stroke: "primary", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "card/surface/focused": { fill: "background", stroke: "ring", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 360, damping: 38 } },
+        "card/surface/pressed": { fill: "surface", stroke: "primary", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, spring: { stiffness: 460, damping: 42 } },
+        "card/header/idle": { fill: "background", textColor: "foreground", font: "700 13px body", corners: { radius: [0, 0, 0, 0], kind: "round" }, on: "card/header/idle" },
+        "card/divider/idle": { stroke: "foreground", strokeWidth: 2 },
         "card/media/idle": { fill: "surface", corners: { radius: [0, 0, 0, 0], kind: "round" } },
         "card/meta/idle": { textColor: "muted-foreground", font: "500 13px body", on: "card/surface/idle" },
-        "panel/surface/idle": { fill: "surface", stroke: "foreground", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(0,0,0,0.14)", blur: 36, offsetX: 0, offsetY: 16 } },
+        "panel/surface/idle": { fill: "background", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
         "panel/header/idle": { fill: "foreground", textColor: "background", font: "700 13px body", corners: { radius: [0, 0, 0, 0], kind: "round" }, on: "panel/header/idle" },
-        "panel/divider/idle": { stroke: "foreground", strokeWidth: 1 },
+        "panel/divider/idle": { stroke: "foreground", strokeWidth: 2 },
         "section/band/idle": { fill: "surface" },
-        "section/rule/idle": { stroke: "foreground", strokeWidth: 2 },
+        "section/rule/idle": { stroke: "foreground", strokeWidth: 3 },
         "focus/ring/outer": { stroke: "background", strokeWidth: 7 },
         "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
-        "pressable/primary/focused": { fill: "primary", textColor: "primary-foreground", stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, font: "700 16px body", spring: { stiffness: 320, damping: 32 } },
-        "pressable/secondary/focused": { fill: "background", stroke: "ring", strokeWidth: 3, textColor: "foreground", corners: { radius: [0, 0, 0, 0], kind: "round" }, font: "700 16px body", spring: { stiffness: 320, damping: 32 } },
-        "stack/panel/idle": { fill: "surface", corners: { radius: [0, 0, 0, 0], kind: "round" } },
-        "stack/hero/idle": { stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" } },
-        "stack/bar/idle": { fill: "background", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
-        "pressable/primary/idle": { fill: "primary", textColor: "primary-foreground", corners: { radius: [0, 0, 0, 0], kind: "round" }, font: "700 16px body", spring: { stiffness: 320, damping: 32 } },
-        "pressable/primary/hovered": { fill: "foreground", textColor: "background", corners: { radius: [0, 0, 0, 0], kind: "round" }, font: "700 16px body", spring: { stiffness: 320, damping: 32 } },
-        "pressable/primary/pressed": { fill: "primary-hover", textColor: "primary-foreground", corners: { radius: [0, 0, 0, 0], kind: "round" }, font: "700 16px body", spring: { stiffness: 400, damping: 34 } },
-        "pressable/secondary/idle": { fill: "background", stroke: "foreground", strokeWidth: 2, textColor: "foreground", corners: { radius: [0, 0, 0, 0], kind: "round" }, font: "700 16px body", spring: { stiffness: 320, damping: 32 } },
-        "pressable/secondary/hovered": { fill: "foreground", stroke: "foreground", strokeWidth: 2, textColor: "background", corners: { radius: [0, 0, 0, 0], kind: "round" }, font: "700 16px body", spring: { stiffness: 320, damping: 32 } },
-        "text/display/idle": { textColor: "foreground", font: "900 112px display" },
-        "text/title/idle": { textColor: "foreground", font: "800 36px display" },
-        "text/eyebrow/idle": { textColor: "primary", font: "700 13px body" },
-        "text/body/idle": { textColor: "foreground", font: "400 16px body" },
-        "text/card/idle": { textColor: "card-foreground", font: "700 22px display", on: "card/surface/idle" },
         "morph/default/idle": { fill: "primary" },
-        "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet rule = sg_fill(abs(p.y - c.y) - 3.0);\nlet d = min(fract(p.x / 24.0), 1.0 - fract(p.x / 24.0)) * 24.0;\nlet tk = (1.0 - smoothstep(0.3, 1.3, d)) * step(c.y - 16.0, p.y) * step(p.y, c.y - 6.0);\nreturn sg_out(px, px.color.rgb, max(rule, tk));\n}\n", params: [0, 0, 0, 0], live: false } },
-        "text/poster/idle": { textColor: "foreground", font: "800 168px display" }
+        "ornament/signature/idle": { fill: "primary", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet o = vec2<f32>(s.x * 0.0, s.y);\nlet r = length(p - o);\nlet band = abs(fract(r / 36.0) - 0.5) * 36.0;\nlet ring = sg_fill(band - 3.0);\nlet quarter = step(o.x, p.x) * step(p.y, o.y);\nreturn sg_out(px, px.color.rgb, ring * quarter);\n}\n", params: [0, 0, 0, 0], live: false } },
+        "textfield/default/idle": { fill: "background", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "400 17px body", spring: { stiffness: 360, damping: 38 } },
+        "textfield/default/hovered": { fill: "surface", stroke: "foreground", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "400 17px body", spring: { stiffness: 360, damping: 38 } },
+        "textfield/default/focused": { fill: "background", stroke: "ring", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "foreground", font: "400 17px body", spring: { stiffness: 360, damping: 38 } }
       }
-    layout: { hero: "offset", columns: 12, asymmetry: 0.33, ornament: "rule", align: "start", imageTreatment: "none", sectionGap: 128, gutter: 24 }
-    motion: { signature: "swiss-slide", stiffness: 320, damping: 32, stagger: 60, enterMs: 702, keyframes: [{ at: 0, opacity: 0, offsetX: 18, offsetY: -16, scale: 1, rotate: 0 }, { at: 0.1, opacity: 0.006, offsetX: 17.884, offsetY: -15.897, scale: 1, rotate: 0 }, { at: 0.2, opacity: 0.03, offsetX: 17.451, offsetY: -15.512, scale: 1, rotate: 0 }, { at: 0.3, opacity: 0.086, offsetX: 16.457, offsetY: -14.628, scale: 1, rotate: 0 }, { at: 0.4, opacity: 0.215, offsetX: 14.134, offsetY: -12.563, scale: 1, rotate: 0 }, { at: 0.5, opacity: 0.587, offsetX: 7.432, offsetY: -6.606, scale: 1, rotate: 0 }, { at: 0.6, opacity: 0.836, offsetX: 2.959, offsetY: -2.63, scale: 1, rotate: 0 }, { at: 0.7, opacity: 0.929, offsetX: 1.272, offsetY: -1.131, scale: 1, rotate: 0 }, { at: 0.8, opacity: 0.974, offsetX: 0.468, offsetY: -0.416, scale: 1, rotate: 0 }, { at: 0.9, opacity: 0.994, offsetX: 0.101, offsetY: -0.09, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    systemBreakpointLooks: { phone: { "text/display/idle": { textColor: "foreground", font: "900 52px display" }, "text/poster/idle": { textColor: "foreground", font: "800 64px display" }, "text/title/idle": { textColor: "foreground", font: "800 28px display" }, "text/numeral/idle": { textColor: "foreground", font: "900 92px display" } }, tablet: { "text/display/idle": { textColor: "foreground", font: "900 84px display" }, "text/poster/idle": { textColor: "foreground", font: "800 108px display" }, "text/numeral/idle": { textColor: "foreground", font: "900 140px display" } } }
+    layout: { hero: "poster", columns: 8, asymmetry: 0.375, ornament: "rule", align: "start", imageTreatment: "none", sectionGap: 120, gutter: 24 }
+    motion: { signature: "swiss-slide", stiffness: 360, damping: 38, stagger: 40, enterMs: 640, keyframes: [{ at: 0, opacity: 0, offsetX: -96, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.1, opacity: 0.006, offsetX: -95.382, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.2, opacity: 0.03, offsetX: -93.074, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.3, opacity: 0.086, offsetX: -87.77, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.4, opacity: 0.215, offsetX: -75.381, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.5, opacity: 0.587, offsetX: -39.635, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.6, opacity: 0.836, offsetX: -15.782, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.7, opacity: 0.929, offsetX: -6.785, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.8, opacity: 0.974, offsetX: -2.495, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.9, opacity: 0.994, offsetX: -0.538, offsetY: 0, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
     sounds: { down: { path: "press.wav", volume: 0.5 } }
     soundBase: "https://almadar-kflow-assets.web.app/sounds/marketing-rasm/"
   }

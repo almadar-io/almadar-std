@@ -29,6 +29,7 @@ uses SurfaceAtom from "std/behaviors/std-rasm-surface"
 uses StackAtom from "std/behaviors/std-rasm-stack"
 uses FocusAtom from "std/behaviors/std-rasm-focus"
 uses CycleAtom from "std/behaviors/std-rasm-theme-cycle"
+uses LayersAtom from "std/behaviors/std-rasm-system-layers"
 uses PinAtom from "std/behaviors/std-rasm-pin"
 uses TextAtom from "std/behaviors/std-rasm-text"
 uses PresenceAtom from "std/behaviors/std-rasm-presence"
@@ -54,6 +55,7 @@ orbital RasmPage {
       Surface.RASM_BOOT -> RASM_BOOT
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
       Cycle.RASM_THEME_SET -> RASM_THEME_SET
+      Layers.RASM_SYSTEM_SET -> RASM_SYSTEM_SET
       Trend.RASM_TREND -> RASM_TREND
     }
   }
@@ -67,6 +69,24 @@ orbital RasmPage {
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
+      Layers.RASM_SYSTEM_SET -> RASM_SYSTEM_SET
+    }
+  }
+
+  trait Layers = LayersAtom.traits.RasmSystemLayers {
+    config {
+      system: @config.system
+      looks: @config.looks
+      systemBreakpointLooks: @config.systemBreakpointLooks
+      palette: @config.palette
+      fonts: @config.fonts
+      layout: @config.layout
+      motion: @config.motion
+      sounds: @config.sounds
+      soundBase: @config.soundBase
+    }
+    listens {
+      Cycle.RASM_SYSTEM_ASK -> RASM_SYSTEM_ASK
     }
   }
 
@@ -141,6 +161,8 @@ orbital RasmPage {
       styles: ["aqua", "arabesque", "art-deco", "art-nouveau", "atelier", "bauhaus", "bloomberg-dense", "blueprint", "clay", "comic", "constructivist", "corporate", "cyberpunk", "gazette", "gothic", "kawaii", "kiosk", "linear-clean", "luxury", "material", "memphis", "mid-century", "minimalist", "mudcloth", "neon", "neumorphic", "newsprint", "notion-editorial", "prism", "retro", "risograph", "scandi", "sketch", "solarpunk", "steampunk", "swiss", "terminal", "ukiyo-e", "vaporwave", "wabi-sabi", "wireframe", "zine"]
       labels: ["theme.aqua", "theme.arabesque", "theme.art-deco", "theme.art-nouveau", "theme.atelier", "theme.bauhaus", "theme.bloomberg-dense", "theme.blueprint", "theme.clay", "theme.comic", "theme.constructivist", "theme.corporate", "theme.cyberpunk", "theme.gazette", "theme.gothic", "theme.kawaii", "theme.kiosk", "theme.linear-clean", "theme.luxury", "theme.material", "theme.memphis", "theme.mid-century", "theme.minimalist", "theme.mudcloth", "theme.neon", "theme.neumorphic", "theme.newsprint", "theme.notion-editorial", "theme.prism", "theme.retro", "theme.risograph", "theme.scandi", "theme.sketch", "theme.solarpunk", "theme.steampunk", "theme.swiss", "theme.terminal", "theme.ukiyo-e", "theme.vaporwave", "theme.wabi-sabi", "theme.wireframe", "theme.zine"]
       start: @config.switcherStart
+      systems: @config.switcherSystems
+      systemLabels: @config.switcherSystemLabels
       refused: "theme.refused"
     }
     listens {
@@ -373,6 +395,14 @@ orbital RasmPage {
       @label "Trend"
       @description "The layout and motion trend the page demonstrates (a std-rasm-trend name); the style is surface only."
       @tier "presentation"
+    switcherSystems : [string] = []
+      @label "Switcher systems"
+      @description "With the switcher on, the std design systems it steps through by name instead of the Rasm styles: each must be imported by the composing program with `uses lazy <Alias> from \"std/behaviors/std-rasm-system-<name>\"` and `orbital <Local> = <Alias>.orbitals.RasmPage { only { Layers } }`, so a system loads the first time the viewer steps to it. The page's own system answers from its Layers trait."
+      @tier "presentation"
+    switcherSystemLabels : [MessageKey] = []
+      @label "Switcher system labels"
+      @description "The catalog key of each switcher system's label, in the order of switcherSystems."
+      @tier "presentation"
     switcherStart : string = ""
       @label "Switcher start"
       @description "The style of the art direction the page starts in."
@@ -391,5 +421,5 @@ orbital RasmPage {
       @tier "presentation"
   }
 
-  page "/page" as RasmPageRoute -> Theme, Trend, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel, SoundPin, SoundToggle, Sound
+  page "/page" as RasmPageRoute -> Theme, Trend, Layers, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel, SoundPin, SoundToggle, Sound
 }
