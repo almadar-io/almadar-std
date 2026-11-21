@@ -4,8 +4,8 @@ app std-rasm-trend [
 ]
 
 type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
-type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
-type RasmMotion = { signature : "rise" | "print-pass" | "fan" | "glitch" | "ink-bleed" | "paper-drop" | "kinetic" | "float" | "snap"!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
+type RasmMotion = { signature : string!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
 type RasmEntry = { enterMs : number!, keyframes : [RasmEntryKey]! }
 type RasmTrend = { layout : RasmLayout!, motion : RasmMotion! }
 
@@ -21,11 +21,17 @@ orbital RasmTrendOrbital {
     state ready {
       INIT -> ready
       RASM_BOOT -> ready
-        (let ((tr : RasmTrend? (object/get @config.trends @config.trend (object/get @config.trends "default" null))))
+        (let ((ol : RasmLayout? @config.layout)
+              (om : RasmMotion? @config.motion)
+              (tr : RasmTrend? (object/get @config.trends @config.trend (object/get @config.trends "default" null))))
+          (if (and (!= @ol null) (!= @om null))
+            (do
+              (set @entity.active @config.system)
+              (emit RASM_TREND { name: @config.system, layout: @ol, motion: @om }))
           (when (!= @tr null)
             (do
               (set @entity.active (if (= (object/get @config.trends @config.trend null) null) "default" @config.trend))
-              (emit RASM_TREND { name: @entity.active, layout: @tr.layout, motion: (let ((m : RasmMotion @tr.motion)) (let ((s (object/get @config.signatures @m.signature null))) (if (= @s null) @m { signature: @m.signature, stiffness: @m.stiffness, damping: @m.damping, stagger: @m.stagger, enterMs: @s.enterMs, keyframes: @s.keyframes }))) }))))
+              (emit RASM_TREND { name: @entity.active, layout: @tr.layout, motion: (let ((m : RasmMotion @tr.motion)) (let ((s (object/get @config.signatures @m.signature null))) (if (= @s null) @m { signature: @m.signature, stiffness: @m.stiffness, damping: @m.damping, stagger: @m.stagger, enterMs: @s.enterMs, keyframes: @s.keyframes }))) })))))
     }
 
     emits {
@@ -44,6 +50,18 @@ orbital RasmTrendOrbital {
     }
 
     config {
+      system : string = ""
+        @label "System"
+        @description "The name of the design system whose own layout and motion this page announces (with layout and motion both set)."
+        @tier "presentation"
+      layout : RasmLayout? = null
+        @label "Layout"
+        @description "The design system's own layout grammar: with motion also set it is announced instead of a named trend."
+        @tier "presentation"
+      motion : RasmMotion? = null
+        @label "Motion"
+        @description "The design system's own motion, its entry keyframes (opacity, offsets, scale, rotation; dense keyframes draw its easing curve) and enterMs given whole."
+        @tier "presentation"
       trend : string = "default"
         @label "Trend"
         @description "The name of the trend to announce (a key of trends); an unknown name announces default."

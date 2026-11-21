@@ -27,6 +27,8 @@ type RasmTransition = { durationMs : number!, distance : number!, staggerMs : nu
 type RasmRingPos = { x : number!, y : number!, z : number! }
 type RasmRingBox = { id : string!, position : RasmRingPos!, width : number?, height : number?, corners : RasmCorners? }
 type RasmTextParams = Map string string
+type RasmFont = { family : string!, file : string!, generic : "serif" | "sans-serif" | "monospace"! }
+type RasmThemeLayer = { palette : Map string string!, fonts : Map string RasmFont! }
 type RasmPaintEntry = { id : string!, z : number!, nodes : [node]!, texts : [RasmText]! }
 type RasmScrubFrame = { at : number!, opacity : number, offsetX : number, offsetY : number, scale : number, rotate : number, dashOffset : number }
 type RasmScrubEntry = { id : string!, paints : [string]!, from : number!, to : number!, keyframes : [RasmScrubFrame]! }
@@ -36,6 +38,7 @@ orbital RasmSurfaceOrbital {
     id : string!
     paints : Map string RasmPaintEntry @description "Every control's latest paint by control id." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
+    layer : RasmThemeLayer @description "The palette and fonts the announced theme lays over the host theme on the canvas." = { palette: {}, fonts: {} }
     viewW : number @description "The canvas width the layout uses: the config width, then the container's width." = 720
     viewH : number @description "The canvas height: the root's content height plus the margins, or with fill on the largest of the container's height, minHeight and the root's content height, as the canvas itself grows." = 520
     fillMin : number @description "With fill on, the root's content height: the canvas stays at least this tall, so the page scrolls instead of squeezing the content." = 0
@@ -74,6 +77,7 @@ orbital RasmSurfaceOrbital {
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_THEME -> ready
         (set @entity.looks ?looks)
+        (set @entity.layer (default ?layer { palette: {}, fonts: {} }))
         (set @entity.breakpoints (default ?breakpoints []))
         (when (> @entity.sizedW 0) (let ((hit (array/filter @entity.breakpoints (fn b (<= @b.min @entity.sizedW)))) (floor (let ((d (array/find @entity.breakpoints (fn b (= @b.name "desktop"))))) (if (= @d null) 0 @d.min)))) (when (and (> (array/len @hit) 0) (!= (object/get (array/last @hit) "name") @entity.breakpoint)) (do (set @entity.breakpoint (object/get (array/last @hit) "name")) (emit RASM_BREAKPOINT { name: (object/get (array/last @hit) "name"), width: @entity.sizedW, chain: (array/reverse (array/map (array/filter @hit (fn b (or (< (object/get (array/last @hit) "min") @floor) (>= @b.min @floor)))) (fn b @b.name))) })))))
         (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
@@ -159,6 +163,7 @@ orbital RasmSurfaceOrbital {
           mode: "2d"
           projection: "free"
           painter: "orbital"
+          themeLayer: @entity.layer
           camera: { mode: "top-down", zoom: 1 }
           pointerMoves: "captured"
           fillContainer: (if @config.fill true "width")
@@ -232,6 +237,7 @@ orbital RasmSurfaceOrbital {
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_THEME -> dirty
         (set @entity.looks ?looks)
+        (set @entity.layer (default ?layer { palette: {}, fonts: {} }))
         (set @entity.breakpoints (default ?breakpoints []))
         (when (> @entity.sizedW 0) (let ((hit (array/filter @entity.breakpoints (fn b (<= @b.min @entity.sizedW)))) (floor (let ((d (array/find @entity.breakpoints (fn b (= @b.name "desktop"))))) (if (= @d null) 0 @d.min)))) (when (and (> (array/len @hit) 0) (!= (object/get (array/last @hit) "name") @entity.breakpoint)) (do (set @entity.breakpoint (object/get (array/last @hit) "name")) (emit RASM_BREAKPOINT { name: (object/get (array/last @hit) "name"), width: @entity.sizedW, chain: (array/reverse (array/map (array/filter @hit (fn b (or (< (object/get (array/last @hit) "min") @floor) (>= @b.min @floor)))) (fn b @b.name))) })))))
         (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
@@ -317,6 +323,7 @@ orbital RasmSurfaceOrbital {
           mode: "2d"
           projection: "free"
           painter: "orbital"
+          themeLayer: @entity.layer
           camera: { mode: "top-down", zoom: 1 }
           pointerMoves: "captured"
           fillContainer: (if @config.fill true "width")
@@ -494,7 +501,7 @@ orbital RasmSurfaceOrbital {
     }
 
     listens {
-      RASM_THEME { name : string!  looks : Map string RasmLook!  breakpoints : [RasmBreakpoint] }
+      RASM_THEME { name : string!  looks : Map string RasmLook!  breakpoints : [RasmBreakpoint]  layer : RasmThemeLayer }
         @description "Store the looks and the breakpoint table, paint the ground and place the root; with a canvas size known, announce the breakpoint the new table puts it in."
       RASM_FOCUS { id : string! }
         @description "Take the focused control id; the surface draws the focus ring (focus/ring/outer then focus/ring/inner, 4px and 2px outside the control rect, the corner radius grown by the offset) around the paint node whose id it is, above every other drawable."

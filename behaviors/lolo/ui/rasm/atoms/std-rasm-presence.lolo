@@ -7,8 +7,8 @@ type RasmRect = { x : number!, y : number!, w : number!, h : number! }
 type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
 type RasmPresenceView = { anchor : string!, order : [string]! }
 type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
-type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
-type RasmMotion = { signature : "rise" | "print-pass" | "fan" | "glitch" | "ink-bleed" | "paper-drop" | "kinetic" | "float" | "snap"!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
+type RasmMotion = { signature : string!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
 type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
 
 orbital RasmPresenceOrbital {
@@ -55,7 +55,7 @@ orbital RasmPresenceOrbital {
       RASM_TREND -> ready
         (set @entity.motion ?motion)
       PRESENCE_GO -> ready
-        (emit RASM_ENTER { order: ?order, staggerMs: (if (= @entity.motion null) @config.staggerMs @entity.motion.stagger), entries: (let ((mo @entity.motion)) (if (or (= @mo null) (= @mo.keyframes null)) [] (let ((ks (default @mo.keyframes [])) (ms (default @mo.enterMs 520))) (array/map (array/range 0 (array/len ?order)) (fn i (let ((delay (* @i @mo.stagger))) (let ((dur (+ @ms @delay))) (let ((d (default (/ @delay @dur) 0)) (first (default (array/first @ks) { at: 0, opacity: 1, offsetX: 0, offsetY: 0 }))) { id: (default (array/nth ?order @i) ""), durationMs: @dur, keyframes: (array/concat [{ at: 0, opacity: @first.opacity, offsetX: @first.offsetX, offsetY: @first.offsetY }] (array/map @ks (fn k { at: (+ @d (* @k.at (- 1 @d))), opacity: @k.opacity, offsetX: @k.offsetX, offsetY: @k.offsetY }))) })))))))) })
+        (emit RASM_ENTER { order: ?order, staggerMs: (if (= @entity.motion null) @config.staggerMs @entity.motion.stagger), entries: (let ((mo @entity.motion)) (if (or (= @mo null) (= @mo.keyframes null)) [] (let ((ks (default @mo.keyframes [])) (ms (default @mo.enterMs 520))) (array/map (array/range 0 (array/len ?order)) (fn i (let ((delay (* @i @mo.stagger))) (let ((dur (+ @ms @delay))) (let ((d (default (/ @delay @dur) 0)) (first (default (array/first @ks) { at: 0, opacity: 1, offsetX: 0, offsetY: 0 }))) { id: (default (array/nth ?order @i) ""), durationMs: @dur, keyframes: (array/concat [{ at: 0, opacity: @first.opacity, offsetX: @first.offsetX, offsetY: @first.offsetY, scale: (default @first.scale 1), rotate: (default @first.rotate 0) }] (array/map @ks (fn k { at: (+ @d (* @k.at (- 1 @d))), opacity: @k.opacity, offsetX: @k.offsetX, offsetY: @k.offsetY, scale: (default @k.scale 1), rotate: (default @k.rotate 0) }))) })))))))) })
     }
 
     listens {

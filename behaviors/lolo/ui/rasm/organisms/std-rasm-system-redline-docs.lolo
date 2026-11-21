@@ -1,0 +1,79 @@
+app std-rasm-system-redline-docs [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-redline-docs — the Redline Docs design system for a Rasm page, anchored on Stripe API docs and MDN Web Docs (https://docs.stripe.com). Colour: #F3F0E8 ground, #16181D ink, #BE1E2D accent. Type: Literata over Fira Sans. Grid: three-pane docs grid 1:3:1. Motion: the doc-slide easing (cubic-bezier 0.20,0.00,0.10,1.00); entrance: panes slide in from their edges. Interaction: link gains a redline underline. Imagery: code blocks and diagrams. Voice: instructional, reference, second person. Components: buttons are text links; cards are callout boxes. Data: inline tables. Sound: soft page tick on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "redline-docs"
+    palette: {background: "#F3F0E8", foreground: "#16181D", card: "#FAF8F5", "card-foreground": "#16181D", surface: "#ECEAE2", muted: "#E1DFD8", "muted-foreground": "#5D5D5E", border: "#908F8D", input: "#858483", primary: "#BE1E2D", "primary-hover": "#A21A26", "primary-foreground": "#F3F0E8", secondary: "#FAF8F5", "secondary-foreground": "#16181D", "secondary-hover": "#D8D6D0", accent: "#BE1E2D", "accent-foreground": "#F3F0E8", ring: "#BE1E2D", "series-1": "#BE1E2D", "series-2": "#721B26", "series-3": "#D67D81", "series-4": "#58595A", "series-5": "#9F4F56"}
+    fonts: { display: { family: "Literata", file: "https://almadar-kflow-assets.web.app/fonts/literata/Literata%5Bopsz%2Cwght%5D.ttf", generic: "serif" }, body: { family: "Fira Sans", file: "https://almadar-kflow-assets.web.app/fonts/firasans/FiraSans-Regular.ttf", generic: "sans-serif" } }
+    looks: {
+        "surface/ground/idle": { fill: "background" },
+        "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(22,24,29,0.12)", blur: 30, offsetY: 12 } },
+        "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(22,24,29,0.12)", blur: 30, offsetY: 12 } },
+        "stack/hero/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "stack/bar/idle": { fill: "foreground", corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "stack/closing/idle": { fill: "foreground", corners: { radius: [24, 24, 24, 24], kind: "round" }, shadow: { color: "rgba(22,24,29,0.22)", blur: 40, offsetY: 18 } },
+        "pressable/primary/idle": { fill: "primary", stroke: "primary", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(190,30,45,0.30)", blur: 16, offsetY: 6 }, textColor: "primary-foreground", font: "600 17px body", spring: { stiffness: 220, damping: 26 } },
+        "pressable/primary/hovered": { fill: "primary-hover", stroke: "primary-hover", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(190,30,45,0.38)", blur: 22, offsetY: 9 }, textColor: "primary-foreground", font: "600 17px body", spring: { stiffness: 220, damping: 26 } },
+        "pressable/primary/pressed": { fill: "primary-hover", stroke: "primary-hover", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(190,30,45,0.2)", blur: 6, offsetY: 2 }, textColor: "primary-foreground", font: "600 17px body", spring: { stiffness: 320, damping: 30 } },
+        "pressable/primary/focused": { fill: "primary", stroke: "ring", strokeWidth: 3, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(190,30,45,0.30)", blur: 16, offsetY: 6 }, textColor: "primary-foreground", font: "600 17px body", spring: { stiffness: 220, damping: 26 } },
+        "pressable/secondary/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,24,29,0.10)", blur: 14, offsetY: 5 }, textColor: "foreground", font: "600 17px body", spring: { stiffness: 220, damping: 26 } },
+        "pressable/secondary/hovered": { fill: "secondary-hover", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,24,29,0.16)", blur: 20, offsetY: 8 }, textColor: "foreground", font: "600 17px body", spring: { stiffness: 220, damping: 26 } },
+        "pressable/secondary/pressed": { fill: "secondary-hover", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,24,29,0.06)", blur: 4, offsetY: 1 }, textColor: "foreground", font: "600 17px body", spring: { stiffness: 320, damping: 30 } },
+        "pressable/secondary/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,24,29,0.10)", blur: 14, offsetY: 5 }, textColor: "foreground", font: "600 17px body", spring: { stiffness: 220, damping: 26 } },
+        "pressable/secondary/disabled": { stroke: "border" },
+        "text/display/idle": { textColor: "foreground", font: "700 112px display" },
+        "text/title/idle": { textColor: "foreground", font: "700 52px display" },
+        "text/eyebrow/idle": { textColor: "muted-foreground", font: "600 13px mono" },
+        "text/body/idle": { textColor: "muted-foreground", font: "400 19px body" },
+        "text/card/idle": { textColor: "card-foreground", font: "600 17px body", on: "card/surface/idle" },
+        "text/numeral/idle": { textColor: "primary", font: "700 168px display" },
+        "text/label/idle": { textColor: "foreground", font: "500 16px mono" },
+        "text/caption/idle": { textColor: "muted-foreground", font: "500 13px mono" },
+        "text/quote/idle": { textColor: "foreground", font: "600 56px display" },
+        "text/inverse/idle": { textColor: "background", font: "500 14px mono", on: "section/band/idle" },
+        "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(22,24,29,0.12)", blur: 28, offsetY: 10 }, spring: { stiffness: 220, damping: 26 } },
+        "card/surface/hovered": { fill: "card", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(22,24,29,0.2)", blur: 36, offsetY: 16 }, spring: { stiffness: 220, damping: 26 } },
+        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(22,24,29,0.2)", blur: 36, offsetY: 16 }, spring: { stiffness: 220, damping: 26 } },
+        "card/surface/pressed": { fill: "card", stroke: "primary", strokeWidth: 1.5, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(22,24,29,0.08)", blur: 8, offsetY: 2 }, spring: { stiffness: 320, damping: 30 } },
+        "card/header/idle": { fill: "card", corners: { radius: [16, 16, 0, 0], kind: "round" }, textColor: "foreground", font: "500 13px mono", on: "card/header/idle" },
+        "card/divider/idle": { stroke: "border", strokeWidth: 1 },
+        "card/media/idle": { fill: "muted", corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "500 13px mono", on: "card/surface/idle" },
+        "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(22,24,29,0.12)", blur: 30, offsetY: 12 } },
+        "panel/header/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [16, 16, 0, 0], kind: "round" }, textColor: "foreground", font: "500 13px mono", on: "panel/header/idle" },
+        "panel/divider/idle": { stroke: "border", strokeWidth: 1 },
+        "section/band/idle": { fill: "foreground" },
+        "section/rule/idle": { stroke: "border", strokeWidth: 1 },
+        "focus/ring/outer": { stroke: "background", strokeWidth: 6 },
+        "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
+        "material/sheet/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [18, 18, 18, 18], kind: "round" }, shadow: { color: "rgba(22,24,29,0.16)", blur: 44, offsetY: 18 } },
+        "material/insert/idle": { fill: "series-1", corners: { radius: [6, 6, 6, 6], kind: "round" } },
+        "material/delete/idle": { fill: "series-2", corners: { radius: [6, 6, 6, 6], kind: "round" } },
+        "material/band/idle": { fill: "muted" },
+        "material/rail/idle": { fill: "border", corners: { radius: [2, 2, 2, 2], kind: "round" } },
+        "material/closing/idle": { fill: "foreground", corners: { radius: [24, 24, 24, 24], kind: "round" }, shadow: { color: "rgba(22,24,29,0.24)", blur: 44, offsetY: 20 } },
+        "pulse/default/idle": { fill: "foreground", stroke: "foreground", textColor: "foreground", font: "600 13px mono" },
+        "pulse/hot/idle": { fill: "primary", stroke: "card", strokeWidth: 3, textColor: "foreground", font: "600 13px mono" },
+        "pulse/link/idle": { stroke: "border", strokeWidth: 2 },
+        "textfield/default/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "500 16px body", spring: { stiffness: 220, damping: 26 } },
+        "textfield/default/hovered": { fill: "card", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "500 16px body", spring: { stiffness: 220, damping: 26 } },
+        "textfield/default/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "500 16px body", spring: { stiffness: 220, damping: 26 } },
+        "range/default/thumb-idle": { stroke: "border" },
+        "range/default/thumb-hovered": { stroke: "border" },
+        "toggle/check/off-idle": { stroke: "border" },
+        "toggle/check/off-hovered": { stroke: "border" },
+        "toggle/switch/off-idle": { stroke: "border" },
+        "toggle/switch/off-hovered": { stroke: "border" }
+      }
+    layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 }
+    motion: { signature: "doc-slide", stiffness: 160, damping: 24, stagger: 80, enterMs: 539, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 12, scale: 0.94, rotate: 2 }, { at: 0.1, opacity: 0.118, offsetX: 0, offsetY: 10.584, scale: 0.947, rotate: 1.764 }, { at: 0.2, opacity: 0.409, offsetX: 0, offsetY: 7.091, scale: 0.965, rotate: 1.182 }, { at: 0.3, opacity: 0.621, offsetX: 0, offsetY: 4.55, scale: 0.977, rotate: 0.758 }, { at: 0.4, opacity: 0.758, offsetX: 0, offsetY: 2.908, scale: 0.985, rotate: 0.485 }, { at: 0.5, opacity: 0.85, offsetX: 0, offsetY: 1.803, scale: 0.991, rotate: 0.301 }, { at: 0.6, opacity: 0.913, offsetX: 0, offsetY: 1.049, scale: 0.995, rotate: 0.175 }, { at: 0.7, opacity: 0.955, offsetX: 0, offsetY: 0.543, scale: 0.997, rotate: 0.09 }, { at: 0.8, opacity: 0.981, offsetX: 0, offsetY: 0.224, scale: 0.999, rotate: 0.037 }, { at: 0.9, opacity: 0.996, offsetX: 0, offsetY: 0.052, scale: 1, rotate: 0.009 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    sounds: { down: { path: "press.wav", volume: 0.5 } }
+    soundBase: "https://almadar-kflow-assets.web.app/sounds/wiki/"
+  }
+}

@@ -1,0 +1,53 @@
+app std-rasm-system-brass-instrument [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-brass-instrument — the Brass Instrument design system for a Rasm page, anchored on Victorian brass scientific instruments (Science Museum collection) (https://collection.sciencemuseumgroup.org.uk). Colour: #1B1512 ground, #E9D8B4 ink, #C08B3A accent. Type: Rye over Merriweather. Grid: circular dial grid with bezel rings. Motion: the gear easing (cubic-bezier 0.60,0.04,0.98,0.34); entrance: a curtain lifts, dials spin up to value. Interaction: gear rotates 15 degrees. Imagery: engraved brass and gauges. Voice: confident, period, measured. Components: buttons are riveted brass plates; cards are gauge faces. Data: dial gauges and ticker tape. Sound: gear ratchet on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "brass-instrument"
+    palette: {background: "#1B1512", foreground: "#E9D8B4", card: "#27211C", "card-foreground": "#E9D8B4", surface: "#211B17", muted: "#2B251F", "muted-foreground": "#A79A80", border: "#786D5B", input: "#827763", primary: "#C08B3A", "primary-hover": "#C99C58", "primary-foreground": "#1B1512", secondary: "#27211C", "secondary-foreground": "#E9D8B4", "secondary-hover": "#342C25", accent: "#C08B3A", "accent-foreground": "#1B1512", ring: "#C08B3A", "series-1": "#C08B3A", "series-2": "#D2AE71", "series-3": "#765628", "series-4": "#AB9E83", "series-5": "#A0855D"}
+    fonts: { display: { family: "Rye", file: "https://almadar-kflow-assets.web.app/fonts/rye/Rye-Regular.ttf", generic: "serif" }, body: { family: "Merriweather", file: "https://almadar-kflow-assets.web.app/fonts/merriweather/Merriweather%5Bopsz%2Cwdth%2Cwght%5D.ttf", generic: "serif" } }
+    looks: {
+        "surface/ground/idle": { fill: "background", material: { wgsl: "fn sp_gear(p: vec2<f32>, c: vec2<f32>, r: f32, teeth: f32, rot: f32) -> f32 {\n  let d = p - c;\n  let a = atan2(d.y, d.x) + rot;\n  let rr = r + 5.0 * smoothstep(-0.2, 0.2, sin(a * teeth));\n  let ring = 1.0 - smoothstep(0.0, 1.4, abs(length(d) - rr));\n  let hub = 1.0 - smoothstep(0.0, 1.4, abs(length(d) - r * 0.55));\n  let spoke = 1.0 - smoothstep(0.0, 1.2, abs(sin((a * 3.0)) * length(d)) - 1.0);\n  return ring + hub * 0.7 + spoke * 0.4 * step(length(d), r * 0.55);\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let brass = vec3<f32>(0.72, 0.52, 0.22);\n  let lum = dot(px.color.rgb, vec3<f32>(0.299, 0.587, 0.114));\n  let line = select(brass, brass * 0.75, lum > 0.5);\n  let g = px.local;\n  let gx = 1.0 - smoothstep(0.0, 1.0, abs(fract(g.x / 32.0) - 0.5) * 32.0 - 15.0);\n  let gy = 1.0 - smoothstep(0.0, 1.0, abs(fract(g.y / 32.0) - 0.5) * 32.0 - 15.0);\n  let major = 1.0 - smoothstep(0.0, 1.0, abs(fract(g.x / 160.0) - 0.5) * 160.0 - 79.0);\n  var a = (gx + gy) * 0.05 + major * 0.06;\n  let t = px.time * 0.15 + px.scroll * 2.0;\n  let big = vec2<f32>(px.size.x * 0.88, px.size.y * 0.28);\n  a = a + sp_gear(g, big, 120.0, 14.0, t) * 0.13;\n  a = a + sp_gear(g, big + vec2<f32>(-150.0, 112.0), 56.0, 8.0, -t * 2.0 + 0.2) * 0.12;\n  a = a + sp_gear(g, vec2<f32>(px.size.x * 0.06, px.size.y * 0.8), 80.0, 11.0, -t) * 0.10;\n  let tick = abs(fract(atan2(g.y - big.y, g.x - big.x) * 24.0 / 6.2832) - 0.5);\n  let gauge = (1.0 - smoothstep(0.0, 0.06, tick - 0.44)) * (1.0 - smoothstep(0.0, 1.5, abs(length(g - big) - 150.0 - 6.0 * 0.0)));\n  a = a + gauge * 0.09;\n  return vec4<f32>(mix(px.color.rgb, line, clamp(a, 0.0, 0.4)), 1.0);\n}\n", params: [0, 0, 0, 0], live: true } },
+        "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [10, 10, 10, 10], kind: "bevel" }, shadow: { color: "rgba(40,20,0,0.34)", blur: 28, offsetY: 12 } },
+        "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [10, 10, 10, 10], kind: "bevel" }, shadow: { color: "rgba(40,20,0,0.30)", blur: 24, offsetY: 10 } },
+        "stack/hero/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, shadow: { color: "rgba(40,20,0,0.30)", blur: 26, offsetY: 10 }, spring: { stiffness: 280, damping: 30 } },
+        "card/surface/hovered": { fill: "card", stroke: "accent", strokeWidth: 2.5, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, shadow: { color: "rgba(40,20,0,0.42)", blur: 34, offsetY: 16 }, spring: { stiffness: 280, damping: 30 } },
+        "card/surface/focused": { fill: "card", stroke: "primary", strokeWidth: 3, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, shadow: { color: "rgba(40,20,0,0.38)", blur: 14, offsetY: 6 }, spring: { stiffness: 280, damping: 30 } },
+        "card/surface/pressed": { fill: "card", stroke: "primary", strokeWidth: 3, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, shadow: { color: "rgba(40,20,0,0.2)", blur: 4, offsetY: 1 }, spring: { stiffness: 320, damping: 30 } },
+        "card/header/idle": { fill: "foreground", corners: { radius: [6, 6, 0, 0], kind: "bevel" }, textColor: "background", font: "700 14px body", on: "card/header/idle" },
+        "card/divider/idle": { stroke: "border", strokeWidth: 1.5, strokeDash: [2, 5] },
+        "card/media/idle": { fill: "muted", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 0, 0], kind: "bevel" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "400 15px body", on: "card/surface/idle" },
+        "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 2, corners: { radius: [10, 10, 10, 10], kind: "bevel" }, shadow: { color: "rgba(40,20,0,0.30)", blur: 24, offsetY: 10 } },
+        "panel/header/idle": { fill: "muted", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 0, 0], kind: "bevel" }, textColor: "foreground", font: "700 14px body", on: "panel/header/idle" },
+        "panel/divider/idle": { stroke: "border", strokeWidth: 1.5, strokeDash: [2, 5] },
+        "section/band/idle": { fill: "muted" },
+        "section/rule/idle": { stroke: "border", strokeWidth: 3 },
+        "focus/ring/outer": { stroke: "background", strokeWidth: 7 },
+        "focus/ring/inner": { stroke: "primary", strokeWidth: 3 },
+        "stack/bar/idle": { fill: "background", stroke: "border", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "pressable/primary/idle": { fill: "primary", textColor: "primary-foreground", stroke: "primary", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "600 15px body", spring: { stiffness: 280, damping: 30 } },
+        "pressable/primary/hovered": { fill: "primary-hover", textColor: "primary-foreground", stroke: "ring", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "600 15px body", shadow: { color: "rgba(40,20,0,0.35)", blur: 10 } },
+        "pressable/primary/pressed": { fill: "primary-hover", textColor: "primary-foreground", stroke: "primary", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "600 15px body" },
+        "pressable/secondary/idle": { fill: "background", textColor: "foreground", stroke: "border", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "500 15px body" },
+        "pressable/secondary/hovered": { fill: "secondary-hover", textColor: "secondary-foreground", stroke: "primary", strokeWidth: 2, corners: { radius: [6, 6, 6, 6], kind: "bevel" }, font: "500 15px body" },
+        "text/display/idle": { fill: "background", textColor: "foreground", font: "700 56px display", backing: "halo" },
+        "text/title/idle": { fill: "background", textColor: "foreground", font: "700 30px display", backing: "halo" },
+        "text/eyebrow/idle": { textColor: "foreground", font: "600 13px body" },
+        "text/body/idle": { textColor: "foreground", font: "400 18px body" },
+        "text/card/idle": { textColor: "card-foreground", font: "700 22px display" },
+        "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 2 },
+        "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet gc = vec2<f32>(s.x * 0.3, c.y);\nlet r0 = m * 0.3;\nlet q = p - gc;\nlet r = length(q);\nlet u = atan2(q.x, -q.y) * 1.591549;\nlet f = abs(fract(u) - 0.5) * 2.0;\nlet rr = r0 * (1.0 + 0.17 * smoothstep(0.3, 0.6, f));\nlet body = sg_fill(r - rr) * (1.0 - sg_fill(r - r0 * 0.5));\nlet hub = sg_fill(r - r0 * 0.18);\nlet ring = sg_line(r - r0 * 0.7, 0.8);\nlet rv = sg_fill(length(vec2<f32>(fract(p.x / 14.0) * 14.0 - 7.0, p.y - (s.y - 8.0))) - 2.2) * step(s.x * 0.55, p.x);\nreturn sg_out(px, px.color.rgb, max(max(body, hub), max(ring, rv)));\n}\n", params: [0, 0, 0, 0], live: false } }
+      }
+    layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "frame", align: "start", imageTreatment: "engraving", sectionGap: 112, gutter: 48 }
+    motion: { signature: "gear", stiffness: 300, damping: 30, stagger: 40, enterMs: 442, keyframes: [{ at: 0, opacity: 0, offsetX: 32, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.1, opacity: 0.009, offsetX: 31.701, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.2, opacity: 0.025, offsetX: 31.212, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.3, opacity: 0.047, offsetX: 30.497, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.4, opacity: 0.078, offsetX: 29.506, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.5, opacity: 0.12, offsetX: 28.17, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.6, opacity: 0.176, offsetX: 26.379, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.7, opacity: 0.251, offsetX: 23.952, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.8, opacity: 0.358, offsetX: 20.534, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.9, opacity: 0.525, offsetX: 15.214, offsetY: 0, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    sounds: { down: { path: "press.wav", volume: 0.5 } }
+    soundBase: "https://almadar-kflow-assets.web.app/sounds/trading/"
+  }
+}

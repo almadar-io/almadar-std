@@ -4,6 +4,21 @@ app std-rasm-page [
   description: "std-rasm-page — the page shell for a composed Rasm page and nothing else: a Theme (std-rasm-theme, knobs preset and style), a Surface that scrolls inside itself (pageScroll on), a Focus, and a root Page stack whose children are the `sections` knob. It has no bar, hero, cards, emblem or text. A program extends the orbital RasmPage (`orbital MyPage = Shell.orbitals.RasmPage { ... }`), sets `sections`, and adds its own traits from the kit (grids, texts, images, materials, pressables, presence, scrub, ribbon, window, ticket, balloon), each wiring its `listens` to Theme.RASM_THEME, Theme.RASM_STYLE, Surface.RASM_DIRECTION, Surface.RASM_RESIZE as it needs and to its parent's RASM_PLACE, and wires every grid, stack and section atom it adds with `Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT` when it declares breakpoint variants (variantBy breakpoint) (the Theme and the root Page stack here already do), and adds orbital-level routes `X.RASM_PAINT -> Surface.RASM_PAINT` for every painting trait and `X.RASM_EXTENT -> Page.RASM_EXTENT` for every stack whose height the page measures; pressables join focus through `Focus` config order."
 ]
 
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLight = { color : string!, intensity : number! }
+type RasmKeyLight = { color : string!, intensity : number!, position : [number]! }
+type RasmLighting = { ambient : RasmLight!, directional : RasmKeyLight!, hemisphere : RasmLight! }
+type RasmLook = { lighting : RasmLighting, inset : RasmInset, fill : string, stroke : string, strokeWidth : number, strokeDash : [number], corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmFont = { family : string!, file : string!, generic : "serif" | "sans-serif" | "monospace"! }
+type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
+type RasmMotion = { signature : string!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmSound = { path : string!, volume : number, loop : boolean, poolSize : number, autostart : boolean, crossfade : boolean, crossfadeDurationMs : number }
 type RasmTransition = { durationMs : number!, distance : number!, staggerMs : number!, owners : [string]!, still : [string]! }
 type RasmStackShape = { axis : "vertical" | "horizontal" | "layer"!, gap : number!, padding : number!, look : string!, children : [RasmChild]! }
 type RasmChild = { id : string!, size : "fixed" | "fill" | "measure"!, main : number, cross : number, min : number }
@@ -18,6 +33,7 @@ uses PinAtom from "std/behaviors/std-rasm-pin"
 uses TextAtom from "std/behaviors/std-rasm-text"
 uses PresenceAtom from "std/behaviors/std-rasm-presence"
 uses PressAtom from "std/behaviors/std-rasm-pressable"
+uses AudioAtom from "std/behaviors/std-audio-cue"
 
 orbital RasmPage {
   entity RasmPageView [runtime] {
@@ -28,6 +44,11 @@ orbital RasmPage {
     config {
       preset: @config.preset
       style: @config.style
+      system: @config.system
+      looks: @config.looks
+      systemBreakpointLooks: @config.systemBreakpointLooks
+      palette: @config.palette
+      fonts: @config.fonts
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
@@ -40,6 +61,9 @@ orbital RasmPage {
   trait Trend = TrendAtom.traits.RasmTrend {
     config {
       trend: @config.trend
+      system: @config.system
+      layout: @config.layout
+      motion: @config.motion
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
@@ -55,7 +79,7 @@ orbital RasmPage {
       rootRect: { x: 0, y: 0, w: 1280, h: 800 }
       fill: true
       pageScroll: true
-      fixed: (array/concat @config.fixed (let ((ids : [string] (if @config.switcher ["themeBar", "themePrev", "themeLabel", "themeNext"] []))) @ids))
+      fixed: (array/concat (array/concat @config.fixed (let ((ids : [string] (if @config.switcher ["themeBar", "themePrev", "themeLabel", "themeNext"] []))) @ids)) (let ((snd : [string] (if (> (array/len (object/keys @config.sounds)) 0) ["soundToggle"] []))) @snd))
       fixedOn: @config.fixedOn
       transition: @config.transition
       scrollReportMs: 120
@@ -71,12 +95,13 @@ orbital RasmPage {
       ThemePrev.RASM_PAINT -> RASM_PAINT
       ThemeNext.RASM_PAINT -> RASM_PAINT
       ThemeLabel.RASM_PAINT -> RASM_PAINT
+      SoundToggle.RASM_PAINT -> RASM_PAINT
     }
   }
 
   trait Focus = FocusAtom.traits.RasmFocus {
     config {
-      order: (let ((ids : [string] (if @config.switcher ["themePrev", "themeNext"] []))) @ids)
+      order: (array/concat (let ((ids : [string] (if @config.switcher ["themePrev", "themeNext"] []))) @ids) (let ((snd : [string] (if (> (array/len (object/keys @config.sounds)) 0) ["soundToggle"] []))) @snd))
     }
     listens {
       Surface.RASM_KEY -> RASM_KEY
@@ -127,7 +152,7 @@ orbital RasmPage {
 
   trait ThemeEnter = PresenceAtom.traits.RasmPresence {
     config {
-      order: ["themeBar", "themePrev", "themeLabel", "themeNext"]
+      order: ["themeBar", "themePrev", "themeLabel", "themeNext", "soundToggle"]
       staggerMs: 60
     }
     listens {
@@ -235,6 +260,58 @@ orbital RasmPage {
     }
   }
 
+  trait SoundPin = PinAtom.traits.RasmPin {
+    config {
+      anchor: "page"
+      child: "soundToggle"
+      enabled: (> (array/len (object/keys @config.sounds)) 0)
+      edge: bottom
+      width: 44
+      height: 44
+      margin: 16
+    }
+    listens {
+      Surface.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Surface.RASM_RESIZE -> RASM_RESIZE
+    }
+  }
+
+  trait SoundToggle = PressAtom.traits.RasmPressable {
+    config {
+      id: "soundToggle"
+      label: "sound.toggle"
+      intent: secondary
+      icon: "M4 9 L8 9 L13 5 L13 19 L8 15 L4 15 Z M16 9 Q19 12 16 15 M18 6 Q23 12 18 18"
+      iconOnly: true
+      action: RASM_SOUND_TOGGLE
+      order: 902
+      z: 51
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      SoundPin.RASM_PLACE -> RASM_PLACE
+      ThemeEnter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
+  trait Sound = AudioAtom.traits.AudioCue {
+    config {
+      slot: floating
+      initialMuted: true
+      baseUrl: @config.soundBase
+      manifest: @config.sounds
+    }
+    listens {
+      SoundToggle.RASM_SOUND_TOGGLE -> TOGGLE_MUTE
+      Surface.RASM_POINTER -> CUE with { key: ?kind }
+    }
+  }
+
   config {
     preset : string = "naqsh"
       @label "Theme"
@@ -243,6 +320,42 @@ orbital RasmPage {
     style : string = ""
       @label "Style"
       @description "The std-rasm-theme style the page wears, named after the program's theme: its looks, hero arrangement, image treatment and entry motion. Empty wears `preset`."
+      @tier "presentation"
+    system : string = ""
+      @label "Design system"
+      @description "The named design system the page wears (a std ui/rasm/systems file sets it with its layers): with looks set, its looks, palette and fonts replace style, and with layout and motion set they replace trend."
+      @tier "presentation"
+    looks : Map string RasmLook = {}
+      @label "System looks"
+      @description "The system's surface layer: its look table (shape, depth, type setting, component anatomy, interaction states), merged over the theme's base."
+      @tier "presentation"
+    systemBreakpointLooks : Map string (Map string RasmLook) = {}
+      @label "System breakpoint looks"
+      @description "The system's looks per breakpoint name."
+      @tier "presentation"
+    palette : Map string string = {}
+      @label "Palette"
+      @description "The system's colour layer: colour by theme colour name, laid over the host theme on the canvas."
+      @tier "presentation"
+    fonts : Map string RasmFont = {}
+      @label "Fonts"
+      @description "The system's type layer: the face and font file of each role (display, body, mono)."
+      @tier "presentation"
+    layout : RasmLayout? = null
+      @label "Layout"
+      @description "The system's composition layer: its layout grammar, announced instead of the trend's with motion also set."
+      @tier "presentation"
+    motion : RasmMotion? = null
+      @label "Motion"
+      @description "The system's motion layer: entry keyframes (dense keyframes draw its signature easing), duration, spring and stagger."
+      @tier "presentation"
+    sounds : Map string RasmSound = {}
+      @label "Sounds"
+      @description "The system's sound layer: the std-audio-cue manifest a page's Sound trait plays (off until the viewer turns it on)."
+      @tier "presentation"
+    soundBase : string = ""
+      @label "Sound base"
+      @description "The URL prefix of the system's sound files."
       @tier "presentation"
     sections : [RasmChild] = []
       @label "Sections"
@@ -278,5 +391,5 @@ orbital RasmPage {
       @tier "presentation"
   }
 
-  page "/page" as RasmPageRoute -> Theme, Trend, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel
+  page "/page" as RasmPageRoute -> Theme, Trend, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel, SoundPin, SoundToggle, Sound
 }

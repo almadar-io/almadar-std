@@ -1,0 +1,61 @@
+app std-rasm-system-ghost-hud [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-ghost-hud — the Ghost HUD design system for a Rasm page, anchored on Territory Studio UI for Blade Runner 2049 and Ghost in the Shell HUDs (https://territorystudio.com). Colour: #05080F ground, #A8F3FF ink, #FF3D71 accent. Type: Orbitron over Share Tech Mono. Grid: radial HUD grid around a central reticle. Motion: the scan-lock easing (cubic-bezier 0.70,0.00,0.30,1.00); entrance: panels lock on with a bracket snap. Interaction: reticle brackets close on the hovered item. Imagery: wireframe 3D and data overlays. Voice: telemetric, clipped, values with units. Components: buttons are bracketed HUD cells; cards are angled glass panels. Data: radial gauges and live ticks. Sound: sonar ping on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "ghost-hud"
+    palette: {background: "#05080F", foreground: "#A8F3FF", card: "#0F161D", "card-foreground": "#A8F3FF", surface: "#0A0F16", muted: "#121B22", "muted-foreground": "#74A8B2", border: "#4E727B", input: "#577E87", primary: "#FF3D71", "primary-hover": "#FF5A86", "primary-foreground": "#05080F", secondary: "#0F161D", "secondary-foreground": "#A8F3FF", "secondary-hover": "#19242C", accent: "#FF3D71", "accent-foreground": "#05080F", ring: "#FF3D71", "series-1": "#FF3D71", "series-2": "#D88FB1", "series-3": "#8F2545", "series-4": "#77ADB7", "series-5": "#BF5E78"}
+    fonts: { display: { family: "Orbitron", file: "https://almadar-kflow-assets.web.app/fonts/orbitron/Orbitron%5Bwght%5D.ttf", generic: "sans-serif" }, body: { family: "Share Tech Mono", file: "https://almadar-kflow-assets.web.app/fonts/sharetechmono/ShareTechMono-Regular.ttf", generic: "monospace" }, mono: { family: "Share Tech Mono", file: "https://almadar-kflow-assets.web.app/fonts/sharetechmono/ShareTechMono-Regular.ttf", generic: "monospace" } }
+    looks: {
+        "surface/ground/idle": { fill: "background", material: { wgsl: "fn cp_h(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn shade(px: Pixel) -> vec4<f32> {\n var c = px.color.rgb;\n let mag = vec3<f32>(1.0, 0.16, 0.43);\n let cya = vec3<f32>(0.0, 0.94, 1.0);\n let col = floor(px.local.x / 7.0);\n let sp = 0.3 + cp_h(vec2<f32>(col, 1.0)) * 0.7;\n let y = fract(px.uv.y * 1.6 - px.time * 0.07 * sp + cp_h(vec2<f32>(col, 2.0)));\n let on = step(0.88, cp_h(vec2<f32>(col, 3.0)));\n let tint = mix(cya, mag, step(0.5, cp_h(vec2<f32>(col, 4.0))));\n c = c + tint * on * pow(y, 8.0) * 0.14 * step(fract(px.local.x / 7.0), 0.3);\n let q = abs(fract(px.local / 56.0) - vec2<f32>(0.5, 0.5));\n c = c + cya * step(0.488, max(q.x, q.y)) * 0.035;\n let bt = floor(px.time * 0.4);\n let by = cp_h(vec2<f32>(bt, 7.0)) * px.size.y;\n let band = step(abs(px.local.y - by), 2.0) * step(0.55, cp_h(vec2<f32>(bt, 9.0)));\n c = c + mag * band * 0.08 * step(0.3, fract(px.local.x / 90.0 + bt));\n let d = length(px.local - px.pointer);\n c = c + cya * 0.05 * exp(-d / 220.0);\n return vec4<f32>(c, px.color.a);\n}", params: [1.0, 0.0, 0.0, 0.0], live: true } },
+        "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [0, 18, 0, 18], kind: "bevel" }, shadow: { color: "rgba(0,240,255,0.18)", blur: 32, offsetX: 0, offsetY: 12 }, spring: { stiffness: 260, damping: 18 } },
+        "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [16, 0, 16, 0], kind: "bevel" }, shadow: { color: "rgba(0,240,255,0.22)", blur: 36, offsetX: 0, offsetY: 14 }, spring: { stiffness: 260, damping: 18 } },
+        "stack/hero/idle": { fill: "background", stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 32, 0, 32], kind: "bevel" }, shadow: { color: "#000000", blur: 0, offsetX: 6, offsetY: 6 }, spring: { stiffness: 260, damping: 18 } },
+        "stack/bar/idle": { fill: "background", stroke: "accent", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "bevel" } },
+        "pressable/primary/idle": { fill: "primary", stroke: "accent", strokeWidth: 1.5, corners: { radius: [0, 12, 0, 12], kind: "bevel" }, textColor: "primary-foreground", font: "700 15px display", shadow: { color: "rgba(252,238,10,0.45)", blur: 18 }, spring: { stiffness: 300, damping: 16 } },
+        "pressable/primary/hovered": { fill: "secondary", stroke: "accent", strokeWidth: 2, corners: { radius: [0, 12, 0, 12], kind: "bevel" }, textColor: "secondary-foreground", font: "700 15px display", shadow: { color: "rgba(255,42,109,0.7)", blur: 28 }, spring: { stiffness: 300, damping: 16 } },
+        "pressable/primary/pressed": { fill: "accent", stroke: "secondary", strokeWidth: 2, corners: { radius: [0, 12, 0, 12], kind: "bevel" }, textColor: "background", font: "700 15px display", spring: { stiffness: 340, damping: 14 } },
+        "pressable/secondary/idle": { fill: "background", stroke: "foreground", strokeWidth: 3, corners: { radius: [12, 0, 12, 0], kind: "bevel" }, textColor: "accent", font: "600 14px display", shadow: { color: "#000000", blur: 0, offsetX: 3, offsetY: 3 }, spring: { stiffness: 300, damping: 16 } },
+        "pressable/secondary/hovered": { fill: "muted", stroke: "foreground", strokeWidth: 3, corners: { radius: [12, 0, 12, 0], kind: "bevel" }, textColor: "foreground", font: "600 14px display", shadow: { color: "#ff2a6d", blur: 0, offsetX: 3, offsetY: 3 }, spring: { stiffness: 300, damping: 16 } },
+        "pressable/primary/focused": { fill: "primary", stroke: "ring", strokeWidth: 3, corners: { radius: [0, 12, 0, 12], kind: "bevel" }, textColor: "primary-foreground", font: "700 15px display", spring: { stiffness: 300, damping: 16 } },
+        "pressable/secondary/focused": { fill: "background", stroke: "ring", strokeWidth: 3, corners: { radius: [12, 0, 12, 0], kind: "bevel" }, textColor: "accent", font: "600 14px display", spring: { stiffness: 300, damping: 16 } },
+        "text/display/idle": { textColor: "foreground", font: "900 84px display" },
+        "text/title/idle": { textColor: "accent", font: "700 40px display" },
+        "text/eyebrow/idle": { textColor: "accent", font: "500 14px mono" },
+        "text/body/idle": { textColor: "muted-foreground", font: "500 18px body" },
+        "text/card/idle": { textColor: "foreground", font: "700 20px display" },
+        "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [0, 18, 0, 18], kind: "bevel" }, shadow: { color: "rgba(0,240,255,0.16)", blur: 30, offsetX: 0, offsetY: 10 }, spring: { stiffness: 260, damping: 18 } },
+        "card/surface/hovered": { fill: "card", stroke: "accent", strokeWidth: 1.5, corners: { radius: [0, 18, 0, 18], kind: "bevel" }, shadow: { color: "rgba(255,42,109,0.35)", blur: 40, offsetX: 0, offsetY: 14 }, spring: { stiffness: 260, damping: 18 } },
+        "text/numeral/idle": { textColor: "accent", font: "900 96px display" },
+        "pulse/call/idle": { on: "surface/ground/idle", fill: "accent", stroke: "accent", textColor: "foreground", font: "700 13px mono" },
+        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 4, corners: { radius: [0, 18, 0, 18], kind: "bevel" }, shadow: { color: "#000000", blur: 0, offsetX: 4, offsetY: 4 }, spring: { stiffness: 260, damping: 18 } },
+        "card/surface/pressed": { fill: "card", stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 18, 0, 18], kind: "bevel" }, shadow: { color: "#000000", blur: 0, offsetX: 1, offsetY: 1 }, spring: { stiffness: 340, damping: 14 } },
+        "card/header/idle": { fill: "primary", corners: { radius: [0, 16, 0, 0], kind: "bevel" }, textColor: "primary-foreground", font: "700 14px display", on: "card/header/idle" },
+        "card/divider/idle": { stroke: "foreground", strokeWidth: 3 },
+        "card/media/idle": { fill: "muted", stroke: "foreground", strokeWidth: 3, corners: { radius: [0, 0, 0, 0], kind: "bevel" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "500 14px mono", on: "card/surface/idle" },
+        "panel/surface/idle": { fill: "card", stroke: "foreground", strokeWidth: 3, corners: { radius: [14, 0, 14, 0], kind: "bevel" }, shadow: { color: "#ff2a6d", blur: 0, offsetX: 4, offsetY: 4 } },
+        "panel/header/idle": { fill: "primary", stroke: "foreground", strokeWidth: 3, corners: { radius: [12, 0, 0, 0], kind: "bevel" }, textColor: "primary-foreground", font: "700 14px display" },
+        "panel/divider/idle": { stroke: "foreground", strokeWidth: 3 },
+        "section/band/idle": { fill: "muted" },
+        "section/rule/idle": { stroke: "foreground", strokeWidth: 3 },
+        "focus/ring/outer": { stroke: "#ffffff", strokeWidth: 7 },
+        "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
+        "textfield/default/idle": { fill: "card", corners: { radius: [0, 10, 0, 10], kind: "bevel" }, textColor: "foreground", font: "500 16px mono", stroke: "input", strokeWidth: 3 },
+        "textfield/default/hovered": { fill: "card", corners: { radius: [0, 10, 0, 10], kind: "bevel" }, textColor: "foreground", font: "500 16px mono", stroke: "input", strokeWidth: 4 },
+        "textfield/default/focused": { fill: "card", corners: { radius: [0, 10, 0, 10], kind: "bevel" }, textColor: "foreground", font: "500 16px mono", stroke: "ring", strokeWidth: 4 },
+        "textfield/default/placeholder": { textColor: "placeholder", font: "500 16px mono" },
+        "morph/default/idle": { fill: "secondary" },
+        "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet q = min(p, s - p);\nlet arm = clamp(m * 0.3, 18.0, 56.0);\nlet v = sg_line(q.x - 8.0, 1.4) * (1.0 - smoothstep(arm - 1.0, arm, q.y)) * smoothstep(6.0, 7.0, q.y);\nlet h = sg_line(q.y - 8.0, 1.4) * (1.0 - smoothstep(arm - 1.0, arm, q.x)) * smoothstep(6.0, 7.0, q.x);\nlet scan = step(fract(p.y / 3.0), 0.34) * 0.12;\nlet tk = step(s.x - 90.0, p.x) * step(abs(p.y - 17.0), 3.0) * (1.0 - smoothstep(0.4, 1.2, min(fract(p.x / 9.0), 1.0 - fract(p.x / 9.0)) * 9.0));\nlet col = mix(px.color.rgb, vec3<f32>(1.0, 0.15, 0.55), tk);\nreturn sg_out(px, col, max(max(v, h), max(scan, tk)));\n}\n", params: [0, 0, 0, 0], live: false } }
+      }
+    layout: { hero: "full-bleed", columns: 12, asymmetry: 0.25, ornament: "frame", align: "start", imageTreatment: "glow", sectionGap: 104, gutter: 40 }
+    motion: { signature: "scan-lock", stiffness: 260, damping: 18, stagger: 45, enterMs: 1414, keyframes: [{ at: 0, opacity: 0, offsetX: 32, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.1, opacity: 0.008, offsetX: 31.753, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.2, opacity: 0.036, offsetX: 30.844, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.3, opacity: 0.099, offsetX: 28.833, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.4, opacity: 0.23, offsetX: 24.646, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.5, opacity: 0.5, offsetX: 16, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.6, opacity: 0.77, offsetX: 7.354, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.7, opacity: 0.901, offsetX: 3.167, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.8, opacity: 0.964, offsetX: 1.156, offsetY: 0, scale: 1, rotate: 0 }, { at: 0.9, opacity: 0.992, offsetX: 0.247, offsetY: 0, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    sounds: { down: { path: "press.wav", volume: 0.5 } }
+    soundBase: "https://almadar-kflow-assets.web.app/sounds/iot/"
+  }
+}

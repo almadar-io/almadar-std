@@ -1,0 +1,63 @@
+app std-rasm-system-keynote-bento [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-keynote-bento — the Keynote Bento design system for a Rasm page, anchored on Apple WWDC keynote bento slides (https://www.apple.com/apple-events/). Colour: #F5F5F7 ground, #1D1D1F ink, #0071E3 accent. Type: Plus Jakarta Sans over DM Sans. Grid: bento modular grid 4x3 with spans. Motion: the keynote easing (cubic-bezier 0.32,0.72,0.00,1.00); entrance: tiles scale up from 92% in a reading wave. Interaction: tile zooms 2% with a glossy sheen. Imagery: product renders on soft gradients. Voice: polished, benefit-first, short. Components: buttons are rounded 22px pills; cards are large-radius tiles. Data: big single numbers per tile. Sound: glass tap on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "keynote-bento"
+    palette: {background: "#F5F5F7", foreground: "#1D1D1F", card: "#FBFBFB", "card-foreground": "#1D1D1F", surface: "#EFEFF1", muted: "#E4E4E6", "muted-foreground": "#626264", border: "#949496", input: "#89898B", primary: "#0071E3", "primary-hover": "#0060C1", "primary-foreground": "#F5F5F7", secondary: "#FBFBFB", "secondary-foreground": "#1D1D1F", "secondary-hover": "#DBDBDD", accent: "#0071E3", "accent-foreground": "#F5F5F7", ring: "#0071E3", "series-1": "#0071E3", "series-2": "#0D4B8B", "series-3": "#6EACEC", "series-4": "#5E5E60", "series-5": "#4078B1"}
+    fonts: { display: { family: "Plus Jakarta Sans", file: "https://almadar-kflow-assets.web.app/fonts/plusjakartasans/PlusJakartaSans%5Bwght%5D.ttf", generic: "sans-serif" }, body: { family: "DM Sans", file: "https://almadar-kflow-assets.web.app/fonts/dmsans/DMSans%5Bopsz%2Cwght%5D.ttf", generic: "sans-serif" } }
+    looks: {
+        "surface/ground/idle": { fill: "background", material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n  let p = px.pointer / max(px.size, vec2<f32>(1.0, 1.0));\n  let l = normalize(vec2<f32>(-0.7 + (p.x - 0.5) * 0.4, -0.7 + (p.y - 0.5) * 0.4));\n  let k = dot(px.uv - vec2<f32>(0.5, 0.5), l);\n  let soft = smoothstep(-0.7, 0.7, k);\n  var col = px.color.rgb + vec3<f32>(1.0, 1.0, 1.0) * (0.5 - soft) * -0.07;\n  let bump = sin(px.uv.x * 6.2831 * 1.0) * sin(px.uv.y * 6.2831 * 1.5 + px.scroll * 3.0);\n  col = col + vec3<f32>(0.012, 0.012, 0.012) * bump;\n  let noise = fract(sin(dot(px.local, vec2<f32>(12.9, 78.2))) * 43758.5) - 0.5;\n  col = col + vec3<f32>(noise * 0.008, noise * 0.008, noise * 0.008);\n  return vec4<f32>(col, px.color.a);\n}\n", params: [0, 0, 0, 0], live: true } },
+        "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [24, 24, 24, 24], kind: "round" }, shadow: { color: "rgba(163,177,198,0.75)", blur: 26, offsetX: 6, offsetY: 6 } },
+        "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [24, 24, 24, 24], kind: "round" }, shadow: { color: "rgba(163,177,198,0.75)", blur: 26, offsetX: 6, offsetY: 6 } },
+        "stack/well/idle": { fill: "background", stroke: "border", strokeWidth: 1.5, corners: { radius: [24, 24, 24, 24], kind: "round" }, inset: { stroke: "border", strokeWidth: 1, gap: 5 } },
+        "pulse/default/idle": { fill: "foreground", stroke: "card", strokeWidth: 2, textColor: "background", font: "600 13px body" },
+        "pulse/hot/idle": { fill: "primary", stroke: "card", strokeWidth: 2, textColor: "primary-foreground", font: "600 13px body" },
+        "stack/hero/idle": { fill: "background", corners: { radius: [24, 24, 24, 24], kind: "round" } },
+        "stack/bar/idle": { fill: "background", stroke: "border", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "pressable/primary/idle": { fill: "primary", corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "primary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 }, shadow: { color: "rgba(163,177,198,0.7)", blur: 14 } },
+        "pressable/primary/hovered": { fill: "primary-hover", corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "primary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 }, shadow: { color: "rgba(163,177,198,0.7)", blur: 14 } },
+        "pressable/primary/pressed": { fill: "primary-hover", corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "primary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 } },
+        "pressable/primary/focused": { fill: "primary", stroke: "ring", strokeWidth: 3, corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "primary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 } },
+        "pressable/secondary/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 }, shadow: { color: "rgba(163,177,198,0.7)", blur: 12, offsetX: 4, offsetY: 4 } },
+        "pressable/secondary/hovered": { fill: "secondary-hover", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 } },
+        "pressable/secondary/pressed": { fill: "secondary", stroke: "primary", strokeWidth: 2, corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 } },
+        "pressable/secondary/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [18, 18, 18, 18], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 150, damping: 22 } },
+        "text/display/idle": { textColor: "foreground", font: "600 60px display", spring: { stiffness: 150, damping: 22 } },
+        "text/title/idle": { textColor: "foreground", font: "600 38px display", spring: { stiffness: 150, damping: 22 } },
+        "text/eyebrow/idle": { textColor: "primary", font: "600 13px display", spring: { stiffness: 150, damping: 22 } },
+        "text/body/idle": { textColor: "muted-foreground", font: "400 17px body", spring: { stiffness: 150, damping: 22 } },
+        "text/card/idle": { textColor: "card-foreground", font: "600 21px display" },
+        "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [28, 28, 28, 28], kind: "round" }, shadow: { color: "rgba(163,177,198,0.75)", blur: 26, offsetX: 6, offsetY: 6 }, spring: { stiffness: 150, damping: 22 } },
+        "card/surface/hovered": { fill: "card", stroke: "primary", strokeWidth: 1.5, corners: { radius: [28, 28, 28, 28], kind: "round" }, shadow: { color: "rgba(163,177,198,0.85)", blur: 32, offsetX: 8, offsetY: 8 }, spring: { stiffness: 150, damping: 22 } },
+        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [28, 28, 28, 28], kind: "round" }, shadow: { color: "rgba(163,177,198,0.75)", blur: 26, offsetX: 6, offsetY: 6 }, spring: { stiffness: 150, damping: 22 } },
+        "card/surface/pressed": { fill: "card", stroke: "primary", strokeWidth: 2, corners: { radius: [28, 28, 28, 28], kind: "round" }, spring: { stiffness: 200, damping: 24 } },
+        "card/header/idle": { fill: "muted", corners: { radius: [26, 26, 0, 0], kind: "round" }, textColor: "foreground", font: "600 14px display", on: "card/header/idle" },
+        "card/divider/idle": { stroke: "border", strokeWidth: 1 },
+        "card/media/idle": { fill: "muted", corners: { radius: [26, 26, 0, 0], kind: "round" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "600 14px body", on: "card/surface/idle" },
+        "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [28, 28, 28, 28], kind: "round" }, shadow: { color: "rgba(163,177,198,0.75)", blur: 26, offsetX: 6, offsetY: 6 } },
+        "panel/header/idle": { fill: "muted", stroke: "border", strokeWidth: 1.5, corners: { radius: [26, 26, 0, 0], kind: "round" }, textColor: "foreground", font: "600 15px display" },
+        "panel/divider/idle": { stroke: "border", strokeWidth: 1 },
+        "section/band/idle": { fill: "background" },
+        "section/rule/idle": { stroke: "border", strokeWidth: 1.5 },
+        "focus/ring/outer": { stroke: "background", strokeWidth: 7 },
+        "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
+        "textfield/default/idle": { fill: "card", corners: { radius: [16, 16, 16, 16], kind: "round" }, textColor: "foreground", font: "600 16px body", stroke: "input", strokeWidth: 1.5 },
+        "textfield/default/hovered": { fill: "card", corners: { radius: [16, 16, 16, 16], kind: "round" }, textColor: "foreground", font: "600 16px body", stroke: "foreground", strokeWidth: 1.5 },
+        "textfield/default/focused": { fill: "card", corners: { radius: [16, 16, 16, 16], kind: "round" }, textColor: "foreground", font: "600 16px body", stroke: "ring", strokeWidth: 3 },
+        "textfield/default/placeholder": { textColor: "placeholder", font: "600 16px body" },
+        "morph/default/idle": { fill: "accent" },
+        "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_rbox(p: vec2<f32>, h: vec2<f32>, r: f32) -> f32 { let q = abs(p) - h + vec2<f32>(r, r); return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - r; }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet hh = vec2<f32>(min(c.x * 0.6, m * 0.3), m * 0.28);\nlet dk = (1.0 - smoothstep(-6.0, 10.0, sg_rbox(p - c - vec2<f32>(8.0, 8.0), hh, 16.0))) * 0.5;\nlet lt = (1.0 - smoothstep(-6.0, 10.0, sg_rbox(p - c + vec2<f32>(8.0, 8.0), hh, 16.0))) * 0.9;\nlet face = sg_fill(sg_rbox(p - c, hh, 16.0));\nlet col = (vec3<f32>(1.0, 1.0, 1.0) * lt + px.color.rgb * dk) / max(lt + dk, 0.001);\nreturn sg_out(px, col, max(lt, dk) * (1.0 - face));\n}\n", params: [0, 0, 0, 0], live: false } }
+      }
+    layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 }
+    motion: { signature: "keynote", stiffness: 150, damping: 22, stagger: 80, enterMs: 1220, keyframes: [{ at: 0, opacity: 0, offsetX: 18, offsetY: -16, scale: 1, rotate: 0 }, { at: 0.1, opacity: 0.27, offsetX: 13.143, offsetY: -11.683, scale: 1, rotate: 0 }, { at: 0.2, opacity: 0.656, offsetX: 6.198, offsetY: -5.509, scale: 1, rotate: 0 }, { at: 0.3, opacity: 0.847, offsetX: 2.751, offsetY: -2.446, scale: 1, rotate: 0 }, { at: 0.4, opacity: 0.918, offsetX: 1.469, offsetY: -1.305, scale: 1, rotate: 0 }, { at: 0.5, opacity: 0.955, offsetX: 0.813, offsetY: -0.723, scale: 1, rotate: 0 }, { at: 0.6, opacity: 0.976, offsetX: 0.436, offsetY: -0.388, scale: 1, rotate: 0 }, { at: 0.7, opacity: 0.988, offsetX: 0.212, offsetY: -0.188, scale: 1, rotate: 0 }, { at: 0.8, opacity: 0.995, offsetX: 0.083, offsetY: -0.074, scale: 1, rotate: 0 }, { at: 0.9, opacity: 0.999, offsetX: 0.019, offsetY: -0.016, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    sounds: { down: { path: "press.wav", volume: 0.5 } }
+    soundBase: "https://almadar-kflow-assets.web.app/sounds/hr-self-service/"
+  }
+}

@@ -1,0 +1,67 @@
+app std-rasm-system-harbour-ledger [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-harbour-ledger — the Harbour Ledger design system for a Rasm page, anchored on Lloyd's of London marine policies and Admiralty harbour charts (https://en.wikipedia.org/wiki/Lloyd%27s_of_London). Colour: #E9EEF0 ground, #0C2D48 ink, #C8102E accent. Type: Old Standard TT over Libre Franklin. Grid: chart grid with compass rose and soundings. Motion: the tide easing (cubic-bezier 0.45,0.00,0.55,1.00); entrance: sections wash in like a tide line. Interaction: card rises like a buoy. Imagery: chart soundings and rhumb lines. Voice: steady, reassuring, plain facts. Components: buttons are signal flags; cards are policy slips with a wax seal. Data: tide-line area charts. Sound: ship bell on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "harbour-ledger"
+    palette: {background: "#E9EEF0", foreground: "#0C2D48", card: "#F5F7F8", "card-foreground": "#0C2D48", surface: "#E2E8EB", muted: "#D7DFE3", "muted-foreground": "#536B7E", border: "#8697A4", input: "#7B8E9C", primary: "#C8102E", "primary-hover": "#AA0E27", "primary-foreground": "#E9EEF0", secondary: "#F5F7F8", "secondary-foreground": "#0C2D48", "secondary-hover": "#CED7DC", accent: "#C8102E", "accent-foreground": "#E9EEF0", ring: "#C8102E", "series-1": "#C8102E", "series-2": "#731D3A", "series-3": "#D77485", "series-4": "#4E677A", "series-5": "#A44857"}
+    fonts: { display: { family: "Old Standard TT", file: "https://almadar-kflow-assets.web.app/fonts/oldstandardtt/OldStandard-Regular.ttf", generic: "serif" }, body: { family: "Libre Franklin", file: "https://almadar-kflow-assets.web.app/fonts/librefranklin/LibreFranklin%5Bwght%5D.ttf", generic: "sans-serif" } }
+    looks: {
+        "surface/ground/idle": { fill: "background" },
+        "stack/sheet/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [8, 8, 8, 8], kind: "round" }, shadow: { color: "rgba(22,32,46,0.20)", blur: 48, offsetX: 0, offsetY: 22 } },
+        "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,32,46,0.16)", blur: 28, offsetX: 0, offsetY: 12 } },
+        "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,32,46,0.14)", blur: 20, offsetX: 0, offsetY: 8 } },
+        "stack/hero/idle": { fill: "background", corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "stack/bar/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "pressable/primary/idle": { fill: "primary", stroke: "primary", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "primary-foreground", font: "600 16px body", shadow: { color: "rgba(190,52,24,0.35)", blur: 18, offsetX: 0, offsetY: 8 }, spring: { stiffness: 420, damping: 34 } },
+        "pressable/primary/hovered": { fill: "primary-hover", stroke: "primary-hover", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "primary-foreground", font: "600 16px body", shadow: { color: "rgba(190,52,24,0.45)", blur: 26, offsetX: 0, offsetY: 12 }, spring: { stiffness: 420, damping: 34 } },
+        "pressable/primary/pressed": { fill: "primary-hover", stroke: "primary-hover", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "primary-foreground", font: "600 16px body", spring: { stiffness: 520, damping: 40 } },
+        "pressable/primary/focused": { fill: "primary", stroke: "ring", strokeWidth: 3, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "primary-foreground", font: "600 16px body", spring: { stiffness: 420, damping: 34 } },
+        "pressable/secondary/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "600 16px body", shadow: { color: "rgba(22,32,46,0.14)", blur: 14, offsetX: 0, offsetY: 6 }, spring: { stiffness: 420, damping: 34 } },
+        "pressable/secondary/hovered": { fill: "muted", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "600 16px body", shadow: { color: "rgba(22,32,46,0.2)", blur: 20, offsetX: 0, offsetY: 8 }, spring: { stiffness: 420, damping: 34 } },
+        "pressable/secondary/pressed": { fill: "muted", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "600 16px body", spring: { stiffness: 520, damping: 40 } },
+        "pressable/secondary/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "600 16px body", spring: { stiffness: 420, damping: 34 } },
+        "pressable/secondary/disabled": { stroke: "border" },
+        "text/display/idle": { textColor: "foreground", font: "800 92px display" },
+        "text/title/idle": { textColor: "foreground", font: "700 44px display" },
+        "text/eyebrow/idle": { textColor: "muted-foreground", font: "600 13px mono" },
+        "text/body/idle": { textColor: "muted-foreground", font: "400 18px body" },
+        "text/card/idle": { textColor: "card-foreground", font: "700 26px display" },
+        "text/numeral/idle": { textColor: "foreground", font: "800 96px display" },
+        "text/label/idle": { textColor: "foreground", font: "600 14px mono" },
+        "text/caption/idle": { textColor: "muted-foreground", font: "500 13px mono" },
+        "text/inverse/idle": { textColor: "primary-foreground", font: "600 14px mono", on: "section/band/idle" },
+        "icon/accent/idle": { on: "surface/ground/idle", textColor: "accent" },
+        "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,32,46,0.14)", blur: 24, offsetX: 0, offsetY: 10 }, spring: { stiffness: 420, damping: 34 } },
+        "card/surface/hovered": { fill: "card", stroke: "foreground", strokeWidth: 1, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,32,46,0.22)", blur: 34, offsetX: 0, offsetY: 16 }, spring: { stiffness: 420, damping: 34 } },
+        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [12, 12, 12, 12], kind: "round" }, spring: { stiffness: 420, damping: 34 } },
+        "card/surface/pressed": { fill: "muted", stroke: "primary", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, spring: { stiffness: 520, damping: 40 } },
+        "card/header/idle": { fill: "muted", corners: { radius: [12, 12, 0, 0], kind: "round" }, textColor: "foreground", font: "600 13px mono", on: "card/header/idle" },
+        "card/divider/idle": { stroke: "border", strokeWidth: 1 },
+        "card/media/idle": { fill: "muted", corners: { radius: [8, 8, 8, 8], kind: "round" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "500 13px mono", on: "card/surface/idle" },
+        "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(22,32,46,0.14)", blur: 24, offsetX: 0, offsetY: 10 } },
+        "panel/header/idle": { fill: "muted", corners: { radius: [12, 12, 0, 0], kind: "round" }, textColor: "foreground", font: "600 13px mono", on: "panel/header/idle" },
+        "panel/divider/idle": { stroke: "border", strokeWidth: 1 },
+        "section/band/idle": { fill: "primary" },
+        "section/rule/idle": { stroke: "foreground", strokeWidth: 1.5 },
+        "focus/ring/outer": { stroke: "background", strokeWidth: 6 },
+        "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
+        "material/flag/idle": { fill: "primary", corners: { radius: [6, 0, 0, 6], kind: "round" }, shadow: { color: "rgba(190,52,24,0.35)", blur: 14, offsetX: 0, offsetY: 6 } },
+        "material/initials/idle": { fill: "muted", stroke: "accent", strokeWidth: 2, corners: { radius: [12, 12, 12, 12], kind: "round" } },
+        "material/stamp/idle": { stroke: "primary", strokeWidth: 5, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "textfield/default/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "500 15px mono", spring: { stiffness: 420, damping: 34 } },
+        "textfield/default/hovered": { fill: "card", stroke: "foreground", strokeWidth: 2, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "500 15px mono", spring: { stiffness: 420, damping: 34 } },
+        "textfield/default/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "500 15px mono", spring: { stiffness: 420, damping: 34 } }
+      }
+    layout: { hero: "centered", columns: 12, asymmetry: 0, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 24 }
+    motion: { signature: "tide", stiffness: 200, damping: 24, stagger: 60, enterMs: 1317, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 30, scale: 0.97, rotate: -3 }, { at: 0.1, opacity: 0.018, offsetX: 0, offsetY: 29.473, scale: 0.971, rotate: -2.947 }, { at: 0.2, opacity: 0.075, offsetX: 0, offsetY: 27.756, scale: 0.972, rotate: -2.776 }, { at: 0.3, opacity: 0.177, offsetX: 0, offsetY: 24.685, scale: 0.975, rotate: -2.469 }, { at: 0.4, opacity: 0.324, offsetX: 0, offsetY: 20.286, scale: 0.98, rotate: -2.029 }, { at: 0.5, opacity: 0.5, offsetX: 0, offsetY: 15, scale: 0.985, rotate: -1.5 }, { at: 0.6, opacity: 0.676, offsetX: 0, offsetY: 9.714, scale: 0.99, rotate: -0.971 }, { at: 0.7, opacity: 0.823, offsetX: 0, offsetY: 5.315, scale: 0.995, rotate: -0.531 }, { at: 0.8, opacity: 0.925, offsetX: 0, offsetY: 2.244, scale: 0.998, rotate: -0.224 }, { at: 0.9, opacity: 0.982, offsetX: 0, offsetY: 0.527, scale: 0.999, rotate: -0.053 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    sounds: { down: { path: "press.wav", volume: 0.5 } }
+    soundBase: "https://almadar-kflow-assets.web.app/sounds/insurance-claims/"
+  }
+}

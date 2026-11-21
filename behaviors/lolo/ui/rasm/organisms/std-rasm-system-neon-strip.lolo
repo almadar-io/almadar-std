@@ -1,0 +1,65 @@
+app std-rasm-system-neon-strip [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-neon-strip — the Neon Strip design system for a Rasm page, anchored on Las Vegas Strip neon signs (Young Electric Sign Company) and Tokyo Shibuya at night (https://en.wikipedia.org/wiki/Neon_Museum). Colour: #0A0614 ground, #F8E9FF ink, #FF2BD6 accent. Type: Monoton over Chakra Petch. Grid: overlapping layered grid, 3 depth planes. Motion: the neon-flicker easing (cubic-bezier 0.10,0.90,0.20,1.00); entrance: signs flicker on with two failed sparks. Interaction: glow intensifies and buzzes. Imagery: neon tube glow on night photos. Voice: loud, nightlife, short bursts. Components: buttons are tube outlines; cards are light boxes. Data: glowing line charts. Sound: neon buzz on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "neon-strip"
+    palette: {background: "#0A0614", foreground: "#F8E9FF", card: "#181422", "card-foreground": "#F8E9FF", surface: "#110D1B", muted: "#1D1827", "muted-foreground": "#ACA0B4", border: "#756C7E", input: "#81788A", primary: "#FF2BD6", "primary-hover": "#FF4BDC", "primary-foreground": "#0A0614", secondary: "#181422", "secondary-foreground": "#F8E9FF", "secondary-hover": "#272130", accent: "#FF2BD6", "accent-foreground": "#0A0614", ring: "#FF2BD6", "series-1": "#FF2BD6", "series-2": "#FC81E8", "series-3": "#911A7F", "series-4": "#B1A5B9", "series-5": "#BF55AB"}
+    fonts: { display: { family: "Monoton", file: "https://almadar-kflow-assets.web.app/fonts/monoton/Monoton-Regular.ttf", generic: "monospace" }, body: { family: "Chakra Petch", file: "https://almadar-kflow-assets.web.app/fonts/chakrapetch/ChakraPetch-Regular.ttf", generic: "sans-serif" }, mono: { family: "Monoton", file: "https://almadar-kflow-assets.web.app/fonts/monoton/Monoton-Regular.ttf", generic: "monospace" } }
+    looks: {
+        "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(34,211,238,0.25)", blur: 24 }, spring: { stiffness: 140, damping: 18 } },
+        "card/surface/hovered": { fill: "card", stroke: "primary", strokeWidth: 2, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(34,211,238,0.45)", blur: 32 }, spring: { stiffness: 140, damping: 18 } },
+        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 2.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(34,211,238,0.25)", blur: 24 }, spring: { stiffness: 140, damping: 18 } },
+        "card/surface/pressed": { fill: "surface", stroke: "primary", strokeWidth: 2, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(34,211,238,0.15)", blur: 10 }, spring: { stiffness: 180, damping: 16 } },
+        "card/header/idle": { fill: "muted", corners: { radius: [12, 12, 0, 0], kind: "round" }, textColor: "muted-foreground", font: "600 13px mono", on: "card/header/idle" },
+        "card/divider/idle": { stroke: "primary", strokeWidth: 1 },
+        "card/media/idle": { fill: "muted", corners: { radius: [12, 12, 0, 0], kind: "round" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "400 14px body", on: "card/surface/idle" },
+        "panel/surface/idle": { fill: "card", stroke: "accent", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(244,114,182,0.2)", blur: 24 } },
+        "panel/header/idle": { fill: "muted", stroke: "accent", strokeWidth: 1.5, corners: { radius: [12, 12, 0, 0], kind: "round" }, textColor: "accent", font: "600 13px mono" },
+        "panel/divider/idle": { stroke: "accent", strokeWidth: 1 },
+        "section/band/idle": { fill: "card" },
+        "section/rule/idle": { stroke: "primary", strokeWidth: 1 },
+        "focus/ring/outer": { stroke: "foreground", strokeWidth: 2 },
+        "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
+        "text/inverse/idle": { textColor: "muted-foreground", font: "600 16px mono", on: "section/band/idle" },
+        "icon/inverse/idle": { textColor: "muted-foreground", on: "section/band/idle" },
+        "pressable/primary/focused": { fill: "background", stroke: "ring", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "primary", font: "400 18px display", spring: { stiffness: 150, damping: 17 } },
+        "pressable/secondary/focused": { fill: "background", stroke: "ring", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "accent", font: "400 17px display", spring: { stiffness: 150, damping: 17 } },
+        "textfield/default/idle": { fill: "background", stroke: "input", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "400 16px body" },
+        "textfield/default/hovered": { fill: "background", stroke: "border", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "400 16px body" },
+        "textfield/default/focused": { fill: "background", stroke: "ring", strokeWidth: 2.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "foreground", font: "400 16px body" },
+        "range/default/fill": { textColor: "primary-foreground" },
+        "range/default/thumb-dragging": { textColor: "primary-foreground" },
+        "surface/ground/idle": { fill: "background", material: { wgsl: "fn ne_h(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(12.9898, 78.233))) * 43758.5453); }\nfn shade(px: Pixel) -> vec4<f32> {\n var c = px.color.rgb;\n let row = floor(px.local.y / 26.0);\n let off = 0.5 * (row - 2.0 * floor(row * 0.5));\n let bx = px.local.x / 64.0 + off;\n let by = fract(px.local.y / 26.0);\n let mortar = clamp(step(fract(bx), 0.04) + step(by, 0.08), 0.0, 1.0);\n let tone = ne_h(vec2<f32>(floor(bx), row));\n c = c * (1.0 + (tone - 0.5) * 0.7) + vec3<f32>(0.02, 0.012, 0.015) * mortar;\n let pk = vec3<f32>(1.0, 0.2, 0.6);\n let cy = vec3<f32>(0.1, 0.85, 1.0);\n let br = 0.9 + 0.1 * sin(px.time * 0.5);\n let d1 = length((px.uv - vec2<f32>(0.2, 0.35)) * vec2<f32>(px.size.x / px.size.y, 1.0));\n let d2 = length((px.uv - vec2<f32>(0.8, 0.62)) * vec2<f32>(px.size.x / px.size.y, 1.0));\n c = c + pk * 0.11 * br * exp(-d1 * 3.0) * (0.6 + 0.4 * (1.0 - mortar));\n c = c + cy * 0.10 * br * exp(-d2 * 3.0) * (0.6 + 0.4 * (1.0 - mortar));\n let dp = length(px.local - px.pointer);\n c = c + cy * 0.04 * exp(-dp / 180.0);\n return vec4<f32>(c, px.color.a);\n}", params: [1.0, 0.0, 0.0, 0.0], live: true } },
+        "stack/card/idle": { fill: "card", stroke: "primary", strokeWidth: 2.5, corners: { radius: [22, 22, 22, 22], kind: "round" }, shadow: { color: "rgba(34,211,238,0.6)", blur: 30 }, spring: { stiffness: 140, damping: 18 } },
+        "stack/panel/idle": { fill: "card", stroke: "accent", strokeWidth: 2.5, corners: { radius: [16, 16, 16, 16], kind: "round" }, shadow: { color: "rgba(244,114,182,0.55)", blur: 28 }, spring: { stiffness: 140, damping: 18 } },
+        "stack/hero/idle": { fill: "background", stroke: "accent", strokeWidth: 3.5, corners: { radius: [36, 36, 36, 36], kind: "round" }, shadow: { color: "rgba(244,114,182,0.65)", blur: 48 }, spring: { stiffness: 140, damping: 18 } },
+        "stack/bar/idle": { fill: "background", stroke: "primary", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(34,211,238,0.45)", blur: 18 } },
+        "pressable/primary/idle": { fill: "background", stroke: "primary", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "primary", font: "400 18px display", shadow: { color: "rgba(34,211,238,0.75)", blur: 26 }, spring: { stiffness: 150, damping: 17 } },
+        "pressable/primary/hovered": { fill: "primary", stroke: "primary", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "background", font: "400 18px display", shadow: { color: "rgba(34,211,238,0.95)", blur: 42 }, spring: { stiffness: 150, damping: 17 } },
+        "pressable/primary/pressed": { fill: "primary", stroke: "foreground", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "background", font: "400 18px display", shadow: { color: "rgba(34,211,238,0.6)", blur: 14 }, spring: { stiffness: 180, damping: 16 } },
+        "pressable/secondary/idle": { fill: "background", stroke: "accent", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "accent", font: "400 17px display", shadow: { color: "rgba(244,114,182,0.7)", blur: 24 }, spring: { stiffness: 150, damping: 17 } },
+        "pressable/secondary/hovered": { fill: "accent", stroke: "accent", strokeWidth: 3, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "background", font: "400 17px display", shadow: { color: "rgba(244,114,182,0.95)", blur: 40 }, spring: { stiffness: 150, damping: 17 } },
+        "text/display/idle": { textColor: "accent", font: "400 92px display" },
+        "text/title/idle": { textColor: "primary", font: "400 46px display" },
+        "text/eyebrow/idle": { textColor: "accent", font: "400 14px display" },
+        "text/body/idle": { textColor: "foreground", font: "400 18px body" },
+        "text/card/idle": { textColor: "primary", font: "400 26px display", on: "card/surface/idle" },
+        "morph/default/idle": { fill: "accent" },
+        "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_rbox(p: vec2<f32>, h: vec2<f32>, r: f32) -> f32 { let q = abs(p) - h + vec2<f32>(r, r); return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - r; }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet rb = sg_rbox(p - c, c - vec2<f32>(16.0, 16.0), min(22.0, m * 0.3));\nlet cr = length(p - c) - m * 0.2;\nlet d = min(abs(rb), abs(cr));\nlet flick = 0.92 + 0.08 * sin(px.time * 9.0 + floor(px.time * 2.0) * 7.0);\nlet core = 1.0 - smoothstep(0.6, 1.8, d);\nlet glow = exp(-d / 9.0) * 0.55 * flick;\nlet col = mix(px.color.rgb, vec3<f32>(1.0, 1.0, 1.0), core * 0.7);\nreturn sg_out(px, col, max(core, glow));\n}\n", params: [0, 0, 0, 0], live: true } },
+        "ticket/body/idle": { fill: "background", stroke: "primary", strokeWidth: 2, corners: { radius: [14, 14, 14, 14], kind: "round" }, shadow: { color: "rgba(255,60,220,0.6)", blur: 16 } },
+        "ticket/stub/idle": { fill: "background", stroke: "accent", strokeWidth: 2, corners: { radius: [14, 14, 14, 14], kind: "round" }, shadow: { color: "rgba(40,240,255,0.6)", blur: 16 } },
+        "ticket/perforation/idle": { stroke: "accent", strokeWidth: 2, strokeDash: [3, 6], shadow: { color: "rgba(40,240,255,0.6)", blur: 8 } }
+      }
+    layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "frame", align: "center", imageTreatment: "glow", sectionGap: 112, gutter: 48 }
+    motion: { signature: "neon-flicker", stiffness: 140, damping: 24, stagger: 80, enterMs: 638, keyframes: [{ at: 0, opacity: 0, offsetX: 18, offsetY: -16, scale: 1, rotate: 0 }, { at: 0.1, opacity: 0.585, offsetX: 7.465, offsetY: -6.636, scale: 1, rotate: 0 }, { at: 0.2, opacity: 0.794, offsetX: 3.701, offsetY: -3.29, scale: 1, rotate: 0 }, { at: 0.3, opacity: 0.888, offsetX: 2.008, offsetY: -1.785, scale: 1, rotate: 0 }, { at: 0.4, opacity: 0.938, offsetX: 1.114, offsetY: -0.991, scale: 1, rotate: 0 }, { at: 0.5, opacity: 0.966, offsetX: 0.608, offsetY: -0.54, scale: 1, rotate: 0 }, { at: 0.6, opacity: 0.983, offsetX: 0.313, offsetY: -0.278, scale: 1, rotate: 0 }, { at: 0.7, opacity: 0.992, offsetX: 0.144, offsetY: -0.128, scale: 1, rotate: 0 }, { at: 0.8, opacity: 0.997, offsetX: 0.053, offsetY: -0.047, scale: 1, rotate: 0 }, { at: 0.9, opacity: 0.999, offsetX: 0.011, offsetY: -0.01, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    sounds: { down: { path: "press.wav", volume: 0.5 } }
+    soundBase: "https://almadar-kflow-assets.web.app/sounds/event/"
+  }
+}

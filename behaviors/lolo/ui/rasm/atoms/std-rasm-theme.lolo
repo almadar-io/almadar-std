@@ -9,8 +9,8 @@ type RasmSpring = { stiffness : number!, damping : number! }
 type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
-type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
-type RasmMotion = { signature : "rise" | "print-pass" | "fan" | "glitch" | "ink-bleed" | "paper-drop" | "kinetic" | "float" | "snap"!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
+type RasmMotion = { signature : string!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
 type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
 type RasmLight = { color : string!, intensity : number! }
 type RasmKeyLight = { color : string!, intensity : number!, position : [number]! }
@@ -19,6 +19,8 @@ type RasmLook = { lighting : RasmLighting, inset : RasmInset, fill : string, str
 type RasmEntry = { enterMs : number!, keyframes : [RasmEntryKey]! }
 type RasmSpaceStep = { tight : number!, stack : number!, group : number!, scale : number!, measure : number! }
 type RasmBreakpoint = { name : "phone" | "tablet" | "desktop" | "wide"!, min : number! }
+type RasmFont = { family : string!, file : string!, generic : "serif" | "sans-serif" | "monospace"! }
+type RasmThemeLayer = { palette : Map string string!, fonts : Map string RasmFont! }
 type RasmStyle = { looks : Map string RasmLook!, breakpointLooks : Map string (Map string RasmLook), palette : "installed" | "inline" }
 
 orbital RasmThemeOrbital {
@@ -36,7 +38,12 @@ orbital RasmThemeOrbital {
 
     state ready {
       INIT -> ready
-        (if (!= @config.style "")
+        (if (and (!= @config.system "") (> (array/len (object/keys @config.looks)) 0))
+          (do
+            (set @entity.active @config.system)
+            (set @entity.isStyle true)
+            (emit THEME_ANNOUNCE { restyle: true }))
+          (if (!= @config.style "")
           (when (!= (object/get @config.styles @config.style null) null)
             (do
               (set @entity.active @config.style)
@@ -45,9 +52,14 @@ orbital RasmThemeOrbital {
           (do
             (set @entity.active @config.preset)
             (set @entity.isStyle false)
-            (emit THEME_ANNOUNCE { restyle: true })))
+            (emit THEME_ANNOUNCE { restyle: true }))))
       RASM_BOOT -> ready
-        (if (!= @config.style "")
+        (if (and (!= @config.system "") (> (array/len (object/keys @config.looks)) 0))
+          (do
+            (set @entity.active @config.system)
+            (set @entity.isStyle true)
+            (emit THEME_ANNOUNCE { restyle: true }))
+          (if (!= @config.style "")
           (when (!= (object/get @config.styles @config.style null) null)
             (do
               (set @entity.active @config.style)
@@ -56,7 +68,7 @@ orbital RasmThemeOrbital {
           (do
             (set @entity.active @config.preset)
             (set @entity.isStyle false)
-            (emit THEME_ANNOUNCE { restyle: true })))
+            (emit THEME_ANNOUNCE { restyle: true }))))
       RASM_THEME_SET -> ready
         (if (!= (object/get @config.presets ?name null) null)
           (do
@@ -79,12 +91,12 @@ orbital RasmThemeOrbital {
         (set @entity.breakpoint ?name)
         (emit SPACE_ANNOUNCE)
       THEME_ANNOUNCE -> ready when (not @entity.isStyle)
-        (emit RASM_THEME { name: @entity.active, looks: (object/get @config.presets @entity.active {}), breakpoints: @config.breakpoints })
+        (emit RASM_THEME { name: @entity.active, looks: (object/get @config.presets @entity.active {}), breakpoints: @config.breakpoints, layer: { palette: @config.palette, fonts: @config.fonts } })
         (emit SPACE_ANNOUNCE)
       THEME_ANNOUNCE -> ready when @entity.isStyle
-        (let ((style (object/get @config.styles @entity.active null)))
+        (let ((style : RasmStyle? (if (= @entity.active @config.system) { looks: @config.looks, breakpointLooks: @config.systemBreakpointLooks } (object/get @config.styles @entity.active null))))
           (do
-            (emit RASM_THEME { name: @entity.active, looks: (array/reduce [(object/get @config.breakpointLooks @entity.breakpoint {}), (object/get (default @style.breakpointLooks {}) @entity.breakpoint {})] (object/merge @config.base @style.looks) (fn acc layer (array/reduce (object/keys @layer) @acc (fn a k (object/set @a @k (object/merge (object/get @a @k {}) (object/get @layer @k {}))))))), breakpoints: @config.breakpoints })
+            (emit RASM_THEME { name: @entity.active, looks: (array/reduce [(object/get @config.breakpointLooks @entity.breakpoint {}), (object/get (default @style.breakpointLooks {}) @entity.breakpoint {})] (object/merge @config.base @style.looks) (fn acc layer (array/reduce (object/keys @layer) @acc (fn a k (object/set @a @k (object/merge (object/get @a @k {}) (object/get @layer @k {}))))))), breakpoints: @config.breakpoints, layer: { palette: @config.palette, fonts: @config.fonts } })
             (when ?restyle
               (emit RASM_STYLE { name: @entity.active }))
             (emit SPACE_ANNOUNCE)))
@@ -117,8 +129,9 @@ orbital RasmThemeOrbital {
         name : string!
         looks : Map string RasmLook!
         breakpoints : [RasmBreakpoint]!
+        layer : RasmThemeLayer!
       }
-        @description "The announced preset and its look table, with the breakpoint table every layout atom selects by. For a style the looks are merged lowest first: `base`, the style looks, `breakpointLooks[<current breakpoint>]` of the theme, then the style own `breakpointLooks[<current breakpoint>]` (a later layer wins per look key and per field of a look; a breakpoint with no entry adds no layer). A preset carries no breakpoint looks. It is announced again when the surface announces another breakpoint."
+        @description "The announced preset and its look table, with the breakpoint table every layout atom selects by. For a style the looks are merged lowest first: `base`, the style looks, `breakpointLooks[<current breakpoint>]` of the theme, then the style own `breakpointLooks[<current breakpoint>]` (a later layer wins per look key and per field of a look; a breakpoint with no entry adds no layer). A preset carries no breakpoint looks. It is announced again when the surface announces another breakpoint. `layer` carries the palette and fonts knobs, which the surface lays over the host theme on its canvas."
         @tier "primary"
       RASM_STYLE -> external {
         name : string!
@@ -150,6 +163,26 @@ orbital RasmThemeOrbital {
       toggleA : "naqsh" | "glass" | "sand" | "instrument" | "terminal" | "paper" | "taif-day" | "taif-night" | "jazari" | "jazari-night" | "observatory" | "print" | "pulse" | "astrolabe" | "prism" | "prism-ink" | "dawn" | "ink-gold" | "aurora" = "naqsh"
         @label "Toggle from"
         @description "One preset of the pair RASM_THEME_TOGGLE alternates."
+        @tier "presentation"
+      system : string = ""
+        @label "System"
+        @description "The name of the design system this page wears: with looks set, its own looks are announced as a style (over base), with palette and fonts laid over the host theme."
+        @tier "presentation"
+      looks : Map string RasmLook = {}
+        @label "System looks"
+        @description "The design system's own look table, merged over base like a style's looks."
+        @tier "presentation"
+      systemBreakpointLooks : Map string (Map string RasmLook) = {}
+        @label "System breakpoint looks"
+        @description "The design system's looks per breakpoint name, merged over its looks at that breakpoint."
+        @tier "presentation"
+      palette : Map string string = {}
+        @label "Palette"
+        @description "Colour by theme colour name (background, foreground, card, primary, …): a look naming one draws this colour instead of the host theme's."
+        @tier "presentation"
+      fonts : Map string RasmFont = {}
+        @label "Fonts"
+        @description "The face each font role (display, body, mono) draws in, with its font file: a look font naming the role draws this face instead of the host theme's."
         @tier "presentation"
       style : string = ""
         @label "Style"
