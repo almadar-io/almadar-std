@@ -1,0 +1,128 @@
+app std-rasm-depth [
+  version: "0.1.0",
+  description: "std-rasm-depth — a stack of depth layers over one placed stage rect: a 2.5D scene the page scroll and the pointer move like a camera. It paints, clipped to the stage, each declared layer (a picture from `url`, or a plain shape filled with a palette name) at its own fraction of the stage, far layers first. A layer's `depth` runs from -1 (a far layer, which lags) through 0 (the stage itself) to 1 (a near layer, which leads). On the page scroll the canvas plays every layer on its own clock: while the stage crosses the view, a layer travels depth times `scrollTravel` px against the scroll and is scaled by one plus depth times `scrollZoom`, so far layers lag behind the page (parallax) and near layers rush past (a camera pushing through the scene). The pointer moves the camera in steps: the stage is cut into `zones` columns and rows of hit regions, entering or pressing one points the camera at its centre, and each layer settles on a spring depth times `pointerTravel` px away from it, against the pointer. Under reduced motion (RASM_MOTION) the layers rest still at the stage rect and the pointer does not move them. Layers are decoration: they announce nothing."
+]
+;; @capabilities "parallax, depth layers, layered scene, camera, 2.5D, scroll depth"
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmDepthLayer = { id : string!, url : string, fill : string, shape : "rect" | "ellipse", x : number!, y : number!, w : number!, h : number!, depth : number, opacity : number, corner : number }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string! }
+
+orbital RasmDepthOrbital {
+  entity RasmDepthRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The stage rect from RASM_PLACE, null until it is placed." = null
+    viewH : number @description "The canvas height from RASM_RESIZE, the view the scroll range is measured in." = 0
+    camX : number @description "The camera's horizontal aim, -0.5 to 0.5 across the stage: the centre of the zone the pointer last entered or pressed." = 0
+    camY : number @description "The camera's vertical aim, -0.5 to 0.5 down the stage." = 0
+    reduced : boolean @description "True while the surface reports reduced motion." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmDepth -> RasmDepthRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DEPTH_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_RESIZE -> ready when (!= ?height @entity.viewH)
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DEPTH_PAINT { n: @entity.paints })
+      RASM_RESIZE -> ready when (= ?height @entity.viewH)
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DEPTH_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (!= @entity.rect null) (str/startsWith ?id (str/concat @config.id ":zone:")) (or (= ?kind "enter") (= ?kind "down")))
+        (set @entity.camX (let ((r (default @entity.rect { x: 0, y: 0, w: 1, h: 1 }))) (- (/ (+ (math/clamp (math/floor (* (/ (- ?x @r.x) (math/max 1 @r.w)) @config.zones)) 0 (- @config.zones 1)) 0.5) @config.zones) 0.5)))
+        (set @entity.camY (let ((r (default @entity.rect { x: 0, y: 0, w: 1, h: 1 }))) (- (/ (+ (math/clamp (math/floor (* (/ (- ?y @r.y) (math/max 1 @r.h)) @config.zones)) 0 (- @config.zones 1)) 0.5) @config.zones) 0.5)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DEPTH_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (not (and (!= @entity.rect null) (str/startsWith ?id (str/concat @config.id ":zone:")) (or (= ?kind "enter") (= ?kind "down"))))
+      DEPTH_PAINT -> ready
+        (let ((r @entity.rect))
+          (when (and (!= @r null) (> @r.w 0) (> @r.h 0) (> @entity.viewH 0))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (let ((still @entity.reduced) (from (- @r.y (* @entity.viewH @config.enter))) (to (- (+ @r.y @r.h) (* @entity.viewH @config.exit)))) (array/concat [{ type: draw-group, id: (str/concat @config.id ":stage"), position: { x: 0, y: 0 }, clip: { x: @r.x, y: @r.y, width: @r.w, height: @r.h }, items: (array/flatten (array/map @config.layers (fn l (let ((d (default @l.depth 0)) (lx (+ @r.x (* @r.w @l.x))) (ly (+ @r.y (* @r.h @l.y))) (lw (* @r.w @l.w)) (lh (* @r.h @l.h)) (target (str/concat @config.id ":target:" @l.id)) (cr (default @l.corner 0)) (alpha (default @l.opacity 1))) (let ((content : [node] (if (!= (default @l.url "") "") [{ type: draw-group, id: (str/concat @config.id ":source:" @l.id), position: { x: @lx, y: @ly, z: @config.z }, target: { id: @target, width: (math/round @lw), height: (math/round @lh) }, items: [{ type: draw-sprite, id: (str/concat @config.id ":photo:" @l.id), asset: { url: @l.url }, fit: "cover", anchor: "top-left", position: { x: 0, y: 0, z: 0 }, width: (math/round @lw), height: (math/round @lh) }] }, { type: draw-shape, id: (str/concat @config.id ":layer:" @l.id), shape: rect, anchor: "top-left", position: { x: @lx, y: @ly, z: @config.z }, width: @lw, height: @lh, fill: "primary", corners: { radius: [@cr, @cr, @cr, @cr], kind: "round" }, opacity: @alpha, material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> { return textureSampleLevel(target_a, target_sampler, px.uv, 0.0); }\n", params: [0, 0, 0, 0], live: false, targets: [@target] }, hit: false }] (if (= @l.shape "ellipse") [{ type: draw-shape, id: (str/concat @config.id ":layer:" @l.id), shape: ellipse, anchor: "center", position: { x: (+ @lx (/ @lw 2)), y: (+ @ly (/ @lh 2)), z: @config.z }, radiusX: (/ @lw 2), radiusY: (/ @lh 2), fill: (default @l.fill "primary"), opacity: @alpha, hit: false }] [{ type: draw-shape, id: (str/concat @config.id ":layer:" @l.id), shape: rect, anchor: "top-left", position: { x: @lx, y: @ly, z: @config.z }, width: @lw, height: @lh, fill: (default @l.fill "primary"), corners: { radius: [@cr, @cr, @cr, @cr], kind: "round" }, opacity: @alpha, hit: false }])))) [{ type: draw-group, id: (str/concat @config.id ":cam:" @l.id), position: { x: (if @still 0 (* (- 0 @entity.camX) (* @d @config.pointerTravel))), y: (if @still 0 (* (- 0 @entity.camY) (* @d @config.pointerTravel))) }, spring: @config.spring, items: [{ type: draw-group, id: (str/concat @config.id ":scroll:" @l.id), position: { x: 0, y: 0 }, animation: (if @still null { clock: "scroll", from: @from, to: @to, keyframes: [{ at: 0, offsetY: 0, scale: 1 }, { at: 1, offsetY: (* (- 0 @d) @config.scrollTravel), scale: (math/max 0.2 (+ 1 (* @d @config.scrollZoom))) }] }), items: @content }] }]))))) }] (array/map (array/range 0 (* @config.zones @config.zones)) (fn i { type: draw-shape, id: (str/concat @config.id ":zone:" @i), shape: rect, anchor: "top-left", position: { x: (+ @r.x (* (/ @r.w @config.zones) (math/mod @i @config.zones))), y: (+ @r.y (* (/ @r.h @config.zones) (math/floor (/ @i @config.zones)))), z: @config.z }, width: (/ @r.w @config.zones), height: (/ @r.h @config.zones), hit: true })))) })))
+    }
+
+    emits {
+      DEPTH_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored stage rect, view height, camera aim and motion preference."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The clipped stage with one scroll-clocked, spring-placed group per layer, then the zones x zones hit regions that aim the camera."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the stage rect when it is placed and repaint."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the scroll range is measured in, and repaint."
+      RASM_MOTION { reduced : boolean! }
+        @description "Take the reduced-motion preference: the layers rest still while it is on."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "Entering or pressing one of the stage's zone regions aims the camera at that zone's centre."
+    }
+
+    config {
+      id : string = "depth"
+        @label "Id"
+        @description "The stage's RASM_PLACE key and paint id; the zone regions are <id>:zone:<i>."
+        @tier "presentation"
+      z : number = 1
+        @label "Z"
+        @description "Paint order on the surface; the layers and the zone regions share it, so text and controls above it keep their hits."
+        @tier "presentation"
+      layers : [RasmDepthLayer] = []
+        @label "Layers"
+        @description "The layers from far to near, each with an id, x, y, w and h as fractions of the stage, and depth (-1 far, 0 still, 1 near), opacity (1), corner radius in px, and either a picture url or a shape (rect or ellipse) filled with a palette name."
+        @tier "domain"
+      scrollTravel : number = 120
+        @label "Scroll travel"
+        @description "How far, in px, a layer of depth 1 travels against the scroll while the stage crosses the view; a layer of depth -1 travels the same distance with it, so it lags the page."
+        @tier "presentation"
+      scrollZoom : number = 0
+        @label "Scroll zoom"
+        @description "How much a layer of depth 1 grows by the end of the crossing (0.25 is a quarter larger); a layer of depth -1 shrinks by as much. 0 keeps every layer's size, a plain parallax."
+        @tier "presentation"
+      pointerTravel : number = 28
+        @label "Pointer travel"
+        @description "How far, in px, a layer of depth 1 sits from the stage centre when the camera is aimed at an edge zone, against the pointer; 0 turns the pointer camera off."
+        @tier "presentation"
+      zones : number = 3
+        @label "Zones"
+        @description "The camera's aim steps: the stage is cut into zones columns and zones rows of hit regions."
+        @tier "presentation"
+      spring : RasmSpring = { stiffness: 60, damping: 14 }
+        @label "Spring"
+        @description "How the layers settle on the pointer camera's aim."
+        @tier "presentation"
+      enter : number = 1
+        @label "Enter at"
+        @description "Where in the view, as a fraction of its height from the top, the stage's top is when the scroll motion starts: 1 as it comes in at the bottom."
+        @tier "presentation"
+      exit : number = 0
+        @label "Exit at"
+        @description "Where in the view the stage's bottom is when the scroll motion ends: 0 as it leaves at the top."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmDepthStart -> RasmDepth
+}

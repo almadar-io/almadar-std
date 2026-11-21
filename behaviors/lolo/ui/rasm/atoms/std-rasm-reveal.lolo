@@ -1,0 +1,105 @@
+app std-rasm-reveal [
+  version: "0.1.0",
+  description: "std-rasm-reveal — a cover laid over one placed rect that the pointer lifts. The cover is one material rect in the `fill` colour (a redaction, a curtain, a dark ground); the canvas shader cuts a soft-edged hole in it where the pointer is, on the canvas's own clock, so the spotlight follows the pointer at frame rate with no logic in the loop. Two ways in that need no pointer: the focus mover's RASM_FOCUS for an id in `lift` opens the same kind of hole around the placed region that control belongs to (keyboard focus reveals the content it lands on), and RASM_REVEAL_ALL { checked } from a toggle lifts the whole cover and puts it back. It takes no hits, so the controls under it stay clickable."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmRevealLift = { id : string!, region : string! }
+type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+
+orbital RasmRevealOrbital {
+  entity RasmRevealRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The cover's rect from RASM_PLACE, null until it is placed." = null
+    known : [RasmPlaced] @description "The placed rects of the regions in `lift`, kept for the keyboard hole." = []
+    key : string @description "The region the last RASM_FOCUS opened, empty for none." = ""
+    all : boolean @description "True while a toggle has lifted the whole cover." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmReveal -> RasmRevealRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id))))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.known (array/concat (array/filter @entity.known (fn k (not (array/some ?placed (fn p (= @p.id @k.id)))))) (array/filter ?placed (fn p (array/some @config.lift (fn l (= @l.region @p.id)))))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REVEAL_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id)))))))
+      RASM_FOCUS -> ready
+        (set @entity.key (let ((l (array/find @config.lift (fn l (= @l.id ?id))))) (if (= @l null) "" @l.region)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REVEAL_PAINT { n: @entity.paints })
+      RASM_REVEAL_ALL -> ready
+        (set @entity.all ?checked)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REVEAL_PAINT { n: @entity.paints })
+      REVEAL_PAINT -> ready when (= @entity.rect null)
+      REVEAL_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (kr (array/find @entity.known (fn k (= @k.id @entity.key)))))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @config.fill, hit: false, material: { live: true, params: [@config.radius, @config.feather, (if @entity.all 1 0), (if (= @kr null) 0 1), (if (= @kr null) 0 (- (+ @kr.rect.x (/ @kr.rect.w 2)) @r.x)), (if (= @kr null) 0 (- (+ @kr.rect.y (/ @kr.rect.h 2)) @r.y)), (if (= @kr null) 0 (+ (/ @kr.rect.w 2) @config.margin)), (if (= @kr null) 0 (+ (/ @kr.rect.h 2) @config.margin))], wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n  let f = max(px.a.y, 1.0);\n  let near = 1.0 - smoothstep(px.a.x - f, px.a.x, length(px.local - px.pointer));\n  let dd = abs(px.local - px.b.xy) - px.b.zw;\n  let sd = length(max(dd, vec2<f32>(0.0, 0.0))) + min(max(dd.x, dd.y), 0.0);\n  let key = (1.0 - smoothstep(0.0, f, sd)) * px.a.w;\n  let hole = max(max(near, key), px.a.z);\n  let a = px.color.a * (1.0 - hole);\n  return vec4<f32>(px.color.rgb * a, a);\n}\n" } }] }))
+    }
+
+    emits {
+      REVEAL_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the cover from the stored rect, the keyboard hole and the lifted flag."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The cover: one material rect whose shader cuts the pointer, keyboard and lifted-all holes."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the cover's rect when its id is placed, and the rects of the regions in `lift`."
+      RASM_FOCUS { id : string! }
+        @description "Keyboard focus moved: the region of a control in `lift` is uncovered, any other id closes the keyboard hole."
+      RASM_REVEAL_ALL { checked : boolean! }
+        @description "A toggle lifted or restored the whole cover."
+    }
+
+    config {
+      id : string = "reveal"
+        @label "Id"
+        @description "The cover's RASM_PLACE key and paint id."
+        @tier "presentation"
+      z : number = 20
+        @label "Z"
+        @description "Paint order; above the content it covers."
+        @tier "presentation"
+      fill : string = "foreground"
+        @label "Fill"
+        @description "The cover's colour: a palette name or a colour the canvas theme resolves."
+        @tier "presentation"
+      radius : number = 130
+        @label "Radius"
+        @description "The spotlight's radius in px: fully open inside it."
+        @tier "presentation"
+      feather : number = 70
+        @label "Feather"
+        @description "How far past the radius the cover fades back to solid, in px; also the softness of the keyboard hole's edge."
+        @tier "presentation"
+      margin : number = 12
+        @label "Keyboard margin"
+        @description "The px the keyboard hole extends past the focused control's rect before it feathers."
+        @tier "presentation"
+      lift : [RasmRevealLift] = []
+        @label "Lift on focus"
+        @description "Each entry names a control id (id) and the placed region (region) its keyboard focus uncovers; the region rects come from RASM_PLACE."
+        @tier "domain"
+    }
+  }
+
+  page boot as RasmRevealStart -> RasmReveal
+}

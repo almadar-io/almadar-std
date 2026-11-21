@@ -1,0 +1,177 @@
+app std-rasm-marquee [
+  version: "0.1.0",
+  description: "std-rasm-marquee — a band of one line of type in the active text look, on a std-rasm-surface with pageScroll on. It paints the `items` (catalog keys) one after another in a row, each in the look text/<intent>/idle (text/<intent>/inverse with tone inverse), over an optional full-bleed `fill` rectangle. With clock time the row loops endlessly on the paint clock, painted end to end enough times for a seamless loop, one set of items every periodMs; RASM_MARQUEE_PAUSE with checked true stops it where it is and checked false sets it going from the same place, so a std-rasm-toggle wired to it is the visitor's pause control. Under reduced motion (RASM_MOTION { reduced: true }, relayed by std-rasm-surface) a time loop stands still at its start. With clock scroll the line instead travels sideways on the page scroll while the rect crosses the view, from one side of its rest position to the other, running back when the page scrolls back; `direction` says which way it moves as the page scrolls down, so neighbouring lines can move against each other. Under rtl the row starts at the right edge and every direction is mirrored. Every text is clipped to the band's rect, standing or travelling (the surface keeps the clip still while the text moves). A text is wide as `widthRatio` of the rect (at least `minItemWidth`), left or right aligned to its slot and never wrapped."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmClip = { x : number!, y : number!, width : number!, height : number! }
+type RasmTravelKey = { at : number!, offsetX : number }
+type RasmTravel = { durationMs : number, startMs : number, loop : boolean, clock : "scroll", from : number, to : number, keyframes : [RasmTravelKey]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, width : number?, wrap : boolean?, role : string?, level : number?, clip : RasmClip?, travel : RasmTravel? }
+type MarqueeItem = { text : MessageKey! }
+
+orbital RasmMarqueeOrbital {
+  entity RasmMarqueeRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the band, null until placed." = null
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced." = "ltr"
+    paused : boolean @description "The pause control is on: the loop stands still where it was." = false
+    reduced : boolean @description "The viewer's reduced-motion preference from RASM_MOTION." = false
+    startedMs : number @description "The epoch-ms instant the loop started, moved forward on resume so it carries on from where it paused; 0 before the band is first placed." = 0
+    phase : number @description "How far through one loop, 0 to 1, the band was when it was paused." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmMarquee -> RasmMarqueeRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MARQUEE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.startedMs (if (= @entity.startedMs 0) (time/epoch-ms @now) @entity.startedMs))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MARQUEE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MARQUEE_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MARQUEE_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MARQUEE_PAINT { n: @entity.paints })
+      RASM_MARQUEE_PAUSE -> ready when (and ?checked (not @entity.paused))
+        (set @entity.phase (let ((t (/ (- (time/epoch-ms @now) @entity.startedMs) @config.periodMs))) (- @t (math/floor @t))))
+        (set @entity.paused true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MARQUEE_PAINT { n: @entity.paints })
+      RASM_MARQUEE_PAUSE -> ready when (and (not ?checked) @entity.paused)
+        (set @entity.startedMs (- (time/epoch-ms @now) (* @entity.phase @config.periodMs)))
+        (set @entity.paused false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MARQUEE_PAINT { n: @entity.paints })
+      RASM_MARQUEE_PAUSE -> ready when (or (and ?checked @entity.paused) (and (not ?checked) (not @entity.paused)))
+      MARQUEE_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.items) 0) (!= (object/get @entity.looks (str/concat "text/" @config.intent (if (= @config.tone "inverse") "/inverse" "/idle")) null) null))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (l (default (object/get @entity.looks (str/concat "text/" @config.intent (if (= @config.tone "inverse") "/inverse" "/idle")) null) {})) (n (array/len @config.items)) (rtl (= @entity.dir "rtl")) (timed (= @config.clock "time")) (still (or @entity.paused @entity.reduced)) (itemW (math/max @config.minItemWidth (* @r.w @config.widthRatio))) (space (+ (math/max @config.minItemWidth (* @r.w @config.widthRatio)) @config.gap)))
+          (let ((period (* @n @space)) (mv (* -1 (* (if @rtl -1 1) (if (= @config.direction "end") -1 1)))) (mid (+ @r.y (/ @r.h 2))) (from (math/max 0 (- @r.y @entity.viewH))) (to (+ @r.y @r.h)) (hold { x: @r.x, y: @r.y, width: (math/max 1 @r.w), height: (math/max 1 @r.h) }))
+            (let ((copies (if @timed (+ 2 (math/ceil (/ @r.w (math/max 1 @period)))) 1)) (rest (if (and @timed @entity.paused) (* @mv (* @entity.phase @period)) 0)) (anim (if @timed (if @still null (as { durationMs: @config.periodMs, startMs: @entity.startedMs, loop: true, keyframes: [{ at: 0, offsetX: 0 }, { at: 1, offsetX: (* @mv @period) }] } RasmTravel)) (if @entity.reduced null (as { clock: "scroll", from: @from, to: (if (> @to @from) @to (+ @from 1)), keyframes: [{ at: 0, offsetX: (* -1 (* @mv (* @r.w @config.travel))) }, { at: 1, offsetX: (* @mv (* @r.w @config.travel)) }] } RasmTravel)))))
+              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @config.fill "") [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":fill"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @config.fill, stroke: "", hit: false }]), texts: (array/map (array/range (* @copies @n)) (fn j (let ((k (math/floor (/ @j (math/max 1 @n))))) (let ((i (- @j (* @k @n)))) (let ((d (+ (* (if @timed (- @k 1) 0) @period) (* @i @space))) (head (and (and @config.heading (= @k 0)) (= @i 0))) (m (default (array/nth @config.items @i) { text: "" }))) { id: (str/concat @config.id ":item:" @k ":" @i), key: (let ((mk (as @m MarqueeItem))) @mk.text), x: (+ (if @rtl (- (+ @r.x @r.w) @d) (+ @r.x @d)) @rest), y: @mid, z: (+ @config.z 1), align: (if @rtl "right" "left"), baseline: "middle", color: @l.textColor, font: @l.font, width: @itemW, wrap: false, role: (if @head "heading" "text"), level: (if @head @config.headingLevel null), clip: @hold, travel: @anim }))))) }))))
+      MARQUEE_PAINT -> ready when (not (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.items) 0) (!= (object/get @entity.looks (str/concat "text/" @config.intent (if (= @config.tone "inverse") "/inverse" "/idle")) null) null)))
+    }
+
+    emits {
+      MARQUEE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the band from the stored rect, looks, view height, direction and pause state."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The band's optional fill and its items, looping on the paint clock or travelling on the scroll clock."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rect the band shows in; the first placement starts the loop clock."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the scroll travel is measured in."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction; rtl starts the row at the right edge and mirrors every direction."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference; reduced, the band stands still."
+      RASM_MARQUEE_PAUSE { checked : boolean! }
+        @description "The pause control: true stops a time loop where it is, false sets it going from there."
+    }
+
+    config {
+      id : string = "marquee"
+        @label "Id"
+        @description "The band's RASM_PLACE key and paint id."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; the fill is at z and the text one above."
+        @tier "presentation"
+      items : [MarqueeItem] = []
+        @label "Items"
+        @description "The catalog keys painted one after another along the row, each in the visitor's language."
+        @tier "presentation"
+      intent : "display" | "title" | "card" | "eyebrow" | "body" | "poster" | "numeral" | "caption" | "label" | "quote" | "inverse" = "title"
+        @label "Intent"
+        @description "The text look the line is set in: text/<intent>/idle."
+        @tier "presentation"
+      tone : "default" | "inverse" = "default"
+        @label "Tone"
+        @description "default reads text/<intent>/idle; inverse reads text/<intent>/inverse, the same role set light on a dark or saturated field, for a band with a fill."
+        @tier "presentation"
+      fill : string = ""
+        @label "Fill"
+        @description "A theme colour token painted over the whole rect behind the text, a full-bleed band; empty paints no fill."
+        @tier "presentation"
+      clock : "time" | "scroll" = "time"
+        @label "Clock"
+        @description "time loops the row endlessly on the paint clock, periodMs per set of items, and answers the pause control; scroll travels the line sideways with the page scroll."
+        @tier "presentation"
+      periodMs : number = 24000
+        @label "Period"
+        @description "With clock time, the milliseconds one set of items takes to pass: a longer period is a slower band."
+        @tier "presentation"
+      direction : "start" | "end" = "start"
+        @label "Direction"
+        @description "start moves the line toward the reading start (left in ltr) as time passes or the page scrolls down; end moves it toward the reading end."
+        @tier "presentation"
+      gap : number = 48
+        @label "Gap"
+        @description "The space after each item in px."
+        @tier "presentation"
+      widthRatio : number = 1
+        @label "Width ratio"
+        @description "How wide each item's slot is, as a multiple of the rect's width; a slot must be wider than its text, which is never wrapped."
+        @tier "presentation"
+      minItemWidth : number = 360
+        @label "Smallest slot"
+        @description "The narrowest an item's slot gets in px, so a band on a phone still has room for its text."
+        @tier "presentation"
+      travel : number = 0.5
+        @label "Travel"
+        @description "With clock scroll, how far the line moves from its rest position to each side, as a fraction of the rect's width: the line is at one side as the rect enters the view and at the other as it leaves."
+        @tier "presentation"
+      heading : boolean = false
+        @label "Heading"
+        @description "Announce the first item to assistive technology as a heading of headingLevel; the other copies are plain text."
+        @tier "presentation"
+      headingLevel : number = 2
+        @label "Heading level"
+        @description "The heading level 1 to 6 the first item announces when heading is on."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmMarqueeStart -> RasmMarquee
+}

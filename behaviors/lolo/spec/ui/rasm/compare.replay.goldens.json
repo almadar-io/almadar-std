@@ -1,0 +1,441 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-compare.lolo",
+  "trait": "RasmCompare",
+  "cases": [
+    {
+      "id": "placing-the-comparison-paints-it",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "cmp",
+                "rect": {
+                  "x": 100,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-another-id-placed-paints-nothing",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 100,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-press-in-the-rect-starts-the-drag-and-moves-the-divider",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "cmp",
+            "x": 300,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-press-on-another-id-does-nothing",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "other",
+            "x": 300,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-move-while-dragging-follows-the-pointer",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "dragging": true,
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "cmp",
+            "x": 420,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-move-without-a-press-does-nothing",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "cmp",
+            "x": 420,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-release-ends-the-drag-and-emits-the-value",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "dragging": true,
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "up",
+            "id": "cmp",
+            "x": 420,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_COMPARE_CHANGED",
+                "payload": {
+                  "value": 50
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-release-without-a-press-emits-nothing",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "up",
+            "id": "cmp",
+            "x": 420,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_COMPARE_CHANGED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-key-step-moves-the-divider-by-step-and-emits-it",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_STEP",
+          "payload": {
+            "id": "cmp",
+            "delta": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_COMPARE_CHANGED",
+                "payload": {
+                  "value": 55
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-step-for-another-id-does-nothing",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_STEP",
+          "payload": {
+            "id": "other",
+            "delta": 1
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_COMPARE_CHANGED",
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "rtl-repaints-mirrored",
+      "config": {
+        "id": "cmp",
+        "label": "l",
+        "beforeLabel": "b",
+        "afterLabel": "a",
+        "beforeUrl": "https://x/b.jpg",
+        "afterUrl": "https://x/a.jpg"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 100,
+          "y": 0,
+          "w": 400,
+          "h": 300
+        },
+        "pos": 50
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "rtl"
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

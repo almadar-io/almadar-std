@@ -1,0 +1,381 @@
+app std-rasm-plane [
+  version: "0.1.0",
+  description: "std-rasm-plane — a free two-dimensional plane of content that wraps around. It places a declared list of items (id and rect in plane units) inside its placed rect with RASM_PLACE, shifted by an offset that a drag, the arrow keys on the focused plane, or the next and previous events move in any direction. The plane is a torus: an item that leaves one edge comes back at the opposite edge, with the tile at least the view plus the widest item so the jump is always off screen. A release carries the drag on with inertia that decays by friction each frame; RASM_PLANE_NEXT and RASM_PLANE_PREV glide the plane to centre the next or previous id of stops, by the shortest way round the wrap. Under reduced motion there is no inertia and the next and previous events cut straight to the item. It paints one transparent rect over its placed rect that takes the pointer and the keyboard focus, and emits RASM_PLANE_MOVED { id, x, y } with the offset every time it changes."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaneItem = { id : string!, x : number!, y : number!, w : number!, h : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+
+orbital RasmPlaneOrbital {
+  entity RasmPlaneRun [runtime] {
+    id : string!
+    rect : RasmRect @description "The rect RASM_PLACE gave this plane." = { x: 0, y: 0, w: 0, h: 0 }
+    hasRect : boolean = false
+    ox : number @description "How far the plane is shifted along x, in px." = 0
+    oy : number @description "How far the plane is shifted along y, in px." = 0
+    vx : number @description "The inertia along x, in px per frame." = 0
+    vy : number @description "The inertia along y, in px per frame." = 0
+    tw : number @description "The tile width the last layout used." = 1
+    th : number @description "The tile height the last layout used." = 1
+    lastX : number = 0
+    lastY : number = 0
+    goal : boolean @description "True while the plane glides to tx, ty." = false
+    tx : number = 0
+    ty : number = 0
+    cursor : number @description "The index in stops the next and previous events move from." = 0
+    focused : boolean = false
+    reduced : boolean = false
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmPlane -> RasmPlaneRun [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      RASM_EXTENT -> idle
+      RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.hasRect true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PLANE_PAINT { n: @entity.paints })
+      RASM_PLACE -> idle when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_MOTION -> idle
+        (set @entity.reduced ?reduced)
+      RASM_FOCUS -> idle
+        (set @entity.focused (= ?id @config.id))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PLANE_PAINT { n: @entity.paints })
+      PLANE_PAINT -> idle when @entity.hasRect
+        (let ((r @entity.rect))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "", stroke: "ring", strokeWidth: (if @entity.focused 3 0), hit: true, semantic: { role: "group", labelledBy: @config.labelledBy, order: @config.order, focused: @entity.focused } }] }))
+      PLANE_PAINT -> idle when (not @entity.hasRect)
+      PLANE_LAYOUT -> idle when @entity.hasRect
+        (let (
+            (r @entity.rect)
+            (mw (array/reduce @config.items 0 (fn acc it (math/max @acc @it.w))))
+            (mh (array/reduce @config.items 0 (fn acc it (math/max @acc @it.h))))
+            (tw (math/max @config.tileW (+ @r.w @mw)))
+            (th (math/max @config.tileH (+ @r.h @mh)))
+          )
+          (do
+            (set @entity.tw @tw)
+            (set @entity.th @th)
+            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
+            (emit RASM_PLANE_MOVED { id: @config.id, x: @entity.ox, y: @entity.oy })))
+      PLANE_LAYOUT -> idle when (not @entity.hasRect)
+      RASM_KEYPRESS -> idle when (and (= ?target @config.id) (= ?key "ArrowLeft"))
+        (set @entity.ox (+ @entity.ox @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_KEYPRESS -> idle when (and (= ?target @config.id) (= ?key "ArrowRight"))
+        (set @entity.ox (- @entity.ox @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_KEYPRESS -> idle when (and (= ?target @config.id) (= ?key "ArrowUp"))
+        (set @entity.oy (+ @entity.oy @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_KEYPRESS -> idle when (and (= ?target @config.id) (= ?key "ArrowDown"))
+        (set @entity.oy (- @entity.oy @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_PLANE_NEXT -> idle when (and @entity.hasRect (> (array/len @config.stops) 0))
+        (set @entity.cursor (default (math/mod (+ @entity.cursor 1) (array/len @config.stops)) 0))
+        (emit PLANE_GO { })
+      RASM_PLANE_PREV -> idle when (and @entity.hasRect (> (array/len @config.stops) 0))
+        (set @entity.cursor (default (math/mod (+ (+ @entity.cursor (array/len @config.stops)) -1) (array/len @config.stops)) 0))
+        (emit PLANE_GO { })
+      PLANE_GO -> moving when (not @entity.reduced)
+        (let ((it (default (array/find @config.items (fn i (= @i.id (default (array/nth @config.stops @entity.cursor) "")))) { id: "", x: 0, y: 0, w: 0, h: 0 })))
+          (do
+            (set @entity.tx (- (/ @entity.rect.w 2) (+ @it.x (/ @it.w 2))))
+            (set @entity.ty (- (/ @entity.rect.h 2) (+ @it.y (/ @it.h 2))))
+            (set @entity.goal true)
+            (set @entity.vx 0)
+            (set @entity.vy 0)))
+      PLANE_GO -> idle when @entity.reduced
+        (let ((it (default (array/find @config.items (fn i (= @i.id (default (array/nth @config.stops @entity.cursor) "")))) { id: "", x: 0, y: 0, w: 0, h: 0 })))
+          (do
+            (set @entity.ox (- (/ @entity.rect.w 2) (+ @it.x (/ @it.w 2))))
+            (set @entity.oy (- (/ @entity.rect.h 2) (+ @it.y (/ @it.h 2))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })))
+      RASM_POINTER -> dragging when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.lastX ?x)
+        (set @entity.lastY ?y)
+        (set @entity.vx 0)
+        (set @entity.vy 0)
+        (set @entity.goal false)
+    }
+
+    state dragging {
+      INIT -> idle
+      RASM_EXTENT -> dragging
+      RASM_PLACE -> dragging when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.hasRect true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PLANE_PAINT { n: @entity.paints })
+      RASM_PLACE -> dragging when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_MOTION -> dragging
+        (set @entity.reduced ?reduced)
+      RASM_FOCUS -> dragging
+        (set @entity.focused (= ?id @config.id))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PLANE_PAINT { n: @entity.paints })
+      PLANE_PAINT -> dragging when @entity.hasRect
+        (let ((r @entity.rect))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "", stroke: "ring", strokeWidth: (if @entity.focused 3 0), hit: true, semantic: { role: "group", labelledBy: @config.labelledBy, order: @config.order, focused: @entity.focused } }] }))
+      PLANE_PAINT -> dragging when (not @entity.hasRect)
+      PLANE_LAYOUT -> dragging when @entity.hasRect
+        (let (
+            (r @entity.rect)
+            (mw (array/reduce @config.items 0 (fn acc it (math/max @acc @it.w))))
+            (mh (array/reduce @config.items 0 (fn acc it (math/max @acc @it.h))))
+            (tw (math/max @config.tileW (+ @r.w @mw)))
+            (th (math/max @config.tileH (+ @r.h @mh)))
+          )
+          (do
+            (set @entity.tw @tw)
+            (set @entity.th @th)
+            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
+            (emit RASM_PLANE_MOVED { id: @config.id, x: @entity.ox, y: @entity.oy })))
+      PLANE_LAYOUT -> dragging when (not @entity.hasRect)
+      RASM_POINTER -> dragging when (and (= ?id @config.id) (= ?kind "move"))
+        (set @entity.ox (+ @entity.ox (- ?x @entity.lastX)))
+        (set @entity.oy (+ @entity.oy (- ?y @entity.lastY)))
+        (set @entity.vx (+ (* 0.5 @entity.vx) (* 0.5 (- ?x @entity.lastX))))
+        (set @entity.vy (+ (* 0.5 @entity.vy) (* 0.5 (- ?y @entity.lastY))))
+        (set @entity.lastX ?x)
+        (set @entity.lastY ?y)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_POINTER -> moving when (and (and (= ?id @config.id) (= ?kind "up")) (not @entity.reduced))
+      RASM_POINTER -> idle when (and (and (= ?id @config.id) (= ?kind "up")) @entity.reduced)
+        (set @entity.vx 0)
+        (set @entity.vy 0)
+    }
+
+    state moving {
+      INIT -> idle
+      RASM_EXTENT -> moving
+      RASM_PLACE -> moving when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.hasRect true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PLANE_PAINT { n: @entity.paints })
+      RASM_PLACE -> moving when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_MOTION -> moving
+        (set @entity.reduced ?reduced)
+      RASM_FOCUS -> moving
+        (set @entity.focused (= ?id @config.id))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PLANE_PAINT { n: @entity.paints })
+      PLANE_PAINT -> moving when @entity.hasRect
+        (let ((r @entity.rect))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "", stroke: "ring", strokeWidth: (if @entity.focused 3 0), hit: true, semantic: { role: "group", labelledBy: @config.labelledBy, order: @config.order, focused: @entity.focused } }] }))
+      PLANE_PAINT -> moving when (not @entity.hasRect)
+      PLANE_LAYOUT -> moving when @entity.hasRect
+        (let (
+            (r @entity.rect)
+            (mw (array/reduce @config.items 0 (fn acc it (math/max @acc @it.w))))
+            (mh (array/reduce @config.items 0 (fn acc it (math/max @acc @it.h))))
+            (tw (math/max @config.tileW (+ @r.w @mw)))
+            (th (math/max @config.tileH (+ @r.h @mh)))
+          )
+          (do
+            (set @entity.tw @tw)
+            (set @entity.th @th)
+            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
+            (emit RASM_PLANE_MOVED { id: @config.id, x: @entity.ox, y: @entity.oy })))
+      PLANE_LAYOUT -> moving when (not @entity.hasRect)
+      RASM_KEYPRESS -> moving when (and (= ?target @config.id) (= ?key "ArrowLeft"))
+        (set @entity.ox (+ @entity.ox @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_KEYPRESS -> moving when (and (= ?target @config.id) (= ?key "ArrowRight"))
+        (set @entity.ox (- @entity.ox @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_KEYPRESS -> moving when (and (= ?target @config.id) (= ?key "ArrowUp"))
+        (set @entity.oy (+ @entity.oy @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_KEYPRESS -> moving when (and (= ?target @config.id) (= ?key "ArrowDown"))
+        (set @entity.oy (- @entity.oy @config.keyStep))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      RASM_PLANE_NEXT -> moving when (and @entity.hasRect (> (array/len @config.stops) 0))
+        (set @entity.cursor (default (math/mod (+ @entity.cursor 1) (array/len @config.stops)) 0))
+        (emit PLANE_GO { })
+      RASM_PLANE_PREV -> moving when (and @entity.hasRect (> (array/len @config.stops) 0))
+        (set @entity.cursor (default (math/mod (+ (+ @entity.cursor (array/len @config.stops)) -1) (array/len @config.stops)) 0))
+        (emit PLANE_GO { })
+      PLANE_GO -> moving when (not @entity.reduced)
+        (let ((it (default (array/find @config.items (fn i (= @i.id (default (array/nth @config.stops @entity.cursor) "")))) { id: "", x: 0, y: 0, w: 0, h: 0 })))
+          (do
+            (set @entity.tx (- (/ @entity.rect.w 2) (+ @it.x (/ @it.w 2))))
+            (set @entity.ty (- (/ @entity.rect.h 2) (+ @it.y (/ @it.h 2))))
+            (set @entity.goal true)
+            (set @entity.vx 0)
+            (set @entity.vy 0)))
+      PLANE_GO -> moving when @entity.reduced
+        (let ((it (default (array/find @config.items (fn i (= @i.id (default (array/nth @config.stops @entity.cursor) "")))) { id: "", x: 0, y: 0, w: 0, h: 0 })))
+          (do
+            (set @entity.ox (- (/ @entity.rect.w 2) (+ @it.x (/ @it.w 2))))
+            (set @entity.oy (- (/ @entity.rect.h 2) (+ @it.y (/ @it.h 2))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })))
+      RASM_POINTER -> dragging when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.lastX ?x)
+        (set @entity.lastY ?y)
+        (set @entity.vx 0)
+        (set @entity.vy 0)
+        (set @entity.goal false)
+      PLANE_FRAME -> moving when (and @entity.goal (or (> (math/abs (- (default (math/mod (+ (default (math/mod (+ (- @entity.tx @entity.ox) (/ @entity.tw 2)) @entity.tw) 0) @entity.tw) @entity.tw) 0) (/ @entity.tw 2))) 0.5) (> (math/abs (- (default (math/mod (+ (default (math/mod (+ (- @entity.ty @entity.oy) (/ @entity.th 2)) @entity.th) 0) @entity.th) @entity.th) 0) (/ @entity.th 2))) 0.5)))
+        (set @entity.ox (+ @entity.ox (* 0.18 (- (default (math/mod (+ (default (math/mod (+ (- @entity.tx @entity.ox) (/ @entity.tw 2)) @entity.tw) 0) @entity.tw) @entity.tw) 0) (/ @entity.tw 2)))))
+        (set @entity.oy (+ @entity.oy (* 0.18 (- (default (math/mod (+ (default (math/mod (+ (- @entity.ty @entity.oy) (/ @entity.th 2)) @entity.th) 0) @entity.th) @entity.th) 0) (/ @entity.th 2)))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      PLANE_FRAME -> idle when (and @entity.goal (and (<= (math/abs (- (default (math/mod (+ (default (math/mod (+ (- @entity.tx @entity.ox) (/ @entity.tw 2)) @entity.tw) 0) @entity.tw) @entity.tw) 0) (/ @entity.tw 2))) 0.5) (<= (math/abs (- (default (math/mod (+ (default (math/mod (+ (- @entity.ty @entity.oy) (/ @entity.th 2)) @entity.th) 0) @entity.th) @entity.th) 0) (/ @entity.th 2))) 0.5)))
+        (set @entity.goal false)
+        (set @entity.ox @entity.tx)
+        (set @entity.oy @entity.ty)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      PLANE_FRAME -> moving when (and (not @entity.goal) (or (> (math/abs (* @entity.vx @config.friction)) 0.1) (> (math/abs (* @entity.vy @config.friction)) 0.1)))
+        (set @entity.ox (+ @entity.ox @entity.vx))
+        (set @entity.oy (+ @entity.oy @entity.vy))
+        (set @entity.vx (* @entity.vx @config.friction))
+        (set @entity.vy (* @entity.vy @config.friction))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit PLANE_LAYOUT { n: @entity.layouts })
+      PLANE_FRAME -> idle when (and (not @entity.goal) (and (<= (math/abs (* @entity.vx @config.friction)) 0.1) (<= (math/abs (* @entity.vy @config.friction)) 0.1)))
+        (set @entity.vx 0)
+        (set @entity.vy 0)
+    }
+
+    ticks {
+      planeTick every 16ms in moving
+        (emit PLANE_FRAME { })
+    }
+
+    emits {
+      PLANE_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Place the items from the stored offset."
+        @tier "internal"
+      PLANE_PAINT -> internal {
+        n : number!
+      }
+        @tier "internal"
+      PLANE_FRAME -> internal { }
+        @description "One animation frame of the glide or the inertia."
+        @tier "internal"
+      PLANE_GO -> internal { }
+        @tier "internal"
+      RASM_PLACE -> external {
+        n : number!
+        placed : [RasmPlaced]!
+      }
+        @description "The items' rects, wrapped inside the plane's rect."
+        @tier "domain"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The transparent rect that takes the pointer and the keyboard focus."
+        @tier "primary"
+      RASM_PLANE_MOVED -> external {
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "The plane's offset changed."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the plane's own rect when it is placed and place the items in it."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A press on the plane starts a drag; moves carry the content; the release hands the speed to the inertia."
+      RASM_KEYPRESS { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "Arrow keys on the focused plane move it by keyStep."
+      RASM_FOCUS { id : string! }
+        @description "Keyboard focus moved; the plane draws its ring when it holds it."
+      RASM_EXTENT { id : string!  w : number!  h : number!  n : number }
+        @description "The extent of an item; the plane places items at their declared sizes, so it takes none of it."
+      RASM_PLANE_NEXT { }
+        @description "Glide to centre the next id in stops."
+      RASM_PLANE_PREV { }
+        @description "Glide to centre the previous id in stops."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference: no inertia, no glide."
+    }
+
+    config {
+      id : string = "plane"
+        @label "Id"
+        @description "The plane's RASM_PLACE key, pointer id and paint id."
+        @tier "presentation"
+      items : [RasmPlaneItem] = []
+        @label "Items"
+        @description "The placed ids on the plane: each one's top-left (x, y) and size (w, h) in px at offset zero, inside a tile of tileW by tileH."
+        @tier "domain"
+      stops : [string] = []
+        @label "Stops"
+        @description "Item ids the next and previous events centre, in order."
+        @tier "domain"
+      tileW : number = 2000
+        @label "Tile width"
+        @description "The width of the wrapping tile in px; at least the view plus the widest item, so it grows to that when the view is wider."
+        @tier "presentation"
+      tileH : number = 1400
+        @label "Tile height"
+        @description "The height of the wrapping tile in px; grows to the view plus the tallest item when the view is taller."
+        @tier "presentation"
+      friction : number = 0.93
+        @label "Friction"
+        @description "The share of its speed the drag keeps each 16 ms frame after release, 0 to 1."
+        @tier "presentation"
+      keyStep : number = 120
+        @label "Key step"
+        @description "How far an arrow key moves the plane, in px."
+        @tier "presentation"
+      order : number = 0
+        @label "Order"
+        @description "Reading and tab order of the plane's semantic node."
+        @tier "presentation"
+      labelledBy : string = ""
+        @label "Labelled by"
+        @description "The id of the text paint that names the plane for assistive technology."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order of the pointer rect; keep it under the items."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmPlaneStart -> RasmPlane
+}

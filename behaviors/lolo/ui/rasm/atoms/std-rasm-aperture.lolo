@@ -1,0 +1,157 @@
+app std-rasm-aperture [
+  version: "0.1.0",
+  description: "std-rasm-aperture — a photograph seen through a mask that grows with the page scroll until the photograph fills the screen (the text-mask reveal). The mask is SVG path data in a box of `boxWidth` by `boxHeight` units, centred in the placed rect at `span` of its width; the photograph is clipped to it. While the page scrolls through the `anchor` section the whole masked group scales about the focal point (a spot inside a solid part of the mask, in box units), so the mask's own strokes widen until they cover the view; the masked photo then crosses over to the plain photograph, which holds, and fades with the last of the range. The canvas plays it from the scroll offset every frame (scroll clock), backwards on the way up, with no repaint while the page moves. Pin it with the page's `fixed` list so the stage stays in view through the runway. Under reduced motion it paints the mask at rest and nothing animates. The photograph takes the `alt` key as an image announced to assistive technology."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+
+orbital RasmApertureOrbital {
+  entity RasmApertureRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The stage rect from RASM_PLACE, null until it is placed." = null
+    scene : RasmRect? @description "The anchor section's rect from RASM_PLACE; the stage's own rect when no anchor is named." = null
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    reduced : boolean @description "True when the surface reported reduced motion: the mask is painted at rest." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmAperture -> RasmApertureRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.scene (let ((it (array/find ?placed (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @it null) @entity.scene @it.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit APERTURE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor))))))
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit APERTURE_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit APERTURE_PAINT { n: @entity.paints })
+      APERTURE_PAINT -> ready when (or (= @entity.rect null) (= @config.mask "") (= @config.url "") (<= @entity.viewH 0))
+      APERTURE_PAINT -> ready when (and (!= @entity.rect null) (!= @config.mask "") (!= @config.url "") (> @entity.viewH 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sc (default @entity.scene (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (given : MessageKey? @config.alt))
+          (let ((k (math/min (/ (* @r.w @config.span) @config.boxWidth) (/ (* @r.h 0.8) @config.boxHeight))))
+            (let ((ox (+ @r.x (/ (- @r.w (* @config.boxWidth @k)) 2))) (oy (+ @r.y (/ (- @r.h (* @config.boxHeight @k)) 2))))
+              (let ((px (+ @ox (* @config.focusX @k))) (py (+ @oy (* @config.focusY @k))) (steps 12))
+                (let ((range { clock: "scroll", from: (- @sc.y (* @entity.viewH @config.enter)), to: (- (+ @sc.y @sc.h) (* @entity.viewH @config.exit)) })
+                      (photoA : node { type: draw-sprite, id: (str/concat @config.id ":masked"), asset: { url: @config.url }, fit: "cover", anchor: "top-left", position: { x: (/ (- @r.x @ox) @k), y: (/ (- @r.y @oy) @k), z: 0 }, width: (/ @r.w @k), height: (/ @r.h @k) })
+                      (photoB : node { type: draw-sprite, id: (str/concat @config.id ":full"), asset: { url: @config.url }, fit: "cover", anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h }))
+                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":alt"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] []), nodes: (array/concat
+                    [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "transparent", hit: false, semantic: (if (and (!= @given null) (not @config.decorative)) { role: "img", labelledBy: (str/concat @config.id ":alt"), order: (+ @r.y (/ @r.x 10000)) } null) }]
+                    (let ((restNodes : [node] [{ type: draw-group, id: (str/concat @config.id ":rest"), position: { x: @ox, y: @oy, z: @config.z }, scale: @k, items: [{ type: draw-group, id: (str/concat @config.id ":restclip"), position: { x: 0, y: 0 }, clip: @config.mask, items: [@photoA] }] }]) (liveNodes : [node] [{ type: draw-group, id: (str/concat @config.id ":fade"), position: { x: 0, y: 0, z: @config.z }, animation: (object/merge @range { keyframes: [{ at: 0, opacity: 0 }, { at: @config.fadeAt, opacity: 0 }, { at: @config.fullAt, opacity: 1 }, { at: @config.endAt, opacity: 1 }, { at: 1, opacity: 0 }] }), items: [@photoB] },
+                       { type: draw-group, id: (str/concat @config.id ":zoom"), position: { x: @px, y: @py, z: @config.z }, animation: (object/merge @range { keyframes: (array/concat (array/map (array/range (+ @steps 1)) (fn i (let ((t (* (/ @config.fullAt @steps) @i))) { at: @t, scale: (math/pow @config.scaleTo (/ @t @config.fullAt)), opacity: (- 1 (math/clamp (/ (- @t @config.fadeAt) (math/max 0.001 (- @config.fullAt @config.fadeAt))) 0 1)) }))) [{ at: 1, scale: @config.scaleTo, opacity: 0 }]) }), items: [{ type: draw-shape, id: (str/concat @config.id ":pivot"), shape: rect, anchor: "top-left", position: { x: (- 0 (+ @r.w @r.h)), y: (- 0 (+ @r.w @r.h)) }, width: (* 2 (+ @r.w @r.h)), height: (* 2 (+ @r.w @r.h)), fill: "transparent", hit: false }, { type: draw-group, id: (str/concat @config.id ":window"), position: { x: (- @ox @px), y: (- @oy @py) }, scale: @k, items: [{ type: draw-group, id: (str/concat @config.id ":clip"), position: { x: 0, y: 0 }, clip: @config.mask, items: [@photoA] }] }] }])) (if @entity.reduced @restNodes @liveNodes))) }))))))
+    }
+
+    emits {
+      APERTURE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored stage, section, view height and motion preference."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The stage: the masked photograph in a scaling group, the plain photograph in a fading one, and the semantic image node."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the stage's rect when its id is placed, and the anchor section's rect."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the scroll range is measured in."
+      RASM_MOTION { reduced : boolean! }
+        @description "Reduced motion paints the mask at rest, with no scroll animation."
+    }
+
+    config {
+      id : string = "aperture"
+        @label "Id"
+        @description "The stage's RASM_PLACE key and paint id; list it in the page's `fixed` to pin the stage."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      url : string = ""
+        @label "Picture"
+        @description "The photograph's URL; nothing is painted while it is empty."
+        @tier "domain"
+      alt : MessageKey?
+        @label "Alt text"
+        @description "The catalog key of the photograph's text alternative, announced as an image."
+        @tier "presentation"
+      decorative : boolean = false
+        @label "Decorative"
+        @description "On, the photograph announces nothing even when an alt key is given."
+        @tier "presentation"
+      mask : string = ""
+        @label "Mask"
+        @description "SVG path data of the mask in a box of boxWidth by boxHeight units; the photograph shows through its filled area. Overlapping subpaths of one winding join into one shape."
+        @tier "domain"
+      boxWidth : number = 600
+        @label "Mask box width"
+        @description "The mask drawing's width in its own units."
+        @tier "presentation"
+      boxHeight : number = 300
+        @label "Mask box height"
+        @description "The mask drawing's height in its own units."
+        @tier "presentation"
+      focusX : number = 300
+        @label "Focus x"
+        @description "The mask-box x the mask grows from: a point inside a solid part of the mask, so its strokes widen over the view."
+        @tier "presentation"
+      focusY : number = 150
+        @label "Focus y"
+        @description "The mask-box y the mask grows from."
+        @tier "presentation"
+      span : number = 0.8
+        @label "Span"
+        @description "The mask's width as a fraction of the stage's width; its height never passes 0.8 of the stage's height."
+        @tier "presentation"
+      scaleTo : number = 20
+        @label "Scale to"
+        @description "How many times the mask has grown when the plain photograph has taken over; the growth is exponential along the scroll."
+        @tier "presentation"
+      anchor : string = ""
+        @label "Anchor"
+        @description "The placed id of the section whose scroll drives the growth (the runway); empty uses the stage's own rect."
+        @tier "presentation"
+      enter : number = 0
+        @label "Enter at"
+        @description "Where in the view, as a fraction of its height from the top, the anchor's top is when the growth starts: 0 as it reaches the top (a pinned stage), 1 as it comes in at the bottom."
+        @tier "presentation"
+      exit : number = 1
+        @label "Exit at"
+        @description "Where in the view the anchor's bottom is when the range ends: 1 at the bottom edge (a pinned stage), 0 as it leaves at the top."
+        @tier "presentation"
+      fadeAt : number = 0.5
+        @label "Cross-over starts"
+        @description "The progress (0 to 1) where the masked photograph starts to fade and the plain photograph to fade in."
+        @tier "presentation"
+      fullAt : number = 0.8
+        @label "Photograph full"
+        @description "The progress where the plain photograph is fully in and the mask has grown to scaleTo."
+        @tier "presentation"
+      endAt : number = 0.92
+        @label "Fade-out starts"
+        @description "The progress where the plain photograph starts to fade, so a pinned stage lets the next section take the view."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmApertureStart -> RasmAperture
+}

@@ -1,0 +1,281 @@
+app std-rasm-spy [
+  version: "0.1.0",
+  description: "std-rasm-spy — scroll-driven selection of one item among declared items, in one of two modes. Mode toc (the default) is a scroll-spy table of contents. It lists declared items, each a placed anchor id (a section) and the text key that names it, as rows in its own placed rect beside a thin rail, and as the page scrolls it marks the row of the section the reader is in: the last item whose anchor's top has passed the `line` fraction of the view (the first item before any has). The marked row is set in the active text intent and carries a bar on the rail; the others are set in the quiet intent. A row press does not scroll; the table follows the reader, it does not steer. It emits RASM_SPY_ACTIVE { id, index } when the marked row changes. Under reduced motion nothing animates in any case: the mark moves with the scroll. Mode tabs is a pinned feature tour: over the scroll range of its `anchor` (a tall placed track) the items take turns, item i active for the i-th share of the range, and each item paints a progress bar along its reading-start edge in its own placed rect (full for the items already read, partly filled for the active one, empty after). The active item's `shows` paint ids are revealed with RASM_VISIBLE and the other items' are hidden, so a surface transition on this owner cross-fades the visuals. Each item also paints one transparent hit region with the tab role over its placed rect: a press, RASM_FOCUS or RASM_ACTIVATE for the region (`<item id>:tab`) picks that item at once, and the pick holds until the page scrolls more than `releasePx` away from where it was made. Outside the breakpoints named in `activeOn` it shows every item's paints and paints nothing of its own."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmSpyItem = { id : string!, key : MessageKey!, row : number! }
+type RasmSpyTab = { id : string!, label : string!, shows : [string]! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmSpyOrbital {
+  entity RasmSpyRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the table, null until placed." = null
+    anchors : Map string RasmRect @description "The placed rect of every item's anchor seen so far." = {}
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    offset : number @description "The page scroll from RASM_PAGE_SCROLLED." = 0
+    dir : "ltr" | "rtl" @description "The reading direction from RASM_DIRECTION." = "ltr"
+    active : number @description "The index of the marked row, -1 before the first paint." = -1
+    track : RasmRect? @description "Tabs mode: the anchor's rect from RASM_PLACE, null until it is placed." = null
+    on : boolean @description "Tabs mode: whether the announced breakpoint is one the spy runs on." = true
+    picked : number @description "Tabs mode: the item a press or the keyboard chose, -1 while the scroll decides." = -1
+    pickedAt : number @description "Tabs mode: the scroll offset when the pick was made." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmSpy -> RasmSpyRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_PAGE_SCROLLED -> ready
+        (set @entity.picked (if (and (>= @entity.picked 0) (> (math/abs (- ?offset @entity.pickedAt)) @config.releasePx)) -1 @entity.picked))
+        (set @entity.offset ?offset)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id))))))
+        (set @entity.track (let ((mine (array/find ?placed (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @mine null) @entity.track @mine.rect)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.anchors (array/reduce (array/filter ?placed (fn p (or (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))) @entity.anchors (fn acc p (object/set @acc @p.id @p.rect))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))))
+      RASM_BREAKPOINT -> ready
+        (set @entity.on (or (= (array/len @config.activeOn) 0) (array/includes @config.activeOn ?name)))
+        (set @entity.active -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= @config.mode "tabs") (= ?kind "up") (>= (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0))
+        (set @entity.picked (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id))
+        (set @entity.pickedAt @entity.offset)
+        (when (!= @entity.track null) (emit RASM_SCROLL_TO { y: (let ((r (default @entity.track { x: 0, y: 0, w: 0, h: 0 })) (cnt (math/max 1 (array/len @config.tabs)))) (let ((from (- @r.y (* @entity.viewH @config.enter))) (to (- (+ @r.y @r.h) (* @entity.viewH @config.exit)))) (+ @from (* (/ (+ (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0.5) @cnt) (- @to @from))))) }))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (not (and (= @config.mode "tabs") (= ?kind "up") (>= (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0)))
+      RASM_FOCUS -> ready when (and (= @config.mode "tabs") (>= (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0))
+        (set @entity.picked (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id))
+        (set @entity.pickedAt @entity.offset)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_FOCUS -> ready when (not (and (= @config.mode "tabs") (>= (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0)))
+      RASM_ACTIVATE -> ready when (and (= @config.mode "tabs") (>= (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0))
+        (set @entity.picked (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id))
+        (set @entity.pickedAt @entity.offset)
+        (when (!= @entity.track null) (emit RASM_SCROLL_TO { y: (let ((r (default @entity.track { x: 0, y: 0, w: 0, h: 0 })) (cnt (math/max 1 (array/len @config.tabs)))) (let ((from (- @r.y (* @entity.viewH @config.enter))) (to (- (+ @r.y @r.h) (* @entity.viewH @config.exit)))) (+ @from (* (/ (+ (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0.5) @cnt) (- @to @from))))) }))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_ACTIVATE -> ready when (not (and (= @config.mode "tabs") (>= (array/indexOf (array/map @config.tabs (fn it (str/concat @it.id ":tab"))) ?id) 0)))
+      SPY_PAINT -> ready when (and (= @config.mode "tabs") (not @entity.on) (!= @entity.active -2))
+        (set @entity.active -2)
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/flatten (array/map @config.tabs (fn it @it.shows))), hidden: [], forward: true })
+        (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [] })
+      SPY_PAINT -> ready when (and (= @config.mode "tabs") (or (not @entity.on) (= @entity.track null) (<= @entity.viewH 0)))
+      SPY_PAINT -> ready when (and (= @config.mode "tabs") @entity.on (!= @entity.track null) (> @entity.viewH 0))
+        (let ((r (default @entity.track { x: 0, y: 0, w: 0, h: 0 })) (cnt (array/len @config.tabs)) (tl (default (object/get @entity.looks @config.trackLook null) {})) (fl (default (object/get @entity.looks @config.fillLook null) {})))
+          (let ((start (- @r.y (* @entity.viewH @config.enter))) (end (- (+ @r.y @r.h) (* @entity.viewH @config.exit))))
+            (let ((t (math/clamp (/ (- @entity.offset @start) (math/max 1 (- @end @start))) 0 1)))
+              (let ((pos (* @t @cnt)) (idx (math/min (- @cnt 1) (math/floor (* @t @cnt)))))
+                (let ((a (if (>= @entity.picked 0) @entity.picked @idx)))
+                  (do
+                    (when (!= @a @entity.active)
+                      (do
+                        (emit RASM_VISIBLE { owner: @config.id, shown: (let ((it (default (array/nth @config.tabs @a) { id: "", label: "", shows: [] }))) @it.shows), hidden: (array/flatten (array/map (array/filter (array/range @cnt) (fn i (!= @i @a))) (fn i (let ((it (default (array/nth @config.tabs @i) { id: "", label: "", shows: [] }))) @it.shows)))), forward: (> @a @entity.active) })
+                        (set @entity.active @a)))
+                    (emit RASM_PAINT {
+                      n: ?n,
+                      id: @config.id,
+                      z: @config.z,
+                      texts: [],
+                      nodes: (let ((made : [node] (array/flatten (array/map (array/range @cnt) (fn i (let ((it (default (array/nth @config.tabs @i) { id: "", label: "", shows: [] }))) (let ((tb (object/get @entity.anchors @it.id null))) (if (= @tb null) [] (let ((fr (if (< @i @a) 1 (if (= @i @a) (if (>= @entity.picked 0) 1 (- @pos @idx)) 0))) (bx (if (= @entity.dir "rtl") (- (+ @tb.x @tb.w) @config.barWidth) @tb.x))) (array/concat [{ type: draw-shape, id: (str/concat @it.id ":track"), shape: rect, anchor: "top-left", position: { x: @bx, y: @tb.y, z: @config.z }, width: @config.barWidth, height: @tb.h, fill: @tl.fill, corners: @tl.corners, hit: false }] (if (> @fr 0) [{ type: draw-shape, id: (str/concat @it.id ":fill"), shape: rect, anchor: "top-left", position: { x: @bx, y: @tb.y, z: (+ @config.z 1) }, width: @config.barWidth, height: (* @tb.h @fr), fill: @fl.fill, corners: @fl.corners, spring: @fl.spring, hit: false }] []) [{ type: draw-shape, id: (str/concat @it.id ":tab"), shape: rect, anchor: "top-left", position: { x: @tb.x, y: @tb.y, z: (+ @config.z 2) }, width: @tb.w, height: @tb.h, fill: "rgba(0,0,0,0)", hit: true, semantic: { role: "tab", labelledBy: @it.label, disabled: false, order: (+ @tb.y (/ @tb.x 10000)), focused: false } }])))))))))) @made)
+                    })))))))
+      SPY_PAINT -> ready when (and (= @config.mode "toc") (!= @entity.rect null))
+        (let (
+            (r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))
+            (n (array/len @config.items))
+            (line (+ @entity.offset (* @entity.viewH @config.line)))
+            (passed (array/map (array/filter @config.items (fn it (let ((a (object/get @entity.anchors @it.id null))) (and (!= @a null) (<= (default (object/get (default @a { x: 0, y: 0, w: 0, h: 0 }) "y" 0) 0) @line))))) (fn it @it.row)))
+            (cur (if (> (array/len @passed) 0) (default (array/last @passed) 0) 0))
+            (rtl (= @entity.dir "rtl"))
+            (idle (default (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null) {}))
+            (act (default (object/get @entity.looks (str/concat "text/" @config.activeIntent "/idle") null) {}))
+            (railX (if @rtl (- (+ @r.x @r.w) 2) @r.x))
+            (textX (if @rtl (- (+ @r.x @r.w) (+ @config.indent 2)) (+ @r.x (+ @config.indent 2))))
+          )
+          (do
+            (when (!= @cur @entity.active)
+              (do
+                (set @entity.active @cur)
+                (emit RASM_SPY_ACTIVE { id: @config.id, index: @cur })))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: (str/concat @config.id ":rail"), shape: rect, anchor: "top-left", position: { x: @railX, y: @r.y, z: @config.z }, width: 2, height: (* @n @config.rowH), fill: @config.railFill, hit: false }, { type: draw-shape, id: (str/concat @config.id ":mark"), shape: rect, anchor: "top-left", position: { x: @railX, y: (+ @r.y (* @cur @config.rowH)), z: (+ @config.z 1) }, width: 2, height: @config.rowH, fill: @config.markFill, hit: false }], texts: (array/map @config.items (fn it (let ((look (if (= @it.row @cur) @act @idle))) { id: (str/concat @config.id ":row" @it.row), key: (let ((k (as @it RasmSpyItem))) @k.key), x: @textX, y: (+ (+ @r.y (* @it.row @config.rowH)) @config.rowPad), z: (+ @config.z 2), align: (if @rtl "right" "left"), baseline: "top", color: @look.textColor, font: @look.font, width: (- @r.w (+ @config.indent 2)), wrap: true }))) })))
+      SPY_PAINT -> ready when (and (= @config.mode "toc") (= @entity.rect null))
+    }
+
+    emits {
+      RASM_SCROLL_TO -> external {
+        y : number!
+      }
+        @description "Tabs mode: a press or keyboard activation on a tab asks the surface to scroll the page to the middle of that tab's part of the track."
+        @tier "domain"
+      SPY_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the table from the stored rects, scroll and looks."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The rail, the bar on the marked row and the rows' text."
+        @tier "primary"
+      RASM_VISIBLE -> external {
+        owner : string!
+        shown : [string]!
+        hidden : [string]!
+        forward : boolean
+      }
+        @description "Tabs mode: the paint ids of the active item shown and those of the other items hidden; forward when the active item moved to a later one."
+        @tier "domain"
+      RASM_SPY_ACTIVE -> external {
+        id : string!
+        index : number!
+      }
+        @description "The marked row changed; index counts from 0 in the order of items."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Take the looks the rows' text is set in."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction: the rail moves to the reading start."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the table's own rect and the items' anchors when they are placed."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the line is measured in."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "Tabs mode: run on the breakpoints `activeOn` names and show everything elsewhere."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "Tabs mode: a release over an item's tab region picks that item."
+      RASM_FOCUS { id : string! }
+        @description "Tabs mode: keyboard focus on an item's tab region picks that item."
+      RASM_ACTIVATE { id : string! }
+        @description "Tabs mode: keyboard activation of an item's tab region picks that item."
+      RASM_PAGE_SCROLLED { offset : number!  max : number! }
+        @description "Take the page scroll and mark the row of the section the reader is in."
+    }
+
+    config {
+      id : string = "toc"
+        @label "Id"
+        @description "The table's RASM_PLACE key and paint id."
+        @tier "presentation"
+      items : [RasmSpyItem] = []
+        @label "Items"
+        @description "The rows: the placed id of each section, the text key that names it, and its row from 0 (rows run top to bottom in row order)."
+        @tier "domain"
+      tabs : [RasmSpyTab] = []
+        @label "Tabs"
+        @description "Tabs mode: the tabs in order: id is the placed id of the tab's rect, label the paint id of the text that names it, shows the paint ids revealed while it is the active tab."
+        @tier "domain"
+      mode : "toc" | "tabs" = "toc"
+        @label "Mode"
+        @description "toc marks the row of the section the reader is in in a table of contents; tabs runs a pinned tour whose active item follows the scroll over the anchor track."
+        @tier "presentation"
+      anchor : string = ""
+        @label "Anchor"
+        @description "Tabs mode: the placed id whose scroll range the items share, the tall track that keeps the pinned tour in view."
+        @tier "presentation"
+      enter : number = 0
+        @label "Enter at"
+        @description "Tabs mode: where in the view, as a fraction of its height from the top, the anchor's top is when the first item starts: 0 when it reaches the top edge."
+        @tier "presentation"
+      exit : number = 1
+        @label "Exit at"
+        @description "Tabs mode: where in the view the anchor's bottom is when the last item ends: 1 as it reaches the bottom edge."
+        @tier "presentation"
+      barWidth : number = 3
+        @label "Bar width"
+        @description "Tabs mode: the progress bar's thickness in px, along the item's reading-start edge."
+        @tier "presentation"
+      releasePx : number = 48
+        @label "Release distance"
+        @description "Tabs mode: how far in px the page scrolls from where a pick was made before the scroll decides the active item again."
+        @tier "presentation"
+      activeOn : [string] = []
+        @label "Active on"
+        @description "Tabs mode: the breakpoints where the spy runs (phone, tablet, desktop, wide); empty runs on every one. Elsewhere every item's paints are shown and nothing is painted."
+        @tier "presentation"
+      trackLook : string = "range/default/track"
+        @label "Track look"
+        @description "Tabs mode: the theme look key whose fill and corners paint the empty bar."
+        @tier "presentation"
+      fillLook : string = "range/default/fill"
+        @label "Fill look"
+        @description "Tabs mode: the theme look key whose fill, corners and spring paint the read part."
+        @tier "presentation"
+      line : number = 0.35
+        @label "Line"
+        @description "Where in the view, as a fraction of its height from the top, a section's top must have passed for its row to be marked."
+        @tier "presentation"
+      intent : "caption" | "body" | "label" = "caption"
+        @label "Intent"
+        @description "The text intent of the rows that are not marked."
+        @tier "presentation"
+      activeIntent : "caption" | "body" | "label" = "label"
+        @label "Active intent"
+        @description "The text intent of the marked row."
+        @tier "presentation"
+      rowH : number = 36
+        @label "Row height"
+        @description "The height of one row in px; at least 44 where a row can be pressed."
+        @tier "presentation"
+      rowPad : number = 8
+        @label "Row padding"
+        @description "The space in px between a row's top and its text."
+        @tier "presentation"
+      indent : number = 14
+        @label "Indent"
+        @description "The space in px between the rail and the text."
+        @tier "presentation"
+      railFill : string = "border"
+        @label "Rail fill"
+        @description "The colour token of the thin rail."
+        @tier "presentation"
+      markFill : string = "primary"
+        @label "Mark fill"
+        @description "The colour token of the bar on the marked row."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmSpyStart -> RasmSpy
+}

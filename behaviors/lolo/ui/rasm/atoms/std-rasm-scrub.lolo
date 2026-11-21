@@ -13,6 +13,7 @@ orbital RasmScrubOrbital {
     rect : RasmRect? @description "The anchor's rect from RASM_PLACE, null until it is placed." = null
     ref : RasmRect? @description "The rect of the relativeTo id from RASM_PLACE, null until it is placed." = null
     viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    bp : string @description "The current breakpoint name, for offOn." = "desktop"
     sends : number @description "Counts sends, so each send in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -31,9 +32,16 @@ orbital RasmScrubOrbital {
         (set @entity.viewH ?height)
         (set @entity.sends (+ @entity.sends 1))
         (emit SCRUB_SEND { n: @entity.sends })
+      RASM_BREAKPOINT -> ready
+        (set @entity.bp ?name)
+        (set @entity.sends (+ @entity.sends 1))
+        (emit SCRUB_SEND { n: @entity.sends })
       SCRUB_SEND -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (or (= @config.relativeTo "") (!= @entity.ref null)))
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (f (default @entity.ref { x: 0, y: 0, w: 1, h: 1 })))
-          (emit RASM_SCRUB { id: @config.id, paints: @config.paints, from: (- @r.y (* @entity.viewH @config.enter)), to: (- (+ @r.y @r.h) (* @entity.viewH @config.exit)), keyframes: (if (= @config.relativeTo "") @config.keyframes (array/map @config.keyframes (fn k (let ((sx : RasmScrubFrame (if (= @k.offsetX null) @k (object/set @k "offsetX" (* @k.offsetX @f.w))))) (if (= @sx.offsetY null) @sx (object/set @sx "offsetY" (* @sx.offsetY @f.h))))))) }))
+          (let ((from (- @r.y (* @entity.viewH @config.enter))) (to (- (+ @r.y @r.h) (* @entity.viewH @config.exit))) (plain (and (= @config.pin "none") (= @config.scaleAbout "origin"))))
+            (let ((range (math/max 0 (- @to @from))) (base : [RasmScrubFrame] (if (= @config.relativeTo "") @config.keyframes (array/map @config.keyframes (fn k (let ((sx : RasmScrubFrame (if (= @k.offsetX null) @k (object/set @k "offsetX" (* @k.offsetX @f.w))))) (if (= @sx.offsetY null) @sx (object/set @sx "offsetY" (* @sx.offsetY @f.h)))))))))
+              (let ((framed : [RasmScrubFrame] (if @plain @base (array/map @base (fn k (let ((lift (if (= @config.pin "none") 0 (* (if (= @config.pin "hold") @k.at (- @k.at 1)) @range))) (grow (if (= @config.scaleAbout "anchor") (- 1 (default @k.scale 1)) 0))) (let ((moved : RasmScrubFrame (object/set @k "offsetX" (+ (default @k.offsetX 0) (* @grow (+ @r.x (/ @r.w 2))))))) (object/set @moved "offsetY" (+ (+ (default @k.offsetY 0) @lift) (* @grow (+ @r.y (/ @r.h 2))))))))))))
+                (emit RASM_SCRUB { id: @config.id, paints: @config.paints, from: @from, to: (if @plain @to (math/max @to (+ @from 1))), keyframes: (if (array/includes @config.offOn @entity.bp) [{ at: 0, offsetX: 0, offsetY: 0, scale: 1, opacity: 1 }, { at: 1, offsetX: 0, offsetY: 0, scale: 1, opacity: 1 }] (if (= @config.pin "none") @framed (array/concat (if (array/some @base (fn k (= @k.at 0))) [] [{ at: 0, offsetY: (if (= @config.pin "hold") 0 (- 0 @range)) }]) @framed (if (array/some @base (fn k (= @k.at 1))) [] [{ at: 1, offsetY: (if (= @config.pin "hold") @range 0) }])))) })))))
       SCRUB_SEND -> ready when (not (and (!= @entity.rect null) (> @entity.viewH 0) (or (= @config.relativeTo "") (!= @entity.ref null))))
     }
 
@@ -59,6 +67,8 @@ orbital RasmScrubOrbital {
         @description "Take the anchor's rect, and the relativeTo id's rect, when they are placed."
       RASM_RESIZE { width : number!  height : number! }
         @description "Take the canvas height, the view the range is measured in."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "The current breakpoint: on the ones in offOn nothing is pinned or moved."
     }
 
     config {
@@ -85,6 +95,18 @@ orbital RasmScrubOrbital {
       relativeTo : string = ""
         @label "Relative to"
         @description "A placed id; when set, keyframe offsetX and offsetY are fractions of its rect's width and height instead of px, and the scrub waits until it is placed. Empty keeps px."
+        @tier "presentation"
+      pin : "none" | "hold" | "reveal" = "none"
+        @label "Pin"
+        @description "none leaves the paints moving with the page; hold adds the scroll to every keyframe's offsetY so they stay where they were when the range began (the section after them slides over: a stacked card, a curtain, the fixed side of a split screen); reveal keeps them where they will be when it ends (the section before lifts away and uncovers them). With a pin, a keyframe at 0 and one at 1 are added when none is given."
+        @tier "presentation"
+      scaleAbout : "origin" | "anchor" = "origin"
+        @label "Scale about"
+        @description "The canvas scales a paint about the page origin; anchor adds the offset that makes a keyframe scale turn about the centre of the anchor instead, so a pinned card shrinks in place (every keyframe should then carry a scale)."
+        @tier "presentation"
+      offOn : [string] = []
+        @label "Off on"
+        @description "The breakpoints where the scrub does nothing: the paints move with the page and keep their painted look, as on a phone where nothing is pinned (route RASM_BREAKPOINT to the scrub to use it)."
         @tier "presentation"
       keyframes : [RasmScrubFrame] = [{ at: 0, opacity: 0, offsetY: 24 }, { at: 0.3, opacity: 1, offsetY: 0 }]
         @label "Keyframes"

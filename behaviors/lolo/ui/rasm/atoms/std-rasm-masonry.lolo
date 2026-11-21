@@ -1,0 +1,172 @@
+app std-rasm-masonry [
+  version: "0.1.0",
+  description: "std-rasm-masonry — the Rasm kit's packing layout node. On RASM_PLACE for its own id it stores its rect and lays its children into a declared number of equal-width columns, each child taking a height of its own (ratio: the column width times main, fixed: main px, measure: the height its RASM_EXTENT or RASM_MEASURED reported) and going under the shortest column so far (assign shortest), or into column index mod columns (assign cycle), so columns of unequal-height items are packed tight with a gap between them. RASM_PLACE carries each child's rect, and RASM_EXTENT the packed height, so a measure parent sizes it. With variantBy breakpoint and variants the column count, gap and padding change per breakpoint. With hoverGrow above 0 the child under the pointer is placed that many px larger on every side while the pointer is over it, painted through an invisible pointer region (paint id <id>:hover). Under rtl column 0 is at the right edge."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
+type RasmMasonryChild = { id : string!, size : "ratio" | "fixed" | "measure"!, main : number }
+type RasmMasonryShape = { columns : number, gap : number, padding : number }
+
+orbital RasmMasonryOrbital {
+  entity RasmMasonryRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave this layout, null until placed." = null
+    dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
+    announced : boolean @description "True once the surface announced a direction, which then replaces the config knob." = false
+    measured : Map string RasmMeasureItem @description "The latest measured height of each child, by id." = {}
+    variant : string @description "The key of variants the announced breakpoint chose, empty for the configured shape." = ""
+    colsNow : number @description "The column count of the last layout." = 1
+    gapNow : number @description "The gap of the last layout in px." = 0
+    padNow : number @description "The padding of the last layout in px." = 0
+    colW : number @description "The column width of the last layout in px." = 0
+    last : [RasmPlaced] @description "The children's rects of the last layout, before any hover growth, read to tell which child the pointer is over." = []
+    hot : string @description "The id of the child the pointer is over, with hoverGrow on; empty when over none." = ""
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmMasonry -> RasmMasonryRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.announced true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit MASONRY_LAYOUT { n: @entity.layouts })
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit MASONRY_LAYOUT { n: @entity.layouts })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit MASONRY_LAYOUT { n: @entity.layouts })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_EXTENT -> ready when (and (array/some @config.children (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h))))
+        (set @entity.measured (object/set @entity.measured ?id { id: ?id, width: ?w, height: ?h, lines: 0 }))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit MASONRY_LAYOUT { n: @entity.layouts })
+      RASM_EXTENT -> ready when (not (and (array/some @config.children (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h)))))
+      RASM_MEASURED -> ready when (array/some ?items (fn it (and (array/some @config.children (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height))))))
+        (set @entity.measured (array/reduce ?items @entity.measured (fn acc it (if (array/some @config.children (fn c (= @c.id @it.id))) (object/set @acc @it.id @it) @acc))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit MASONRY_LAYOUT { n: @entity.layouts })
+      RASM_MEASURED -> ready when (not (array/some ?items (fn it (and (array/some @config.children (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height)))))))
+      RASM_POINTER -> ready when (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (array/find @entity.last (fn p (and (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot))
+        (set @entity.hot (let ((h (array/find @entity.last (fn p (and (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit MASONRY_LAYOUT { n: @entity.layouts })
+      RASM_POINTER -> ready when (not (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (array/find @entity.last (fn p (and (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot)))
+      MASONRY_LAYOUT -> ready when (!= @entity.rect null)
+        (set @entity.colsNow (math/max 1 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.columns)) @config.columns)))
+        (set @entity.gapNow (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap))
+        (set @entity.padNow (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding))
+        (set @entity.colW (if (> @entity.colsNow 0) (math/max 0 (/ (- (- @entity.rect.w (* 2 @entity.padNow)) (* @entity.gapNow (- @entity.colsNow 1))) @entity.colsNow)) 0))
+        (set @entity.last (let ((r @entity.rect) (cols @entity.colsNow) (cw @entity.colW) (gap @entity.gapNow) (pad @entity.padNow) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl"))) (let ((laid (array/reduce @config.children { tops: (array/map (array/range @cols) (fn i 0)), placed: [] } (fn acc c (let ((hc (if (= @c.size "ratio") (* @cw (default @c.main 1)) (if (= @c.size "fixed") (default @c.main 0) (let ((m (object/get @entity.measured @c.id null))) (if (= @m null) 0 @m.height))))) (k (if (= @config.assign "cycle") (- (array/len @acc.placed) (* @cols (if (> @cols 0) (math/floor (/ (array/len @acc.placed) @cols)) 0))) (array/reduce (array/range @cols) 0 (fn best i (if (< (default (array/nth @acc.tops @i) 0) (default (array/nth @acc.tops @best) 0)) @i @best)))))) (let ((y0 (default (array/nth @acc.tops @k) 0)) (x0 (* @k (+ @cw @gap)))) { tops: (array/map (array/range @cols) (fn i (if (= @i @k) (+ (+ @y0 @hc) @gap) (default (array/nth @acc.tops @i) 0)))), placed: (array/append @acc.placed { id: @c.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @cw)) (+ (+ @r.x @pad) @x0)), y: (+ (+ @r.y @pad) @y0), w: @cw, h: @hc } }) })))))) @laid.placed)))
+        (emit RASM_PLACE { n: ?n, placed: (array/map @entity.last (fn p (if (and (> @config.hoverGrow 0) (= @p.id @entity.hot)) { id: @p.id, rect: { x: (- @p.rect.x @config.hoverGrow), y: (- @p.rect.y @config.hoverGrow), w: (+ @p.rect.w (* 2 @config.hoverGrow)), h: (+ @p.rect.h (* 2 @config.hoverGrow)) } } @p))) })
+        (emit RASM_EXTENT { n: ?n, id: @config.id, w: @entity.rect.w, h: (+ (* 2 @entity.padNow) (math/max 0 (- (array/reduce @entity.last 0 (fn a p (math/max @a (- (+ @p.rect.y @p.rect.h) (+ @entity.rect.y @entity.padNow))))) 0))) })
+        (when (> @config.hoverGrow 0)
+          (emit RASM_PAINT { n: ?n, id: (str/concat @config.id ":hover"), z: @config.z, nodes: (array/map @entity.last (fn p { type: draw-shape, shape: "rect", id: (str/concat @config.id ":hover:" @p.id), position: { x: @p.rect.x, y: @p.rect.y }, anchor: "top-left", width: @p.rect.w, height: @p.rect.h, fill: "rgba(0,0,0,0)", hit: true })) }))
+      MASONRY_LAYOUT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      MASONRY_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Pack the children from the stored rect."
+        @tier "internal"
+      RASM_PLACE -> external {
+        n : number!
+        placed : [RasmPlaced]!
+      }
+        @description "The children's rects, packed into columns."
+        @tier "primary"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "With hoverGrow on, an invisible pointer region over every child so the pointer is seen anywhere on it."
+        @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The packed height after each layout: the tallest column's bottom plus the padding. A parent measures this layout by it and grows."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction; once announced it replaces the direction knob and the children are packed again."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain that variants holds, none of them keeping the configured shape; the children are packed again when it changes."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take this layout's rect when it is placed, then pack the children."
+      RASM_EXTENT { id : string!  w : number!  h : number!  n : number }
+        @description "A child's content height: a measure child takes it, and the children are packed again when it changes."
+      RASM_MEASURED { items : [RasmMeasureItem]! }
+        @description "Canvas text measurements: a child that is a measured text takes its height like a child that reports RASM_EXTENT."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "With hoverGrow on, an enter or leave says where the pointer is: the child under it grows and the children are placed again."
+    }
+
+    config {
+      id : string = "masonry"
+        @label "Id"
+        @description "The layout's id: its RASM_PLACE key and its hover paint id prefix."
+        @tier "presentation"
+      columns : number = 3
+        @label "Columns"
+        @description "How many equal-width columns the children are packed into."
+        @tier "presentation"
+      gap : number = 16
+        @label "Gap"
+        @description "Space between columns and between a column's children in px."
+        @tier "presentation"
+      padding : number = 0
+        @label "Padding"
+        @description "Space between the rect and the columns on every side in px."
+        @tier "presentation"
+      assign : "shortest" | "cycle" = "shortest"
+        @label "Assign"
+        @description "shortest puts each child, in order, under the column that is shortest so far (the first when they tie); cycle puts child i in column i mod columns, so which column holds a child is known."
+        @tier "presentation"
+      hoverGrow : number = 0
+        @label "Hover growth"
+        @description "Above 0, the child under the pointer is placed this many px larger on every side while the pointer is over it."
+        @tier "presentation"
+      direction : "ltr" | "rtl" = "ltr"
+        @label "Direction"
+        @description "ltr starts column 0 at the left edge, rtl at the right edge; a surface RASM_DIRECTION replaces it."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order of the hover pointer regions on the surface."
+        @tier "presentation"
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from variants by the surface's breakpoint name, falling back to the next smaller declared variant, then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string RasmMasonryShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the columns, gap and padding a variant names replace the configured ones while that breakpoint is current; one it leaves out keeps the configured value."
+        @tier "presentation"
+      children : [RasmMasonryChild] = []
+        @label "Children"
+        @description "The children in packing order, each with a size: ratio (height is the column width times main), fixed (main px) or measure (the height it reported). Every breakpoint packs the same children."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmMasonryStart -> RasmMasonry
+}

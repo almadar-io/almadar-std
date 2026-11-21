@@ -1,0 +1,122 @@
+app std-rasm-trend [
+  version: "1.0.0",
+  description: "std-rasm-trend — the layout and motion half of a Rasm page, separate from its theme (std-rasm-theme is surface only: colours, borders, shadows, corners, type, materials). A trend is a named layout grammar (hero arrangement, columns, asymmetry, ornament, alignment, image treatment, section gap, gutter) and motion signature (entry keyframes, spring, stagger). On RASM_BOOT it announces the configured trend as RASM_TREND { name, layout, motion }, with the motion's entry keyframes and duration taken from its signature; the stack, text, image and presence atoms arrange and move by it, and the theme takes its gutter and section gap for the spacing scale. Any trend can wear any theme. The trend's own mechanisms (a horizontal strip, a marquee, a deck, …) are separate atoms the landing composes."
+]
+
+type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "poster" | "editorial" | "collage"!, columns : number!, asymmetry : number!, ornament : "none" | "rule" | "double-rule" | "frame" | "stamp"!, align : "start" | "center"!, imageTreatment : "none" | "duotone" | "halftone" | "riso" | "engraving" | "glow" | "grain" | "scanline"!, sectionGap : number!, gutter : number! }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number! }
+type RasmMotion = { signature : "rise" | "print-pass" | "fan" | "glitch" | "ink-bleed" | "paper-drop" | "kinetic" | "float" | "snap"!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
+type RasmEntry = { enterMs : number!, keyframes : [RasmEntryKey]! }
+type RasmTrend = { layout : RasmLayout!, motion : RasmMotion! }
+
+orbital RasmTrendOrbital {
+  entity RasmTrendRun [runtime] {
+    id : string!
+    active : string @description "The trend announced last." = ""
+  }
+
+  trait RasmTrend -> RasmTrendRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_BOOT -> ready
+        (let ((tr : RasmTrend? (object/get @config.trends @config.trend (object/get @config.trends "default" null))))
+          (when (!= @tr null)
+            (do
+              (set @entity.active (if (= (object/get @config.trends @config.trend null) null) "default" @config.trend))
+              (emit RASM_TREND { name: @entity.active, layout: @tr.layout, motion: (let ((m : RasmMotion @tr.motion)) (let ((s (object/get @config.signatures @m.signature null))) (if (= @s null) @m { signature: @m.signature, stiffness: @m.stiffness, damping: @m.damping, stagger: @m.stagger, enterMs: @s.enterMs, keyframes: @s.keyframes }))) }))))
+    }
+
+    emits {
+      RASM_TREND -> external {
+        name : string!
+        layout : RasmLayout!
+        motion : RasmMotion!
+      }
+        @description "The page's trend: its layout grammar and its motion (signature entry keyframes merged in), for the layout, text, image and motion atoms and the theme's spacing."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: announce the configured trend."
+    }
+
+    config {
+      trend : string = "default"
+        @label "Trend"
+        @description "The name of the trend to announce (a key of trends); an unknown name announces default."
+        @tier "presentation"
+      signatures : Map string RasmEntry = {
+        "rise": { enterMs: 520, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 18 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "print-pass": { enterMs: 760, keyframes: [{ at: 0, opacity: 0, offsetX: 7, offsetY: -5 }, { at: 0.34, opacity: 0.55, offsetX: 7, offsetY: -5 }, { at: 0.35, opacity: 0.55, offsetX: -4, offsetY: 3 }, { at: 0.68, opacity: 0.85, offsetX: -4, offsetY: 3 }, { at: 0.69, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "fan": { enterMs: 900, keyframes: [{ at: 0, opacity: 0, offsetX: -28, offsetY: 28 }, { at: 0.6, opacity: 0.8, offsetX: -4, offsetY: 4 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "glitch": { enterMs: 620, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 0.12, opacity: 1, offsetX: -14, offsetY: 0 }, { at: 0.22, opacity: 0.35, offsetX: 11, offsetY: 0 }, { at: 0.32, opacity: 1, offsetX: -7, offsetY: 0 }, { at: 0.42, opacity: 0.7, offsetX: 4, offsetY: 0 }, { at: 0.52, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "ink-bleed": { enterMs: 1400, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 0.45, opacity: 0.35, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "paper-drop": { enterMs: 820, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: -64 }, { at: 0.62, opacity: 1, offsetX: 0, offsetY: 8 }, { at: 0.82, opacity: 1, offsetX: 0, offsetY: -3 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "kinetic": { enterMs: 640, keyframes: [{ at: 0, opacity: 0, offsetX: -90, offsetY: 0 }, { at: 0.7, opacity: 1, offsetX: 6, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "float": { enterMs: 1600, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 34 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
+        "snap": { enterMs: 1, keyframes: [{ at: 0, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] }
+      }
+        @label "Motion signatures"
+        @description "Each motion signature's entry: its duration in ms and the keyframes an element plays as it enters (0 to 1 of its own window; opacity and offsets in px). RASM_STYLE's motion carries the style's signature's entry, which the entry choreography staggers."
+        @tier "presentation"
+      trends : Map string RasmTrend = {
+        "default": { layout: { hero: "centered", columns: 12, asymmetry: 0, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 24 }, motion: { signature: "rise", stiffness: 200, damping: 24, stagger: 60 } },
+        "pinned-tabs-by-scroll": { layout: { hero: "split", columns: 12, asymmetry: 0.0, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 96, gutter: 48 }, motion: { signature: "rise", stiffness: 180, damping: 26, stagger: 60 } },
+        "experimental-navigation": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 32 }, motion: { signature: "snap", stiffness: 420, damping: 34, stagger: 60 } },
+        "scroll-snap-carousel": { layout: { hero: "centered", columns: 12, asymmetry: 0, ornament: "frame", align: "center", imageTreatment: "duotone", sectionGap: 128, gutter: 64 }, motion: { signature: "fan", stiffness: 150, damping: 22, stagger: 90 } },
+        "kinetic-type-intro": { layout: { hero: "poster", columns: 12, asymmetry: 0.4, ornament: "none", align: "start", imageTreatment: "duotone", sectionGap: 96, gutter: 32 }, motion: { signature: "kinetic", stiffness: 360, damping: 28, stagger: 50 } },
+        "accordion-gallery": { layout: { hero: "split", columns: 12, asymmetry: 0.3, ornament: "none", align: "start", imageTreatment: "duotone", sectionGap: 96, gutter: 40 }, motion: { signature: "kinetic", stiffness: 220, damping: 18, stagger: 60 } },
+        "terminal-as-landing": { layout: { hero: "offset", columns: 12, asymmetry: 0.0, ornament: "rule", align: "start", imageTreatment: "scanline", sectionGap: 80, gutter: 32 }, motion: { signature: "snap", stiffness: 400, damping: 40, stagger: 30 } },
+        "editorial-magazine-grid": { layout: { hero: "editorial", columns: 12, asymmetry: 0.15, ornament: "double-rule", align: "start", imageTreatment: "engraving", sectionGap: 96, gutter: 40 }, motion: { signature: "rise", stiffness: 140, damping: 24, stagger: 90 } },
+        "draggable-infinite-canvas": { layout: { hero: "collage", columns: 12, asymmetry: 0.3, ornament: "stamp", align: "start", imageTreatment: "grain", sectionGap: 80, gutter: 32 }, motion: { signature: "paper-drop", stiffness: 380, damping: 18, stagger: 50 } },
+        "gamified-design": { layout: { hero: "collage", columns: 12, asymmetry: 0.15, ornament: "stamp", align: "center", imageTreatment: "none", sectionGap: 96, gutter: 36 }, motion: { signature: "float", stiffness: 140, damping: 12, stagger: 80 } },
+        "zoom-through-hero": { layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "double-rule", align: "start", imageTreatment: "engraving", sectionGap: 96, gutter: 40 }, motion: { signature: "kinetic", stiffness: 190, damping: 28, stagger: 60 } },
+        "split-screen-scroll": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 32 }, motion: { signature: "rise", stiffness: 260, damping: 30, stagger: 80 } },
+        "neo-brutalism": { layout: { hero: "collage", columns: 12, asymmetry: 0.2, ornament: "frame", align: "start", imageTreatment: "halftone", sectionGap: 72, gutter: 28 }, motion: { signature: "snap", stiffness: 480, damping: 18, stagger: 90 } },
+        "cursor-led-reveal": { layout: { hero: "centered", columns: 8, asymmetry: 0, ornament: "frame", align: "center", imageTreatment: "duotone", sectionGap: 128, gutter: 56 }, motion: { signature: "ink-bleed", stiffness: 90, damping: 18, stagger: 140 } },
+        "text-mask-reveal": { layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 112, gutter: 48 }, motion: { signature: "float", stiffness: 110, damping: 18, stagger: 100 } },
+        "maximalism": { layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "frame", align: "center", imageTreatment: "glow", sectionGap: 112, gutter: 48 }, motion: { signature: "rise", stiffness: 140, damping: 24, stagger: 80 } },
+        "dashboard-as-landing": { layout: { hero: "centered", columns: 12, asymmetry: 0.0, ornament: "rule", align: "center", imageTreatment: "glow", sectionGap: 112, gutter: 32 }, motion: { signature: "rise", stiffness: 220, damping: 26, stagger: 50 } },
+        "video-first-full-bleed-hero": { layout: { hero: "collage", columns: 12, asymmetry: 0.35, ornament: "none", align: "start", imageTreatment: "duotone", sectionGap: 88, gutter: 36 }, motion: { signature: "paper-drop", stiffness: 260, damping: 9, stagger: 45 } },
+        "opposite-direction-column-walls": { layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "frame", align: "center", imageTreatment: "glow", sectionGap: 120, gutter: 48 }, motion: { signature: "rise", stiffness: 150, damping: 20, stagger: 90 } },
+        "card-fan-deck": { layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "none", align: "center", imageTreatment: "none", sectionGap: 112, gutter: 40 }, motion: { signature: "float", stiffness: 100, damping: 14, stagger: 90 } },
+        "single-column-long-read": { layout: { hero: "editorial", columns: 8, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 120, gutter: 56 }, motion: { signature: "rise", stiffness: 150, damping: 22, stagger: 80 } },
+        "bento-grid": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 }, motion: { signature: "rise", stiffness: 150, damping: 22, stagger: 80 } },
+        "3d-and-immersive": { layout: { hero: "full-bleed", columns: 12, asymmetry: 0.25, ornament: "frame", align: "start", imageTreatment: "glow", sectionGap: 104, gutter: 40 }, motion: { signature: "kinetic", stiffness: 260, damping: 18, stagger: 45 } },
+        "sticky-chart-scrollytelling": { layout: { hero: "split", columns: 12, asymmetry: 0.15, ornament: "none", align: "start", imageTreatment: "glow", sectionGap: 120, gutter: 48 }, motion: { signature: "float", stiffness: 120, damping: 20, stagger: 90 } },
+        "map-led-landing": { layout: { hero: "editorial", columns: 12, asymmetry: 0.1, ornament: "double-rule", align: "start", imageTreatment: "halftone", sectionGap: 72, gutter: 28 }, motion: { signature: "rise", stiffness: 260, damping: 28, stagger: 40 } },
+        "zig-zag-feature-rows": { layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 112, gutter: 32 }, motion: { signature: "kinetic", stiffness: 300, damping: 26, stagger: 70 } },
+        "big-type-scroll-slides": { layout: { hero: "offset", columns: 12, asymmetry: 0.33, ornament: "rule", align: "start", imageTreatment: "none", sectionGap: 128, gutter: 24 }, motion: { signature: "kinetic", stiffness: 320, damping: 32, stagger: 60 } },
+        "masonry": { layout: { hero: "poster", columns: 12, asymmetry: 0.3, ornament: "rule", align: "start", imageTreatment: "grain", sectionGap: 144, gutter: 72 }, motion: { signature: "rise", stiffness: 140, damping: 24, stagger: 120 } },
+        "floating-pill-nav-narrow-hero": { layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 112, gutter: 48 }, motion: { signature: "float", stiffness: 110, damping: 18, stagger: 100 } },
+        "parallax-depth-layers": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 }, motion: { signature: "rise", stiffness: 120, damping: 22, stagger: 90 } },
+        "line-follow-path": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "frame", align: "start", imageTreatment: "none", sectionGap: 72, gutter: 32 }, motion: { signature: "snap", stiffness: 500, damping: 40, stagger: 40 } },
+        "horizontal-scroll-gallery": { layout: { hero: "centered", columns: 6, asymmetry: 0, ornament: "rule", align: "center", imageTreatment: "none", sectionGap: 160, gutter: 96 }, motion: { signature: "rise", stiffness: 90, damping: 24, stagger: 160 } },
+        "scrollytelling": { layout: { hero: "centered", columns: 12, asymmetry: 0.0, ornament: "none", align: "center", imageTreatment: "none", sectionGap: 160, gutter: 48 }, motion: { signature: "rise", stiffness: 120, damping: 24, stagger: 110 } },
+        "full-screen-slideshow": { layout: { hero: "centered", columns: 8, asymmetry: 0.1, ornament: "frame", align: "center", imageTreatment: "duotone", sectionGap: 120, gutter: 56 }, motion: { signature: "ink-bleed", stiffness: 110, damping: 20, stagger: 110 } },
+        "marquee-bands": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 0, gutter: 40 }, motion: { signature: "rise", stiffness: 300, damping: 26, stagger: 90 } },
+        "bold-typography": { layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 112, gutter: 32 }, motion: { signature: "kinetic", stiffness: 300, damping: 26, stagger: 70 } },
+        "timeline-narrative": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 32 }, motion: { signature: "snap", stiffness: 420, damping: 34, stagger: 60 } },
+        "collage": { layout: { hero: "collage", columns: 12, asymmetry: 0.3, ornament: "stamp", align: "start", imageTreatment: "grain", sectionGap: 80, gutter: 32 }, motion: { signature: "paper-drop", stiffness: 380, damping: 18, stagger: 50 } },
+        "stats-band": { layout: { hero: "offset", columns: 12, asymmetry: 0.33, ornament: "rule", align: "start", imageTreatment: "none", sectionGap: 128, gutter: 24 }, motion: { signature: "kinetic", stiffness: 320, damping: 32, stagger: 60 } },
+        "pinned-product-scrub": { layout: { hero: "offset", columns: 12, asymmetry: 0.35, ornament: "rule", align: "start", imageTreatment: "grain", sectionGap: 96, gutter: 40 }, motion: { signature: "paper-drop", stiffness: 200, damping: 16, stagger: 80 } },
+        "curtain-reveal-sections": { layout: { hero: "split", columns: 12, asymmetry: 0.15, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 104, gutter: 40 }, motion: { signature: "rise", stiffness: 140, damping: 26, stagger: 80 } },
+        "comparison-slider": { layout: { hero: "poster", columns: 12, asymmetry: 0.25, ornament: "stamp", align: "start", imageTreatment: "riso", sectionGap: 96, gutter: 40 }, motion: { signature: "print-pass", stiffness: 240, damping: 20, stagger: 60 } },
+        "chat-as-landing": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 0, gutter: 40 }, motion: { signature: "rise", stiffness: 300, damping: 26, stagger: 90 } },
+        "step-wizard-as-hero": { layout: { hero: "centered", columns: 12, asymmetry: 0.0, ornament: "none", align: "center", imageTreatment: "none", sectionGap: 160, gutter: 48 }, motion: { signature: "rise", stiffness: 120, damping: 24, stagger: 110 } },
+        "sticky-stacked-cards": { layout: { hero: "collage", columns: 12, asymmetry: 0.25, ornament: "rule", align: "start", imageTreatment: "grain", sectionGap: 104, gutter: 44 }, motion: { signature: "ink-bleed", stiffness: 130, damping: 11, stagger: 110 } },
+        "giant-wordmark-footer": { layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 32 }, motion: { signature: "rise", stiffness: 380, damping: 34, stagger: 60 } },
+        "intro-sequence": { layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "frame", align: "start", imageTreatment: "engraving", sectionGap: 112, gutter: 48 }, motion: { signature: "snap", stiffness: 300, damping: 30, stagger: 40 } },
+        "docs-three-pane": { layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 }, motion: { signature: "rise", stiffness: 160, damping: 24, stagger: 80 } }
+      }
+        @label "Trends"
+        @description "Every trend by name: its layout grammar and motion. Each of the marketing landings demonstrates one; a page picks one with `trend`."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmTrendStart -> RasmTrend
+}

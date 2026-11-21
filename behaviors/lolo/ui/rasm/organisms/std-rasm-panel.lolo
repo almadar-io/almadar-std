@@ -5,6 +5,7 @@ app std-rasm-panel [
 ]
 
 uses ThemeAtom from "std/behaviors/std-rasm-theme"
+uses TrendAtom from "std/behaviors/std-rasm-trend"
 uses SurfaceAtom from "std/behaviors/std-rasm-surface"
 uses StackAtom from "std/behaviors/std-rasm-stack"
 uses TextAtom from "std/behaviors/std-rasm-text"
@@ -27,6 +28,13 @@ orbital RasmPanel {
     listens {
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
       ThemeBtn.RASM_THEME_PRESSED -> RASM_THEME_TOGGLE
+      Surface.RASM_BOOT -> RASM_BOOT
+      Trend.RASM_TREND -> RASM_TREND
+    }
+  }
+
+  trait Trend = TrendAtom.traits.RasmTrend {
+    listens {
       Surface.RASM_BOOT -> RASM_BOOT
     }
   }
@@ -89,7 +97,7 @@ orbital RasmPanel {
     }
     listens {
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
-      Theme.RASM_STYLE -> RASM_STYLE
+      Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       Surface.RASM_PLACE -> RASM_PLACE
@@ -109,7 +117,7 @@ orbital RasmPanel {
       children: [{ id: "begin", size: "fill" }, { id: "theme", size: "fill" }, { id: "later", size: "fill" }]
     }
     listens {
-      Theme.RASM_STYLE -> RASM_STYLE
+      Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       PanelStack.RASM_PLACE -> RASM_PLACE
@@ -258,7 +266,7 @@ orbital RasmPanel {
       staggerMs: 70
     }
     listens {
-      Theme.RASM_STYLE -> RASM_STYLE
+      Trend.RASM_TREND -> RASM_TREND
       Surface.RASM_BOOT -> RASM_BOOT
       Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
     }
@@ -269,6 +277,7 @@ orbital RasmPanel {
       order: ["name", "season", "begin", "theme", "sound", "warmth"]
     }
     listens {
+      Surface.RASM_HIDDEN -> RASM_HIDDEN
       Surface.RASM_KEY -> RASM_KEY
       Surface.RASM_ACCESS -> RASM_ACCESS
       Surface.RASM_POINTER -> RASM_POINTER
@@ -338,5 +347,5 @@ orbital RasmPanel {
     }
   }
 
-  page "/rasm-panel" as RasmPanelPage -> Theme, Surface, NameBuffer, PanelStack, ActionsStack, TitleText, BodyText, BeginBtn, ThemeBtn, LaterBtn, SoundToggle, WarmthRange, Enter, Focus, NameField, SeasonChoice, Anchor
+  page "/rasm-panel" as RasmPanelPage -> Theme, Trend, Surface, NameBuffer, PanelStack, ActionsStack, TitleText, BodyText, BeginBtn, ThemeBtn, LaterBtn, SoundToggle, WarmthRange, Enter, Focus, NameField, SeasonChoice, Anchor
 }

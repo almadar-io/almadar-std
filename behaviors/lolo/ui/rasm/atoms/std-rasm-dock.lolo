@@ -1,0 +1,100 @@
+app std-rasm-dock [
+  version: "0.1.0",
+  description: "std-rasm-dock — docks one placed child to an edge of the viewport. On RASM_RESIZE it takes the canvas size and emits RASM_PLACE for `child`: along the top or bottom edge (`edge`), stretched across the width, or `width` px wide at the start, centre or end (start and end follow the reading direction), `height` px tall, `margin` px in from the edges. The rect is the one the child has at scroll offset 0, so a child listed as fixed on the surface keeps it while the page scrolls: a floating bar at the top, or a footer waiting at the bottom for the page to lift away. On the breakpoints in `idleOn` it places nothing, so the page's own layout can place the child there."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+
+orbital RasmDockOrbital {
+  entity RasmDockRun [runtime] {
+    id : string!
+    viewW : number @description "The canvas width from RASM_RESIZE, 0 before it." = 0
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    dir : "ltr" | "rtl" @description "The surface's reading direction." = "ltr"
+    bp : string @description "The announced breakpoint name, empty before one." = ""
+    placed : number @description "Counts placements, so each placement in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmDock -> RasmDockRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_RESIZE -> ready
+        (set @entity.viewW ?width)
+        (set @entity.viewH ?height)
+        (set @entity.placed (+ @entity.placed 1))
+        (emit DOCK_PLACE { n: @entity.placed })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.placed (+ @entity.placed 1))
+        (emit DOCK_PLACE { n: @entity.placed })
+      RASM_BREAKPOINT -> ready
+        (set @entity.bp ?name)
+        (set @entity.placed (+ @entity.placed 1))
+        (emit DOCK_PLACE { n: @entity.placed })
+      DOCK_PLACE -> ready when (and (> @entity.viewW 0) (not (array/includes @config.idleOn @entity.bp)))
+        (let ((span (math/max 0 (- @entity.viewW (* 2 @config.margin)))))
+          (let ((w (if (or (= @config.align "stretch") (<= @config.width 0)) @span (math/min @config.width @span))) (rtl (= @entity.dir "rtl")))
+            (emit RASM_PLACE { n: ?n, placed: [{ id: @config.child, rect: { x: (if (= @config.align "center") (/ (- @entity.viewW @w) 2) (if (or (= @config.align "stretch") (if @rtl (= @config.align "end") (= @config.align "start"))) @config.margin (- @entity.viewW (+ @w @config.margin)))), y: (if (= @config.edge "top") @config.margin (- @entity.viewH (+ @config.height @config.margin))), w: @w, h: @config.height } }] })))
+      DOCK_PLACE -> ready when (not (and (> @entity.viewW 0) (not (array/includes @config.idleOn @entity.bp))))
+    }
+
+    emits {
+      DOCK_PLACE -> internal {
+        n : number!
+      }
+        @description "Place the child."
+        @tier "internal"
+      RASM_PLACE -> external {
+        n : number!
+        placed : [RasmPlaced]!
+      }
+        @description "The docked child's rect at scroll offset 0."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas size and place the child."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: start and end follow it."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "Take the breakpoint: on an idle one the child is not placed."
+    }
+
+    config {
+      child : string = ""
+        @label "Child"
+        @description "The id of the placed child to dock."
+        @tier "domain"
+      edge : "top" | "bottom" = "top"
+        @label "Edge"
+        @description "The viewport edge the child sits against."
+        @tier "presentation"
+      align : "start" | "center" | "end" | "stretch" = "stretch"
+        @label "Align"
+        @description "Where along the edge the child sits: stretch fills the width between the margins; start and end follow the reading direction."
+        @tier "presentation"
+      width : number = 0
+        @label "Width"
+        @description "The child's width in px, narrowed to fit between the margins; 0 or stretch takes the whole width between them."
+        @tier "presentation"
+      height : number = 56
+        @label "Height"
+        @description "The child's height in px."
+        @tier "presentation"
+      margin : number = 0
+        @label "Margin"
+        @description "The space in px between the child and the edges of the viewport."
+        @tier "presentation"
+      idleOn : [string] = []
+        @label "Idle on"
+        @description "Breakpoint names on which the child is not placed here."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmDockStart -> RasmDock
+}

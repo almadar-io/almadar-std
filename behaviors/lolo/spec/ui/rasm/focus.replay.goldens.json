@@ -1,850 +1,1026 @@
 {
- "atom": "../ui/rasm/atoms/std-rasm-focus.lolo",
- "trait": "RasmFocus",
- "cases": [
-  {
-   "id": "tab-moves-focus-forward-and-shift-tab-wraps-backward",
-   "config": {
-    "order": [
-     "a",
-     "b",
-     "c"
-    ]
-   },
-   "entity": {
-    "id": "f"
-   },
-   "steps": [
+  "atom": "../ui/rasm/atoms/std-rasm-focus.lolo",
+  "trait": "RasmFocus",
+  "cases": [
     {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
+      "id": "tab-moves-focus-forward-and-shift-tab-wraps-backward",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "previous"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "c"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "activate"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_ACTIVATE",
+                "payload": {
+                  "id": "c"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "decrease"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_STEP",
+                "payload": {
+                  "id": "c",
+                  "delta": -1
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
     },
     {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "previous"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "c"
+      "id": "press-on-a-control-moves-focus-so-tab-continues-after-it",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "b",
+            "x": 1,
+            "y": 1,
+            "index": -1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "b"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "c"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
     },
     {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "activate"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RASM_ACTIVATE",
-        "payload": {
-         "id": "c"
+      "id": "press-outside-the-order-leaves-focus-alone",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "ground",
+            "x": 1,
+            "y": 1,
+            "index": -1
+          },
+          "expect": {
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "up",
+            "id": "b",
+            "x": 1,
+            "y": 1
+          },
+          "expect": {
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
     },
     {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "decrease"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RASM_STEP",
-        "payload": {
-         "id": "c",
-         "delta": -1
+      "id": "a-trap-cycles-only-its-order-and-the-release-restores-the-focus-before-it",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "b"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_TRAP",
+          "payload": {
+            "owner": "dlg",
+            "order": [
+              "x",
+              "y"
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "x"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "y"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "x"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "previous"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "y"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "a",
+            "x": 1,
+            "y": 1,
+            "index": -1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_RELEASE",
+          "payload": {
+            "owner": "dlg"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "b"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "c"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "nested-traps-release-innermost-first-and-a-middle-release-hands-its-saved-index-up",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_TRAP",
+          "payload": {
+            "owner": "d1",
+            "order": [
+              "x",
+              "y"
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_TRAP",
+          "payload": {
+            "owner": "d2",
+            "order": [
+              "p",
+              "q"
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "p"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_RELEASE",
+          "payload": {
+            "owner": "d1"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "q"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_RELEASE",
+          "payload": {
+            "owner": "d2"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-releasing-an-owner-that-holds-no-trap-changes-nothing-and-a-second-trap-of-one-owner-is-ignored",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_RELEASE",
+          "payload": {
+            "owner": "nobody"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_TRAP",
+          "payload": {
+            "owner": "dlg",
+            "order": [
+              "x",
+              "y"
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_TRAP",
+          "payload": {
+            "owner": "dlg",
+            "order": [
+              "m",
+              "n"
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "x"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS_RELEASE",
+          "payload": {
+            "owner": "dlg"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "escape-page-and-home-end-leave-as-keypress-for-the-focused-control",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "escape"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_KEYPRESS",
+                "payload": {
+                  "target": "",
+                  "key": "Escape",
+                  "shift": false,
+                  "alt": false,
+                  "ctrl": false,
+                  "meta": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "pageDown"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "home"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "pageDown"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_KEYPRESS",
+                "payload": {
+                  "target": "a",
+                  "key": "PageDown",
+                  "shift": false,
+                  "alt": false,
+                  "ctrl": false,
+                  "meta": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "pageUp"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_KEYPRESS",
+                "payload": {
+                  "target": "a",
+                  "key": "PageUp",
+                  "shift": false,
+                  "alt": false,
+                  "ctrl": false,
+                  "meta": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "home"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_KEYPRESS",
+                "payload": {
+                  "target": "a",
+                  "key": "Home",
+                  "shift": false,
+                  "alt": false,
+                  "ctrl": false,
+                  "meta": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "end"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_KEYPRESS",
+                "payload": {
+                  "target": "a",
+                  "key": "End",
+                  "shift": false,
+                  "alt": false,
+                  "ctrl": false,
+                  "meta": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "escape"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_KEYPRESS",
+                "payload": {
+                  "target": "a",
+                  "key": "Escape",
+                  "shift": false,
+                  "alt": false,
+                  "ctrl": false,
+                  "meta": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tab-and-shift-tab-skip-ids-the-surface-reports-hidden",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_HIDDEN",
+          "payload": {
+            "ids": [
+              "b"
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "c"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "previous"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-with-nothing-hidden-tab-reaches-every-id",
+      "config": {
+        "order": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_HIDDEN",
+          "payload": {
+            "ids": []
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RASM_FOCUS",
+                "payload": {
+                  "id": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "with-every-id-hidden-tab-moves-nowhere",
+      "config": {
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "entity": {
+        "id": "f"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_HIDDEN",
+          "payload": {
+            "ids": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_KEY",
+          "payload": {
+            "key": "next"
+          },
+          "expect": {
+            "emitCounts": {
+              "RASM_FOCUS": 0
+            }
+          }
+        }
+      ]
     }
-   ]
-  },
-  {
-   "id": "press-on-a-control-moves-focus-so-tab-continues-after-it",
-   "config": {
-    "order": [
-     "a",
-     "b",
-     "c"
-    ]
-   },
-   "entity": {
-    "id": "f"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_POINTER",
-     "payload": {
-      "kind": "down",
-      "id": "b",
-      "x": 1,
-      "y": 1,
-      "index": -1
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "b"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "c"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "press-outside-the-order-leaves-focus-alone",
-   "config": {
-    "order": [
-     "a",
-     "b",
-     "c"
-    ]
-   },
-   "entity": {
-    "id": "f"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_POINTER",
-     "payload": {
-      "kind": "down",
-      "id": "ground",
-      "x": 1,
-      "y": 1,
-      "index": -1
-     },
-     "expect": {
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_POINTER",
-     "payload": {
-      "kind": "up",
-      "id": "b",
-      "x": 1,
-      "y": 1
-     },
-     "expect": {
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-trap-cycles-only-its-order-and-the-release-restores-the-focus-before-it",
-   "config": {
-    "order": [
-     "a",
-     "b",
-     "c"
-    ]
-   },
-   "entity": {
-    "id": "f"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "b"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_TRAP",
-     "payload": {
-      "owner": "dlg",
-      "order": [
-       "x",
-       "y"
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": ""
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "x"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "y"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "x"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "previous"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "y"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_POINTER",
-     "payload": {
-      "kind": "down",
-      "id": "a",
-      "x": 1,
-      "y": 1,
-      "index": -1
-     },
-     "expect": {
-      "state": "ready",
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_RELEASE",
-     "payload": {
-      "owner": "dlg"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "b"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "c"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "nested-traps-release-innermost-first-and-a-middle-release-hands-its-saved-index-up",
-   "config": {
-    "order": [
-     "a",
-     "b",
-     "c"
-    ]
-   },
-   "entity": {
-    "id": "f"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_TRAP",
-     "payload": {
-      "owner": "d1",
-      "order": [
-       "x",
-       "y"
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": ""
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_TRAP",
-     "payload": {
-      "owner": "d2",
-      "order": [
-       "p",
-       "q"
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": ""
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "p"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_RELEASE",
-     "payload": {
-      "owner": "d1"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "q"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_RELEASE",
-     "payload": {
-      "owner": "d2"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-releasing-an-owner-that-holds-no-trap-changes-nothing-and-a-second-trap-of-one-owner-is-ignored",
-   "config": {
-    "order": [
-     "a",
-     "b",
-     "c"
-    ]
-   },
-   "entity": {
-    "id": "f"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_RELEASE",
-     "payload": {
-      "owner": "nobody"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_TRAP",
-     "payload": {
-      "owner": "dlg",
-      "order": [
-       "x",
-       "y"
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": ""
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_TRAP",
-     "payload": {
-      "owner": "dlg",
-      "order": [
-       "m",
-       "n"
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "x"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_FOCUS_RELEASE",
-     "payload": {
-      "owner": "dlg"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "escape-page-and-home-end-leave-as-keypress-for-the-focused-control",
-   "config": {
-    "order": [
-     "a",
-     "b",
-     "c"
-    ]
-   },
-   "entity": {
-    "id": "f"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "escape"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_KEYPRESS",
-        "payload": {
-         "target": "",
-         "key": "Escape",
-         "shift": false,
-         "alt": false,
-         "ctrl": false,
-         "meta": false
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "pageDown"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "home"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": []
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "next"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_FOCUS",
-        "payload": {
-         "id": "a"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "pageDown"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_KEYPRESS",
-        "payload": {
-         "target": "a",
-         "key": "PageDown",
-         "shift": false,
-         "alt": false,
-         "ctrl": false,
-         "meta": false
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "pageUp"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_KEYPRESS",
-        "payload": {
-         "target": "a",
-         "key": "PageUp",
-         "shift": false,
-         "alt": false,
-         "ctrl": false,
-         "meta": false
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "home"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_KEYPRESS",
-        "payload": {
-         "target": "a",
-         "key": "Home",
-         "shift": false,
-         "alt": false,
-         "ctrl": false,
-         "meta": false
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "end"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_KEYPRESS",
-        "payload": {
-         "target": "a",
-         "key": "End",
-         "shift": false,
-         "alt": false,
-         "ctrl": false,
-         "meta": false
-        }
-       }
-      ]
-     }
-    },
-    {
-     "from": "ready",
-     "event": "RASM_KEY",
-     "payload": {
-      "key": "escape"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_KEYPRESS",
-        "payload": {
-         "target": "a",
-         "key": "Escape",
-         "shift": false,
-         "alt": false,
-         "ctrl": false,
-         "meta": false
-        }
-       }
-      ]
-     }
-    }
-   ]
-  }
- ]
+  ]
 }

@@ -1,0 +1,307 @@
+app std-rasm-deck [
+  version: "0.1.0",
+  description: "std-rasm-deck — a deck of cards on the Rasm canvas, painted from the records RASM_CARDS hands it: each card a media picture, a badge, a title and a body, in the card/surface/<state> (falling back to stack/card/idle), text/card/idle, text/body/idle, text/eyebrow/idle and card/media/idle looks. Folded, the cards sit as a fan: centred, overlapping, each tilted along an arc so the middle one is on top. Spread, they lie as an even grid of upright cards, as many to a row as fit. RASM_DECK_SPREAD flips between the two and RASM_DECK_SHUFFLE deals the cards one place on, so the fan and the grid both reorder. Every card is a focusable control (plate id `<id>:card:<index>:plate`, role and name for assistive technology): a pointer over it, keyboard focus on it or a tap, a release or RASM_ACTIVATE on it lifts it out of the fan to the front, upright; a second activation puts it back, and each activation emits `action` with its index. Every move between two layouts runs on a sibling std-rasm-tween with the deck's id: the deck sends RASM_TWEEN_START and moves each card between its old and new place on every RASM_TWEEN_STEP, so under reduced motion the cards land at once. With variantBy breakpoint and `variants` the card size, fan angle, arc and overlap change per breakpoint. It reports its height in RASM_EXTENT after every layout (the fan's, or the grid's rows), and holds no rows of its own: a program reads its data and sends the records."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLook = { inset : RasmInset, fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, rotate : number?, pivotX : number?, pivotY : number? }
+type DeckCard = { title : string!, body : string, badge : string, image : string }
+type DeckPose = { x : number!, y : number!, r : number!, k : number! }
+type DeckGeo = { w : number!, h : number!, mediaH : number! }
+type DeckShape = { cardW : number, cardH : number, mediaH : number, fanRad : number, arc : number, overlap : number }
+
+orbital RasmDeckOrbital {
+  entity RasmDeckRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The deck's rect from RASM_PLACE, null until placed." = null
+    cards : [DeckCard] @description "The records the last RASM_CARDS sent." = []
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced." = "ltr"
+    variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
+    spread : boolean @description "True when the cards lie spread out, false when they sit folded as a fan." = false
+    shift : number @description "How many places the last shuffles dealt every card on." = 0
+    sel : number @description "The card a tap or activation lifted, -1 for none." = -1
+    hot : number @description "The card the pointer is over, -1 for none." = -1
+    focus : number @description "The card RASM_FOCUS last named, -1 for none." = -1
+    pressing : number @description "The card a pointer press began on, -1 for none." = -1
+    geo : DeckGeo @description "The card size the last layout used." = { w: 0, h: 0, mediaH: 0 }
+    fromP : [DeckPose] @description "Where each card was when the current move began." = []
+    toP : [DeckPose] @description "Where each card is going." = []
+    poses : [DeckPose] @description "Where each card is now, between fromP and toP." = []
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmDeck -> RasmDeckRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.spread @config.spread)
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DECK_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DECK_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (emit DECK_LAYOUT { animate: false })
+      RASM_PLACE -> ready when (not (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))))
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (emit DECK_LAYOUT { animate: false })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_CARDS -> ready when (= ?id @config.id)
+        (set @entity.cards ?cards)
+        (set @entity.sel -1)
+        (set @entity.hot -1)
+        (set @entity.focus -1)
+        (set @entity.pressing -1)
+        (set @entity.shift 0)
+        (emit DECK_LAYOUT { animate: false })
+      RASM_CARDS -> ready when (!= ?id @config.id)
+      RASM_DECK_SPREAD -> ready
+        (set @entity.spread (not @entity.spread))
+        (set @entity.sel -1)
+        (emit DECK_LAYOUT { animate: true })
+      RASM_DECK_SHUFFLE -> ready
+        (set @entity.shift (math/mod (+ @entity.shift 1) (math/max 1 (array/len @entity.cards))))
+        (set @entity.sel -1)
+        (emit DECK_LAYOUT { animate: true })
+      RASM_POINTER -> ready
+        (let ((plates (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate")))))
+          (let ((idx (array/indexOf @plates ?id)))
+            (let ((hoverOn (and (= ?kind "enter") (>= @idx 0))) (hoverOff (and (= ?kind "leave") (>= @idx 0) (= @idx @entity.hot))) (press (and (= ?kind "down") (>= @idx 0))) (release (and (= ?kind "up") (>= @entity.pressing 0))))
+              (do
+                (when (and @release (= @idx @entity.pressing))
+                  (do
+                    (set @entity.sel (if (= @entity.sel @idx) -1 @idx))
+                    (emit @config.action { index: @idx })))
+                (when (or @hoverOn @hoverOff @press @release)
+                  (do
+                    (set @entity.hot (if @hoverOn @idx (if @hoverOff -1 @entity.hot)))
+                    (set @entity.pressing (if @press @idx -1))
+                    (emit DECK_LAYOUT { animate: true })))))))
+      RASM_FOCUS -> ready
+        (let ((idx (array/indexOf (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id)))
+          (when (!= @idx @entity.focus)
+            (do
+              (set @entity.focus @idx)
+              (emit DECK_LAYOUT { animate: true }))))
+      RASM_ACTIVATE -> ready
+        (let ((idx (array/indexOf (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id)))
+          (when (>= @idx 0)
+            (do
+              (set @entity.sel (if (= @entity.sel @idx) -1 @idx))
+              (emit @config.action { index: @idx })
+              (emit DECK_LAYOUT { animate: true }))))
+      DECK_LAYOUT -> ready when (and (!= @entity.rect null) (> (array/len @entity.cards) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sh (object/get @config.variants @entity.variant null)) (n (array/len @entity.cards)) (gap @config.gap) (lift @config.lift))
+          (let ((cw (default (if (= @sh null) null @sh.cardW) @config.cardW)) (ch (default (if (= @sh null) null @sh.cardH) @config.cardH)) (mh (default (if (= @sh null) null @sh.mediaH) @config.mediaH)) (fr (default (if (= @sh null) null @sh.fanRad) @config.fanRad)) (arc (default (if (= @sh null) null @sh.arc) @config.arc)) (ov (default (if (= @sh null) null @sh.overlap) @config.overlap)))
+            (let ((m (/ (- @n 1) 2)) (cols (math/max 1 (math/min @n (math/floor (default (/ (+ @r.w @gap) (+ @cw @gap)) 1))))) (stepX (if (<= @n 1) 0 (math/min (* @cw @ov) (default (/ (math/max 0 (- @r.w @cw)) (- @n 1)) 0)))))
+              (let ((rows (math/ceil (default (/ @n @cols) 1))) (used (+ (* @cols @cw) (* @gap (- @cols 1)))))
+                (let ((poses : [DeckPose] (array/map (array/range @n) (fn i (let ((slot (math/mod (+ @i @entity.shift) @n)) (up (or (= @i @entity.sel) (= @i @entity.focus) (= @i @entity.hot)))) (let ((u (if (<= @m 0) 0 (default (/ (- @slot @m) @m) 0)))) (if @entity.spread { x: (+ (+ @r.x (/ (- @r.w @used) 2)) (+ (/ @cw 2) (* (math/mod @slot @cols) (+ @cw @gap)))), y: (- (+ (+ @r.y @lift) (+ (/ @ch 2) (* (math/floor (default (/ @slot @cols) 0)) (+ @ch @gap)))) (if @up (* @lift 0.6) 0)), r: 0, k: (+ @slot (if @up 1000 0)) } { x: (+ (+ @r.x (/ @r.w 2)) (* (- @slot @m) @stepX)), y: (- (+ (+ (+ @r.y @lift) (/ @ch 2)) (* @arc (* @u @u))) (if @up @lift 0)), r: (if @up 0 (* @u (/ @fr 2))), k: (+ (- @n (* 2 (math/abs (- @slot @m)))) (if @up 1000 0)) })))))) (anim (and @entity.spread true)))
+                  (let ((go (and (= (array/len @entity.poses) @n) (= (array/len @entity.toP) @n))) (height (+ (+ @lift 12) (if @entity.spread (+ (* @rows @ch) (* @gap (- @rows 1))) (+ (+ (/ @ch 2) @arc) (+ (* (/ @ch 2) (math/cos (/ @fr 2))) (* (/ @cw 2) (math/sin (math/abs (/ @fr 2))))))))))
+                    (do
+                      (set @entity.geo { w: @cw, h: @ch, mediaH: @mh })
+                      (set @entity.fromP (if (and ?animate @go) @entity.poses @poses))
+                      (set @entity.toP @poses)
+                      (set @entity.poses (if (and ?animate @go) @entity.poses @poses))
+                      (when (and ?animate @go)
+                        (emit RASM_TWEEN_START { id: @config.id, from: 0, to: 1, durationMs: @config.moveMs }))
+                      (emit RASM_EXTENT { n: @entity.paints, id: @config.id, w: @r.w, h: @height })
+                      (set @entity.paints (+ @entity.paints 1))
+                      (emit DECK_PAINT { n: @entity.paints }))))))))
+      DECK_LAYOUT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0)))
+      RASM_TWEEN_STEP -> ready when (and (= ?id @config.id) (= (array/len @entity.fromP) (array/len @entity.toP)))
+        (set @entity.poses (array/map (array/range (array/len @entity.toP)) (fn i (let ((a (default (array/nth @entity.fromP @i) { x: 0, y: 0, r: 0, k: 0 })) (b (default (array/nth @entity.toP @i) { x: 0, y: 0, r: 0, k: 0 }))) { x: (+ @a.x (* (- @b.x @a.x) ?t)), y: (+ @a.y (* (- @b.y @a.y) ?t)), r: (+ @a.r (* (- @b.r @a.r) ?t)), k: @b.k }))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DECK_PAINT { n: @entity.paints })
+      RASM_TWEEN_STEP -> ready when (not (and (= ?id @config.id) (= (array/len @entity.fromP) (array/len @entity.toP))))
+      DECK_PAINT -> ready when (and (!= @entity.rect null) (> (array/len @entity.cards) 0) (= (array/len @entity.poses) (array/len @entity.cards)))
+        (let ((rtl (= @entity.dir "rtl")) (g @entity.geo) (p @config.padding) (card (default (object/get @entity.looks "card/surface/idle" null) (default (object/get @entity.looks "stack/card/idle" null) {}))) (title (default (object/get @entity.looks "text/card/idle" null) {})) (body (default (object/get @entity.looks "text/body/idle" null) {})) (badge (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (med (default (object/get @entity.looks "card/media/idle" null) {})))
+          (let ((hw (/ @g.w 2)) (hh (/ @g.h 2)) (tw (- @g.w (* 2 @p))) (titleBlock (* @config.titleLines @config.titleLineH)))
+            (let ((order (array/sort (array/map (array/range (array/len @entity.cards)) (fn i { i: @i, k: (let ((pp (default (array/nth @entity.poses @i) { x: 0, y: 0, r: 0, k: 0 }))) @pp.k) })) "k" "asc")))
+              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/map @order (fn o (let ((i @o.i) (c (default (array/nth @entity.cards @o.i) { title: "" })) (pp (default (array/nth @entity.poses @o.i) { x: 0, y: 0, r: 0, k: 0 }))) (let ((ls (if (= @entity.pressing @i) "pressed" (if (= @entity.focus @i) "focused" (if (= @entity.hot @i) "hovered" "idle")))) (pid (str/concat @config.id ":card:" @i ":plate")) (tid (str/concat @config.id ":card:" @i ":title")) (url (object/get @c @config.media "")) (tx (if @rtl (- @hw @p) (- (+ (- 0 @hw) @p) 0))) (al (if @rtl "right" "left")) (badgeY (+ (- (+ (- 0 @hh) @g.mediaH) 0) @p)))
+                (let ((surf (default (object/get @entity.looks (str/concat "card/surface/" @ls) null) @card)) (titleY (+ @badgeY 22)) (mr (default (array/first (default @med.corners.radius [0])) 0)))
+                  (let ((bodyY (+ (+ @titleY @titleBlock) 8)))
+                    { type: draw-group, id: (str/concat @config.id ":card:" @i), position: { x: @pp.x, y: @pp.y }, rotate: @pp.r, items: (array/concat [{ type: draw-shape, shape: "rect", id: @pid, anchor: "top-left", position: { x: (- 0 @hw), y: (- 0 @hh), z: @config.z }, width: @g.w, height: @g.h, fill: @surf.fill, stroke: @surf.stroke, strokeWidth: @surf.strokeWidth, inset: @surf.inset, corners: @surf.corners, shadow: @surf.shadow, material: @surf.material, hit: true, semantic: { role: @config.role, labelledBy: @tid, disabled: false, order: (+ @config.order @i), focused: (= @entity.focus @i) } }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":card:" @i ":mediaSlot"), anchor: "top-left", position: { x: (- 0 @hw), y: (- 0 @hh), z: @config.z }, width: @g.w, height: @g.mediaH, fill: @med.fill, corners: @med.corners, hit: false }] (if (= @url "") [] [{ type: draw-group, id: (str/concat @config.id ":card:" @i ":mediaClip"), position: { x: 0, y: 0 }, clip: (str/concat "M " (- 0 @hw) " " (+ (- 0 @hh) @g.mediaH) " L " (- 0 @hw) " " (+ (- 0 @hh) @mr) " A " @mr " " @mr " 0 0 1 " (+ (- 0 @hw) @mr) " " (- 0 @hh) " L " (- @hw @mr) " " (- 0 @hh) " A " @mr " " @mr " 0 0 1 " @hw " " (+ (- 0 @hh) @mr) " L " @hw " " (+ (- 0 @hh) @g.mediaH) " Z"), items: [{ type: draw-sprite, id: (str/concat @config.id ":card:" @i ":media"), asset: { url: @url }, fit: "cover", anchor: "top-left", position: { x: (- 0 @hw), y: (- 0 @hh), z: @config.z }, width: @g.w, height: @g.mediaH }] }]) [{ type: draw-text, id: (str/concat @config.id ":card:" @i ":tag"), text: (default @c.badge ""), anchor: "top-left", position: { x: @tx, y: @badgeY, z: @config.z }, align: @al, baseline: "top", color: @badge.textColor, font: @badge.font, width: @tw, wrap: false, hit: false }, { type: draw-text, id: @tid, text: @c.title, anchor: "top-left", position: { x: @tx, y: @titleY, z: @config.z }, align: @al, baseline: "top", color: @title.textColor, font: @title.font, width: @tw, height: @titleBlock, fit: "shrink", minSize: @config.titleMinSize, wrap: true, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @i ":body"), text: (default @c.body ""), anchor: "top-left", position: { x: @tx, y: @bodyY, z: @config.z }, align: @al, baseline: "top", color: @body.textColor, font: @body.font, width: @tw, height: (math/max 20 (- (- @hh @bodyY) @p)), fit: "shrink", minSize: @config.bodyMinSize, wrap: true, hit: false }]) })))))) }))))
+      DECK_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0) (= (array/len @entity.poses) (array/len @entity.cards))))
+    }
+
+    emits {
+      DECK_LAYOUT -> internal {
+        animate : boolean!
+      }
+        @description "Lay the cards out from the stored rect, state and records; animate moves them from where they are."
+        @tier "internal"
+      DECK_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the cards at their current places."
+        @tier "internal"
+      RASM_TWEEN_START -> external {
+        id : string!
+        from : number!
+        to : number!
+        durationMs : number!
+      }
+        @description "Start the move between two layouts on the sibling tween with this deck's id."
+        @tier "domain"
+      @config.action -> external {
+        index : number!
+      }
+        @description "A card was released over itself or activated from the keyboard; index is its position in the records."
+        @tier "domain"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The cards: one group per card, painted from the edges of the fan to its front, each with its place and tilt."
+        @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The deck's height after each layout: the fan with its arc and lift, or the rows of the spread."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the deck's rect when it is placed."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain that `variants` holds, none of them keeping the configured shape."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction: rtl aligns the card text right."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A pointer entering a card lifts it, leaving puts it back; a press and a release over the same card is a tap."
+      RASM_FOCUS { id : string! }
+        @description "The card whose plate id this is takes the focused look and lifts; any other id clears it."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of the card whose plate id this is lifts it, or puts it back."
+      RASM_CARDS { id : string!  cards : [DeckCard]! }
+        @description "The records to paint, for the deck with this id."
+      RASM_DECK_SPREAD
+        @description "Spread the cards out, or fold them back into the fan."
+      RASM_DECK_SHUFFLE
+        @description "Deal every card one place on."
+      RASM_TWEEN_STEP { id : string!  value : number!  t : number! }
+        @description "One step of the deck's move: every card is placed t of the way from its old place to its new one."
+    }
+
+    config {
+      id : string = "deck"
+        @label "Id"
+        @description "The deck's RASM_PLACE key, paint id, RASM_CARDS address and tween id."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      cardW : number = 240
+        @label "Card width"
+        @description "Each card's width in px."
+        @tier "presentation"
+      cardH : number = 320
+        @label "Card height"
+        @description "Each card's height in px."
+        @tier "presentation"
+      mediaH : number = 130
+        @label "Media height"
+        @description "The picture band at a card's top in px, painted in card/media/idle."
+        @tier "presentation"
+      padding : number = 16
+        @label "Padding"
+        @description "Space inside a card in px."
+        @tier "presentation"
+      media : string = "image"
+        @label "Media field"
+        @description "The name of the record field holding the picture URL."
+        @tier "presentation"
+      titleLines : number = 2
+        @label "Title lines"
+        @description "The lines kept for a title; a longer title shrinks to titleMinSize."
+        @tier "presentation"
+      titleLineH : number = 24
+        @label "Title line height"
+        @description "One title line's height in px."
+        @tier "presentation"
+      titleMinSize : number = 15
+        @label "Title smallest size"
+        @description "The font size in px a long title shrinks to before it ends in an ellipsis."
+        @tier "presentation"
+      bodyMinSize : number = 13
+        @label "Body smallest size"
+        @description "The font size in px a long body shrinks to before it ends in an ellipsis."
+        @tier "presentation"
+      fanRad : number = 0.6
+        @label "Fan angle"
+        @description "The angle in radians between the leftmost and rightmost card of the fan."
+        @tier "presentation"
+      arc : number = 40
+        @label "Arc"
+        @description "How far in px the outer cards of the fan sit below the middle one."
+        @tier "presentation"
+      overlap : number = 0.55
+        @label "Overlap"
+        @description "The distance between two neighbouring cards of the fan as a fraction of a card's width."
+        @tier "presentation"
+      lift : number = 48
+        @label "Lift"
+        @description "How far in px a lifted card rises; the deck reserves it above the cards."
+        @tier "presentation"
+      gap : number = 20
+        @label "Gap"
+        @description "Space between cards when the deck is spread, in px."
+        @tier "presentation"
+      spread : boolean = false
+        @label "Starts spread"
+        @description "True starts the deck spread out; false starts it folded as a fan."
+        @tier "presentation"
+      moveMs : number = 420
+        @label "Move"
+        @description "How long a move between two layouts takes, in ms."
+        @tier "presentation"
+      role : "button" | "link" = "button"
+        @label "Role"
+        @description "What a card announces to assistive technology."
+        @tier "presentation"
+      order : number = 0
+        @label "Order"
+        @description "Reading order of the first card's semantic node; card i takes order + i."
+        @tier "domain"
+      action : event = RASM_ACTION
+        @label "Action"
+        @description "The event a card emits, with `{ index }`, when it is released over itself or activated from the keyboard."
+        @tier "domain"
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant (desktop and wide stop at desktop), then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string DeckShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the cardW, cardH, mediaH, fanRad, arc and overlap a variant names replace the configured ones while that breakpoint is current. A phone variant also applies to tablet unless tablet is given, so give every breakpoint's shape."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmDeckStart -> RasmDeck
+}

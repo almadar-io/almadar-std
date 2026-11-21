@@ -1,0 +1,263 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-reveal.lolo",
+  "trait": "RasmReveal",
+  "cases": [
+    {
+      "id": "placing-the-cover-paints-it",
+      "config": {
+        "id": "cov",
+        "lift": [
+          {
+            "id": "btn",
+            "region": "a"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "cov",
+                "rect": {
+                  "x": 0,
+                  "y": 100,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-placing-another-id-paints-nothing",
+      "config": {
+        "id": "cov",
+        "lift": [
+          {
+            "id": "btn",
+            "region": "a"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 0,
+                  "y": 100,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-lift-id-placed-repaints-the-placed-cover",
+      "config": {
+        "id": "cov",
+        "lift": [
+          {
+            "id": "btn",
+            "region": "a"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 400,
+          "h": 300
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "a",
+                "rect": {
+                  "x": 10,
+                  "y": 120,
+                  "w": 100,
+                  "h": 40
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "focus-on-a-lift-id-opens-a-keyboard-hole",
+      "config": {
+        "id": "cov",
+        "lift": [
+          {
+            "id": "btn",
+            "region": "a"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 400,
+          "h": 300
+        },
+        "known": [
+          {
+            "id": "a",
+            "rect": {
+              "x": 10,
+              "y": 120,
+              "w": 100,
+              "h": 40
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS",
+          "payload": {
+            "id": "btn"
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-focus-before-the-cover-is-placed-paints-nothing",
+      "config": {
+        "id": "cov",
+        "lift": [
+          {
+            "id": "btn",
+            "region": "a"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_FOCUS",
+          "payload": {
+            "id": "btn"
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "toggle-on-lifts-the-whole-cover",
+      "config": {
+        "id": "cov"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 400,
+          "h": 300
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_REVEAL_ALL",
+          "payload": {
+            "checked": true
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-toggle-before-the-cover-is-placed-paints-nothing",
+      "config": {
+        "id": "cov"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_REVEAL_ALL",
+          "payload": {
+            "checked": true
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

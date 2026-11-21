@@ -1,0 +1,171 @@
+app std-rasm-camera [
+  version: "0.1.0",
+  description: "std-rasm-camera — a fly-to camera over one drawing, driven by the page scroll. It shows a window of another std-rasm-mirror's render target (`of`, the map, a floor plan, any drawing painted once) as a sprite in its placed rect, and moves that window through the declared stops as the page scrolls past its `anchor` section: progress 0 is when the anchor's top reaches the `enter` fraction of the view and 1 is when its bottom reaches the `exit` fraction. Each stop is a centre in source units and a zoom (1 shows the whole drawing); between two stops the window pans and zooms with a smooth ease, and for the `hold` share of each segment it rests on a stop so the reader can read it. The window keeps the sprite's aspect and stays inside the drawing. Under reduced motion (RASM_MOTION { reduced: true }) the window cuts from stop to stop at the middle of each segment instead of flying. It emits CAMERA_STOP { id, index } when the nearest stop changes, so a program can light the place the camera is on."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmCameraStop = { x : number!, y : number!, zoom : number! }
+
+orbital RasmCameraOrbital {
+  entity RasmCameraRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave this camera, null until placed." = null
+    range : RasmRect? @description "The rect RASM_PLACE gave the anchor section, null until placed." = null
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    offset : number @description "The page scroll from RASM_PAGE_SCROLLED." = 0
+    reduced : boolean @description "The viewer's reduced-motion preference." = false
+    stop : number @description "The index of the stop nearest the window, -1 before the first paint." = -1
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmCamera -> RasmCameraRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CAMERA_PAINT { n: @entity.paints })
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CAMERA_PAINT { n: @entity.paints })
+      RASM_PAGE_SCROLLED -> ready
+        (set @entity.offset ?offset)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CAMERA_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (= @p.id @config.anchor))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.range (let ((it (array/find ?placed (fn p (= @p.id @config.anchor))))) (if (= @it null) @entity.range @it.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CAMERA_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (= @p.id @config.anchor)))))
+      CAMERA_PAINT -> ready when (and (!= @entity.rect null) (!= @entity.range null) (> @entity.viewH 0) (> (array/len @config.stops) 0))
+        (let (
+            (r (default @entity.rect { x: 0, y: 0, w: 1, h: 1 }))
+            (a (default @entity.range { x: 0, y: 0, w: 1, h: 1 }))
+            (n (array/len @config.stops))
+            (from (- @a.y (* @entity.viewH @config.enter)))
+            (span (math/max 1 (- (- (+ @a.y @a.h) (* @entity.viewH @config.exit)) @from)))
+            (p (math/clamp (/ (- @entity.offset @from) @span) 0 1))
+            (s (* @p (math/max 0 (- @n 1))))
+            (i (math/clamp (math/floor @s) 0 (math/max 0 (- @n 2))))
+            (f (math/clamp (- @s @i) 0 1))
+            (g (math/clamp (/ (- @f (/ @config.hold 2)) (math/max 0.01 (- 1 @config.hold))) 0 1))
+            (e (if @entity.reduced (if (< @f 0.5) 0 1) (* (* @g @g) (- 3 (* 2 @g)))))
+            (sa (default (array/nth @config.stops @i) { x: 0, y: 0, zoom: 1 }))
+            (sb (default (array/nth @config.stops (math/min (+ @i 1) (- @n 1))) { x: 0, y: 0, zoom: 1 }))
+            (cx (math/lerp @sa.x @sb.x @e))
+            (cy (math/lerp @sa.y @sb.y @e))
+            (zoom (math/max 0.1 (math/lerp @sa.zoom @sb.zoom @e)))
+            (iw (math/max 1 (- @r.w (* 2 @config.inset))))
+            (ih (math/max 1 (- @r.h (* 2 @config.inset))))
+            (vw0 (/ @config.sourceWidth @zoom))
+            (tall (> (* @vw0 (/ @ih @iw)) @config.sourceHeight))
+            (vh (if @tall @config.sourceHeight (* @vw0 (/ @ih @iw))))
+            (vw (if @tall (* @config.sourceHeight (/ @iw @ih)) @vw0))
+            (vx (math/clamp (- @cx (/ @vw 2)) 0 (math/max 0 (- @config.sourceWidth @vw))))
+            (vy (math/clamp (- @cy (/ @vh 2)) 0 (math/max 0 (- @config.sourceHeight @vh))))
+            (near (if (< @e 0.5) @i (+ @i 1)))
+          )
+          (do
+            (when (!= @near @entity.stop)
+              (do
+                (set @entity.stop @near)
+                (emit CAMERA_STOP { id: @config.id, index: @near })))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-sprite, id: @config.id, texture: (str/concat "target:" @config.of ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: @config.z }, width: @iw, height: @ih, frame: { x: @vx, y: @vy, w: @vw, h: @vh } }] })))
+      CAMERA_PAINT -> ready when (not (and (!= @entity.rect null) (!= @entity.range null) (> @entity.viewH 0) (> (array/len @config.stops) 0)))
+    }
+
+    emits {
+      CAMERA_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the window from the stored rects, scroll and stops."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The sprite that shows the camera's window of the drawing."
+        @tier "primary"
+      CAMERA_STOP -> external {
+        id : string!
+        index : number!
+      }
+        @description "The stop nearest the window changed; index counts from 0 in the order of `stops`."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take this camera's rect and the anchor's rect when they are placed."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the scroll range is measured in."
+      RASM_PAGE_SCROLLED { offset : number!  max : number! }
+        @description "Take the page scroll and move the window."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference; reduced, the window cuts between stops."
+    }
+
+    config {
+      id : string = "camera"
+        @label "Id"
+        @description "The camera's RASM_PLACE key and paint id."
+        @tier "presentation"
+      of : string = ""
+        @label "Of"
+        @description "The id of the std-rasm-mirror that paints the drawing; the camera shows its render target."
+        @tier "domain"
+      anchor : string = ""
+        @label "Anchor"
+        @description "The placed id whose scroll range drives the camera (a section)."
+        @tier "presentation"
+      stops : [RasmCameraStop] = []
+        @label "Stops"
+        @description "Where the camera rests, in order: the window's centre in source units (x, y) and its zoom (1 shows the whole drawing, 2 half of it)."
+        @tier "domain"
+      sourceWidth : number = 160
+        @label "Source width"
+        @description "Width of the drawing in source units; the same as the mirror's sourceWidth."
+        @tier "domain"
+      sourceHeight : number = 120
+        @label "Source height"
+        @description "Height of the drawing in source units; the same as the mirror's sourceHeight."
+        @tier "domain"
+      hold : number = 0.5
+        @label "Hold"
+        @description "The share of each segment between two stops that the camera rests on a stop, 0 to 0.9: 0 flies without pause."
+        @tier "presentation"
+      enter : number = 1
+        @label "Enter at"
+        @description "Where in the view, as a fraction of its height from the top, the anchor's top is when the camera starts: 1 as it comes in at the bottom."
+        @tier "presentation"
+      exit : number = 0
+        @label "Exit at"
+        @description "Where in the view, as a fraction of its height from the top, the anchor's bottom is when the camera reaches its last stop: 0 at the top edge."
+        @tier "presentation"
+      inset : number = 0
+        @label "Inset"
+        @description "Pixels between the placed rect's edge and the sprite."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmCameraStart -> RasmCamera
+}

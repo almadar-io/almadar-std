@@ -1,0 +1,151 @@
+app std-rasm-zoomthrough [
+  version: "0.1.0",
+  description: "std-rasm-zoomthrough — a camera that flies through nested layers as the page scrolls: layer 0 is the whole scene, every next layer is a detail of one point of the layer before it, and scrolling zooms into that point until the detail takes over the view, again and again. Each layer is a drawing (nodes in a width by height box) with the box point to dive into (focusX, focusY). Layer i is drawn at scale zoom^(u - i) about its focus, u being the camera depth from 0 to the last layer along the scroll range; it fades in as the layer before it nears its own focus and out once the next one is in, so the layers cross over at matching scale. Each layer's caption (when it has one) rides the same fade as scroll-clock text motion. The canvas plays everything from the scroll offset every frame, backwards on the way up, with no repaint while the page moves. While the camera settles the focus moves from centerX of the stage to its middle, which makes room for copy beside the first drawing. Pin the stage with the page's `fixed` list; on the breakpoints in `quietOn` it paints nothing, for a composer that lays the layers out as plain pictures there. Under reduced motion only layer 0 is painted at rest."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmTravelKey = { at : number!, opacity : number, offsetX : number, offsetY : number }
+type RasmTravel = { durationMs : number, startMs : number, loop : boolean, clock : "scroll", from : number, to : number, keyframes : [RasmTravelKey]! }
+type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, travel : RasmTravel? }
+type RasmZoomLayer = { source : [node]!, width : number!, height : number!, focusX : number!, focusY : number!, caption : MessageKey? }
+
+orbital RasmZoomthroughOrbital {
+  entity RasmZoomthroughRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The stage rect from RASM_PLACE, null until it is placed." = null
+    scene : RasmRect? @description "The anchor section's rect from RASM_PLACE; the stage's own rect when no anchor is named." = null
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    reduced : boolean @description "True when the surface reported reduced motion." = false
+    quiet : boolean @description "True while the announced breakpoint is in quietOn." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmZoomthrough -> RasmZoomthroughRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.scene (let ((it (array/find ?placed (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @it null) @entity.scene @it.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ZOOM_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor))))))
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ZOOM_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ZOOM_PAINT { n: @entity.paints })
+      RASM_BREAKPOINT -> ready
+        (set @entity.quiet (array/includes @config.quietOn ?name))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ZOOM_PAINT { n: @entity.paints })
+      ZOOM_PAINT -> ready when (or (= @entity.rect null) (<= @entity.viewH 0) (= (array/len @config.layers) 0))
+      ZOOM_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.layers) 0) @entity.quiet)
+        (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [] })
+      ZOOM_PAINT -> ready when (and (!= @entity.rect null) (> @entity.viewH 0) (> (array/len @config.layers) 0) (not @entity.quiet))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sc (default @entity.scene (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (n (array/len @config.layers)))
+          (let ((cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2))) (range { clock: "scroll", from: (- @sc.y (* @entity.viewH @config.enter)), to: (- (+ @sc.y @sc.h) (* @entity.viewH @config.exit)) }) (m (* @config.samples (math/max 1 (- @n 1)))) (last (- @n 1)))
+            (let ((opac (array/map (array/range @n) (fn i (array/map (array/range (+ @m 1)) (fn j (let ((t (/ @j @m)) (u (* (/ @j @m) (math/max 1 @last)))) (* (- 1 (math/clamp (/ (- @t @config.endAt) (math/max 0.001 (- 1 @config.endAt))) 0 1)) (* (if (= @i 0) 1 (math/clamp (/ (- @u (- @i 1)) @config.appear) 0 1)) (if (= @i @last) 1 (- 1 (math/clamp (/ (- @u (+ @i @config.vanishAt)) @config.vanishOver) 0 1)))))))))))
+                  (shift (array/map (array/range (+ @m 1)) (fn j (* (- 1 (math/min 1 (/ (/ @j @m) (math/max 0.001 @config.settleAt)))) (* (- @config.centerX 0.5) @r.w))))))
+              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (array/map (array/range (if @entity.reduced 1 @n)) (fn i (let ((l (array/nth @config.layers @i))) (let ((k (math/max (default (/ @r.w (math/max 1 @l.width)) 1) (default (/ @r.h (math/max 1 @l.height)) 1)))) { type: draw-group, id: (str/concat @config.id ":layer" @i), position: { x: @cx, y: @cy, z: @config.z }, animation: (if @entity.reduced null (object/merge @range { keyframes: (array/map (array/range (+ @m 1)) (fn j { at: (default (/ @j @m) 0), scale: (math/pow @config.zoom (- (* (/ @j @m) (math/max 1 @last)) @i)), offsetX: (default (array/nth @shift @j) 0), opacity: (default (array/nth (default (array/nth @opac @i) []) @j) 0) })) })), items: [{ type: draw-shape, id: (str/concat @config.id ":pivot" @i), shape: rect, anchor: "top-left", position: { x: (- 0 (* 2 (+ @r.w @r.h))), y: (- 0 (* 2 (+ @r.w @r.h))) }, width: (* 4 (+ @r.w @r.h)), height: (* 4 (+ @r.w @r.h)), fill: "transparent", hit: false }, { type: draw-group, id: (str/concat @config.id ":box" @i), position: { x: (- 0 (* @l.focusX @k)), y: (- 0 (* @l.focusY @k)) }, scale: @k, items: @l.source }] })))), texts: (if @entity.reduced [] (array/map (array/filter (array/range @n) (fn i (let ((l (array/nth @config.layers @i))) (let ((cap : MessageKey? @l.caption)) (!= @cap null))))) (fn i (let ((l (array/nth @config.layers @i))) (let ((cap : MessageKey? @l.caption)) { id: (str/concat @config.id ":caption" @i), key: (default @cap ""), x: (+ @r.x 32), y: (- (+ @r.y @r.h) 64), z: (+ @config.z 6), align: "left", baseline: "top", color: "foreground", font: "600 16px mono", travel: (object/merge @range { keyframes: (array/map (array/range (+ @m 1)) (fn j { at: (default (/ @j @m) 0), opacity: (default (array/nth (default (array/nth @opac @i) []) @j) 0) })) }) }))))) }))))
+    }
+
+    emits {
+      ZOOM_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored stage, section, view height, breakpoint and motion preference."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "One scaling, fading group per layer, and one scroll-faded caption per captioned layer."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the stage's rect when its id is placed, and the anchor section's rect."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the scroll range is measured in."
+      RASM_MOTION { reduced : boolean! }
+        @description "Reduced motion paints layer 0 at rest."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "A breakpoint in quietOn makes the stage paint nothing."
+    }
+
+    config {
+      id : string = "zoom"
+        @label "Id"
+        @description "The stage's RASM_PLACE key and paint id; list it in the page's `fixed` to pin the stage."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      layers : [RasmZoomLayer] = []
+        @label "Layers"
+        @description "The layers from the whole scene to the deepest detail: nodes in a width by height box, the box point to dive into, and an optional caption key. Each layer's box is scaled to cover the stage and is the detail of the previous layer's focus at 1/zoom of the view."
+        @tier "domain"
+      zoom : number = 8
+        @label "Zoom"
+        @description "The scale step between one layer and the next."
+        @tier "presentation"
+      samples : number = 24
+        @label "Samples"
+        @description "Keyframes per layer step: the exponential zoom is played piecewise linear between them."
+        @tier "presentation"
+      anchor : string = ""
+        @label "Anchor"
+        @description "The placed id of the section whose scroll drives the flight (the runway); empty uses the stage's own rect."
+        @tier "presentation"
+      enter : number = 0
+        @label "Enter at"
+        @description "Where in the view, as a fraction of its height from the top, the anchor's top is when the flight starts: 0 for a pinned stage."
+        @tier "presentation"
+      exit : number = 1
+        @label "Exit at"
+        @description "Where in the view the anchor's bottom is when the flight ends: 1 for a pinned stage."
+        @tier "presentation"
+      centerX : number = 0.5
+        @label "Start centre"
+        @description "Where across the stage, as a fraction of its width, the first layer's focus sits at the start; the focus slides to the middle as the camera settles."
+        @tier "presentation"
+      settleAt : number = 0.3
+        @label "Settle at"
+        @description "The progress by which the focus has reached the middle of the stage."
+        @tier "presentation"
+      appear : number = 0.35
+        @label "Appear over"
+        @description "How much camera depth a layer takes to fade in once the layer before it starts to be dived into."
+        @tier "presentation"
+      vanishAt : number = 0.45
+        @label "Vanish from"
+        @description "How far past its own depth a layer starts to fade out, in camera depth."
+        @tier "presentation"
+      vanishOver : number = 0.35
+        @label "Vanish over"
+        @description "How much camera depth a layer takes to fade out."
+        @tier "presentation"
+      endAt : number = 0.94
+        @label "Fade-out starts"
+        @description "The progress where the whole stage starts to fade, so a pinned stage lets the next section take the view."
+        @tier "presentation"
+      quietOn : [string] = []
+        @label "Quiet on"
+        @description "Breakpoint names (phone, tablet, desktop, wide) where nothing is painted."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmZoomthroughStart -> RasmZoomthrough
+}

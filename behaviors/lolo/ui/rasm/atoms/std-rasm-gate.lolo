@@ -1,0 +1,177 @@
+app std-rasm-gate [
+  version: "0.1.0",
+  description: "std-rasm-gate — an intro gate over the first screen. Until it opens, it paints an opaque curtain in the `look`'s fill over the `anchor` rect (and blocks the pointer there) and shows the `contents` ids (a counter, a skip control) above it. RASM_GATE_LIFT, which a count's done event or a skip control's action can be named to, or Escape, lifts the curtain: it slides up off the anchor over `liftMs`, the contents are hidden at once, and the gate is gone. Nothing is shown until the surface has reported the viewer's motion preference: under reduced motion the gate never paints and the contents stay hidden, so the page opens straight onto its first screen."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+
+orbital RasmGateOrbital {
+  entity RasmGateRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The anchor's rect, null until placed." = null
+    ready : boolean @description "The surface has reported the motion preference and it is not reduced." = false
+    liftedMs : number @description "The epoch-ms instant the lift started, 0 before it." = 0
+    elapsed : number @description "The ms the lift has run." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmGate -> RasmGateRun [client] {
+    initial: holding
+
+    state holding {
+      INIT -> holding
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+      RASM_THEME -> holding
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GATE_PAINT { n: @entity.paints })
+      RASM_PLACE -> holding when (array/some ?placed (fn p (= @p.id @config.anchor)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.anchor))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GATE_PAINT { n: @entity.paints })
+      RASM_PLACE -> holding when (not (array/some ?placed (fn p (= @p.id @config.anchor))))
+      RASM_MOTION -> holding when (not ?reduced)
+        (set @entity.ready true)
+        (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GATE_PAINT { n: @entity.paints })
+      RASM_MOTION -> gone when ?reduced
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z, nodes: [], texts: [] })
+      RASM_GATE_LIFT -> lifting when @entity.ready
+        (set @entity.liftedMs (time/epoch-ms @now))
+        (set @entity.elapsed 0)
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GATE_PAINT { n: @entity.paints })
+      RASM_GATE_LIFT -> holding when (not @entity.ready)
+      RASM_KEYPRESS -> lifting when (and (= ?key "Escape") @entity.ready)
+        (set @entity.liftedMs (time/epoch-ms @now))
+        (set @entity.elapsed 0)
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GATE_PAINT { n: @entity.paints })
+      RASM_KEYPRESS -> holding when (not (and (= ?key "Escape") @entity.ready))
+      GATE_PAINT -> holding
+        (let ((r @entity.rect) (look (default (object/get @entity.looks @config.look null) {})))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (if (and @entity.ready (!= @r null)) [{ type: draw-shape, id: (str/concat @config.id ":curtain"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, hit: true }] []) }))
+    }
+
+    state lifting {
+      INIT -> lifting
+      RASM_THEME -> lifting
+        (set @entity.looks ?looks)
+      RASM_PLACE -> lifting
+      RASM_MOTION -> lifting
+      RASM_GATE_LIFT -> lifting
+      RASM_KEYPRESS -> lifting
+      GATE_PAINT -> lifting
+        (let ((r @entity.rect) (look (default (object/get @entity.looks @config.look null) {})))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (if (!= @r null) [{ type: draw-shape, id: (str/concat @config.id ":curtain"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, hit: true, animation: { durationMs: @config.liftMs, startMs: @entity.liftedMs, loop: false, keyframes: [{ at: 0, opacity: 1, offsetY: 0 }, { at: 0.4, opacity: 1, offsetY: (* -0.12 @r.h) }, { at: 0.7, opacity: 1, offsetY: (* -0.45 @r.h) }, { at: 1, opacity: 1, offsetY: (- 0 @r.h) }] } }] []) }))
+      GATE_TICK -> lifting when (< (+ @entity.elapsed ?dtMs) @config.liftMs)
+        (set @entity.elapsed (+ @entity.elapsed ?dtMs))
+      GATE_TICK -> gone when (>= (+ @entity.elapsed ?dtMs) @config.liftMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z, nodes: [], texts: [] })
+    }
+
+    state gone {
+      INIT -> gone
+      RASM_THEME -> gone
+      RASM_PLACE -> gone
+      RASM_MOTION -> gone
+      RASM_GATE_LIFT -> gone
+      RASM_KEYPRESS -> gone
+      GATE_TICK -> gone
+    }
+
+    ticks {
+      liftTick every 50ms in lifting
+        (emit GATE_TICK { dtMs: 50 })
+    }
+
+    emits {
+      GATE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the curtain."
+        @tier "internal"
+      GATE_TICK -> internal {
+        dtMs : number!
+      }
+        @description "One step of the lift clock."
+        @tier "internal"
+      RASM_VISIBLE -> external {
+        owner : string!
+        shown : [string]!
+        hidden : [string]!
+      }
+        @description "The contents are shown while the curtain is down and hidden once it lifts."
+        @tier "domain"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The curtain, empty until the motion preference is known and again once the gate is gone."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks the curtain is drawn in."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the anchor's rect."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference: reduced opens the gate for good before anything is shown."
+      RASM_GATE_LIFT { }
+        @description "Lift the curtain: name this event as a count's done event or a skip control's action."
+      RASM_KEYPRESS { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "Escape lifts the curtain."
+      GATE_TICK { dtMs : number! }
+        @description "One step of the lift clock."
+    }
+
+    config {
+      id : string = "gate"
+        @label "Id"
+        @description "The gate's id: its RASM_VISIBLE owner and its paint id."
+        @tier "domain"
+      anchor : string = "page"
+        @label "Anchor"
+        @description "The id of the placed rect the curtain covers."
+        @tier "presentation"
+      look : string = "surface/ground/idle"
+        @label "Curtain look"
+        @description "The look whose fill colours the curtain."
+        @tier "presentation"
+      contents : [string] = []
+        @label "Contents"
+        @description "The paint ids shown over the curtain while it is down: a counter, a skip control."
+        @tier "domain"
+      liftMs : number = 700
+        @label "Lift duration"
+        @description "How long the curtain takes to slide off the anchor, in ms."
+        @tier "presentation"
+      z : number = 60
+        @label "Z"
+        @description "Paint order of the curtain; the contents' z must exceed it."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmGateStart -> RasmGate
+}

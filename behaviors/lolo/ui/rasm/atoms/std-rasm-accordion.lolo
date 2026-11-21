@@ -1,0 +1,288 @@
+app std-rasm-accordion [
+  version: "0.1.0",
+  description: "std-rasm-accordion — an accordion gallery on the Rasm canvas: a row of panels of which exactly one is open and the rest are compressed to a rail, painted from the `panels` the call site declares (each a picture, a marker, a title and a body, the three texts message keys the surface paints in the visitor's language). The open panel shows its picture with a card-coloured plate across its foot holding the marker, the title and the body; a compressed panel shows its picture strip with a plate holding its title, set upright in a vertical accordion (axis vertical, a stack of full-width panels, for a phone) and turned a quarter turn along the rail in a horizontal one (axis horizontal, the panels side by side across the rect, mirrored under rtl). Every panel is a focusable control (plate id `<id>:panel:<index>:plate`, role and name for assistive technology): a tap, a release or RASM_ACTIVATE on it opens it, keyboard focus on it opens it, and with `hover` on a pointer over it opens it; activating the open panel emits `action` with its index. Opening a panel runs on a sibling std-rasm-tween with the accordion's id: the accordion sends RASM_TWEEN_START and moves each panel between its old and new place on every RASM_TWEEN_STEP, so under reduced motion the panels land at once; the open panel's texts fade in as it opens. With variantBy breakpoint and `variants` the axis, rail, open size and height change per breakpoint. It reports its height in RASM_EXTENT after every layout. Looks are card/surface/<state> (falling back to stack/card/idle), text/eyebrow/idle, text/card/idle and text/body/idle."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLook = { inset : RasmInset, fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]!, startMs : number }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, rotate : number?, pivotX : number?, pivotY : number? }
+type AccPanel = { marker : MessageKey!, title : MessageKey!, body : MessageKey!, image : string!, alt : MessageKey }
+type AccPart = { i : number!, tid : string!, nodes : [node]!, texts : [RasmText]! }
+type AccPose = { p : number!, s : number! }
+type AccShape = { axis : "horizontal" | "vertical", rail : number, openSize : number, height : number }
+
+orbital RasmAccordionOrbital {
+  entity RasmAccordionRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The accordion's rect from RASM_PLACE, null until placed." = null
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced." = "ltr"
+    variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
+    active : number @description "The open panel." = 0
+    hot : number @description "The panel the pointer is over, -1 for none." = -1
+    focus : number @description "The panel RASM_FOCUS last named, -1 for none." = -1
+    pressing : number @description "The panel a pointer press began on, -1 for none." = -1
+    openedMs : number @description "The epoch-ms instant the open panel last changed, 0 before any change." = 0
+    fromP : [AccPose] @description "Where each panel was when the current move began." = []
+    toP : [AccPose] @description "Where each panel is going." = []
+    poses : [AccPose] @description "Where each panel is now, between fromP and toP." = []
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmAccordion -> RasmAccordionRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.active @config.start)
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ACC_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (emit ACC_LAYOUT { animate: false })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (emit ACC_LAYOUT { animate: false })
+      RASM_PLACE -> ready when (not (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))))
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (emit ACC_LAYOUT { animate: false })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_POINTER -> ready
+        (let ((plates (array/map (array/range (array/len @config.panels)) (fn i (str/concat @config.id ":panel:" @i ":plate")))))
+          (let ((idx (array/indexOf @plates ?id)))
+            (let ((hoverOn (and (= ?kind "enter") (>= @idx 0))) (hoverOff (and (= ?kind "leave") (>= @idx 0) (= @idx @entity.hot))) (press (and (= ?kind "down") (>= @idx 0))) (release (and (= ?kind "up") (>= @entity.pressing 0) (= @idx @entity.pressing))))
+              (let ((moved (and (!= @idx @entity.active) (or @release (and @hoverOn @config.hover)))))
+              (do
+                (when @release
+                  (do
+                    (set @entity.openedMs (if (= @entity.active @idx) @entity.openedMs (time/epoch-ms @now)))
+                    (set @entity.active @idx)
+                    (emit @config.action { index: @idx })))
+                (when (and @hoverOn @config.hover (!= @idx @entity.active))
+                  (do
+                    (set @entity.active @idx)
+                    (set @entity.openedMs (time/epoch-ms @now))))
+                (when (or @hoverOn @hoverOff @press (= ?kind "up"))
+                  (do
+                    (set @entity.hot (if @hoverOn @idx (if @hoverOff -1 @entity.hot)))
+                    (set @entity.pressing (if @press @idx -1))
+                    (emit ACC_LAYOUT { animate: @moved }))))))))
+      RASM_FOCUS -> ready
+        (let ((idx (array/indexOf (array/map (array/range (array/len @config.panels)) (fn i (str/concat @config.id ":panel:" @i ":plate"))) ?id)))
+          (when (!= @idx @entity.focus)
+            (let ((moved (and (>= @idx 0) (!= @idx @entity.active))))
+            (do
+              (set @entity.focus @idx)
+              (when (and (>= @idx 0) (!= @idx @entity.active))
+                (do
+                  (set @entity.active @idx)
+                  (set @entity.openedMs (time/epoch-ms @now))))
+              (emit ACC_LAYOUT { animate: @moved })))))
+      RASM_ACTIVATE -> ready
+        (let ((idx (array/indexOf (array/map (array/range (array/len @config.panels)) (fn i (str/concat @config.id ":panel:" @i ":plate"))) ?id)))
+          (when (>= @idx 0)
+            (let ((moved (!= @idx @entity.active)))
+            (do
+              (when (!= @idx @entity.active)
+                (set @entity.openedMs (time/epoch-ms @now)))
+              (set @entity.active @idx)
+              (emit @config.action { index: @idx })
+              (emit ACC_LAYOUT { animate: @moved })))))
+      ACC_LAYOUT -> ready when (and (!= @entity.rect null) (> (array/len @config.panels) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sh (object/get @config.variants @entity.variant null)) (n (array/len @config.panels)) (gap @config.gap))
+          (let ((ax (default (if (= @sh null) null @sh.axis) @config.axis)) (rail (default (if (= @sh null) null @sh.rail) @config.rail)) (open (default (if (= @sh null) null @sh.openSize) @config.openSize)) (ht (default (if (= @sh null) null @sh.height) @config.height)))
+            (let ((horiz (= @ax "horizontal")))
+              (let ((total (if @horiz @r.w (+ @open (* (- @n 1) (+ @rail @gap))))) (openS (if @horiz (math/max @rail (- @r.w (* (- @n 1) (+ @rail @gap)))) @open)))
+                (let ((poses : [AccPose] (array/map (array/range @n) (fn i { p: (+ (* @i (+ @rail @gap)) (if (> @i @entity.active) (- @openS @rail) 0)), s: (if (= @i @entity.active) @openS @rail) }))) (go (and (= (array/len @entity.poses) @n) (= (array/len @entity.toP) @n))))
+                  (do
+                    (set @entity.fromP (if (and ?animate @go) @entity.poses @poses))
+                    (set @entity.toP @poses)
+                    (set @entity.poses (if (and ?animate @go) @entity.poses @poses))
+                    (when (and ?animate @go)
+                      (emit RASM_TWEEN_START { id: @config.id, from: 0, to: 1, durationMs: @config.moveMs }))
+                    (emit RASM_EXTENT { n: @entity.paints, id: @config.id, w: @r.w, h: (if @horiz @ht @total) })
+                    (set @entity.paints (+ @entity.paints 1))
+                    (emit ACC_PAINT { n: @entity.paints })))))))
+      ACC_LAYOUT -> ready when (not (and (!= @entity.rect null) (> (array/len @config.panels) 0)))
+      RASM_TWEEN_STEP -> ready when (and (= ?id @config.id) (= (array/len @entity.fromP) (array/len @entity.toP)))
+        (set @entity.poses (array/map (array/range (array/len @entity.toP)) (fn i (let ((a (default (array/nth @entity.fromP @i) { p: 0, s: 0 })) (b (default (array/nth @entity.toP @i) { p: 0, s: 0 }))) { p: (+ @a.p (* (- @b.p @a.p) ?t)), s: (+ @a.s (* (- @b.s @a.s) ?t)) }))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ACC_PAINT { n: @entity.paints })
+      RASM_TWEEN_STEP -> ready when (not (and (= ?id @config.id) (= (array/len @entity.fromP) (array/len @entity.toP))))
+      ACC_PAINT -> ready when (and (!= @entity.rect null) (> (array/len @config.panels) 0) (= (array/len @entity.poses) (array/len @config.panels)) (= (array/len @entity.toP) (array/len @config.panels)))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sh (object/get @config.variants @entity.variant null)) (rtl (= @entity.dir "rtl")) (m @config.margin) (p @config.padding) (card (default (object/get @entity.looks "card/surface/idle" null) (default (object/get @entity.looks "stack/card/idle" null) {}))) (title (default (object/get @entity.looks "text/card/idle" null) {})) (body (default (object/get @entity.looks "text/body/idle" null) {})) (marker (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (anim { durationMs: @config.moveMs, loop: false, startMs: @entity.openedMs, keyframes: [{ at: 0, opacity: 0, offsetY: 10 }, { at: 0.45, opacity: 0, offsetY: 10 }, { at: 1, opacity: 1, offsetY: 0 }] }))
+          (let ((horiz (= (default (if (= @sh null) null @sh.axis) @config.axis) "horizontal")) (ht (default (if (= @sh null) null @sh.height) @config.height)))
+            (let ((curR (array/map @entity.poses (fn pz (if @horiz { x: (if @rtl (- (- (+ @r.x @r.w) @pz.p) @pz.s) (+ @r.x @pz.p)), y: @r.y, w: @pz.s, h: @ht } { x: @r.x, y: (+ @r.y @pz.p), w: @r.w, h: @pz.s })))) (tgtR (array/map @entity.toP (fn pz (if @horiz { x: (if @rtl (- (- (+ @r.x @r.w) @pz.p) @pz.s) (+ @r.x @pz.p)), y: @r.y, w: @pz.s, h: @ht } { x: @r.x, y: (+ @r.y @pz.p), w: @r.w, h: @pz.s })))))
+              (let ((parts : [AccPart] (array/map (array/range (array/len @config.panels)) (fn i (let ((pn (default (array/nth @config.panels @i) { marker: "", title: "", body: "", image: "" })) (cur (default (array/nth @curR @i) { x: 0, y: 0, w: 0, h: 0 })) (tgt (default (array/nth @tgtR @i) { x: 0, y: 0, w: 0, h: 0 })) (open (= @i @entity.active))) (let ((ls (if (= @entity.pressing @i) "pressed" (if (= @entity.focus @i) "focused" (if (= @entity.hot @i) "hovered" "idle")))) (pid (str/concat @config.id ":panel:" @i ":plate")) (tid (str/concat @config.id ":panel:" @i ":title")) (mr (default (array/first (default @card.corners.radius [0])) 0))) (let ((surf (default (object/get @entity.looks (str/concat "card/surface/" @ls) null) @card)) (plateH (if @open @config.plateH (if @horiz @config.railPlateH (- @cur.h (* 2 @m))))) (lineH @config.titleLineH)) (let ((plate { x: (+ @cur.x @m), y: (- (- (+ @cur.y @cur.h) @m) @plateH), w: (math/max 0 (- @cur.w (* 2 @m))), h: @plateH }) (tplate { x: (+ @tgt.x @m), y: (- (- (+ @tgt.y @tgt.h) @m) (if @open @config.plateH (if @horiz @config.railPlateH (- @tgt.h (* 2 @m))))), w: (math/max 0 (- @tgt.w (* 2 @m))), h: (if @open @config.plateH (if @horiz @config.railPlateH (- @tgt.h (* 2 @m)))) }) (tx : [RasmText] (if @open [{ id: (str/concat @config.id ":panel:" @i ":marker"), key: @pn.marker, x: (+ @tplate.x @p), y: (+ @tplate.y @p), z: @config.z, align: (if @rtl "right" "left"), baseline: "top", color: @marker.textColor, font: @marker.font, width: (- @tplate.w (* 2 @p)), wrap: true, measure: false, animation: @anim }, { id: @tid, key: @pn.title, x: (+ @tplate.x @p), y: (+ (+ @tplate.y @p) 22), z: @config.z, align: (if @rtl "right" "left"), baseline: "top", color: @title.textColor, font: @title.font, width: (- @tplate.w (* 2 @p)), wrap: true, measure: false, animation: @anim }, { id: (str/concat @config.id ":panel:" @i ":body"), key: @pn.body, x: (+ @tplate.x @p), y: (+ (+ (+ @tplate.y @p) 22) (* @config.titleLines @lineH)), z: @config.z, align: (if @rtl "right" "left"), baseline: "top", color: @body.textColor, font: @body.font, width: (- @tplate.w (* 2 @p)), wrap: true, measure: false, animation: @anim }] (if @horiz [{ id: @tid, key: @pn.title, x: (- (+ @tplate.x (/ @tplate.w 2)) (/ (- @tplate.h (* 2 @p)) 2)), y: (- (+ @tplate.y (/ @tplate.h 2)) (/ @lineH 2)), z: @config.z, align: "left", baseline: "top", color: @title.textColor, font: @title.font, width: (- @tplate.h (* 2 @p)), wrap: false, measure: false, rotate: -1.5707963, pivotX: (+ @tplate.x (/ @tplate.w 2)), pivotY: (+ @tplate.y (/ @tplate.h 2)) }] [{ id: @tid, key: @pn.title, x: (+ @tplate.x @p), y: (- (+ @tplate.y (/ @tplate.h 2)) (/ @lineH 2)), z: @config.z, align: (if @rtl "right" "left"), baseline: "top", color: @title.textColor, font: @title.font, width: (- @tplate.w (* 2 @p)), wrap: false, measure: false }])))) { i: @i, tid: @tid, nodes: [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":panel:" @i ":slot"), anchor: "top-left", position: { x: @cur.x, y: @cur.y, z: @config.z }, width: @cur.w, height: @cur.h, fill: @surf.fill, corners: @surf.corners, hit: false }, { type: draw-group, id: (str/concat @config.id ":panel:" @i ":clip"), position: { x: 0, y: 0 }, clip: (str/concat "M " (+ @cur.x @mr) " " @cur.y " L " (- (+ @cur.x @cur.w) @mr) " " @cur.y " A " @mr " " @mr " 0 0 1 " (+ @cur.x @cur.w) " " (+ @cur.y @mr) " L " (+ @cur.x @cur.w) " " (- (+ @cur.y @cur.h) @mr) " A " @mr " " @mr " 0 0 1 " (- (+ @cur.x @cur.w) @mr) " " (+ @cur.y @cur.h) " L " (+ @cur.x @mr) " " (+ @cur.y @cur.h) " A " @mr " " @mr " 0 0 1 " @cur.x " " (- (+ @cur.y @cur.h) @mr) " L " @cur.x " " (+ @cur.y @mr) " A " @mr " " @mr " 0 0 1 " (+ @cur.x @mr) " " @cur.y " Z"), items: [{ type: draw-sprite, id: (str/concat @config.id ":panel:" @i ":image"), asset: { url: @pn.image }, fit: "cover", anchor: "top-left", position: { x: @cur.x, y: @cur.y, z: @config.z }, width: @cur.w, height: @cur.h }] }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":panel:" @i ":label"), anchor: "top-left", position: { x: @plate.x, y: @plate.y, z: @config.z }, width: @plate.w, height: @plate.h, fill: @surf.fill, stroke: @surf.stroke, strokeWidth: @surf.strokeWidth, corners: @surf.corners, shadow: @surf.shadow, hit: false }, { type: draw-shape, shape: "rect", id: @pid, anchor: "top-left", position: { x: @cur.x, y: @cur.y, z: @config.z }, width: @cur.w, height: @cur.h, fill: "rgba(0,0,0,0)", hit: true, semantic: { role: @config.role, labelledBy: @tid, disabled: false, order: (+ @config.order @i), focused: (= @entity.focus @i) } }], texts: @tx }))))))))
+                (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (array/flatten (array/map @parts (fn q @q.nodes))), texts: (array/flatten (array/map @parts (fn q @q.texts))) })))))
+      ACC_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @config.panels) 0) (= (array/len @entity.poses) (array/len @config.panels)) (= (array/len @entity.toP) (array/len @config.panels))))
+    }
+
+    emits {
+      ACC_LAYOUT -> internal {
+        animate : boolean!
+      }
+        @description "Lay the panels out from the stored rect and the open panel; animate moves them from where they are."
+        @tier "internal"
+      ACC_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the panels at their current places."
+        @tier "internal"
+      RASM_TWEEN_START -> external {
+        id : string!
+        from : number!
+        to : number!
+        durationMs : number!
+      }
+        @description "Start the move between two layouts on the sibling tween with this accordion's id."
+        @tier "domain"
+      @config.action -> external {
+        index : number!
+      }
+        @description "A panel was released over itself or activated from the keyboard; index is its position in the panels."
+        @tier "domain"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The panels: the slot, the clipped picture, the label plate and the hit region of each, and the open panel's marker, title and body or each compressed panel's title."
+        @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The accordion's height after each layout: its configured height when horizontal, the open panel plus the rails when vertical."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the accordion's rect when it is placed."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain that `variants` holds, none of them keeping the configured shape."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction: rtl mirrors a horizontal accordion and aligns the text right."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A press and a release over the same panel opens it; with `hover` on, entering a panel opens it."
+      RASM_FOCUS { id : string! }
+        @description "The panel whose plate id this is takes the focused look and opens; any other id clears the focus."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of the panel whose plate id this is opens it."
+      RASM_TWEEN_STEP { id : string!  value : number!  t : number! }
+        @description "One step of the accordion's move: every panel is placed t of the way from its old place to its new one."
+    }
+
+    config {
+      id : string = "accordion"
+        @label "Id"
+        @description "The accordion's RASM_PLACE key, paint id and tween id."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      panels : [AccPanel] = []
+        @label "Panels"
+        @description "In order: each panel's marker, title and body (message keys), its picture URL and the alt key naming the picture."
+        @tier "presentation"
+      start : number = 0
+        @label "Starts open"
+        @description "The index of the panel that starts open."
+        @tier "presentation"
+      axis : "horizontal" | "vertical" = "horizontal"
+        @label "Axis"
+        @description "horizontal puts the panels side by side across the rect; vertical stacks them, each as wide as the rect."
+        @tier "presentation"
+      height : number = 520
+        @label "Height"
+        @description "The accordion's height in px when horizontal."
+        @tier "presentation"
+      rail : number = 76
+        @label "Rail"
+        @description "A compressed panel's size along the axis in px; at least 44 keeps it a touch target."
+        @tier "presentation"
+      openSize : number = 380
+        @label "Open size"
+        @description "The open panel's height in px when vertical; a horizontal accordion gives it whatever the rail panels leave."
+        @tier "presentation"
+      gap : number = 10
+        @label "Gap"
+        @description "Space between panels in px."
+        @tier "presentation"
+      margin : number = 10
+        @label "Plate margin"
+        @description "Space between a panel's edge and its label plate in px."
+        @tier "presentation"
+      padding : number = 16
+        @label "Padding"
+        @description "Space inside a label plate in px."
+        @tier "presentation"
+      plateH : number = 190
+        @label "Open plate height"
+        @description "The label plate of the open panel in px, holding its marker, title and body."
+        @tier "presentation"
+      railPlateH : number = 230
+        @label "Rail plate height"
+        @description "The label plate of a compressed panel when horizontal, in px, holding its title turned along the rail."
+        @tier "presentation"
+      titleLines : number = 2
+        @label "Title lines"
+        @description "The lines the open panel's title is given before its body starts."
+        @tier "presentation"
+      titleLineH : number = 26
+        @label "Title line height"
+        @description "One title line's height in px."
+        @tier "presentation"
+      hover : boolean = false
+        @label "Open on hover"
+        @description "A pointer entering a panel opens it. Off, only a tap, a key or focus opens it."
+        @tier "presentation"
+      moveMs : number = 480
+        @label "Move"
+        @description "How long opening a panel takes, in ms."
+        @tier "presentation"
+      role : "button" | "tab" = "button"
+        @label "Role"
+        @description "What a panel announces to assistive technology."
+        @tier "presentation"
+      order : number = 0
+        @label "Order"
+        @description "Reading order of the first panel's semantic node; panel i takes order + i."
+        @tier "domain"
+      action : event = RASM_ACTION
+        @label "Action"
+        @description "The event a panel emits, with `{ index }`, when it is released over itself or activated from the keyboard."
+        @tier "domain"
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant (desktop and wide stop at desktop), then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string AccShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the axis, rail, openSize and height a variant names replace the configured ones while that breakpoint is current. A phone variant also applies to tablet unless tablet is given, so give every breakpoint's shape."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmAccordionStart -> RasmAccordion
+}

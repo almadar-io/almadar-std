@@ -1,0 +1,244 @@
+app std-rasm-zigzag [
+  version: "0.1.0",
+  description: "std-rasm-zigzag — zig-zag feature rows on the Rasm canvas, painted from the records RASM_CARDS hands it: one row per record, a picture on one half and its text on the other, the picture swapping sides every row (the first on the reading-start side, mirrored under rtl). A row's text is an optional numeral (the record's position as two digits, with `numbered`), the badge, the title and the body, in the text/numeral/idle, text/eyebrow/idle, text/title/idle (falling back to text/card/idle) and text/body/idle looks, centred against the picture; the picture is cover-cropped into the card/media/idle corners (falling back to card/surface/idle) over its slot fill. On a std-rasm-surface with pageScroll on each row arrives the first time its top crosses the `viewAt` line of the view: its picture slides in from the side it sits on and its text from the other side while both fade in, `staggerMs` after the row before it, once, and a row already above the line when the page loads arrives at once. Under reduced motion (RASM_MOTION { reduced: true }) every row is simply shown. With variantBy breakpoint and `variants` a row's height, picture height, gap and whether the picture stacks above the text (stacked, the shape for a phone) change per breakpoint. It reports its height in RASM_EXTENT after every layout and holds no rows of its own: a program reads its data and sends the records."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLook = { inset : RasmInset, fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, rotate : number?, pivotX : number?, pivotY : number? }
+type ZigKeyframe = { at : number!, opacity : number, offsetX : number, offsetY : number }
+type ZigAnimation = { durationMs : number!, loop : boolean!, keyframes : [ZigKeyframe]!, startMs : number }
+type ZigCard = { title : string!, body : string, badge : string, image : string }
+type ZigPart = { i : number!, nodes : [node]! }
+type ZigShape = { rowH : number, picH : number, gap : number, stacked : boolean }
+
+orbital RasmZigzagOrbital {
+  entity RasmZigzagRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rows' rect from RASM_PLACE, null until placed." = null
+    cards : [ZigCard] @description "The records the last RASM_CARDS sent." = []
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced; rtl mirrors every row." = "ltr"
+    variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    offset : number @description "The page scroll from RASM_PAGE_SCROLLED." = 0
+    reduced : boolean @description "True when the viewer asked for reduced motion." = false
+    seen : [number] @description "Per row, the epoch-ms instant it began to arrive, 0 while it waits." = []
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmZigzag -> RasmZigzagRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ZIG_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ZIG_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ZIG_PAINT { n: @entity.paints })
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (emit ZIG_SEE { n: @entity.paints })
+      RASM_PAGE_SCROLLED -> ready
+        (set @entity.offset ?offset)
+        (emit ZIG_SEE { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (emit ZIG_SEE { n: @entity.paints })
+      RASM_PLACE -> ready when (not (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))))
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (emit ZIG_SEE { n: @entity.paints })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_CARDS -> ready when (= ?id @config.id)
+        (set @entity.cards ?cards)
+        (set @entity.seen (array/map (array/range (array/len ?cards)) (fn i 0)))
+        (emit ZIG_SEE { n: @entity.paints })
+      RASM_CARDS -> ready when (!= ?id @config.id)
+      ZIG_SEE -> ready when (and (!= @entity.rect null) (> (array/len @entity.cards) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sh (object/get @config.variants @entity.variant null)))
+          (let ((rowH (if (default (if (= @sh null) null @sh.stacked) @config.stacked) (+ (+ (default (if (= @sh null) null @sh.picH) @config.picH) 16) (+ (+ (if @config.numbered @config.numeralH 0) @config.badgeH) (+ (* @config.titleLines @config.titleLineH) (+ 10 @config.bodyH)))) (default (if (= @sh null) null @sh.rowH) @config.rowH))) (gap (default (if (= @sh null) null @sh.gap) @config.gap)))
+            (let ((arrived (array/filter (array/range (array/len @entity.cards)) (fn i (and (<= (default (array/nth @entity.seen @i) 0) 0) (> @entity.viewH 0) (< (+ @r.y (* @i (+ @rowH @gap))) (+ @entity.offset (* @entity.viewH @config.viewAt))))))))
+              (do
+                (set @entity.seen (array/map (array/range (array/len @entity.cards)) (fn i (let ((was (default (array/nth @entity.seen @i) 0))) (if (> @was 0) @was (let ((pos (array/indexOf @arrived @i))) (if (>= @pos 0) (+ (time/epoch-ms @now) (* @pos @config.staggerMs)) 0)))))))
+                (set @entity.paints (+ @entity.paints 1))
+                (emit ZIG_PAINT { n: @entity.paints })))))
+      ZIG_SEE -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0)))
+      ZIG_PAINT -> ready when (and (!= @entity.rect null) (> (array/len @entity.cards) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sh (object/get @config.variants @entity.variant null)) (rtl (= @entity.dir "rtl")) (n (array/len @entity.cards)) (card (default (object/get @entity.looks "card/surface/idle" null) (default (object/get @entity.looks "stack/card/idle" null) {}))) (numeral (default (object/get @entity.looks "text/numeral/idle" null) {})) (badge (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (title (default (object/get @entity.looks "text/title/idle" null) (default (object/get @entity.looks "text/card/idle" null) {}))) (body (default (object/get @entity.looks "text/body/idle" null) {})) (med (default (object/get @entity.looks "card/media/idle" null) {})))
+          (let ((rowH (default (if (= @sh null) null @sh.rowH) @config.rowH)) (picH (default (if (= @sh null) null @sh.picH) @config.picH)) (gap (default (if (= @sh null) null @sh.gap) @config.gap)) (stacked (default (if (= @sh null) null @sh.stacked) @config.stacked)))
+            (let ((blockH (+ (+ (if @config.numbered @config.numeralH 0) @config.badgeH) (+ (* @config.titleLines @config.titleLineH) (+ 10 @config.bodyH)))) (mr (default (array/first (default (if (= @med.corners null) @card.corners.radius @med.corners.radius) [0])) 0)))
+              (let ((total (if @stacked (+ (+ @picH 16) @blockH) @rowH)))
+                (let ((parts : [ZigPart] (array/map (array/range @n) (fn i (let ((c (default (array/nth @entity.cards @i) { title: "" })) (y (+ @r.y (* @i (+ @total @gap)))) (st (default (array/nth @entity.seen @i) 0)) (left (if @rtl (= (math/mod @i 2) 1) (= (math/mod @i 2) 0)))) (let ((picW (if @stacked @r.w (* (- @r.w @config.colGap) @config.picFrac))) (url (object/get @c @config.media ""))) (let ((textW (if @stacked @r.w (- (- @r.w @config.colGap) @picW))) (picX (if (or @stacked @left) @r.x (- (+ @r.x @r.w) @picW))) (pich (if @stacked @picH @total)) (side (if @left -1 1))) (let ((textX (if @stacked @r.x (if @left (+ (+ @r.x @picW) @config.colGap) @r.x))) (textY (if @stacked (+ (+ @y @picH) 16) (+ @y (/ (- @total @blockH) 2)))) (shown (or @entity.reduced (> @st 0))) (picAnim { durationMs: @config.arriveMs, loop: false, startMs: @st, keyframes: [{ at: 0, opacity: 0, offsetX: (* @side @config.slidePx), offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] }) (txtAnim { durationMs: @config.arriveMs, loop: false, startMs: @st, keyframes: [{ at: 0, opacity: 0, offsetX: (* (- 0 @side) @config.slidePx), offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] }) (hidden { durationMs: 1, loop: false, startMs: 0, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 0, offsetX: 0, offsetY: 0 }] }) (still { durationMs: 1, loop: false, startMs: 0, keyframes: [{ at: 0, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] }))
+                  (let ((al (if @rtl "right" "left")) (tx (if @rtl (- (+ @textX @textW) 0) @textX)) (numY @textY) (badgeY (+ @textY (if @config.numbered @config.numeralH 0))))
+                    (let ((titleY (+ @badgeY @config.badgeH)) (num (str/concat (if (< (+ @i 1) 10) "0" "") (+ @i 1))))
+                      (let ((bodyY (+ (+ @titleY (* @config.titleLines @config.titleLineH)) 10)))
+                        { i: @i, nodes: [{ type: draw-group, id: (str/concat @config.id ":row:" @i ":pic"), position: { x: 0, y: 0 }, animation: (if (and @shown (or @entity.reduced (> @st 0))) (if @entity.reduced @still @picAnim) @hidden), items: (array/concat [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":row:" @i ":slot"), anchor: "top-left", position: { x: @picX, y: @y, z: @config.z }, width: @picW, height: @pich, fill: @med.fill, corners: (if (= @med.corners null) @card.corners @med.corners), hit: false }] (if (= @url "") [] [{ type: draw-group, id: (str/concat @config.id ":row:" @i ":clip"), position: { x: 0, y: 0 }, clip: (str/concat "M " (+ @picX @mr) " " @y " L " (- (+ @picX @picW) @mr) " " @y " A " @mr " " @mr " 0 0 1 " (+ @picX @picW) " " (+ @y @mr) " L " (+ @picX @picW) " " (- (+ @y @pich) @mr) " A " @mr " " @mr " 0 0 1 " (- (+ @picX @picW) @mr) " " (+ @y @pich) " L " (+ @picX @mr) " " (+ @y @pich) " A " @mr " " @mr " 0 0 1 " @picX " " (- (+ @y @pich) @mr) " L " @picX " " (+ @y @mr) " A " @mr " " @mr " 0 0 1 " (+ @picX @mr) " " @y " Z"), items: [{ type: draw-sprite, id: (str/concat @config.id ":row:" @i ":image"), asset: { url: @url }, fit: "cover", anchor: "top-left", position: { x: @picX, y: @y, z: @config.z }, width: @picW, height: @pich }] }])) }, { type: draw-group, id: (str/concat @config.id ":row:" @i ":text"), position: { x: 0, y: 0 }, animation: (if @shown (if @entity.reduced @still @txtAnim) @hidden), items: (array/concat (if @config.numbered [{ type: draw-text, id: (str/concat @config.id ":row:" @i ":num"), text: @num, anchor: "top-left", position: { x: @tx, y: @numY, z: @config.z }, align: @al, baseline: "top", color: @numeral.textColor, font: @numeral.font, width: @textW, wrap: false, hit: false }] []) [{ type: draw-text, id: (str/concat @config.id ":row:" @i ":tag"), text: (default @c.badge ""), anchor: "top-left", position: { x: @tx, y: @badgeY, z: @config.z }, align: @al, baseline: "top", color: @badge.textColor, font: @badge.font, width: @textW, wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":row:" @i ":title"), text: @c.title, anchor: "top-left", position: { x: @tx, y: @titleY, z: @config.z }, align: @al, baseline: "top", color: @title.textColor, font: @title.font, width: @textW, height: (* @config.titleLines @config.titleLineH), fit: "shrink", minSize: @config.titleMinSize, wrap: true, hit: false }, { type: draw-text, id: (str/concat @config.id ":row:" @i ":body"), text: (default @c.body ""), anchor: "top-left", position: { x: @tx, y: @bodyY, z: @config.z }, align: @al, baseline: "top", color: @body.textColor, font: @body.font, width: @textW, height: @config.bodyH, fit: "shrink", minSize: @config.bodyMinSize, wrap: true, hit: false }]) }] })))))))))))
+                  (do
+                    (emit RASM_EXTENT { n: ?n, id: @config.id, w: @r.w, h: (- (+ (* @n (+ @total @gap)) 0) @gap) })
+                    (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/flatten (array/map @parts (fn q @q.nodes))) })))))))
+      ZIG_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0)))
+    }
+
+    emits {
+      ZIG_SEE -> internal {
+        n : number!
+      }
+        @description "Note which rows have reached the view line and start their arrival."
+        @tier "internal"
+      ZIG_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the rows from the stored rect, looks, records and arrivals."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The rows: for each, its picture group and its text group, each carrying its own arrival."
+        @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The rows' height after each paint: every row as tall as the shape says, plus the gaps."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rows' rect when it is placed."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view arrival is measured against."
+      RASM_PAGE_SCROLLED { offset : number!  max : number! }
+        @description "Take the page scroll; each row arrives the first time its top reaches the view line."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain that `variants` holds, none of them keeping the configured shape."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction: rtl mirrors every row and aligns the text right."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference; reduced, every row is shown with no slide."
+      RASM_CARDS { id : string!  cards : [ZigCard]! }
+        @description "The records to paint, for the rows with this id."
+    }
+
+    config {
+      id : string = "rows"
+        @label "Id"
+        @description "The rows' RASM_PLACE key, paint id and RASM_CARDS address."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      media : string = "image"
+        @label "Media field"
+        @description "The name of the record field holding the picture URL."
+        @tier "presentation"
+      rowH : number = 340
+        @label "Row height"
+        @description "Each row's height in px when the picture sits beside the text."
+        @tier "presentation"
+      picH : number = 240
+        @label "Picture height"
+        @description "The picture's height in px when it stacks above the text."
+        @tier "presentation"
+      picFrac : number = 0.5
+        @label "Picture share"
+        @description "The fraction of the row, less the column gap, the picture takes when it sits beside the text."
+        @tier "presentation"
+      colGap : number = 56
+        @label "Column gap"
+        @description "Space between the picture and the text in px when they sit side by side."
+        @tier "presentation"
+      gap : number = 40
+        @label "Row gap"
+        @description "Space between rows in px."
+        @tier "presentation"
+      stacked : boolean = false
+        @label "Stacked"
+        @description "True puts the picture above the text in every row, as wide as the rows, instead of beside it."
+        @tier "presentation"
+      numbered : boolean = true
+        @label "Numbered"
+        @description "Paint each row's position as two digits above its badge, in text/numeral/idle."
+        @tier "presentation"
+      numeralH : number = 56
+        @label "Numeral height"
+        @description "The line the numeral takes in px."
+        @tier "presentation"
+      badgeH : number = 26
+        @label "Badge height"
+        @description "The line the badge takes above the title in px."
+        @tier "presentation"
+      titleLines : number = 2
+        @label "Title lines"
+        @description "The lines kept for a title; a longer title shrinks to titleMinSize."
+        @tier "presentation"
+      titleLineH : number = 34
+        @label "Title line height"
+        @description "One title line's height in px."
+        @tier "presentation"
+      titleMinSize : number = 18
+        @label "Title smallest size"
+        @description "The font size in px a long title shrinks to before it ends in an ellipsis."
+        @tier "presentation"
+      bodyH : number = 96
+        @label "Body height"
+        @description "The room for the body in px; a longer body shrinks to bodyMinSize."
+        @tier "presentation"
+      bodyMinSize : number = 14
+        @label "Body smallest size"
+        @description "The font size in px a long body shrinks to before it ends in an ellipsis."
+        @tier "presentation"
+      viewAt : number = 0.85
+        @label "View line"
+        @description "Where in the view, as a fraction of its height from the top, a row's top must pass for the row to arrive."
+        @tier "presentation"
+      arriveMs : number = 620
+        @label "Arrival"
+        @description "How long one row takes to slide and fade in, in ms."
+        @tier "presentation"
+      slidePx : number = 96
+        @label "Slide"
+        @description "How far in px the picture and the text start from their places."
+        @tier "presentation"
+      staggerMs : number = 90
+        @label "Stagger"
+        @description "The delay between one row's arrival and the next when several arrive at once, in ms."
+        @tier "presentation"
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant (desktop and wide stop at desktop), then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string ZigShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the rowH, picH, gap and stacked a variant names replace the configured ones while that breakpoint is current. A phone variant also applies to tablet unless tablet is given, so give every breakpoint's shape."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmZigzagStart -> RasmZigzag
+}

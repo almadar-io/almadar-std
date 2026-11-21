@@ -4,10 +4,12 @@ app std-rasm-page [
   description: "std-rasm-page — the page shell for a composed Rasm page and nothing else: a Theme (std-rasm-theme, knobs preset and style), a Surface that scrolls inside itself (pageScroll on), a Focus, and a root Page stack whose children are the `sections` knob. It has no bar, hero, cards, emblem or text. A program extends the orbital RasmPage (`orbital MyPage = Shell.orbitals.RasmPage { ... }`), sets `sections`, and adds its own traits from the kit (grids, texts, images, materials, pressables, presence, scrub, ribbon, window, ticket, balloon), each wiring its `listens` to Theme.RASM_THEME, Theme.RASM_STYLE, Surface.RASM_DIRECTION, Surface.RASM_RESIZE as it needs and to its parent's RASM_PLACE, and wires every grid, stack and section atom it adds with `Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT` when it declares breakpoint variants (variantBy breakpoint) (the Theme and the root Page stack here already do), and adds orbital-level routes `X.RASM_PAINT -> Surface.RASM_PAINT` for every painting trait and `X.RASM_EXTENT -> Page.RASM_EXTENT` for every stack whose height the page measures; pressables join focus through `Focus` config order."
 ]
 
+type RasmTransition = { durationMs : number!, distance : number!, staggerMs : number!, owners : [string]!, still : [string]! }
 type RasmStackShape = { axis : "vertical" | "horizontal" | "layer"!, gap : number!, padding : number!, look : string!, children : [RasmChild]! }
 type RasmChild = { id : string!, size : "fixed" | "fill" | "measure"!, main : number, cross : number, min : number }
 
 uses ThemeAtom from "std/behaviors/std-rasm-theme"
+uses TrendAtom from "std/behaviors/std-rasm-trend"
 uses SurfaceAtom from "std/behaviors/std-rasm-surface"
 uses StackAtom from "std/behaviors/std-rasm-stack"
 uses FocusAtom from "std/behaviors/std-rasm-focus"
@@ -31,6 +33,16 @@ orbital RasmPage {
       Surface.RASM_BOOT -> RASM_BOOT
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
       Cycle.RASM_THEME_SET -> RASM_THEME_SET
+      Trend.RASM_TREND -> RASM_TREND
+    }
+  }
+
+  trait Trend = TrendAtom.traits.RasmTrend {
+    config {
+      trend: @config.trend
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
     }
   }
 
@@ -45,6 +57,7 @@ orbital RasmPage {
       pageScroll: true
       fixed: (array/concat @config.fixed (let ((ids : [string] (if @config.switcher ["themeBar", "themePrev", "themeLabel", "themeNext"] []))) @ids))
       fixedOn: @config.fixedOn
+      transition: @config.transition
       scrollReportMs: 120
       margin: 0
     }
@@ -69,6 +82,7 @@ orbital RasmPage {
       Surface.RASM_KEY -> RASM_KEY
       Surface.RASM_ACCESS -> RASM_ACCESS
       Surface.RASM_POINTER -> RASM_POINTER
+      Surface.RASM_HIDDEN -> RASM_HIDDEN
     }
   }
 
@@ -88,7 +102,7 @@ orbital RasmPage {
     listens {
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
       Theme.RASM_THEME -> RASM_THEME
-      Theme.RASM_STYLE -> RASM_STYLE
+      Trend.RASM_TREND -> RASM_TREND
       Surface.RASM_DIRECTION -> RASM_DIRECTION
       Surface.RASM_PLACE -> RASM_PLACE
       Surface.RASM_MEASURED -> RASM_MEASURED
@@ -118,7 +132,7 @@ orbital RasmPage {
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
-      Theme.RASM_STYLE -> RASM_STYLE
+      Trend.RASM_TREND -> RASM_TREND
       Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
       Surface.RASM_RESIZE -> RASM_RESIZE
       Page.RASM_PLACE -> RASM_PLACE
@@ -242,6 +256,10 @@ orbital RasmPage {
       @label "Theme switcher"
       @description "On, a small panel pinned to the top corner at the reading end (right under ltr, left under rtl) steps the page through the art directions the Cycle trait lists (one per Rasm style that has a theme file: its program theme key, style and catalog label; a composing program must declare these theme keys in its `themes` list) with previous and next buttons and shows the current entry's label; each step switches the viewer's theme and the Rasm style together."
       @tier "presentation"
+    trend : string = "default"
+      @label "Trend"
+      @description "The layout and motion trend the page demonstrates (a std-rasm-trend name); the style is surface only."
+      @tier "presentation"
     switcherStart : string = ""
       @label "Switcher start"
       @description "The style of the art direction the page starts in."
@@ -254,7 +272,11 @@ orbital RasmPage {
       @label "Fixed on"
       @description "The breakpoints where the fixed ids stay in place; empty keeps them in place at every breakpoint."
       @tier "presentation"
+    transition : RasmTransition = { durationMs: 0, distance: 0, staggerMs: 0, owners: [], still: [] }
+      @label "Content transition"
+      @description "How content a trait swaps with RASM_VISIBLE moves on the surface: duration, slide distance, stagger, the owners whose swaps transition and the paint ids that always swap at once (a tab strip, a wizard, a scroll-driven switcher)."
+      @tier "presentation"
   }
 
-  page "/page" as RasmPageRoute -> Theme, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel
+  page "/page" as RasmPageRoute -> Theme, Trend, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel
 }

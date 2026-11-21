@@ -1,0 +1,146 @@
+app std-rasm-frames [
+  version: "0.1.0",
+  description: "std-rasm-frames — an image sequence played over one placed rect, by the page scroll or by the clock. Each declared frame is a picture cropped to the rect and clipped to it. With drive scroll the canvas plays the sequence at the scroll position while the rect crosses the view (progress 0 as its top reaches the `enter` fraction of the view, 1 as its bottom reaches `exit`): frame by frame each one fades in, holds and fades into the next, turning from -swing to swing degrees as it passes, so scrolling back plays it backwards and a pinned rect (a std-rasm-surface `fixed` id) becomes a scrubbed turn-around of one subject. With drive clock the frames play on their own: each shows for `frameMs`, fades into the next over `fadeMs` and drifts sideways across its picture by `drift` of the rect's width, looping forever, as a moving full-bleed hero. A clock sequence stops, showing its first frame as a still, under reduced motion (RASM_MOTION) and while RASM_FRAMES_PAUSED says checked, so a visitor can pause it. With `alt` the sequence is announced once as one image."
+]
+;; @capabilities "image sequence, frame scrub, scroll scrubbed frames, product turntable, moving hero, film strip, slideshow hero"
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmFrame = { url : string! }
+type RasmFrameKey = { at : number!, opacity : number, offsetX : number, rotate : number }
+type RasmFrameClock = { clock : string, from : number, to : number, durationMs : number, loop : boolean, startMs : number, keyframes : [RasmFrameKey]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+
+orbital RasmFramesOrbital {
+  entity RasmFramesRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave the sequence, null until it is placed." = null
+    viewH : number @description "The canvas height from RASM_RESIZE, the view the scroll range is measured in." = 0
+    span : RasmRect? @description "The rect of the rangeAnchor id from RASM_PLACE, null until it is placed or when rangeAnchor is empty." = null
+    startMs : number @description "The first placement instant on the canvas epoch clock: where a clock sequence begins, kept across repaints." = 0
+    still : boolean @description "True while the surface reports reduced motion." = false
+    paused : boolean @description "True while the visitor's pause control is checked." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmFrames -> RasmFramesRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.startMs (if (= @entity.rect null) (time/epoch-ms @now) @entity.startMs))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.span (let ((far (array/find ?placed (fn p (and (!= @config.rangeAnchor "") (= @p.id @config.rangeAnchor)))))) (if (= @far null) @entity.span @far.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FRAMES_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (not (array/some ?placed (fn p (= @p.id @config.id)))) (array/some ?placed (fn p (and (!= @config.rangeAnchor "") (= @p.id @config.rangeAnchor)))))
+        (set @entity.span (let ((far (array/find ?placed (fn p (and (!= @config.rangeAnchor "") (= @p.id @config.rangeAnchor)))))) (if (= @far null) @entity.span @far.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FRAMES_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (or (array/some ?placed (fn p (= @p.id @config.id))) (array/some ?placed (fn p (and (!= @config.rangeAnchor "") (= @p.id @config.rangeAnchor))))))
+      RASM_RESIZE -> ready when (!= ?height @entity.viewH)
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FRAMES_PAINT { n: @entity.paints })
+      RASM_RESIZE -> ready when (= ?height @entity.viewH)
+      RASM_MOTION -> ready
+        (set @entity.still ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FRAMES_PAINT { n: @entity.paints })
+      RASM_FRAMES_PAUSED -> ready
+        (set @entity.paused ?checked)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FRAMES_PAINT { n: @entity.paints })
+      FRAMES_PAINT -> ready
+        (let ((r @entity.rect) (n (array/len @config.frames)))
+          (when (and (!= @r null) (> @r.w 0) (> @r.h 0) (> @n 0) (or (!= @config.drive "scroll") (and (> @entity.viewH 0) (or (= @config.rangeAnchor "") (!= @entity.span null)))))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (let ((none : [RasmText] []) (given : MessageKey? @config.alt)) (if (!= @given null) [{ id: (str/concat @config.id ":alt"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] @none)), nodes: (let ((scrolled (= @config.drive "scroll")) (rests (and (= @config.drive "clock") (or @entity.still @entity.paused))) (cr @config.corner) (bleed (if (= @config.drive "clock") @config.drift 0)) (fade (if (= @config.drive "clock") (/ @config.fadeMs (* @n @config.frameMs)) 0))) (let ((sp (default @entity.span @r)) (iw (* @r.w (+ 1 @bleed))) (ih (* @r.h (+ 1 @bleed))) (ix (- @r.x (/ (* @r.w @bleed) 2))) (iy (- @r.y (/ (* @r.h @bleed) 2))) (pan (/ (* @r.w @bleed) 2)) (step (default (if (> @n 1) (/ 1 (- @n 1)) 1) 1))) [{ type: draw-group, id: (str/concat @config.id ":stage"), position: { x: 0, y: 0 }, clip: { x: @r.x, y: @r.y, width: @r.w, height: @r.h }, items: (array/map (if @rests [0] (array/range 0 @n)) (fn i (let ((target (str/concat @config.id ":target:" @i)) (frame (array/nth @config.frames @i)) (ch (/ @i @n)) (nx (/ (+ @i 1) @n)) (mid (* @i @step))) (let ((keys : [RasmFrameKey] (if @scrolled (array/filter [{ at: (- @mid @step), opacity: 0, rotate: (- 0 @config.swing) }, { at: @mid, opacity: 1, rotate: 0 }, { at: (+ @mid @step), opacity: 0, rotate: @config.swing }] (fn k (and (>= @k.at 0) (<= @k.at 1)))) (array/concat (if (> @i 0) [{ at: (- @ch @fade), opacity: 0, offsetX: @pan }] []) [{ at: @ch, opacity: 1, offsetX: @pan }, { at: (- @nx @fade), opacity: 1, offsetX: (- 0 @pan) }, { at: @nx, opacity: 0, offsetX: (- 0 @pan) }] (if (= @i 0) [{ at: (- 1 @fade), opacity: 0, offsetX: (- 0 @pan) }, { at: 1, opacity: 1, offsetX: @pan }] []))))) { type: draw-group, id: (str/concat @config.id ":frame:" @i), position: { x: 0, y: 0 }, animation: (let ((play : RasmFrameClock (if @scrolled { clock: "scroll", from: (- @sp.y (* @entity.viewH @config.enter)), to: (- (+ @sp.y @sp.h) (* @entity.viewH @config.exit)), keyframes: @keys } { durationMs: (* @n @config.frameMs), loop: true, startMs: @entity.startMs, keyframes: @keys }))) (if @rests null @play)), items: [{ type: draw-group, id: (str/concat @config.id ":source:" @i), position: { x: @ix, y: @iy, z: @config.z }, target: { id: @target, width: (math/round @iw), height: (math/round @ih) }, items: [{ type: draw-sprite, id: (str/concat @config.id ":photo:" @i), asset: { url: @frame.url }, fit: "cover", anchor: "top-left", position: { x: 0, y: 0, z: 0 }, width: (math/round @iw), height: (math/round @ih) }] }, { type: draw-shape, id: (str/concat @config.id ":shot:" @i), shape: rect, anchor: "top-left", position: { x: @ix, y: @iy, z: @config.z }, width: @iw, height: @ih, fill: "primary", corners: { radius: [@cr, @cr, @cr, @cr], kind: "round" }, material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> { return textureSampleLevel(target_a, target_sampler, px.uv, 0.0); }\n", params: [0, 0, 0, 0], live: false, targets: [@target] }, semantic: (let ((given : MessageKey? @config.alt)) (if (and (= @i 0) (!= @given null)) { role: "img", labelledBy: (str/concat @config.id ":alt"), order: (+ @r.y (/ @r.x 10000)) } null)), hit: false }] })))) }])) })))
+    }
+
+    emits {
+      FRAMES_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect, view height, clock start and the still or paused state."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The clipped stage with one animated group per frame; a resting clock sequence paints its first frame alone."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rect when it is placed; the first placement is the clock sequence's start."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view the scroll range is measured in."
+      RASM_MOTION { reduced : boolean! }
+        @description "Take the reduced-motion preference: a clock sequence rests on its first frame while it is on."
+      RASM_FRAMES_PAUSED { checked : boolean! }
+        @description "The pause control changed: a checked control rests a clock sequence on its first frame."
+    }
+
+    config {
+      id : string = "frames"
+        @label "Id"
+        @description "The sequence's RASM_PLACE key and paint id."
+        @tier "presentation"
+      z : number = 1
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      frames : [RasmFrame] = []
+        @label "Frames"
+        @description "The pictures in order, each a url the canvas fetches and crops to cover the rect."
+        @tier "domain"
+      drive : "scroll" | "clock" = "scroll"
+        @label "Drive"
+        @description "scroll plays the frames at the page scroll while the rect crosses the view; clock plays them on their own, looping."
+        @tier "presentation"
+      alt : MessageKey?
+        @label "Alt text"
+        @description "The catalog key of the sequence's text alternative, announced once as one image; leave it unset for a purely decorative sequence."
+        @tier "presentation"
+      rangeAnchor : string = ""
+        @label "Range anchor"
+        @description "With drive scroll, a placed id whose rect gives the scroll range instead of the sequence's own: a pinned sequence plays while the longer section it stays beside crosses the view. Empty uses the sequence's own rect."
+        @tier "presentation"
+      swing : number = 0
+        @label "Swing"
+        @description "With drive scroll, the degrees a frame turns each way as it passes: it rotates from minus swing as it fades in to swing as it fades out, so the cross-fade reads as a turn."
+        @tier "presentation"
+      frameMs : number = 4000
+        @label "Frame time"
+        @description "With drive clock, how long each frame holds before the next fades in, in ms."
+        @tier "policy"
+      fadeMs : number = 900
+        @label "Fade time"
+        @description "With drive clock, how long the cross-fade between two frames lasts, in ms."
+        @tier "policy"
+      drift : number = 0.08
+        @label "Drift"
+        @description "With drive clock, how much wider than the rect each picture is, as a fraction; it pans sideways across that surplus while it shows. 0 keeps every picture still."
+        @tier "presentation"
+      corner : number = 0
+        @label "Corner"
+        @description "The corner radius of each picture in px."
+        @tier "presentation"
+      enter : number = 1
+        @label "Enter at"
+        @description "With drive scroll, where in the view, as a fraction of its height from the top, the rect's top is when the sequence starts: 1 as it comes in at the bottom."
+        @tier "presentation"
+      exit : number = 0
+        @label "Exit at"
+        @description "With drive scroll, where in the view the rect's bottom is when the sequence ends: 0 as it leaves at the top."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmFramesStart -> RasmFrames
+}

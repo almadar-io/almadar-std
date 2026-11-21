@@ -1,0 +1,374 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-dock.lolo",
+  "trait": "RasmDock",
+  "cases": [
+    {
+      "id": "resize takes the size and asks for a placement",
+      "config": {
+        "child": "bar",
+        "edge": "top"
+      },
+      "entity": {
+        "id": "d"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 1000,
+            "height": 700
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "viewW": 1000,
+              "viewH": 700
+            },
+            "emits": [
+              {
+                "event": "DOCK_PLACE"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a stretched bottom dock fills the width at the bottom edge",
+      "config": {
+        "child": "bar",
+        "edge": "bottom",
+        "align": "stretch",
+        "height": 600,
+        "margin": 0
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 1000,
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "bar",
+                      "rect": {
+                        "x": 0,
+                        "y": 200,
+                        "w": 1000,
+                        "h": 600
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a centred top dock sits in the middle under the margin",
+      "config": {
+        "child": "bar",
+        "edge": "top",
+        "align": "center",
+        "width": 600,
+        "height": 56,
+        "margin": 16
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 1000,
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "bar",
+                      "rect": {
+                        "x": 200,
+                        "y": 16,
+                        "w": 600,
+                        "h": 56
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a dock wider than the view is narrowed to fit",
+      "config": {
+        "child": "bar",
+        "edge": "top",
+        "align": "center",
+        "width": 2000,
+        "height": 56,
+        "margin": 16
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 1000,
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "bar",
+                      "rect": {
+                        "x": 16,
+                        "y": 16,
+                        "w": 968,
+                        "h": 56
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an end dock sits at the right under ltr",
+      "config": {
+        "child": "bar",
+        "edge": "top",
+        "align": "end",
+        "width": 300,
+        "height": 48,
+        "margin": 10
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 1000,
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "bar",
+                      "rect": {
+                        "x": 690,
+                        "y": 10,
+                        "w": 300,
+                        "h": 48
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an end dock sits at the left under rtl",
+      "config": {
+        "child": "bar",
+        "edge": "top",
+        "align": "end",
+        "width": 300,
+        "height": 48,
+        "margin": 10
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 1000,
+        "viewH": 800,
+        "dir": "rtl"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "bar",
+                      "rect": {
+                        "x": 10,
+                        "y": 10,
+                        "w": 300,
+                        "h": 48
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an idle breakpoint places nothing",
+      "config": {
+        "child": "bar",
+        "edge": "bottom",
+        "height": 600,
+        "idleOn": [
+          "phone"
+        ]
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 390,
+        "viewH": 800,
+        "bp": "phone"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PLACE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "another breakpoint places",
+      "config": {
+        "child": "bar",
+        "edge": "bottom",
+        "height": 600,
+        "idleOn": [
+          "phone"
+        ]
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 1000,
+        "viewH": 800,
+        "bp": "desktop"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "bar",
+                      "rect": {
+                        "x": 0,
+                        "y": 200,
+                        "w": 1000,
+                        "h": 600
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "before the size is known nothing is placed",
+      "config": {
+        "child": "bar",
+        "edge": "top"
+      },
+      "entity": {
+        "id": "d",
+        "viewW": 0,
+        "viewH": 0
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DOCK_PLACE",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PLACE"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

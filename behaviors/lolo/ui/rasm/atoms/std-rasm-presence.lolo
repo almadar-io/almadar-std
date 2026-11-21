@@ -52,7 +52,7 @@ orbital RasmPresenceOrbital {
               (set @entity.played (array/concat @entity.played (array/map @due (fn v @v.anchor))))
               (emit PRESENCE_GO { order: (array/flatten (array/map @due (fn v @v.order))) }))))
       PRESENCE_CHECK -> ready when (<= @entity.viewH 0)
-      RASM_STYLE -> ready
+      RASM_TREND -> ready
         (set @entity.motion ?motion)
       PRESENCE_GO -> ready
         (emit RASM_ENTER { order: ?order, staggerMs: (if (= @entity.motion null) @config.staggerMs @entity.motion.stagger), entries: (let ((mo @entity.motion)) (if (or (= @mo null) (= @mo.keyframes null)) [] (let ((ks (default @mo.keyframes [])) (ms (default @mo.enterMs 520))) (array/map (array/range 0 (array/len ?order)) (fn i (let ((delay (* @i @mo.stagger))) (let ((dur (+ @ms @delay))) (let ((d (default (/ @delay @dur) 0)) (first (default (array/first @ks) { at: 0, opacity: 1, offsetX: 0, offsetY: 0 }))) { id: (default (array/nth ?order @i) ""), durationMs: @dur, keyframes: (array/concat [{ at: 0, opacity: @first.opacity, offsetX: @first.offsetX, offsetY: @first.offsetY }] (array/map @ks (fn k { at: (+ @d (* @k.at (- 1 @d))), opacity: @k.opacity, offsetX: @k.offsetX, offsetY: @k.offsetY }))) })))))))) })
@@ -67,7 +67,7 @@ orbital RasmPresenceOrbital {
         @description "Take the onView anchors' rects as they are placed."
       RASM_RESIZE { width : number!  height : number! }
         @description "Take the canvas height, the view the anchors are measured against."
-      RASM_STYLE { name : string!  layout : RasmLayout!  motion : RasmMotion! }
+      RASM_TREND { name : string!  layout : RasmLayout!  motion : RasmMotion! }
         @description "Take the style's motion: its stagger and its signature's entry keyframes shape every entry from now on."
       RASM_PAGE_SCROLLED { offset : number!  max : number! }
         @description "Take the page scroll and play the onView groups it brought into view."

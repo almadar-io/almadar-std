@@ -1,0 +1,1567 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-plane.lolo",
+  "trait": "RasmPlane",
+  "cases": [
+    {
+      "id": "placed-the-items-sit-at-their-tile-positions",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-another-ids-placement-places-nothing",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 1,
+                  "h": 1
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "RASM_PLACE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-drag-carries-the-items-by-the-pointer-travel",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "plane",
+            "x": 200,
+            "y": 150
+          },
+          "expect": {
+            "state": "dragging"
+          }
+        },
+        {
+          "from": "dragging",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "plane",
+            "x": 250,
+            "y": 170
+          },
+          "expect": {
+            "state": "dragging",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 150,
+                        "y": 120,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 550,
+                        "y": 320,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-move-on-another-id-does-not-drag",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "plane",
+            "x": 200,
+            "y": 150
+          },
+          "expect": {
+            "state": "dragging"
+          }
+        },
+        {
+          "from": "dragging",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "other",
+            "x": 250,
+            "y": 170
+          },
+          "expect": {
+            "state": "dragging",
+            "neverEmits": [
+              "RASM_PLACE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-item-pushed-off-one-edge-comes-back-at-the-other",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 250
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_KEYPRESS",
+          "payload": {
+            "target": "plane",
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false,
+            "ctrl": false,
+            "meta": false
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 850,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 250,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-small-key-move-does-not-wrap",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 100
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_KEYPRESS",
+          "payload": {
+            "target": "plane",
+            "key": "ArrowLeft",
+            "shift": false,
+            "alt": false,
+            "ctrl": false,
+            "meta": false
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 200,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 600,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "arrow-right-on-the-plane-moves-the-view-right",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_KEYPRESS",
+          "payload": {
+            "target": "plane",
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false,
+            "ctrl": false,
+            "meta": false
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": -20,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 380,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-arrow-key-for-another-target-does-nothing",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_KEYPRESS",
+          "payload": {
+            "target": "other",
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false,
+            "ctrl": false,
+            "meta": false
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "RASM_PLACE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-release-hands-the-speed-to-the-inertia",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "plane",
+            "x": 200,
+            "y": 150
+          },
+          "expect": {
+            "state": "dragging"
+          }
+        },
+        {
+          "from": "dragging",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "plane",
+            "x": 250,
+            "y": 150
+          },
+          "expect": {
+            "state": "dragging"
+          }
+        },
+        {
+          "from": "dragging",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "up",
+            "id": "plane",
+            "x": 250,
+            "y": 150
+          },
+          "expect": {
+            "state": "moving"
+          }
+        },
+        {
+          "from": "moving",
+          "event": "PLANE_FRAME",
+          "payload": {},
+          "expect": {
+            "state": "moving",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 175,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 575,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-release-at-rest-settles-at-once",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "plane",
+            "x": 200,
+            "y": 150
+          },
+          "expect": {
+            "state": "dragging"
+          }
+        },
+        {
+          "from": "dragging",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "up",
+            "id": "plane",
+            "x": 200,
+            "y": 150
+          },
+          "expect": {
+            "state": "moving"
+          }
+        },
+        {
+          "from": "moving",
+          "event": "PLANE_FRAME",
+          "payload": {},
+          "expect": {
+            "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reduced-motion-has-no-inertia",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "plane",
+            "x": 200,
+            "y": 150
+          },
+          "expect": {
+            "state": "dragging"
+          }
+        },
+        {
+          "from": "dragging",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "plane",
+            "x": 250,
+            "y": 150
+          },
+          "expect": {
+            "state": "dragging"
+          }
+        },
+        {
+          "from": "dragging",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "up",
+            "id": "plane",
+            "x": 250,
+            "y": 150
+          },
+          "expect": {
+            "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "next-glides-toward-the-next-stop",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_PLANE_NEXT",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PLANE_GO",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reduced-motion-next-cuts-to-the-stop-centred",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [
+          "b"
+        ],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_PLANE_NEXT",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 750,
+                        "y": 725,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 150,
+                        "y": 125,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-next-with-no-stops-does-nothing",
+      "config": {
+        "id": "plane",
+        "items": [
+          {
+            "id": "a",
+            "x": 100,
+            "y": 100,
+            "w": 100,
+            "h": 50
+          },
+          {
+            "id": "b",
+            "x": 500,
+            "y": 300,
+            "w": 100,
+            "h": 50
+          }
+        ],
+        "stops": [],
+        "tileW": 1000,
+        "tileH": 800,
+        "friction": 0.93,
+        "keyStep": 120
+      },
+      "entity": {
+        "id": "p"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "plane",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "a",
+                      "rect": {
+                        "x": 100,
+                        "y": 100,
+                        "w": 100,
+                        "h": 50
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "rect": {
+                        "x": 500,
+                        "y": 300,
+                        "w": 100,
+                        "h": 50
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "idle",
+          "event": "RASM_PLANE_NEXT",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "RASM_PLACE"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

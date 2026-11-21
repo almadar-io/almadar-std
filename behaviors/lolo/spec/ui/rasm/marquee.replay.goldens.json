@@ -1,0 +1,1299 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-marquee.lolo",
+  "trait": "RasmMarquee",
+  "cases": [
+    {
+      "id": "a-time-loop-paints-its-items-once-placed-looked-up-and-sized",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": null,
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "m",
+                "rect": {
+                  "x": 0,
+                  "y": 100,
+                  "w": 800,
+                  "h": 100
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-placement-for-another-band-paints-nothing",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": null,
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 0,
+                  "y": 100,
+                  "w": 800,
+                  "h": 100
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-view-height-waits",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 0,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-items-paint-nothing",
+      "config": {
+        "id": "m",
+        "items": [],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pausing-stops-the-loop-and-keeps-where-it-was",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MARQUEE_PAUSE",
+          "payload": {
+            "checked": true
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "paused": true
+            },
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-running-band-is-not-paused",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "pausing-twice-in-a-row-repaints-nothing-the-second-time",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000,
+        "paused": true,
+        "phase": 0.25
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MARQUEE_PAUSE",
+          "payload": {
+            "checked": true
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-resuming-a-band-that-is-not-paused-repaints-nothing",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MARQUEE_PAUSE",
+          "payload": {
+            "checked": false
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resuming-a-paused-band-sets-the-loop-going-again",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000,
+        "paused": true,
+        "phase": 0.25
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MARQUEE_PAUSE",
+          "payload": {
+            "checked": false
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "paused": false
+            },
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "reduced-motion-is-taken-and-repaints",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "reduced": true
+            },
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-motion-allowed-leaves-the-flag-off",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          },
+          {
+            "text": "b"
+          }
+        ],
+        "periodMs": 10000
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 100,
+          "w": 800,
+          "h": 100
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": false
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "reduced": false
+            },
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "clock-scroll-travels-the-line-on-the-page-scroll",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll",
+        "travel": 0.5
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 0,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "left",
+                      "baseline": "middle",
+                      "color": "foreground",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "text",
+                      "level": null,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": {
+                        "clock": "scroll",
+                        "from": 600,
+                        "to": 1400,
+                        "keyframes": [
+                          {
+                            "at": 0,
+                            "offsetX": 300
+                          },
+                          {
+                            "at": 1,
+                            "offsetX": -300
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "direction-end-moves-the-scroll-line-the-other-way",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll",
+        "travel": 0.5,
+        "direction": "end"
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 0,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "left",
+                      "baseline": "middle",
+                      "color": "foreground",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "text",
+                      "level": null,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": {
+                        "clock": "scroll",
+                        "from": 600,
+                        "to": 1400,
+                        "keyframes": [
+                          {
+                            "at": 0,
+                            "offsetX": -300
+                          },
+                          {
+                            "at": 1,
+                            "offsetX": 300
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "rtl-mirrors-the-scroll-line-and-starts-at-the-right-edge",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll",
+        "travel": 0.5
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "rtl"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 600,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "right",
+                      "baseline": "middle",
+                      "color": "foreground",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "text",
+                      "level": null,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": {
+                        "clock": "scroll",
+                        "from": 600,
+                        "to": 1400,
+                        "keyframes": [
+                          {
+                            "at": 0,
+                            "offsetX": -300
+                          },
+                          {
+                            "at": 1,
+                            "offsetX": 300
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reduced-motion-leaves-the-scroll-line-at-rest",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll",
+        "travel": 0.5
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000,
+        "reduced": true
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 0,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "left",
+                      "baseline": "middle",
+                      "color": "foreground",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "text",
+                      "level": null,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tone-inverse-reads-the-inverse-look",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll",
+        "tone": "inverse"
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000,
+        "reduced": true
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 0,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "left",
+                      "baseline": "middle",
+                      "color": "#FFFFFF",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "text",
+                      "level": null,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-heading-band-announces-its-first-item-as-a-heading",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll",
+        "heading": true,
+        "headingLevel": 2
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000,
+        "reduced": true
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 0,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "left",
+                      "baseline": "middle",
+                      "color": "foreground",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "heading",
+                      "level": 2,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-fill-paints-a-full-bleed-rect-behind-the-text",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll",
+        "fill": "primary"
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000,
+        "reduced": true
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [
+                    {
+                      "type": "draw-shape",
+                      "shape": "rect",
+                      "id": "m:fill",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 0,
+                        "y": 1200,
+                        "z": 2
+                      },
+                      "width": 600,
+                      "height": 200,
+                      "fill": "primary",
+                      "stroke": "",
+                      "hit": false
+                    }
+                  ],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 0,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "left",
+                      "baseline": "middle",
+                      "color": "foreground",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "text",
+                      "level": null,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-fill-paints-no-rect",
+      "config": {
+        "id": "m",
+        "items": [
+          {
+            "text": "a"
+          }
+        ],
+        "periodMs": 10000,
+        "clock": "scroll"
+      },
+      "entity": {
+        "id": "r",
+        "looks": {
+          "text/title/idle": {
+            "textColor": "foreground",
+            "font": "800 56px display"
+          },
+          "text/title/inverse": {
+            "textColor": "#FFFFFF",
+            "font": "800 56px display"
+          }
+        },
+        "rect": {
+          "x": 0,
+          "y": 1200,
+          "w": 600,
+          "h": 200
+        },
+        "viewH": 600,
+        "startedMs": 1000,
+        "reduced": true
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_DIRECTION",
+          "payload": {
+            "direction": "ltr"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "m",
+                  "z": 2,
+                  "nodes": [],
+                  "texts": [
+                    {
+                      "id": "m:item:0:0",
+                      "key": "a",
+                      "x": 0,
+                      "y": 1300,
+                      "z": 3,
+                      "align": "left",
+                      "baseline": "middle",
+                      "color": "foreground",
+                      "font": "800 56px display",
+                      "width": 600,
+                      "wrap": false,
+                      "role": "text",
+                      "level": null,
+                      "clip": {
+                        "x": 0,
+                        "y": 1200,
+                        "width": 600,
+                        "height": 200
+                      },
+                      "travel": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,451 +1,505 @@
 {
- "atom": "../ui/rasm/atoms/std-rasm-surface.lolo",
- "trait": "RasmSurface",
- "cases": [
-  {
-   "id": "page-scroll-keeps-the-container-height-declares-the-content-height-and-pins-the-ground-and-fixed-paints",
-   "config": {
-    "fill": true,
-    "pageScroll": true,
-    "fixed": [
-     "bar"
-    ],
-    "scrollReportMs": 80
-   },
-   "entity": {
-    "id": "s",
-    "looks": {
-     "surface/ground/idle": {
-      "fill": "#101010"
-     }
-    },
-    "viewW": 400,
-    "viewH": 300,
-    "containerH": 300,
-    "fillMin": 900
-   },
-   "steps": [
+  "atom": "../ui/rasm/atoms/std-rasm-surface.lolo",
+  "trait": "RasmSurface",
+  "cases": [
     {
-     "from": "ready",
-     "event": "RASM_PAINT",
-     "payload": {
-      "id": "bar",
-      "z": 2,
-      "nodes": [
-       {
-        "type": "draw-shape",
-        "shape": "rect",
-        "id": "bar",
-        "position": {
-         "x": 0,
-         "y": 0
+      "id": "page-scroll-keeps-the-container-height-declares-the-content-height-and-pins-the-ground-and-fixed-paints",
+      "config": {
+        "fill": true,
+        "pageScroll": true,
+        "fixed": [
+          "bar"
+        ],
+        "scrollReportMs": 80
+      },
+      "entity": {
+        "id": "s",
+        "looks": {
+          "surface/ground/idle": {
+            "fill": "#101010"
+          }
         },
-        "width": 10,
-        "height": 10
-       }
-      ]
-     },
-     "expect": {
-      "state": "dirty",
-      "neverEmits": [
-       "SURFACE_REPAINT"
-      ]
-     }
-    },
-    {
-     "from": "dirty",
-     "event": "RASM_PAINT",
-     "payload": {
-      "id": "body",
-      "z": 1,
-      "nodes": [
-       {
-        "type": "draw-shape",
-        "shape": "rect",
-        "id": "body",
-        "position": {
-         "x": 0,
-         "y": 0
+        "viewW": 400,
+        "viewH": 300,
+        "containerH": 300,
+        "fillMin": 900
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PAINT",
+          "payload": {
+            "id": "bar",
+            "z": 2,
+            "nodes": [
+              {
+                "type": "draw-shape",
+                "shape": "rect",
+                "id": "bar",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "width": 10,
+                "height": 10
+              }
+            ]
+          },
+          "expect": {
+            "state": "dirty",
+            "neverEmits": [
+              "SURFACE_REPAINT"
+            ]
+          }
         },
-        "width": 10,
-        "height": 10
-       }
+        {
+          "from": "dirty",
+          "event": "RASM_PAINT",
+          "payload": {
+            "id": "body",
+            "z": 1,
+            "nodes": [
+              {
+                "type": "draw-shape",
+                "shape": "rect",
+                "id": "body",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "width": 10,
+                "height": 10
+              }
+            ]
+          },
+          "expect": {
+            "state": "dirty",
+            "neverEmits": [
+              "SURFACE_REPAINT"
+            ]
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 3
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "looks": {
+              "surface/ground/idle": {
+                "fill": "#101010"
+              }
+            },
+            "viewW": 400,
+            "viewH": 300,
+            "containerH": 300,
+            "fillMin": 900,
+            "paints": {
+              "bar": {
+                "id": "bar",
+                "z": 2,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "bar",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              },
+              "body": {
+                "id": "body",
+                "z": 1,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "body",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "scroll.height": 900,
+                  "scroll.event": "SURFACE_SCROLLED",
+                  "scroll.reportMs": 80,
+                  "minHeight": 0,
+                  "worldHeight": 300,
+                  "drawables.0.id": "rasm:ground",
+                  "drawables.0.fixed": true,
+                  "drawables.1.id": "body",
+                  "drawables.1.fixed": null,
+                  "drawables.2.type": "draw-group",
+                  "drawables.2.id": "rasm:fixed:bar",
+                  "drawables.2.fixed": true,
+                  "drawables.2.items.0.id": "bar"
+                }
+              }
+            ]
+          }
+        }
       ]
-     },
-     "expect": {
-      "state": "dirty",
-      "neverEmits": [
-       "SURFACE_REPAINT"
-      ]
-     }
     },
     {
-     "from": "dirty",
-     "event": "SURFACE_REPAINT",
-     "payload": {
-      "n": 3
-     },
-     "options": {
-      "render": true,
-      "renderProps": true
-     },
-     "entity": {
-      "id": "s",
-      "looks": {
-       "surface/ground/idle": {
-        "fill": "#101010"
-       }
-      },
-      "viewW": 400,
-      "viewH": 300,
-      "containerH": 300,
-      "fillMin": 900,
-      "paints": {
-       "bar": {
-        "id": "bar",
-        "z": 2,
-        "nodes": [
-         {
-          "type": "draw-shape",
-          "shape": "rect",
-          "id": "bar",
-          "position": {
-           "x": 0,
-           "y": 0
-          },
-          "width": 10,
-          "height": 10
-         }
-        ],
-        "texts": []
-       },
-       "body": {
-        "id": "body",
-        "z": 1,
-        "nodes": [
-         {
-          "type": "draw-shape",
-          "shape": "rect",
-          "id": "body",
-          "position": {
-           "x": 0,
-           "y": 0
-          },
-          "width": 10,
-          "height": 10
-         }
-        ],
-        "texts": []
-       }
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "rendered": [
-       {
-        "slot": "main",
-        "props": {
-         "scroll.height": 900,
-         "scroll.event": "SURFACE_SCROLLED",
-         "scroll.reportMs": 80,
-         "minHeight": 0,
-         "worldHeight": 300,
-         "drawables.0.id": "rasm:ground",
-         "drawables.0.fixed": true,
-         "drawables.1.id": "body",
-         "drawables.1.fixed": null,
-         "drawables.2.type": "draw-group",
-         "drawables.2.id": "rasm:fixed:bar",
-         "drawables.2.fixed": true,
-         "drawables.2.items.0.id": "bar"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-without-page-scroll-the-canvas-declares-no-scroll-and-pins-nothing",
-   "config": {
-    "fill": true,
-    "fixed": [
-     "bar"
-    ]
-   },
-   "entity": {
-    "id": "s"
-   },
-   "steps": [
-    {
-     "from": "dirty",
-     "event": "SURFACE_REPAINT",
-     "payload": {
-      "n": 3
-     },
-     "options": {
-      "render": true,
-      "renderProps": true
-     },
-     "entity": {
-      "id": "s",
-      "looks": {
-       "surface/ground/idle": {
-        "fill": "#101010"
-       }
-      },
-      "paints": {
-       "bar": {
-        "id": "bar",
-        "z": 2,
-        "nodes": [
-         {
-          "type": "draw-shape",
-          "shape": "rect",
-          "id": "bar",
-          "position": {
-           "x": 0,
-           "y": 0
-          },
-          "width": 10,
-          "height": 10
-         }
-        ],
-        "texts": []
-       }
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "rendered": [
-       {
-        "slot": "main",
-        "props": {
-         "scroll": null,
-         "drawables.0.fixed": false
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "page-scroll-a-resize-keeps-the-canvas-at-the-container-height",
-   "config": {
-    "fill": true,
-    "pageScroll": true
-   },
-   "entity": {
-    "id": "s",
-    "fillMin": 900
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_RESIZE",
-     "payload": {
-      "width": 400,
-      "height": 300
-     },
-     "expect": {
-      "state": "ready",
-      "entity": {
-       "viewH": 300
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-fill-without-page-scroll-grows-the-canvas-to-its-content",
-   "config": {
-    "fill": true
-   },
-   "entity": {
-    "id": "s",
-    "fillMin": 900
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_RESIZE",
-     "payload": {
-      "width": 400,
-      "height": 300
-     },
-     "expect": {
-      "state": "ready",
-      "entity": {
-       "viewH": 900
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-canvas-scroll-report-is-relayed-as-rasm-page-scrolled",
-   "config": {
-    "fill": true,
-    "pageScroll": true
-   },
-   "entity": {
-    "id": "s"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "SURFACE_SCROLLED",
-     "payload": {
-      "offset": 120,
-      "max": 600
-     },
-     "expect": {
-      "state": "ready",
-      "entity": {
-       "scrollY": 120
-      },
-      "emits": [
-       {
-        "event": "RASM_PAGE_SCROLLED",
-        "payload": {
-         "offset": 120,
-         "max": 600
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-scrub-wraps-its-paints-in-a-scroll-clocked-group-and-leaves-the-rest",
-   "config": {
-    "fill": true,
-    "pageScroll": true
-   },
-   "entity": {
-    "id": "s"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "RASM_SCRUB",
-     "payload": {
-      "id": "hero",
-      "paints": [
-       "a"
-      ],
-      "from": 100,
-      "to": 500,
-      "keyframes": [
-       {
-        "at": 0,
-        "opacity": 0
-       },
-       {
-        "at": 1,
-        "opacity": 1
-       }
-      ]
-     },
-     "expect": {
-      "state": "dirty",
-      "neverEmits": [
-       "SURFACE_REPAINT"
-      ]
-     }
-    },
-    {
-     "from": "dirty",
-     "event": "SURFACE_REPAINT",
-     "payload": {
-      "n": 1
-     },
-     "options": {
-      "render": true,
-      "renderProps": true
-     },
-     "entity": {
-      "id": "s",
-      "paints": {
-       "a": {
-        "id": "a",
-        "z": 1,
-        "nodes": [
-         {
-          "type": "draw-shape",
-          "shape": "rect",
-          "id": "a",
-          "position": {
-           "x": 0,
-           "y": 0
-          },
-          "width": 10,
-          "height": 10
-         }
-        ],
-        "texts": []
-       },
-       "b": {
-        "id": "b",
-        "z": 2,
-        "nodes": [
-         {
-          "type": "draw-shape",
-          "shape": "rect",
-          "id": "b",
-          "position": {
-           "x": 0,
-           "y": 0
-          },
-          "width": 10,
-          "height": 10
-         }
-        ],
-        "texts": []
-       }
-      },
-      "scrubs": {
-       "hero": {
-        "id": "hero",
-        "paints": [
-         "a"
-        ],
-        "from": 100,
-        "to": 500,
-        "keyframes": [
-         {
-          "at": 0,
-          "opacity": 0
-         },
-         {
-          "at": 1,
-          "opacity": 1
-         }
+      "id": "control-without-page-scroll-the-canvas-declares-no-scroll-and-pins-nothing",
+      "config": {
+        "fill": true,
+        "fixed": [
+          "bar"
         ]
-       }
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "rendered": [
-       {
-        "slot": "main",
-        "props": {
-         "drawables.0.type": "draw-group",
-         "drawables.0.id": "rasm:scrub:a",
-         "drawables.0.animation.clock": "scroll",
-         "drawables.0.animation.from": 100,
-         "drawables.0.animation.to": 500,
-         "drawables.0.items.0.id": "a",
-         "drawables.1.id": "b"
+      },
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 3
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "looks": {
+              "surface/ground/idle": {
+                "fill": "#101010"
+              }
+            },
+            "paints": {
+              "bar": {
+                "id": "bar",
+                "z": 2,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "bar",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "scroll": null,
+                  "drawables.0.fixed": false
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "page-scroll-a-resize-keeps-the-canvas-at-the-container-height",
+      "config": {
+        "fill": true,
+        "pageScroll": true
+      },
+      "entity": {
+        "id": "s",
+        "fillMin": 900
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 400,
+            "height": 300
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "viewH": 300
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-fill-without-page-scroll-grows-the-canvas-to-its-content",
+      "config": {
+        "fill": true
+      },
+      "entity": {
+        "id": "s",
+        "fillMin": 900
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 400,
+            "height": 300
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "viewH": 900
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-canvas-scroll-report-is-relayed-as-rasm-page-scrolled",
+      "config": {
+        "fill": true,
+        "pageScroll": true
+      },
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SURFACE_SCROLLED",
+          "payload": {
+            "offset": 120,
+            "max": 600
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "scrollY": 120
+            },
+            "emits": [
+              {
+                "event": "RASM_PAGE_SCROLLED",
+                "payload": {
+                  "offset": 120,
+                  "max": 600
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-scrub-wraps-its-paints-in-a-scroll-clocked-group-and-leaves-the-rest",
+      "config": {
+        "fill": true,
+        "pageScroll": true
+      },
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_SCRUB",
+          "payload": {
+            "id": "hero",
+            "paints": [
+              "a"
+            ],
+            "from": 100,
+            "to": 500,
+            "keyframes": [
+              {
+                "at": 0,
+                "opacity": 0
+              },
+              {
+                "at": 1,
+                "opacity": 1
+              }
+            ]
+          },
+          "expect": {
+            "state": "dirty",
+            "neverEmits": [
+              "SURFACE_REPAINT"
+            ]
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "paints": {
+              "a": {
+                "id": "a",
+                "z": 1,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "a",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              },
+              "b": {
+                "id": "b",
+                "z": 2,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "b",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              }
+            },
+            "scrubs": {
+              "hero": {
+                "id": "hero",
+                "paints": [
+                  "a"
+                ],
+                "from": 100,
+                "to": 500,
+                "keyframes": [
+                  {
+                    "at": 0,
+                    "opacity": 0
+                  },
+                  {
+                    "at": 1,
+                    "opacity": 1
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "drawables.0.type": "draw-group",
+                  "drawables.0.id": "rasm:scrub:a",
+                  "drawables.0.animation.clock": "scroll",
+                  "drawables.0.animation.from": 100,
+                  "drawables.0.animation.to": 500,
+                  "drawables.0.items.0.id": "a",
+                  "drawables.1.id": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-to-asks-the-canvas-to-move-the-page-and-counts-the-request",
+      "config": {
+        "fill": true,
+        "pageScroll": true
+      },
+      "entity": {
+        "id": "s",
+        "scrollToN": 0
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_SCROLL_TO",
+          "payload": {
+            "y": 640
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "scrollTo": 640,
+              "scrollToN": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-to-a-negative-offset-asks-for-the-top",
+      "config": {
+        "fill": true,
+        "pageScroll": true
+      },
+      "entity": {
+        "id": "s",
+        "scrollToN": 2
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_SCROLL_TO",
+          "payload": {
+            "y": -50
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "scrollTo": 0,
+              "scrollToN": 3
+            }
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

@@ -1,0 +1,352 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-aperture.lolo",
+  "trait": "RasmAperture",
+  "cases": [
+    {
+      "id": "the-view-sized-and-the-stage-placed-it-paints",
+      "config": {
+        "id": "ap",
+        "url": "https://x/p.jpg",
+        "mask": "M 0 0 L 100 0 L 100 100 Z",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x",
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "ap",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 1000,
+                  "h": 800
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unsized-view-paints-nothing",
+      "config": {
+        "id": "ap",
+        "url": "https://x/p.jpg",
+        "mask": "M 0 0 L 100 0 L 100 100 Z",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "ap",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 1000,
+                  "h": 800
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-anchor-section-placed-repaints-with-its-scroll-range",
+      "config": {
+        "id": "ap",
+        "url": "https://x/p.jpg",
+        "mask": "M 0 0 L 100 0 L 100 100 Z",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 800
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 2400
+        },
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "scene",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 1000,
+                  "h": 2600
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unrelated-id-placed-paints-nothing",
+      "config": {
+        "id": "ap",
+        "url": "https://x/p.jpg",
+        "mask": "M 0 0 L 100 0 L 100 100 Z",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 800
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 2400
+        },
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 1000,
+                  "h": 800
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "resizing-the-view-repaints",
+      "config": {
+        "id": "ap",
+        "url": "https://x/p.jpg",
+        "mask": "M 0 0 L 100 0 L 100 100 Z",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 800
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 1000,
+            "height": 900
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "reduced-motion-repaints-the-mask-at-rest",
+      "config": {
+        "id": "ap",
+        "url": "https://x/p.jpg",
+        "mask": "M 0 0 L 100 0 L 100 100 Z",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 800
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 2400
+        },
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-mask-paints-nothing",
+      "config": {
+        "id": "ap",
+        "url": "https://x/p.jpg",
+        "mask": "",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 800
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 2400
+        },
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-photograph-paints-nothing",
+      "config": {
+        "id": "ap",
+        "url": "",
+        "mask": "M 0 0 L 100 0 L 100 100 Z",
+        "boxWidth": 100,
+        "boxHeight": 100,
+        "anchor": "scene"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 800
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 2400
+        },
+        "viewH": 800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_RESIZE",
+          "payload": {
+            "width": 1000,
+            "height": 800
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

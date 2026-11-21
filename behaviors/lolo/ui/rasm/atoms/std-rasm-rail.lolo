@@ -1,0 +1,336 @@
+app std-rasm-rail [
+  version: "0.1.0",
+  description: "std-rasm-rail — a snapping rail of cards on the Rasm canvas: one row of cards painted from the records RASM_CARDS hands it (a media picture, a badge, a title and a body each), wider than its rect, cut to the view by a clip so the next card peeks in at the edge, and always coming to rest with a card at the start of the rail. A press on the rail and a drag moves the row with the pointer, and on release it snaps to the nearest card, leaning to the next one when the drag passed a fifth of a card in that direction; a press and a release that never moved is a tap on the card under it and emits `action` with its index. RASM_RAIL_NEXT and RASM_RAIL_PREV step one card, keyboard focus on a card (plate id `<id>:card:<index>:plate`) brings it into view and RASM_ACTIVATE on it emits `action`, so a pointer, a touch swipe, buttons and the keyboard all move the same rail. Every snap runs on a sibling std-rasm-tween with the rail's id: the rail sends RASM_TWEEN_START from the offset to the card's offset and takes each RASM_TWEEN_STEP value as its offset, so under reduced motion it lands at once. With `bleed` the clip runs from the left edge of the canvas to the right so the neighbours show in the page gutters; a row of dots under the cards marks where the rail is. With variantBy breakpoint and `variants` the card size and gap change per breakpoint, so a phone shows one card with the next peeking. It reports its height in RASM_EXTENT. Looks are card/surface/<state> (falling back to stack/card/idle), text/card/idle, text/body/idle, text/eyebrow/idle, card/media/idle and pressable/primary/idle (the dot of the current card)."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmInset = { stroke : string!, strokeWidth : number!, gap : number! }
+type RasmLook = { inset : RasmInset, fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string, backing : "none" | "halo" | "plate" }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, rotate : number?, pivotX : number?, pivotY : number? }
+type RailCard = { title : string!, body : string, badge : string, image : string }
+type RailShape = { cardW : number, cardH : number, mediaH : number, gap : number }
+
+orbital RasmRailOrbital {
+  entity RasmRailRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rail's rect from RASM_PLACE, null until placed." = null
+    cards : [RailCard] @description "The records the last RASM_CARDS sent." = []
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced; rtl starts the row at the right edge." = "ltr"
+    viewW : number @description "The canvas width from RASM_RESIZE, the clip's width with bleed." = 0
+    variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
+    offset : number @description "How far the row is scrolled along its axis in px." = 0
+    maxOffset : number @description "The largest offset in px." = 0
+    dragging : boolean @description "True while a press on the rail is held." = false
+    dragX : number @description "The pointer's x when the press began." = 0
+    dragOff : number @description "The offset when the press began." = 0
+    moved : boolean @description "True once the held press travelled far enough to be a drag, not a tap." = false
+    pressIdx : number @description "The card the press began on, -1 for none." = -1
+    hot : number @description "The card the pointer is over, -1 for none." = -1
+    focus : number @description "The card RASM_FOCUS last named, -1 for none." = -1
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmRail -> RasmRailRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RAIL_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RAIL_PAINT { n: @entity.paints })
+      RASM_RESIZE -> ready
+        (set @entity.viewW ?width)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RAIL_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (emit RAIL_LAYOUT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))))
+      RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
+        (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
+        (emit RAIL_LAYOUT { n: @entity.paints })
+      RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_CARDS -> ready when (= ?id @config.id)
+        (set @entity.cards ?cards)
+        (set @entity.offset 0)
+        (set @entity.hot -1)
+        (set @entity.focus -1)
+        (set @entity.pressIdx -1)
+        (set @entity.dragging false)
+        (emit RAIL_LAYOUT { n: @entity.paints })
+      RASM_CARDS -> ready when (!= ?id @config.id)
+      RAIL_LAYOUT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sh (object/get @config.variants @entity.variant null)) (n (array/len @entity.cards)))
+          (let ((cw (default (if (= @sh null) null @sh.cardW) @config.cardW)) (ch (default (if (= @sh null) null @sh.cardH) @config.cardH)) (gap (default (if (= @sh null) null @sh.gap) @config.gap)))
+            (let ((mx (math/max 0 (- (- (* @n (+ @cw @gap)) @gap) @r.w))))
+              (do
+                (set @entity.maxOffset @mx)
+                (set @entity.offset (math/clamp @entity.offset 0 @mx))
+                (emit RASM_EXTENT { n: @entity.paints, id: @config.id, w: @r.w, h: (+ @ch @config.dotsH) })
+                (set @entity.paints (+ @entity.paints 1))
+                (emit RAIL_PAINT { n: @entity.paints })))))
+      RAIL_LAYOUT -> ready when (= @entity.rect null)
+      RAIL_GOTO -> ready when (!= @entity.rect null)
+        (let ((sh (object/get @config.variants @entity.variant null)))
+          (let ((pitch (+ (default (if (= @sh null) null @sh.cardW) @config.cardW) (default (if (= @sh null) null @sh.gap) @config.gap))))
+            (let ((target (math/clamp (* (math/clamp ?index 0 (math/max 0 (- (array/len @entity.cards) 1))) @pitch) 0 @entity.maxOffset)))
+              (do
+                (when (!= @target @entity.offset)
+                  (emit RASM_TWEEN_START { id: @config.id, from: @entity.offset, to: @target, durationMs: @config.snapMs }))
+                (when (= @target @entity.offset)
+                  (do
+                    (set @entity.paints (+ @entity.paints 1))
+                    (emit RAIL_PAINT { n: @entity.paints })))))))
+      RAIL_GOTO -> ready when (= @entity.rect null)
+      RASM_TWEEN_STEP -> ready when (= ?id @config.id)
+        (set @entity.offset (math/clamp ?value 0 @entity.maxOffset))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RAIL_PAINT { n: @entity.paints })
+      RASM_TWEEN_STEP -> ready when (!= ?id @config.id)
+      RASM_RAIL_NEXT -> ready when (!= @entity.rect null)
+        (let ((sh (object/get @config.variants @entity.variant null)))
+          (let ((pitch (+ (default (if (= @sh null) null @sh.cardW) @config.cardW) (default (if (= @sh null) null @sh.gap) @config.gap))))
+            (emit RAIL_GOTO { index: (+ (math/round (default (/ @entity.offset @pitch) 0)) 1) })))
+      RASM_RAIL_NEXT -> ready when (= @entity.rect null)
+      RASM_RAIL_PREV -> ready when (!= @entity.rect null)
+        (let ((sh (object/get @config.variants @entity.variant null)))
+          (let ((pitch (+ (default (if (= @sh null) null @sh.cardW) @config.cardW) (default (if (= @sh null) null @sh.gap) @config.gap))))
+            (emit RAIL_GOTO { index: (- (math/round (default (/ @entity.offset @pitch) 0)) 1) })))
+      RASM_RAIL_PREV -> ready when (= @entity.rect null)
+      RASM_POINTER -> ready when (and (= ?kind "down") (str/startsWith ?id @config.id))
+        (set @entity.dragging true)
+        (set @entity.moved false)
+        (set @entity.dragX ?x)
+        (set @entity.dragOff @entity.offset)
+        (set @entity.pressIdx (array/indexOf (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id))
+        (emit RASM_TWEEN_CANCEL { id: @config.id })
+      RASM_POINTER -> ready when (and (= ?kind "move") @entity.dragging)
+        (set @entity.moved (or @entity.moved (> (math/abs (- ?x @entity.dragX)) 8)))
+        (set @entity.offset (math/clamp (- @entity.dragOff (* (if (= @entity.dir "rtl") -1 1) (- ?x @entity.dragX))) 0 @entity.maxOffset))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RAIL_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.dragging)
+        (set @entity.dragging false)
+        (let ((sh (object/get @config.variants @entity.variant null)))
+          (let ((pitch (+ (default (if (= @sh null) null @sh.cardW) @config.cardW) (default (if (= @sh null) null @sh.gap) @config.gap))))
+            (do
+              (when (and (not @entity.moved) (>= @entity.pressIdx 0))
+                (emit @config.action { index: @entity.pressIdx }))
+              (when @entity.moved
+                (emit RAIL_GOTO { index: (math/round (+ (default (/ @entity.offset @pitch) 0) (if (> (- @entity.offset @entity.dragOff) 0) 0.3 (if (< (- @entity.offset @entity.dragOff) 0) -0.3 0)))) })))))
+      RASM_POINTER -> ready when (and (array/includes ["enter", "leave"] ?kind) (str/startsWith ?id (str/concat @config.id ":card:")))
+        (set @entity.hot (if (= ?kind "enter") (array/indexOf (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id) -1))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RAIL_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (not (or (and (= ?kind "down") (str/startsWith ?id @config.id)) (and (= ?kind "move") @entity.dragging) (and (= ?kind "up") @entity.dragging) (and (array/includes ["enter", "leave"] ?kind) (str/startsWith ?id (str/concat @config.id ":card:")))))
+      RASM_FOCUS -> ready
+        (let ((idx (array/indexOf (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id)))
+          (when (!= @idx @entity.focus)
+            (let ((sh (object/get @config.variants @entity.variant null)) (r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })))
+              (let ((cw (default (if (= @sh null) null @sh.cardW) @config.cardW)) (gap (default (if (= @sh null) null @sh.gap) @config.gap)))
+                (do
+                  (set @entity.focus @idx)
+                  (when (and (>= @idx 0) (or (< (- (* @idx (+ @cw @gap)) @entity.offset) 0) (> (+ (- (* @idx (+ @cw @gap)) @entity.offset) @cw) @r.w)))
+                    (emit RAIL_GOTO { index: @idx }))
+                  (set @entity.paints (+ @entity.paints 1))
+                  (emit RAIL_PAINT { n: @entity.paints }))))))
+      RASM_ACTIVATE -> ready
+        (let ((idx (array/indexOf (array/map (array/range (array/len @entity.cards)) (fn i (str/concat @config.id ":card:" @i ":plate"))) ?id)))
+          (when (>= @idx 0)
+            (emit @config.action { index: @idx })))
+      RAIL_PAINT -> ready when (and (!= @entity.rect null) (> (array/len @entity.cards) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (sh (object/get @config.variants @entity.variant null)) (rtl (= @entity.dir "rtl")) (p @config.padding) (n (array/len @entity.cards)) (card (default (object/get @entity.looks "card/surface/idle" null) (default (object/get @entity.looks "stack/card/idle" null) {}))) (title (default (object/get @entity.looks "text/card/idle" null) {})) (body (default (object/get @entity.looks "text/body/idle" null) {})) (badge (default (object/get @entity.looks (str/concat "text/" @config.badgeIntent "/idle") null) (default (object/get @entity.looks "text/eyebrow/idle" null) {}))) (med (default (object/get @entity.looks "card/media/idle" null) {})) (dotOn (default (object/get @entity.looks "pressable/primary/idle" null) {})))
+          (let ((cw (default (if (= @sh null) null @sh.cardW) @config.cardW)) (ch (default (if (= @sh null) null @sh.cardH) @config.cardH)) (mh (default (if (= @sh null) null @sh.mediaH) @config.mediaH)) (gap (default (if (= @sh null) null @sh.gap) @config.gap)))
+            (let ((pitch (+ @cw @gap)) (tw (- @cw (* 2 @p))) (cx0 (if @config.bleed 0 @r.x)) (cw0 (if @config.bleed (math/max @r.w @entity.viewW) @r.w)) (mr (default (array/first (default @card.corners.radius [0])) 0)))
+              (let ((cardNodes : [node] (array/flatten (array/map (array/range @n) (fn i (let ((c (default (array/nth @entity.cards @i) { title: "" })) (x (if @rtl (- (- (+ @r.x @r.w) @cw) (- (* @i @pitch) @entity.offset)) (- (+ @r.x (* @i @pitch)) @entity.offset))) (y @r.y)) (let ((ls (if (= @entity.focus @i) "focused" (if (= @entity.hot @i) "hovered" "idle"))) (pid (str/concat @config.id ":card:" @i ":plate")) (tid (str/concat @config.id ":card:" @i ":title")) (url (object/get @c @config.media "")) (tx (+ @x @p)) (al (if @rtl "right" "left"))) (let ((surf (default (object/get @entity.looks (str/concat "card/surface/" @ls) null) @card)) (badgeY (+ (+ @y @mh) @p))) (let ((titleY (+ @badgeY @config.badgeH)) (tx2 (if @rtl (- (+ @x @cw) @p) (+ @x @p)))) (let ((bodyY (+ (+ @titleY (* @config.titleLines @config.titleLineH)) 6))) (array/concat [{ type: draw-shape, shape: "rect", id: @pid, anchor: "top-left", position: { x: @x, y: @y, z: @config.z }, width: @cw, height: @ch, fill: @surf.fill, stroke: @surf.stroke, strokeWidth: @surf.strokeWidth, inset: @surf.inset, corners: @surf.corners, shadow: @surf.shadow, material: @surf.material, hit: true, semantic: { role: @config.role, labelledBy: @tid, disabled: false, order: (+ @config.order @i), focused: (= @entity.focus @i) } }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":card:" @i ":mediaSlot"), anchor: "top-left", position: { x: @x, y: @y, z: @config.z }, width: @cw, height: @mh, fill: @med.fill, corners: @med.corners, hit: false }] (if (= @url "") [] [{ type: draw-group, id: (str/concat @config.id ":card:" @i ":mediaClip"), position: { x: 0, y: 0 }, clip: (str/concat "M " @x " " (+ @y @mh) " L " @x " " (+ @y @mr) " A " @mr " " @mr " 0 0 1 " (+ @x @mr) " " @y " L " (- (+ @x @cw) @mr) " " @y " A " @mr " " @mr " 0 0 1 " (+ @x @cw) " " (+ @y @mr) " L " (+ @x @cw) " " (+ @y @mh) " Z"), items: [{ type: draw-sprite, id: (str/concat @config.id ":card:" @i ":media"), asset: { url: @url }, fit: "cover", anchor: "top-left", position: { x: @x, y: @y, z: @config.z }, width: @cw, height: @mh }] }]) [{ type: draw-text, id: (str/concat @config.id ":card:" @i ":tag"), text: (default @c.badge ""), anchor: "top-left", position: { x: @tx2, y: @badgeY, z: @config.z }, align: @al, baseline: "top", color: @badge.textColor, font: @badge.font, width: @tw, height: @config.badgeH, fit: "shrink", minSize: @config.bodyMinSize, wrap: false, hit: false }, { type: draw-text, id: @tid, text: @c.title, anchor: "top-left", position: { x: @tx2, y: @titleY, z: @config.z }, align: @al, baseline: "top", color: @title.textColor, font: @title.font, width: @tw, height: (* @config.titleLines @config.titleLineH), fit: "shrink", minSize: @config.titleMinSize, wrap: true, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @i ":body"), text: (default @c.body ""), anchor: "top-left", position: { x: @tx2, y: @bodyY, z: @config.z }, align: @al, baseline: "top", color: @body.textColor, font: @body.font, width: @tw, height: (math/max 20 (- (- (+ @y @ch) @bodyY) @p)), fit: "shrink", minSize: @config.bodyMinSize, wrap: true, hit: false }])))))))))))
+                (let ((hit : node { type: draw-shape, shape: "rect", id: @config.id, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @ch, fill: "rgba(0,0,0,0)", hit: true }) (idx (math/min (- @n 1) (math/round (default (/ @entity.offset (math/max 1 @pitch)) 0)))) (clipPath (str/concat "M " @cx0 " " (- @r.y 16) " L " (+ @cx0 @cw0) " " (- @r.y 16) " L " (+ @cx0 @cw0) " " (+ (+ @r.y @ch) 16) " L " @cx0 " " (+ (+ @r.y @ch) 16) " Z")))
+                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-group, id: (str/concat @config.id ":strip"), position: { x: 0, y: 0 }, clip: @clipPath, items: (array/concat [@hit] @cardNodes) }, { type: draw-group, id: (str/concat @config.id ":dots"), position: { x: 0, y: 0 }, items: (array/map (array/range @n) (fn i { type: draw-shape, shape: "rect", id: (str/concat @config.id ":dot:" @i), anchor: "top-left", position: { x: (+ (- (+ @r.x (/ @r.w 2)) (/ (- (* @n 18) 10) 2)) (* @i 18)), y: (+ (+ @r.y @ch) 12), z: @config.z }, width: 8, height: 8, fill: (if (= @i @idx) @dotOn.fill "rgba(127,127,127,0.55)"), corners: { radius: [4, 4, 4, 4], kind: "round" }, hit: false })) }] }))))))
+      RAIL_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0)))
+    }
+
+    emits {
+      RAIL_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Fit the offset limits and the height from the stored rect, card size and records."
+        @tier "internal"
+      RAIL_GOTO -> internal {
+        index : number!
+      }
+        @description "Snap to the card at this index, or the nearest the rail can reach."
+        @tier "internal"
+      RAIL_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the cards at the current offset."
+        @tier "internal"
+      RASM_TWEEN_START -> external {
+        id : string!
+        from : number!
+        to : number!
+        durationMs : number!
+      }
+        @description "Start a snap from the current offset to a card's offset on the sibling tween with this rail's id."
+        @tier "domain"
+      RASM_TWEEN_CANCEL -> external {
+        id : string!
+      }
+        @description "Stop a snap that is still running when a press takes hold of the rail."
+        @tier "domain"
+      @config.action -> external {
+        index : number!
+      }
+        @description "A card was tapped or activated from the keyboard; index is its position in the records."
+        @tier "domain"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The clipped strip (the drag region and every card) and the dots under it."
+        @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The rail's height after each layout: the card height plus the row of dots."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rail's rect when it is placed."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas width, the clip's width with bleed."
+      RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
+        @description "With variantBy \"breakpoint\": the variant is the first name of chain that `variants` holds, none of them keeping the configured shape."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "Take the reading direction: rtl starts the row at the right edge, reverses the drag and aligns the card text right."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A press on the rail or a card and a drag moves the row; the release snaps it, or taps the card when nothing moved."
+      RASM_FOCUS { id : string! }
+        @description "The card whose plate id this is takes the focused look and is brought into view; any other id clears the focus."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of the card whose plate id this is emits action."
+      RASM_CARDS { id : string!  cards : [RailCard]! }
+        @description "The records to paint, for the rail with this id."
+      RASM_RAIL_NEXT
+        @description "Snap to the next card."
+      RASM_RAIL_PREV
+        @description "Snap to the previous card."
+      RASM_TWEEN_STEP { id : string!  value : number!  t : number! }
+        @description "One step of a snap: the value is the rail's offset."
+    }
+
+    config {
+      id : string = "rail"
+        @label "Id"
+        @description "The rail's RASM_PLACE key, paint id, drag region id, RASM_CARDS address and tween id."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      cardW : number = 280
+        @label "Card width"
+        @description "Each card's width in px."
+        @tier "presentation"
+      cardH : number = 360
+        @label "Card height"
+        @description "Each card's height in px."
+        @tier "presentation"
+      mediaH : number = 150
+        @label "Media height"
+        @description "The picture band at a card's top in px, painted in card/media/idle."
+        @tier "presentation"
+      gap : number = 16
+        @label "Gap"
+        @description "Space between cards in px."
+        @tier "presentation"
+      padding : number = 18
+        @label "Padding"
+        @description "Space inside a card in px."
+        @tier "presentation"
+      media : string = "image"
+        @label "Media field"
+        @description "The name of the record field holding the picture URL."
+        @tier "presentation"
+      badgeIntent : string = "eyebrow"
+        @label "Badge text"
+        @description "The text intent the badge is set in, looked up as text/<intent>/idle: eyebrow for a small tag, numeral for a large figure such as a time."
+        @tier "presentation"
+      badgeH : number = 26
+        @label "Badge height"
+        @description "The line the badge takes above the title in px."
+        @tier "presentation"
+      titleLines : number = 2
+        @label "Title lines"
+        @description "The lines kept for a title; a longer title shrinks to titleMinSize."
+        @tier "presentation"
+      titleLineH : number = 24
+        @label "Title line height"
+        @description "One title line's height in px."
+        @tier "presentation"
+      titleMinSize : number = 15
+        @label "Title smallest size"
+        @description "The font size in px a long title shrinks to before it ends in an ellipsis."
+        @tier "presentation"
+      bodyMinSize : number = 13
+        @label "Body smallest size"
+        @description "The font size in px a long body shrinks to before it ends in an ellipsis."
+        @tier "presentation"
+      dotsH : number = 32
+        @label "Dots row"
+        @description "The height reserved under the cards for the row of dots, in px."
+        @tier "presentation"
+      bleed : boolean = true
+        @label "Bleed"
+        @description "True clips the row to the whole canvas width, so the neighbouring cards show in the page gutters; false clips it to the rail's rect."
+        @tier "presentation"
+      snapMs : number = 360
+        @label "Snap"
+        @description "How long a snap to a card takes, in ms."
+        @tier "presentation"
+      role : "button" | "link" = "button"
+        @label "Role"
+        @description "What a card announces to assistive technology."
+        @tier "presentation"
+      order : number = 0
+        @label "Order"
+        @description "Reading order of the first card's semantic node; card i takes order + i."
+        @tier "domain"
+      action : event = RASM_ACTION
+        @label "Action"
+        @description "The event a tapped or keyboard-activated card emits, with `{ index }`."
+        @tier "domain"
+      variantBy : "" | "breakpoint" = ""
+        @label "Variant by"
+        @description "\"breakpoint\" picks a shape from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant (desktop and wide stop at desktop), then to the configured shape; empty keeps the configured shape."
+        @tier "presentation"
+      variants : Map string RailShape = {}
+        @label "Variants"
+        @description "Shapes by breakpoint name (phone, tablet, desktop, wide): the cardW, cardH, mediaH and gap a variant names replace the configured ones while that breakpoint is current. A phone variant also applies to tablet unless tablet is given, so give every breakpoint's shape."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmRailStart -> RasmRail
+}

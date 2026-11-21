@@ -1,0 +1,445 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-gate.lolo",
+  "trait": "RasmGate",
+  "cases": [
+    {
+      "id": "motion allowed shows the contents",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g"
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": false
+          },
+          "expect": {
+            "state": "holding",
+            "entity": {
+              "ready": true
+            },
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "gate",
+                  "shown": [
+                    "count",
+                    "skip"
+                  ],
+                  "hidden": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reduced motion opens the gate for good and shows nothing",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g"
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "gone",
+            "neverEmits": [
+              "RASM_VISIBLE"
+            ],
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "gate",
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the curtain paints once ready and placed",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 700
+        },
+        "looks": {
+          "surface/ground/idle": {
+            "fill": "#EEEEEE"
+          }
+        }
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "GATE_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "holding",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "gate",
+                  "nodes": [
+                    {
+                      "type": "draw-shape",
+                      "id": "gate:curtain",
+                      "shape": "rect",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 60
+                      },
+                      "width": 1000,
+                      "height": 700,
+                      "fill": "#EEEEEE",
+                      "hit": true
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "before the motion preference is known nothing paints",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 700
+        },
+        "looks": {
+          "surface/ground/idle": {
+            "fill": "#EEEEEE"
+          }
+        }
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "GATE_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "holding",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "gate",
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a lift request lifts the curtain and hides the contents",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 1000,
+          "h": 700
+        },
+        "looks": {
+          "surface/ground/idle": {
+            "fill": "#EEEEEE"
+          }
+        }
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "RASM_GATE_LIFT",
+          "payload": {},
+          "expect": {
+            "state": "lifting",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "gate",
+                  "shown": [],
+                  "hidden": [
+                    "count",
+                    "skip"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a lift request before the motion preference is known does nothing",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": false
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "RASM_GATE_LIFT",
+          "payload": {},
+          "expect": {
+            "state": "holding",
+            "neverEmits": [
+              "RASM_VISIBLE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Escape lifts the curtain",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": true
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "RASM_KEYPRESS",
+          "payload": {
+            "target": "page",
+            "key": "Escape",
+            "shift": false,
+            "alt": false,
+            "ctrl": false,
+            "meta": false
+          },
+          "expect": {
+            "state": "lifting"
+          }
+        }
+      ]
+    },
+    {
+      "id": "another key leaves the curtain down",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": true
+      },
+      "steps": [
+        {
+          "from": "holding",
+          "event": "RASM_KEYPRESS",
+          "payload": {
+            "target": "page",
+            "key": "a",
+            "shift": false,
+            "alt": false,
+            "ctrl": false,
+            "meta": false
+          },
+          "expect": {
+            "state": "holding"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a tick before the lift ends keeps lifting",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": true,
+        "elapsed": 100
+      },
+      "steps": [
+        {
+          "from": "lifting",
+          "event": "GATE_TICK",
+          "payload": {
+            "dtMs": 50
+          },
+          "expect": {
+            "state": "lifting",
+            "entity": {
+              "elapsed": 150
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the tick that ends the lift clears the curtain",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": true,
+        "elapsed": 680
+      },
+      "steps": [
+        {
+          "from": "lifting",
+          "event": "GATE_TICK",
+          "payload": {
+            "dtMs": 50
+          },
+          "expect": {
+            "state": "gone",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "id": "gate",
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "once gone a lift request does nothing",
+      "config": {
+        "id": "gate",
+        "anchor": "hero",
+        "contents": [
+          "count",
+          "skip"
+        ],
+        "liftMs": 700
+      },
+      "entity": {
+        "id": "g",
+        "ready": true
+      },
+      "steps": [
+        {
+          "from": "gone",
+          "event": "RASM_GATE_LIFT",
+          "payload": {},
+          "expect": {
+            "state": "gone",
+            "neverEmits": [
+              "RASM_VISIBLE",
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+app std-rasm-slides [
+  version: "0.1.0",
+  description: "std-rasm-slides — a full-screen slide deck. The `slides` knob lists, per slide, the paint ids that make it up; one slide is shown at a time and the rest are hidden with RASM_VISIBLE. A wheel turn on the canvas, PageDown, PageUp, Home, End, a vertical swipe, a press on one of the `dots` controls (or its keyboard activation) moves to another slide: the shown and hidden ids are announced (owner = id, so the surface can transition them), RASM_SLIDE { id, index } tells the rest of the page, and a wipe panel in the theme's primary colour sweeps over the `anchor` rect while the swap happens, forwards or backwards. A ring is drawn round the dot of the current slide, from the dot rects RASM_PLACE gives. A wheel burst is ignored for `lockMs` after a move, so one flick is one slide. Under reduced motion the swap is announced with another owner (`<id>:still`, which the surface does not transition) and no wipe is drawn."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmSlide = { paints : [string]! }
+
+orbital RasmSlidesOrbital {
+  entity RasmSlidesRun [runtime] {
+    id : string!
+    index : number @description "The slide on show." = 0
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rects : Map string RasmRect @description "The placed rect of every dot control seen so far." = {}
+    anchor : RasmRect? @description "The rect the wipe panel sweeps over, null until placed." = null
+    reduced : boolean @description "The viewer's reduced-motion preference." = false
+    lockedMs : number @description "The epoch-ms instant before which wheel turns are ignored." = 0
+    movedMs : number @description "The epoch-ms instant of the last move, 0 before one: the wipe's start." = 0
+    forward : boolean @description "Whether the last move went toward the end." = true
+    downX : number @description "Where the pointer last went down." = 0
+    downY : number = 0
+    armed : boolean @description "A pointer is down." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmSlides -> RasmSlidesRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit RASM_VISIBLE { owner: @config.id, shown: (let ((first : RasmSlide { paints: [] })) (let ((s (default (array/first @config.slides) @first))) @s.paints)), hidden: (let ((blank : RasmSlide { paints: [] })) (array/flatten (array/map (array/filter (array/range 0 (array/len @config.slides)) (fn i (!= @i 0))) (fn i (let ((s (default (array/nth @config.slides @i) @blank))) @s.paints))))), forward: true })
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SLIDES_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.anchor) (array/includes @config.dots @p.id))))
+        (set @entity.rects (array/reduce (array/filter ?placed (fn p (array/includes @config.dots @p.id))) @entity.rects (fn acc p (object/set @acc @p.id @p.rect))))
+        (set @entity.anchor (let ((mine (array/find ?placed (fn p (= @p.id @config.anchor))))) (if (= @mine null) @entity.anchor @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SLIDES_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.anchor) (array/includes @config.dots @p.id)))))
+      RASM_WHEEL -> ready when (> (math/abs ?dy) @config.wheelMin)
+        (let ((t (time/epoch-ms @now)))
+          (when (>= @t @entity.lockedMs)
+            (emit SLIDES_GO { to: (+ @entity.index (if (> ?dy 0) 1 -1)), forward: (> ?dy 0) })))
+      RASM_WHEEL -> ready when (<= (math/abs ?dy) @config.wheelMin)
+      RASM_KEY -> ready when (array/includes ["pageDown", "pageUp", "home", "end"] ?key)
+        (emit SLIDES_GO { to: (if (= ?key "pageDown") (+ @entity.index 1) (if (= ?key "pageUp") (- @entity.index 1) (if (= ?key "home") 0 (- (array/len @config.slides) 1)))), forward: (or (= ?key "pageDown") (= ?key "end")) })
+      RASM_KEY -> ready when (not (array/includes ["pageDown", "pageUp", "home", "end"] ?key))
+      RASM_POINTER -> ready when (= ?kind "down")
+        (set @entity.downX ?x)
+        (set @entity.downY ?y)
+        (set @entity.armed true)
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.armed (>= (math/abs (- ?y @entity.downY)) @config.swipePx) (> (math/abs (- ?y @entity.downY)) (math/abs (- ?x @entity.downX))))
+        (set @entity.armed false)
+        (emit SLIDES_GO { to: (+ @entity.index (if (< ?y @entity.downY) 1 -1)), forward: (< ?y @entity.downY) })
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.armed (< (math/abs (- ?y @entity.downY)) @config.swipePx) (array/includes @config.dots ?id))
+        (set @entity.armed false)
+        (emit SLIDES_GO { to: (array/indexOf @config.dots ?id), forward: (> (array/indexOf @config.dots ?id) @entity.index) })
+      RASM_POINTER -> ready when (and (= ?kind "up") (not (and @entity.armed (or (>= (math/abs (- ?y @entity.downY)) @config.swipePx) (array/includes @config.dots ?id)))))
+        (set @entity.armed false)
+      RASM_POINTER -> ready when (or (= ?kind "enter") (= ?kind "leave") (= ?kind "move"))
+      RASM_ACTIVATE -> ready when (array/includes @config.dots ?id)
+        (emit SLIDES_GO { to: (array/indexOf @config.dots ?id), forward: (> (array/indexOf @config.dots ?id) @entity.index) })
+      RASM_ACTIVATE -> ready when (not (array/includes @config.dots ?id))
+      SLIDES_GO -> ready when (and (>= ?to 0) (< ?to (array/len @config.slides)) (!= ?to @entity.index))
+        (let ((blank : RasmSlide { paints: [] }) (cur (default (array/nth @config.slides @entity.index) @blank)) (next (default (array/nth @config.slides ?to) @blank)) (t (time/epoch-ms @now)))
+          (do
+            (emit RASM_VISIBLE { owner: (if @entity.reduced (str/concat @config.id ":still") @config.id), shown: @next.paints, hidden: @cur.paints, forward: ?forward })
+            (set @entity.lockedMs (+ @t @config.lockMs))
+            (set @entity.movedMs @t)))
+        (set @entity.forward ?forward)
+        (set @entity.index ?to)
+        (emit RASM_SLIDE { id: @config.id, index: ?to })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SLIDES_PAINT { n: @entity.paints })
+      SLIDES_GO -> ready when (not (and (>= ?to 0) (< ?to (array/len @config.slides)) (!= ?to @entity.index)))
+      SLIDES_PAINT -> ready
+        (let ((look (default (object/get @entity.looks @config.markLook null) {})) (dot (object/get @entity.rects (default (array/nth @config.dots @entity.index) "") null)) (a @entity.anchor))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/concat (if (and (!= @a null) (not @entity.reduced) (> @entity.movedMs 0)) [{ type: draw-shape, id: (str/concat @config.id ":wipe"), shape: rect, anchor: "top-left", position: { x: @a.x, y: @a.y, z: @config.z }, width: @a.w, height: @a.h, fill: @look.fill, hit: false, animation: { durationMs: @config.wipeMs, startMs: @entity.movedMs, loop: false, keyframes: (if @entity.forward [{ at: 0, opacity: 1, offsetY: (- 0 @a.h) }, { at: 0.5, opacity: 1, offsetY: 0 }, { at: 1, opacity: 1, offsetY: @a.h }] [{ at: 0, opacity: 1, offsetY: @a.h }, { at: 0.5, opacity: 1, offsetY: 0 }, { at: 1, opacity: 1, offsetY: (- 0 @a.h) }]) } }] []) (if (= @dot null) [] [{ type: draw-shape, id: (str/concat @config.id ":mark"), shape: ellipse, anchor: "top-left", position: { x: (+ @dot.x (/ @dot.w 2)), y: (+ @dot.y (/ @dot.h 2)), z: (+ @config.z 1) }, radiusX: @config.markR, fill: "", stroke: @look.fill, strokeWidth: 2, hit: false }])) }))
+    }
+
+    emits {
+      SLIDES_GO -> internal {
+        to : number!
+        forward : boolean!
+      }
+        @description "Move to this slide."
+        @tier "internal"
+      SLIDES_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the wipe panel and the ring on the current dot."
+        @tier "internal"
+      RASM_VISIBLE -> external {
+        owner : string!
+        shown : [string]!
+        hidden : [string]!
+        forward : boolean
+      }
+        @description "The paint ids of the slide that is now shown and of the slide that left; the surface transitions them when the owner is one of its transition owners."
+        @tier "domain"
+      RASM_SLIDE -> external {
+        id : string!
+        index : number!
+      }
+        @description "The deck moved to this slide."
+        @tier "domain"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The wipe panel and the ring round the current dot."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks the wipe and the ring are drawn in."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference: reduced swaps without a wipe."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the dot controls' rects and the anchor's rect."
+      RASM_WHEEL { target : string!  x : number!  y : number!  dx : number!  dy : number! }
+        @description "A wheel turn moves one slide toward its direction, unless the last move is still locked."
+      RASM_KEY { key : string! }
+        @description "PageDown, PageUp, Home and End move the deck."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "A vertical swipe moves one slide; a release on a dot control goes to its slide."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of a dot control goes to its slide."
+    }
+
+    config {
+      id : string = "slides"
+        @label "Id"
+        @description "The deck's id: its RASM_VISIBLE owner and its paint id."
+        @tier "domain"
+      slides : [RasmSlide] = []
+        @label "Slides"
+        @description "The slides in order, each the paint ids that make it up; the first is on show at the start."
+        @tier "domain"
+      dots : [string] = []
+        @label "Dots"
+        @description "The id of the dot control for each slide, in slide order: a press or activation on one goes to its slide, and the ring is drawn round the current one."
+        @tier "domain"
+      anchor : string = "page"
+        @label "Anchor"
+        @description "The id of the placed rect the wipe panel sweeps over."
+        @tier "presentation"
+      markLook : string = "pressable/primary/idle"
+        @label "Wipe and ring look"
+        @description "The look whose fill colours the wipe panel and the ring."
+        @tier "presentation"
+      markR : number = 12
+        @label "Ring radius"
+        @description "The radius in px of the ring round the current dot."
+        @tier "presentation"
+      wipeMs : number = 560
+        @label "Wipe duration"
+        @description "How long the wipe panel takes to sweep across, in ms; it covers the anchor at half of it."
+        @tier "presentation"
+      lockMs : number = 900
+        @label "Wheel lock"
+        @description "How long wheel turns are ignored after a move, in ms, so one flick moves one slide."
+        @tier "presentation"
+      wheelMin : number = 4
+        @label "Wheel threshold"
+        @description "The smallest wheel delta, in px, that counts as a turn."
+        @tier "presentation"
+      swipePx : number = 56
+        @label "Swipe distance"
+        @description "How far a vertical drag must travel, in px, to move a slide; a shorter press on a dot goes to that dot's slide."
+        @tier "presentation"
+      z : number = 40
+        @label "Z"
+        @description "Paint order of the wipe panel and the ring."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmSlidesStart -> RasmSlides
+}

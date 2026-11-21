@@ -1,0 +1,227 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-trend.lolo",
+  "trait": "RasmTrend",
+  "cases": [
+    {
+      "id": "boot-announces-the-configured-trend-with-its-signature-entry",
+      "config": {
+        "trend": "x",
+        "signatures": {
+          "rise": {
+            "enterMs": 520,
+            "keyframes": [
+              {
+                "at": 0,
+                "opacity": 0,
+                "offsetX": 0,
+                "offsetY": 18
+              },
+              {
+                "at": 1,
+                "opacity": 1,
+                "offsetX": 0,
+                "offsetY": 0
+              }
+            ]
+          }
+        },
+        "trends": {
+          "default": {
+            "layout": {
+              "hero": "centered",
+              "columns": 12,
+              "asymmetry": 0,
+              "ornament": "none",
+              "align": "start",
+              "imageTreatment": "none",
+              "sectionGap": 96,
+              "gutter": 24
+            },
+            "motion": {
+              "signature": "snap",
+              "stiffness": 1,
+              "damping": 1,
+              "stagger": 0
+            }
+          },
+          "x": {
+            "layout": {
+              "hero": "split",
+              "columns": 12,
+              "asymmetry": 0,
+              "ornament": "none",
+              "align": "start",
+              "imageTreatment": "none",
+              "sectionGap": 96,
+              "gutter": 40
+            },
+            "motion": {
+              "signature": "rise",
+              "stiffness": 200,
+              "damping": 24,
+              "stagger": 60
+            }
+          }
+        }
+      },
+      "entity": {
+        "id": "t"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_BOOT",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_TREND",
+                "payload": {
+                  "name": "x",
+                  "layout": {
+                    "hero": "split",
+                    "columns": 12,
+                    "asymmetry": 0,
+                    "ornament": "none",
+                    "align": "start",
+                    "imageTreatment": "none",
+                    "sectionGap": 96,
+                    "gutter": 40
+                  },
+                  "motion": {
+                    "signature": "rise",
+                    "stiffness": 200,
+                    "damping": 24,
+                    "stagger": 60,
+                    "enterMs": 520,
+                    "keyframes": [
+                      {
+                        "at": 0,
+                        "opacity": 0,
+                        "offsetX": 0,
+                        "offsetY": 18
+                      },
+                      {
+                        "at": 1,
+                        "opacity": 1,
+                        "offsetX": 0,
+                        "offsetY": 0
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unknown-trend-announces-default",
+      "config": {
+        "trend": "nope",
+        "signatures": {},
+        "trends": {
+          "default": {
+            "layout": {
+              "hero": "centered",
+              "columns": 12,
+              "asymmetry": 0,
+              "ornament": "none",
+              "align": "start",
+              "imageTreatment": "none",
+              "sectionGap": 96,
+              "gutter": 24
+            },
+            "motion": {
+              "signature": "snap",
+              "stiffness": 1,
+              "damping": 1,
+              "stagger": 0
+            }
+          }
+        }
+      },
+      "entity": {
+        "id": "t"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_BOOT",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_TREND",
+                "payload": {
+                  "name": "default",
+                  "layout": {
+                    "hero": "centered",
+                    "columns": 12,
+                    "asymmetry": 0,
+                    "ornament": "none",
+                    "align": "start",
+                    "imageTreatment": "none",
+                    "sectionGap": 96,
+                    "gutter": 24
+                  },
+                  "motion": {
+                    "signature": "snap",
+                    "stiffness": 1,
+                    "damping": 1,
+                    "stagger": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-nothing-is-announced-before-boot",
+      "config": {
+        "trend": "x",
+        "trends": {
+          "default": {
+            "layout": {
+              "hero": "centered",
+              "columns": 12,
+              "asymmetry": 0,
+              "ornament": "none",
+              "align": "start",
+              "imageTreatment": "none",
+              "sectionGap": 96,
+              "gutter": 24
+            },
+            "motion": {
+              "signature": "snap",
+              "stiffness": 1,
+              "damping": 1,
+              "stagger": 0
+            }
+          }
+        }
+      },
+      "entity": {
+        "id": "t"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_TREND"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

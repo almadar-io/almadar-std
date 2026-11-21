@@ -19,11 +19,13 @@ type RasmLook = { lighting : RasmLighting, inset : RasmInset, fill : string, str
 type RasmEntry = { enterMs : number!, keyframes : [RasmEntryKey]! }
 type RasmSpaceStep = { tight : number!, stack : number!, group : number!, scale : number!, measure : number! }
 type RasmBreakpoint = { name : "phone" | "tablet" | "desktop" | "wide"!, min : number! }
-type RasmStyle = { looks : Map string RasmLook!, layout : RasmLayout!, motion : RasmMotion!, breakpointLooks : Map string (Map string RasmLook), palette : "installed" | "inline" }
+type RasmStyle = { looks : Map string RasmLook!, breakpointLooks : Map string (Map string RasmLook), palette : "installed" | "inline" }
 
 orbital RasmThemeOrbital {
   entity RasmThemeRun [runtime] {
     id : string!
+    trendGutter : number @description "The gutter the trend announced (RASM_TREND), -1 until one is: the gutter knob is used then." = -1
+    trendSection : number @description "The section gap the trend announced, -1 until one is." = -1
     active : string @description "The preset whose looks were last announced." = "naqsh"
     isStyle : boolean @description "True when `active` names a style: only a style carries breakpoint looks." = false
     breakpoint : string @description "The breakpoint name the surface last announced, empty before it did: the looks of a style are merged for it." = ""
@@ -84,13 +86,17 @@ orbital RasmThemeOrbital {
           (do
             (emit RASM_THEME { name: @entity.active, looks: (array/reduce [(object/get @config.breakpointLooks @entity.breakpoint {}), (object/get (default @style.breakpointLooks {}) @entity.breakpoint {})] (object/merge @config.base @style.looks) (fn acc layer (array/reduce (object/keys @layer) @acc (fn a k (object/set @a @k (object/merge (object/get @a @k {}) (object/get @layer @k {}))))))), breakpoints: @config.breakpoints })
             (when ?restyle
-              (emit RASM_STYLE { name: @entity.active, layout: @style.layout, motion: (let ((s (object/get @config.signatures @style.motion.signature null))) (if (= @s null) @style.motion (object/merge @style.motion { enterMs: @s.enterMs, keyframes: @s.keyframes }))) }))
+              (emit RASM_STYLE { name: @entity.active }))
             (emit SPACE_ANNOUNCE)))
+      RASM_TREND -> ready
+        (set @entity.trendGutter ?layout.gutter)
+        (set @entity.trendSection ?layout.sectionGap)
+        (emit SPACE_ANNOUNCE)
       SPACE_ANNOUNCE -> ready
         (let ((step : RasmSpaceStep? (object/get @config.space (if (= @entity.breakpoint "") "desktop" @entity.breakpoint) (object/get @config.space "desktop" null)))
               (style (if @entity.isStyle (object/get @config.styles @entity.active null) null)))
           (when (!= @step null)
-            (emit RASM_SPACE { space: { tight: @step.tight, stack: @step.stack, group: @step.group, gutter: (math/round (* @step.scale (if (= @style null) @config.gutter @style.layout.gutter))), section: (math/round (* @step.scale (if (= @style null) @config.section @style.layout.sectionGap))), measure: @step.measure } })))
+            (emit RASM_SPACE { space: { tight: @step.tight, stack: @step.stack, group: @step.group, gutter: (math/round (* @step.scale (if (< @entity.trendGutter 0) @config.gutter @entity.trendGutter))), section: (math/round (* @step.scale (if (< @entity.trendSection 0) @config.section @entity.trendSection))), measure: @step.measure } })))
     }
 
     emits {
@@ -105,7 +111,7 @@ orbital RasmThemeOrbital {
       RASM_SPACE -> external {
         space : Map string number!
       }
-        @description "The spacing scale for the current breakpoint, in px: tight, stack and group from the space table, gutter and section the active style's gutter and sectionGap (a preset's the gutter and section knobs) times the breakpoint's scale, and measure, the widest a contained content column runs (0 for none). Announced with every look announcement and on every breakpoint; layout atoms take their gaps and padding from it by step name."
+        @description "The spacing scale for the current breakpoint, in px: tight, stack and group from the space table, gutter and section the trend's gutter and sectionGap (the gutter and section knobs until a trend is announced) times the breakpoint's scale, and measure, the widest a contained content column runs (0 for none). Announced with every look announcement and on every breakpoint; layout atoms take their gaps and padding from it by step name."
         @tier "primary"
       RASM_THEME -> external {
         name : string!
@@ -116,10 +122,8 @@ orbital RasmThemeOrbital {
         @tier "primary"
       RASM_STYLE -> external {
         name : string!
-        layout : RasmLayout!
-        motion : RasmMotion!
       }
-        @description "A style was announced: its layout grammar (hero arrangement, columns, ornament, image treatment, rhythm) and motion signature, for the landing and the motion atoms."
+        @description "A style was announced (its name; a style is surface only, its layout and motion come from std-rasm-trend)."
         @tier "primary"
     }
 
@@ -128,6 +132,8 @@ orbital RasmThemeOrbital {
         @description "The surface entered a breakpoint: when a style is active its looks are announced again for it."
       RASM_BOOT { }
         @description "The surface mounted: announce the configured preset."
+      RASM_TREND { name : string!  layout : RasmLayout!  motion : RasmMotion! }
+        @description "The page's trend (std-rasm-trend): its gutter and section gap set the spacing scale."
       RASM_THEME_TOGGLE { }
         @description "Switch to the other preset and announce its looks."
         @synonyms "flip theme"
@@ -252,12 +258,15 @@ orbital RasmThemeOrbital {
         "toggle/switch/on-hovered": { on: "surface/ground/idle", fill: "primary", corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "500 15px body" },
         "toggle/switch/on-idle": { on: "surface/ground/idle", fill: "primary", corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "500 15px body" },
         "morph/default/idle": { fill: "accent" },
+        "morph/line/idle": { stroke: "primary", strokeWidth: 3 },
         "text/display/idle": { textColor: "foreground", font: "300 60px display", spring: { stiffness: 140, damping: 22 } },
         "text/eyebrow/idle": { textColor: "primary", font: "600 13px body", spring: { stiffness: 140, damping: 22 } },
         "pulse/good/idle": { on: "surface/ground/idle", fill: "success", stroke: "border", textColor: "foreground", font: "600 13px body" },
         "pulse/warn/idle": { on: "surface/ground/idle", fill: "warning", stroke: "border", textColor: "foreground", font: "600 13px body" },
         "pulse/bad/idle": { on: "surface/ground/idle", fill: "error", stroke: "border", textColor: "foreground", font: "600 13px body" },
         "pulse/link/idle": { stroke: "primary", strokeWidth: 1.25 },
+        "pulse/axis/idle": { on: "surface/ground/idle", fill: "muted-foreground", textColor: "muted-foreground", font: "500 13px body" },
+        "pulse/end/idle": { on: "surface/ground/idle", fill: "primary", stroke: "border", textColor: "foreground", font: "600 13px body" },
         "ribbon/line/idle": { fill: "accent", stroke: "border", strokeWidth: 1.5 },
         "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(0,0,0,0.10)", blur: 18, offsetY: 6 }, spring: { stiffness: 160, damping: 22 } },
         "card/surface/hovered": { fill: "card", stroke: "primary", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(0,0,0,0.16)", blur: 26, offsetY: 10 }, spring: { stiffness: 160, damping: 22 } },
@@ -364,20 +373,6 @@ orbital RasmThemeOrbital {
         @label "Breakpoint looks"
         @description "The looks that differ below the desktop breakpoint, by breakpoint name then look key, over the style's looks: smaller poster, numeral, display, title, quote and card text. `base` and a style's own looks are the desktop look; a style names its own `breakpointLooks` when its type is extreme. A look listed here replaces only the fields it gives (a font string carries weight and size together, so the weight listed here replaces the style's)."
         @tier "presentation"
-      signatures : Map string RasmEntry = {
-        "rise": { enterMs: 520, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 18 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "print-pass": { enterMs: 760, keyframes: [{ at: 0, opacity: 0, offsetX: 7, offsetY: -5 }, { at: 0.34, opacity: 0.55, offsetX: 7, offsetY: -5 }, { at: 0.35, opacity: 0.55, offsetX: -4, offsetY: 3 }, { at: 0.68, opacity: 0.85, offsetX: -4, offsetY: 3 }, { at: 0.69, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "fan": { enterMs: 900, keyframes: [{ at: 0, opacity: 0, offsetX: -28, offsetY: 28 }, { at: 0.6, opacity: 0.8, offsetX: -4, offsetY: 4 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "glitch": { enterMs: 620, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 0.12, opacity: 1, offsetX: -14, offsetY: 0 }, { at: 0.22, opacity: 0.35, offsetX: 11, offsetY: 0 }, { at: 0.32, opacity: 1, offsetX: -7, offsetY: 0 }, { at: 0.42, opacity: 0.7, offsetX: 4, offsetY: 0 }, { at: 0.52, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "ink-bleed": { enterMs: 1400, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 0.45, opacity: 0.35, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "paper-drop": { enterMs: 820, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: -64 }, { at: 0.62, opacity: 1, offsetX: 0, offsetY: 8 }, { at: 0.82, opacity: 1, offsetX: 0, offsetY: -3 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "kinetic": { enterMs: 640, keyframes: [{ at: 0, opacity: 0, offsetX: -90, offsetY: 0 }, { at: 0.7, opacity: 1, offsetX: 6, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "float": { enterMs: 1600, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 34 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] },
-        "snap": { enterMs: 1, keyframes: [{ at: 0, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0 }] }
-      }
-        @label "Motion signatures"
-        @description "Each motion signature's entry: its duration in ms and the keyframes an element plays as it enters (0 to 1 of its own window; opacity and offsets in px). RASM_STYLE's motion carries the style's signature's entry, which the entry choreography staggers."
-        @tier "presentation"
       styles : Map string RasmStyle = {
         "aqua": {
           looks: {
@@ -416,9 +411,7 @@ orbital RasmThemeOrbital {
             "window/frame/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [12, 12, 12, 12], kind: "round" }, shadow: { color: "rgba(0,0,0,0.3)", blur: 22, offsetY: 8 } },
             "window/titlebar/idle": { fill: "muted", stroke: "border", strokeWidth: 1, corners: { radius: [12, 12, 0, 0], kind: "round" }, textColor: "foreground", font: "600 13px display" },
             "window/control/idle": { fill: "primary", stroke: "primary-hover", strokeWidth: 1, corners: { radius: [999, 999, 999, 999], kind: "round" }, material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n let v = px.uv.y;\n let top = smoothstep(0.5, 0.0, v);\n let gel = vec3<f32>(1.0, 1.0, 1.0) * top * 0.38;\n let low = smoothstep(0.5, 1.0, v) * 0.12;\n let rgb = px.color.rgb + gel + vec3<f32>(low, low, low) * 0.5;\n return vec4<f32>(rgb, px.color.a);\n}", params: [1.0, 0.0, 0.0, 0.0], live: false } }
-          },
-          layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "none", align: "center", imageTreatment: "glow", sectionGap: 112, gutter: 48 },
-          motion: { signature: "rise", stiffness: 220, damping: 22, stagger: 70 }
+          }
         },
         "arabesque": {
           looks: {
@@ -474,9 +467,7 @@ orbital RasmThemeOrbital {
             "toggle/switch/off-idle": { stroke: "input" },
             "toggle/switch/off-hovered": { stroke: "input" }
           },
-          layout: { hero: "centered", columns: 8, asymmetry: 0, ornament: "frame", align: "center", imageTreatment: "duotone", sectionGap: 96, gutter: 56 },
-          breakpointLooks: { phone: { "text/numeral/idle": { textColor: "primary", font: "700 30px display" } } },
-          motion: { signature: "fan", stiffness: 130, damping: 20, stagger: 80 }
+          breakpointLooks: { phone: { "text/numeral/idle": { textColor: "primary", font: "700 30px display" } } }
         },
         "art-deco": {
           looks: {
@@ -530,9 +521,7 @@ orbital RasmThemeOrbital {
             "ticket/body/idle": { fill: "background", stroke: "primary", strokeWidth: 2, corners: { radius: [16, 16, 16, 16], kind: "notch" }, shadow: { color: "rgba(11,16,38,0.22)", blur: 36, offsetY: 14 } },
             "ticket/stub/idle": { fill: "primary", stroke: "primary", strokeWidth: 2, corners: { radius: [16, 16, 16, 16], kind: "notch" }, shadow: { color: "rgba(11,16,38,0.22)", blur: 36, offsetY: 14 } },
             "ticket/perforation/idle": { stroke: "primary", strokeWidth: 2, strokeDash: [4, 5] }
-          },
-          layout: { hero: "centered", columns: 12, asymmetry: 0, ornament: "frame", align: "center", imageTreatment: "duotone", sectionGap: 128, gutter: 64 },
-          motion: { signature: "fan", stiffness: 150, damping: 22, stagger: 90 }
+          }
         },
         "art-nouveau": {
           looks: {
@@ -570,9 +559,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "600 22px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 2 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet k = 0.018;\nlet x = p.x;\nlet y1 = c.y + sin(x * k) * m * 0.28 + sin(x * k * 2.3 + 1.0) * m * 0.08;\nlet y2 = c.y + sin(x * k + 3.14159) * m * 0.28 + sin(x * k * 2.3 + 4.1) * m * 0.08;\nlet t = 0.5 + 0.5 * sin(x * 0.011);\nlet a = max(sg_line(p.y - y1, 0.8 + 2.6 * t), sg_line(p.y - y2, 0.8 + 2.6 * (1.0 - t)));\nreturn sg_out(px, px.color.rgb, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "centered", columns: 8, asymmetry: 0.1, ornament: "frame", align: "center", imageTreatment: "duotone", sectionGap: 120, gutter: 56 },
-          motion: { signature: "ink-bleed", stiffness: 110, damping: 20, stagger: 110 }
+          }
         },
         "atelier": {
           looks: {
@@ -626,9 +613,7 @@ orbital RasmThemeOrbital {
             "toggle/check/off-hovered": { stroke: "input" },
             "toggle/switch/off-idle": { stroke: "input" },
             "toggle/switch/off-hovered": { stroke: "input" }
-          },
-          layout: { hero: "poster", columns: 12, asymmetry: 0.3, ornament: "rule", align: "start", imageTreatment: "grain", sectionGap: 144, gutter: 72 },
-          motion: { signature: "rise", stiffness: 140, damping: 24, stagger: 120 }
+          }
         },
         "bauhaus": {
           looks: {
@@ -683,9 +668,7 @@ orbital RasmThemeOrbital {
             "toggle/check/off-hovered": { stroke: "input" },
             "toggle/switch/off-idle": { stroke: "input" },
             "toggle/switch/off-hovered": { stroke: "input" }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 112, gutter: 32 },
-          motion: { signature: "kinetic", stiffness: 300, damping: 26, stagger: 70 }
+          }
         },
         "bloomberg-dense": {
           looks: {
@@ -751,9 +734,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "primary", font: "700 15px mono", on: "card/surface/idle" },
             "morph/default/idle": { fill: "primary" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet cell = vec2<f32>(48.0, 14.0);\nlet g = fract(p / cell);\nlet ci = floor(p / cell);\nlet hline = 1.0 - smoothstep(0.3, 1.2, min(g.y, 1.0 - g.y) * cell.y);\nlet vline = 1.0 - smoothstep(0.3, 1.2, min(g.x, 1.0 - g.x) * cell.x);\nlet bar = step(g.x, 0.15 + 0.7 * sg_hash(ci)) * step(0.3, g.y) * step(g.y, 0.7) * step(0.45, sg_hash(ci + vec2<f32>(3.0, 9.0)));\nreturn sg_out(px, px.color.rgb, max(max(hline, vline) * 0.45, bar * 0.9));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "editorial", columns: 12, asymmetry: 0.0, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 64, gutter: 24 },
-          motion: { signature: "snap", stiffness: 520, damping: 50, stagger: 25 }
+          }
         },
         "blueprint": {
           looks: {
@@ -798,9 +779,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "foreground", font: "500 18px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_seg(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>) -> f32 { let pa = p - a; let ba = b - a; let h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0); return length(pa - ba * h); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet gx = min(fract(p.x / 16.0), 1.0 - fract(p.x / 16.0)) * 16.0;\nlet gy = min(fract(p.y / 16.0), 1.0 - fract(p.y / 16.0)) * 16.0;\nlet mx = min(fract(p.x / 80.0), 1.0 - fract(p.x / 80.0)) * 80.0;\nlet my = min(fract(p.y / 80.0), 1.0 - fract(p.y / 80.0)) * 80.0;\nlet minor = max(1.0 - smoothstep(0.2, 1.0, gx), 1.0 - smoothstep(0.2, 1.0, gy)) * 0.22;\nlet major = max(1.0 - smoothstep(0.2, 1.0, mx), 1.0 - smoothstep(0.2, 1.0, my)) * 0.45;\nlet yd = s.y - 14.0;\nlet dl = sg_line(p.y - yd, 0.5) * step(8.0, p.x) * step(p.x, s.x - 8.0);\nlet tk = max(sg_line(p.x - 8.0, 0.5), sg_line(p.x - (s.x - 8.0), 0.5)) * step(abs(p.y - yd), 6.0);\nlet ar = max(sg_line(sg_seg(p, vec2<f32>(8.0, yd), vec2<f32>(16.0, yd - 4.0)), 0.5), sg_line(sg_seg(p, vec2<f32>(8.0, yd), vec2<f32>(16.0, yd + 4.0)), 0.5));\nlet ar2 = max(sg_line(sg_seg(p, vec2<f32>(s.x - 8.0, yd), vec2<f32>(s.x - 16.0, yd - 4.0)), 0.5), sg_line(sg_seg(p, vec2<f32>(s.x - 8.0, yd), vec2<f32>(s.x - 16.0, yd + 4.0)), 0.5));\nreturn sg_out(px, px.color.rgb, max(max(minor, major), max(max(dl, tk), max(ar, ar2))));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "double-rule", align: "start", imageTreatment: "engraving", sectionGap: 96, gutter: 40 },
-          motion: { signature: "kinetic", stiffness: 190, damping: 28, stagger: 60 }
+          }
         },
         "clay": {
           looks: {
@@ -846,9 +825,7 @@ orbital RasmThemeOrbital {
             "textfield/default/placeholder": { textColor: "muted-foreground", font: "500 16px body" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_smin(a: f32, b: f32, k: f32) -> f32 { let h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet b1 = length(p - vec2<f32>(s.x * 0.3, c.y * 1.05)) - m * 0.3;\nlet b2 = length(p - vec2<f32>(s.x * 0.52, c.y * 0.9)) - m * 0.38;\nlet b3 = length(p - vec2<f32>(s.x * 0.72, c.y * 1.1)) - m * 0.26;\nlet d = sg_smin(sg_smin(b1, b2, m * 0.15), b3, m * 0.15);\nlet cov = 1.0 - smoothstep(-2.0, 2.0, d);\nlet col = px.color.rgb * (0.78 + 0.4 * (1.0 - px.uv.y)) * (0.9 + 0.1 * smoothstep(0.0, m * 0.2, -d));\nreturn sg_out(px, col, cov);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "none", align: "center", imageTreatment: "none", sectionGap: 112, gutter: 40 },
-          motion: { signature: "float", stiffness: 100, damping: 14, stagger: 90 }
+          }
         },
         "comic": {
           looks: {
@@ -888,9 +865,7 @@ orbital RasmThemeOrbital {
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_rot(p: vec2<f32>, a: f32) -> vec2<f32> { let c = cos(a); let s = sin(a); return vec2<f32>(c * p.x - s * p.y, s * p.x + c * p.y); }\nfn sg_halftone(p: vec2<f32>, cell: f32, ang: f32, rad: f32) -> f32 { let q = sg_rot(p, ang) / cell; let c = fract(q) - vec2<f32>(0.5, 0.5); return (1.0 - smoothstep(rad - 0.08, rad + 0.08, length(c))) * step(0.03, rad); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet q = p - c;\nlet r = length(q);\nlet u = atan2(q.x, -q.y) * 2.228169;\nlet f = abs(fract(u) - 0.5) * 2.0;\nlet rr = m * 0.46 * mix(0.55, 1.0, f);\nlet d = r - rr;\nlet body = sg_fill(d);\nlet edge = sg_line(d + 2.0, 2.0);\nlet dots = sg_halftone(p, 8.0, 0.7854, 0.12 + 0.5 * clamp(r / max(rr, 1.0), 0.0, 1.0));\nlet col = mix(px.color.rgb, vec3<f32>(0.04, 0.04, 0.04), edge);\nreturn sg_out(px, col, max(body * dots, edge));\n}\n", params: [0, 0, 0, 0], live: false } },
             "balloon/body/idle": { fill: "card", stroke: "foreground", strokeWidth: 3.5, corners: { radius: [22, 22, 22, 22], kind: "round" } },
             "balloon/shout/idle": { fill: "accent", stroke: "foreground", strokeWidth: 4, corners: { radius: [8, 8, 8, 8], kind: "notch" } }
-          },
-          layout: { hero: "collage", columns: 12, asymmetry: 0.2, ornament: "frame", align: "start", imageTreatment: "halftone", sectionGap: 72, gutter: 28 },
-          motion: { signature: "snap", stiffness: 480, damping: 18, stagger: 90 }
+          }
         },
         "constructivist": {
           looks: {
@@ -938,9 +913,7 @@ orbital RasmThemeOrbital {
             "ornament/daycell/idle": { fill: "card", stroke: "foreground", strokeWidth: 2.5, shadow: { color: "#111111", blur: 0, offsetX: 4, offsetY: 4 } },
             "ornament/launch/idle": { fill: "foreground", stroke: "primary", strokeWidth: 5, shadow: { color: "#b80e1b", blur: 0, offsetX: 6, offsetY: 6 } },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet apex = vec2<f32>(s.x * 0.78, c.y);\nlet k = clamp((apex.x - p.x) / max(apex.x, 1.0), 0.0, 1.0);\nlet wedge = sg_fill((abs(p.y - c.y) - c.y * k) * 0.85) * step(p.x, apex.x);\nlet v = abs(fract((p.x - p.y) / 22.0) - 0.5) * 22.0;\nlet bar = (1.0 - smoothstep(4.0, 5.0, v)) * step(apex.x + 6.0, p.x);\nlet col = mix(px.color.rgb, vec3<f32>(0.82, 0.1, 0.1), wedge);\nreturn sg_out(px, col, max(wedge, bar));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "poster", columns: 12, asymmetry: 0.4, ornament: "none", align: "start", imageTreatment: "duotone", sectionGap: 96, gutter: 32 },
-          motion: { signature: "kinetic", stiffness: 360, damping: 28, stagger: 50 }
+          }
         },
         "corporate": {
           looks: {
@@ -996,9 +969,7 @@ orbital RasmThemeOrbital {
             "text/quote/idle": { textColor: "foreground", font: "400 34px display" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_box(p: vec2<f32>, h: vec2<f32>) -> f32 { let q = abs(p) - h; return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nvar a = 0.0;\nlet bw = min(s.x * 0.1, 28.0);\nfor (var i = 0; i < 5; i = i + 1) {\n  let f = f32(i);\n  let bx = c.x + (f - 2.0) * bw * 1.6;\n  let bh = s.y * (0.22 + 0.13 * f);\n  let d = sg_box(p - vec2<f32>(bx, s.y - 8.0 - bh * 0.5), vec2<f32>(bw * 0.5, bh * 0.5));\n  a = max(a, sg_fill(d) * (0.4 + 0.15 * f));\n}\na = max(a, sg_line(p.y - (s.y - 6.0), 0.8));\nreturn sg_out(px, px.color.rgb, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.0, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 96, gutter: 48 },
-          motion: { signature: "rise", stiffness: 180, damping: 26, stagger: 60 }
+          }
         },
         "cyberpunk": {
           looks: {
@@ -1042,9 +1013,7 @@ orbital RasmThemeOrbital {
             "textfield/default/placeholder": { textColor: "placeholder", font: "500 16px mono" },
             "morph/default/idle": { fill: "secondary" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet q = min(p, s - p);\nlet arm = clamp(m * 0.3, 18.0, 56.0);\nlet v = sg_line(q.x - 8.0, 1.4) * (1.0 - smoothstep(arm - 1.0, arm, q.y)) * smoothstep(6.0, 7.0, q.y);\nlet h = sg_line(q.y - 8.0, 1.4) * (1.0 - smoothstep(arm - 1.0, arm, q.x)) * smoothstep(6.0, 7.0, q.x);\nlet scan = step(fract(p.y / 3.0), 0.34) * 0.12;\nlet tk = step(s.x - 90.0, p.x) * step(abs(p.y - 17.0), 3.0) * (1.0 - smoothstep(0.4, 1.2, min(fract(p.x / 9.0), 1.0 - fract(p.x / 9.0)) * 9.0));\nlet col = mix(px.color.rgb, vec3<f32>(1.0, 0.15, 0.55), tk);\nreturn sg_out(px, col, max(max(v, h), max(scan, tk)));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "full-bleed", columns: 12, asymmetry: 0.25, ornament: "frame", align: "start", imageTreatment: "glow", sectionGap: 104, gutter: 40 },
-          motion: { signature: "kinetic", stiffness: 260, damping: 18, stagger: 45 }
+          }
         },
         "haven": {
           looks: {
@@ -1100,8 +1069,6 @@ orbital RasmThemeOrbital {
             "toggle/switch/off-idle": { stroke: "border" },
             "toggle/switch/off-hovered": { stroke: "border" }
           },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 },
-          motion: { signature: "rise", stiffness: 120, damping: 22, stagger: 90 },
           palette: "inline"
         },
         "gazette": {
@@ -1156,9 +1123,7 @@ orbital RasmThemeOrbital {
             "morph/default/idle": { fill: "accent", stroke: "foreground", strokeWidth: 1.5 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet top = max(sg_line(p.y - 6.0, 1.5), sg_line(p.y - 11.0, 0.5));\nlet vr = max(sg_line(p.x - s.x / 3.0, 0.5), sg_line(p.x - s.x * 2.0 / 3.0, 0.5)) * step(16.0, p.y);\nlet q = p - c;\nlet dg = max(sg_line(abs(q.x) + abs(q.y) - 9.0, 1.0), max(sg_fill(length(q) - 2.5), sg_fill(length(vec2<f32>(abs(q.x) - 17.0, q.y)) - 2.0)));\nreturn sg_out(px, px.color.rgb, max(max(top, vr), dg));\n}\n", params: [0, 0, 0, 0], live: false } },
             "grid/rule/idle": { stroke: "foreground", strokeWidth: 0.75 }
-          },
-          layout: { hero: "editorial", columns: 12, asymmetry: 0.15, ornament: "double-rule", align: "start", imageTreatment: "engraving", sectionGap: 96, gutter: 40 },
-          motion: { signature: "rise", stiffness: 140, damping: 24, stagger: 90 }
+          }
         },
         "gothic": {
           looks: {
@@ -1207,9 +1172,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "400 22px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 1.5 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_goth(q: vec2<f32>, hw: f32, ys: f32) -> f32 { return select(abs(q.x - hw), abs(length(q - vec2<f32>(-hw, ys)) - 2.0 * hw), q.y < ys); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet hw = min(c.x * 0.8, s.y * 0.4);\nlet ys = 4.0 + 1.732 * hw;\nlet q = vec2<f32>(abs(p.x - c.x), p.y);\nlet inside = step(q.y, s.y - 4.0);\nlet arches = max(sg_line(sg_goth(q, hw, ys), 1.2), sg_line(sg_goth(q, hw * 0.72, ys), 0.7)) * inside;\nlet tref = max(sg_line(length(vec2<f32>(q.x, q.y - (ys - hw * 0.55))) - hw * 0.22, 0.8), sg_fill(length(vec2<f32>(q.x, q.y - (ys + hw * 0.5))) - 2.0));\nreturn sg_out(px, px.color.rgb, max(arches, tref));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "centered", columns: 8, asymmetry: 0, ornament: "frame", align: "center", imageTreatment: "duotone", sectionGap: 128, gutter: 56 },
-          motion: { signature: "ink-bleed", stiffness: 90, damping: 18, stagger: 140 }
+          }
         },
         "kawaii": {
           looks: {
@@ -1247,9 +1210,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "800 22px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_star(p: vec2<f32>, ro: f32, ri: f32) -> f32 { let r = length(p); let u = atan2(p.x, -p.y) * 0.795775; let f = abs(fract(u) - 0.5) * 2.0; return (r - mix(ri, ro, f)) * 0.8; }\nfn sg_heart(p: vec2<f32>, r: f32) -> f32 { let q = vec2<f32>(p.x, -p.y + r * 0.1) / (r * 1.1); let t = q.x * q.x + q.y * q.y - 1.0; let v = t * t * t - q.x * q.x * q.y * q.y * q.y; return v * r * 0.33; }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nvar col = px.color.rgb;\nvar a = 0.0;\nlet h1 = sg_fill(sg_heart(p - vec2<f32>(s.x * 0.3, c.y), m * 0.3));\ncol = mix(col, vec3<f32>(1.0, 0.45, 0.68), h1);\na = max(a, h1);\nlet h2 = sg_fill(sg_heart(p - vec2<f32>(s.x * 0.62, c.y * 1.15), m * 0.2));\na = max(a, h2);\nlet st = sg_fill(sg_star(p - vec2<f32>(s.x * 0.78, c.y * 0.7), m * 0.16, m * 0.07));\ncol = mix(col, vec3<f32>(1.0, 0.85, 0.35), st);\na = max(a, st);\nlet dt = sg_fill(length(p - vec2<f32>(s.x * 0.5, c.y * 0.45)) - 3.0);\na = max(a, dt);\nreturn sg_out(px, col, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "collage", columns: 12, asymmetry: 0.15, ornament: "stamp", align: "center", imageTreatment: "none", sectionGap: 96, gutter: 36 },
-          motion: { signature: "float", stiffness: 140, damping: 12, stagger: 80 }
+          }
         },
         "kiosk": {
           looks: {
@@ -1287,9 +1248,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "800 28px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_rbox(p: vec2<f32>, h: vec2<f32>, r: f32) -> f32 { let q = abs(p) - h + vec2<f32>(r, r); return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - r; }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet w = min(s.x * 0.28, m * 0.9);\nlet hy = min(w * 0.5, c.y - 5.0);\nvar a = 0.0;\nfor (var i = 0; i < 3; i = i + 1) {\n  let f = f32(i);\n  let bc = vec2<f32>(c.x + (f - 1.0) * w * 1.15, c.y);\n  a = max(a, sg_line(sg_rbox(p - bc, vec2<f32>(w * 0.5, hy), 14.0), 1.8));\n}\nlet rp = length(p - c);\na = max(a, max(sg_line(rp - 10.0, 1.0) * 0.8, max(sg_line(rp - 20.0, 1.0) * 0.4, sg_fill(rp - 4.0))));\nreturn sg_out(px, px.color.rgb, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "poster", columns: 6, asymmetry: 0.0, ornament: "none", align: "center", imageTreatment: "none", sectionGap: 96, gutter: 32 },
-          motion: { signature: "snap", stiffness: 300, damping: 26, stagger: 50 }
+          }
         },
         "linear-clean": {
           looks: {
@@ -1342,9 +1301,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "500 18px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet gx = (p.x - s.x * 0.7) / (s.x * 0.25);\nlet g = exp(-gx * gx);\nlet rule = sg_line(p.y - c.y, 0.5) * (0.25 + 0.75 * g);\nlet q = fract(p / 24.0) - vec2<f32>(0.5, 0.5);\nlet dots = (1.0 - smoothstep(0.8, 1.6, length(q) * 24.0)) * 0.3;\nlet glow = exp(-abs(p.y - c.y) / 10.0) * g * 0.35;\nreturn sg_out(px, px.color.rgb, max(max(rule, dots), glow));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "centered", columns: 12, asymmetry: 0.0, ornament: "rule", align: "center", imageTreatment: "glow", sectionGap: 112, gutter: 32 },
-          motion: { signature: "rise", stiffness: 220, damping: 26, stagger: 50 }
+          }
         },
         "luxury": {
           looks: {
@@ -1398,9 +1355,7 @@ orbital RasmThemeOrbital {
             "toggle/check/off-hovered": { stroke: "input" },
             "toggle/switch/off-idle": { stroke: "input" },
             "toggle/switch/off-hovered": { stroke: "input" }
-          },
-          layout: { hero: "centered", columns: 6, asymmetry: 0, ornament: "rule", align: "center", imageTreatment: "none", sectionGap: 160, gutter: 96 },
-          motion: { signature: "rise", stiffness: 90, damping: 24, stagger: 160 }
+          }
         },
         "material": {
           looks: {
@@ -1421,9 +1376,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "500 22px display" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_seg(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>) -> f32 { let pa = p - a; let ba = b - a; let h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0); return length(pa - ba * h); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet cc = vec2<f32>(c.x, c.y - m * 0.03);\nlet r = m * 0.28;\nlet sh = (1.0 - smoothstep(-r * 0.1, r * 0.35, length(p - cc - vec2<f32>(0.0, r * 0.18)) - r)) * 0.3;\nlet body = sg_fill(length(p - cc) - r);\nlet ripple = sg_line(length(p - cc) - r * 0.62, 1.0) * 0.35;\nlet pl = max(sg_line(sg_seg(p, cc - vec2<f32>(r * 0.35, 0.0), cc + vec2<f32>(r * 0.35, 0.0)), 1.6), sg_line(sg_seg(p, cc - vec2<f32>(0.0, r * 0.35), cc + vec2<f32>(0.0, r * 0.35)), 1.6));\nvar col = mix(vec3<f32>(0.0, 0.0, 0.0), px.color.rgb, body);\ncol = mix(col, vec3<f32>(1.0, 1.0, 1.0), max(pl, ripple));\nreturn sg_out(px, col, max(max(body, sh), pl));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "full-bleed", columns: 12, asymmetry: 0.15, ornament: "none", align: "start", imageTreatment: "duotone", sectionGap: 96, gutter: 32 },
-          motion: { signature: "snap", stiffness: 260, damping: 24, stagger: 40 }
+          }
         },
         "memphis": {
           looks: {
@@ -1474,9 +1427,7 @@ orbital RasmThemeOrbital {
             "textfield/default/placeholder": { textColor: "placeholder", font: "500 16px body" },
             "morph/default/idle": { fill: "secondary", stroke: "foreground", strokeWidth: 3 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_rot(p: vec2<f32>, a: f32) -> vec2<f32> { let c = cos(a); let s = sin(a); return vec2<f32>(c * p.x - s * p.y, s * p.x + c * p.y); }\nfn sg_tri(p: vec2<f32>, r: f32) -> f32 { return max(p.y - 0.5 * r, max(dot(p, vec2<f32>(0.866, -0.5)), dot(p, vec2<f32>(-0.866, -0.5))) - 0.5 * r); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nvar col = px.color.rgb;\nvar a = 0.0;\nlet y0 = s.y * 0.7 + sin(p.x * 0.22) * 5.0;\na = max(a, sg_line(p.y - y0, 2.0) * step(s.x * 0.1, p.x) * step(p.x, s.x * 0.5));\nlet t1 = sg_fill(sg_tri(p - vec2<f32>(s.x * 0.72, s.y * 0.35), m * 0.2));\ncol = mix(col, vec3<f32>(1.0, 0.4, 0.7), t1);\na = max(a, t1);\nlet t2 = sg_fill(sg_tri(sg_rot(p - vec2<f32>(s.x * 0.85, s.y * 0.7), 0.6), m * 0.12));\ncol = mix(col, vec3<f32>(0.1, 0.8, 0.75), t2);\na = max(a, t2);\nlet qd = fract(p / 12.0) - vec2<f32>(0.5, 0.5);\nlet region = step(abs(p.x - s.x * 0.2), 30.0) * step(abs(p.y - s.y * 0.3), 20.0);\na = max(a, sg_fill(length(qd) * 12.0 - 2.5) * region);\nlet cr = sg_line(length(p - vec2<f32>(s.x * 0.45, s.y * 0.3)) - m * 0.14, 2.5);\ncol = mix(col, vec3<f32>(1.0, 0.85, 0.2), cr);\na = max(a, cr);\nreturn sg_out(px, col, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "collage", columns: 12, asymmetry: 0.35, ornament: "none", align: "start", imageTreatment: "duotone", sectionGap: 88, gutter: 36 },
-          motion: { signature: "paper-drop", stiffness: 260, damping: 9, stagger: 45 }
+          }
         },
         "mid-century": {
           looks: {
@@ -1521,9 +1472,7 @@ orbital RasmThemeOrbital {
             "text/label/idle": { textColor: "foreground", font: "600 14px body" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 2 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_seg(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>) -> f32 { let pa = p - a; let ba = b - a; let h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0); return length(pa - ba * h); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet o = vec2<f32>(s.x * 0.72, c.y);\nvar a = 0.0;\nfor (var i = 0; i < 8; i = i + 1) {\n  let f = f32(i);\n  let ang = f * 0.7854;\n  let dir = vec2<f32>(cos(ang), sin(ang));\n  let alt = f * 0.5 - floor(f * 0.5);\n  let l = m * (0.3 + 0.2 * alt);\n  a = max(a, max(sg_line(sg_seg(p - o, vec2<f32>(0.0, 0.0), dir * l), 0.9), sg_fill(length(p - o - dir * l) - 3.5)));\n}\nlet cc = vec2<f32>(s.x * 0.3, c.y);\nlet rr = m * 0.4;\nlet dA = length(p - cc) - rr;\nlet dB = length(p - cc - vec2<f32>(rr * 0.28, rr * 0.34)) - rr * 0.92;\nlet boom = sg_fill(max(dA, -dB));\nlet col = mix(vec3<f32>(0.1, 0.55, 0.55), px.color.rgb, boom);\nreturn sg_out(px, col, max(a, boom));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.3, ornament: "none", align: "start", imageTreatment: "duotone", sectionGap: 96, gutter: 40 },
-          motion: { signature: "kinetic", stiffness: 220, damping: 18, stagger: 60 }
+          }
         },
         "minimalist": {
           looks: {
@@ -1577,9 +1526,7 @@ orbital RasmThemeOrbital {
             "toggle/check/off-hovered": { stroke: "input" },
             "toggle/switch/off-idle": { stroke: "input" },
             "toggle/switch/off-hovered": { stroke: "input" }
-          },
-          layout: { hero: "centered", columns: 12, asymmetry: 0.0, ornament: "none", align: "center", imageTreatment: "none", sectionGap: 160, gutter: 48 },
-          motion: { signature: "rise", stiffness: 120, damping: 24, stagger: 110 }
+          }
         },
         "mudcloth": {
           looks: {
@@ -1618,9 +1565,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "400 22px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 3 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet rowH = 26.0;\nlet row = floor(p.y / rowH);\nlet kind = row - 3.0 * floor(row / 3.0);\nlet q = vec2<f32>(p.x, (p.y - row * rowH) - rowH * 0.5);\nlet dots = sg_fill(length(vec2<f32>(fract(q.x / 16.0) * 16.0 - 8.0, q.y)) - 3.0);\nlet zz = sg_line((q.y - (abs(fract(q.x / 20.0) - 0.5) * 20.0 - 5.0)) * 0.7, 1.2);\nlet fx = fract(q.x / 20.0) * 20.0 - 10.0;\nlet cr = max(sg_line(fx, 1.0) * step(abs(q.y), 6.0), sg_line(q.y, 1.0) * step(abs(fx), 6.0));\nlet pick = select(select(cr, zz, kind > 0.5 && kind < 1.5), dots, kind < 0.5);\nlet sep = sg_line(p.y - row * rowH, 0.8) * 0.8;\nreturn sg_out(px, px.color.rgb, max(pick, sep));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "offset", columns: 12, asymmetry: 0.35, ornament: "rule", align: "start", imageTreatment: "grain", sectionGap: 96, gutter: 40 },
-          motion: { signature: "paper-drop", stiffness: 200, damping: 16, stagger: 80 }
+          }
         },
         "neon": {
           looks: {
@@ -1668,9 +1613,7 @@ orbital RasmThemeOrbital {
             "ticket/body/idle": { fill: "background", stroke: "primary", strokeWidth: 2, corners: { radius: [14, 14, 14, 14], kind: "round" }, shadow: { color: "rgba(255,60,220,0.6)", blur: 16 } },
             "ticket/stub/idle": { fill: "background", stroke: "accent", strokeWidth: 2, corners: { radius: [14, 14, 14, 14], kind: "round" }, shadow: { color: "rgba(40,240,255,0.6)", blur: 16 } },
             "ticket/perforation/idle": { stroke: "accent", strokeWidth: 2, strokeDash: [3, 6], shadow: { color: "rgba(40,240,255,0.6)", blur: 8 } }
-          },
-          layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "frame", align: "center", imageTreatment: "glow", sectionGap: 112, gutter: 48 },
-          motion: { signature: "rise", stiffness: 140, damping: 24, stagger: 80 }
+          }
         },
         "neumorphic": {
           looks: {
@@ -1716,9 +1659,7 @@ orbital RasmThemeOrbital {
             "textfield/default/placeholder": { textColor: "placeholder", font: "600 16px body" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_rbox(p: vec2<f32>, h: vec2<f32>, r: f32) -> f32 { let q = abs(p) - h + vec2<f32>(r, r); return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - r; }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet hh = vec2<f32>(min(c.x * 0.6, m * 0.3), m * 0.28);\nlet dk = (1.0 - smoothstep(-6.0, 10.0, sg_rbox(p - c - vec2<f32>(8.0, 8.0), hh, 16.0))) * 0.5;\nlet lt = (1.0 - smoothstep(-6.0, 10.0, sg_rbox(p - c + vec2<f32>(8.0, 8.0), hh, 16.0))) * 0.9;\nlet face = sg_fill(sg_rbox(p - c, hh, 16.0));\nlet col = (vec3<f32>(1.0, 1.0, 1.0) * lt + px.color.rgb * dk) / max(lt + dk, 0.001);\nreturn sg_out(px, col, max(lt, dk) * (1.0 - face));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 },
-          motion: { signature: "rise", stiffness: 150, damping: 22, stagger: 80 }
+          }
         },
         "newsprint": {
           looks: {
@@ -1762,9 +1703,7 @@ orbital RasmThemeOrbital {
             "morph/default/idle": { fill: "foreground", stroke: "foreground", strokeWidth: 2 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_rot(p: vec2<f32>, a: f32) -> vec2<f32> { let c = cos(a); let s = sin(a); return vec2<f32>(c * p.x - s * p.y, s * p.x + c * p.y); }\nfn sg_halftone(p: vec2<f32>, cell: f32, ang: f32, rad: f32) -> f32 { let q = sg_rot(p, ang) / cell; let c = fract(q) - vec2<f32>(0.5, 0.5); return (1.0 - smoothstep(rad - 0.08, rad + 0.08, length(c))) * step(0.03, rad); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet top = max(sg_line(p.y - 5.0, 2.0), sg_line(p.y - 11.0, 0.5));\nlet gut = sg_line(p.x - s.x * 0.5, 0.5) * step(fract(p.y / 6.0), 0.5) * step(16.0, p.y);\nlet ht = sg_halftone(p, 7.0, 0.7854, 0.5 * (1.0 - px.uv.y)) * step(p.x, s.x * 0.28) * step(20.0, p.y);\nreturn sg_out(px, px.color.rgb, max(max(top, gut), ht));\n}\n", params: [0, 0, 0, 0], live: false } },
             "grid/rule/idle": { stroke: "foreground", strokeWidth: 0.75 }
-          },
-          layout: { hero: "editorial", columns: 12, asymmetry: 0.1, ornament: "double-rule", align: "start", imageTreatment: "halftone", sectionGap: 72, gutter: 28 },
-          motion: { signature: "rise", stiffness: 260, damping: 28, stagger: 40 }
+          }
         },
         "notion-editorial": {
           looks: {
@@ -1809,9 +1748,7 @@ orbital RasmThemeOrbital {
             "textfield/default/placeholder": { textColor: "placeholder", font: "400 16px body" },
             "morph/default/idle": { fill: "accent", corners: { radius: [4, 4, 4, 4], kind: "round" } },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_rbox(p: vec2<f32>, h: vec2<f32>, r: f32) -> f32 { let q = abs(p) - h + vec2<f32>(r, r); return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - r; }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nvar a = 0.0;\nfor (var i = 0; i < 6; i = i + 1) {\n  let f = f32(i);\n  let cx = f - 2.0 * floor(f * 0.5);\n  let ry = floor(f * 0.5);\n  a = max(a, sg_fill(length(p - vec2<f32>(8.0 + cx * 6.0, c.y - 6.0 + ry * 6.0)) - 1.6));\n}\na = max(a, sg_line(sg_rbox(p - vec2<f32>(40.0, c.y), vec2<f32>(7.0, 7.0), 2.0), 0.9));\nlet l1 = max((s.x - 70.0) * 0.8, 8.0);\nlet l2 = l1 * 0.6;\na = max(a, sg_fill(sg_rbox(p - vec2<f32>(56.0 + l1 * 0.5, c.y - 4.0), vec2<f32>(l1 * 0.5, 2.0), 2.0)) * 0.55);\na = max(a, sg_fill(sg_rbox(p - vec2<f32>(56.0 + l2 * 0.5, c.y + 6.0), vec2<f32>(l2 * 0.5, 2.0), 2.0)) * 0.4);\nreturn sg_out(px, px.color.rgb, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "editorial", columns: 8, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 120, gutter: 56 },
-          motion: { signature: "rise", stiffness: 150, damping: 22, stagger: 80 }
+          }
         },
         "prism": {
           looks: {
@@ -1857,9 +1794,7 @@ orbital RasmThemeOrbital {
             "morph/bill/idle": { stroke: "series-2", strokeWidth: 3.5 },
             "morph/use/idle": { stroke: "series-3", strokeWidth: 3.5 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_tri(p: vec2<f32>, r: f32) -> f32 { return max(p.y - 0.5 * r, max(dot(p, vec2<f32>(0.866, -0.5)), dot(p, vec2<f32>(-0.866, -0.5))) - 0.5 * r); }\nfn sg_rainbow(t: f32) -> vec3<f32> { return vec3<f32>(0.5, 0.5, 0.5) + vec3<f32>(0.5, 0.5, 0.5) * cos(6.28318 * (vec3<f32>(t, t, t) + vec3<f32>(0.0, 0.33, 0.67))); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet pc = vec2<f32>(s.x * 0.28, c.y);\nlet r = m * 0.38;\nlet outline = sg_line(sg_tri(p - pc, r), 1.4);\nlet x0 = pc.x + r * 0.4;\nlet t = clamp((p.x - x0) / max(s.x - x0, 1.0), 0.0, 1.0);\nlet hgt = m * 0.04 + m * 0.4 * t;\nlet u = (p.y - c.y) / max(hgt, 1.0);\nlet inside = (1.0 - smoothstep(0.97, 1.0, abs(u))) * step(x0, p.x);\nlet beam = sg_line(p.y - c.y, 0.7) * step(p.x, pc.x - r * 0.1) * step(8.0, p.x);\nlet col = mix(px.color.rgb, sg_rainbow(u * 0.4 + 0.4), inside);\nreturn sg_out(px, col, max(max(outline, beam), inside * 0.85));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.15, ornament: "none", align: "start", imageTreatment: "glow", sectionGap: 120, gutter: 48 },
-          motion: { signature: "float", stiffness: 120, damping: 20, stagger: 90 }
+          }
         },
         "retro": {
           looks: {
@@ -1880,9 +1815,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "400 22px display" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 2 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet cc = vec2<f32>(c.x, s.y * 0.6);\nlet r = m * 0.42;\nlet disc = sg_fill(length(p - cc) - r);\nlet gk = clamp((p.y - cc.y) / max(r, 1.0), 0.0, 1.0);\nlet band = step(gk * 0.7, fract(p.y / 9.0));\nlet lower = step(cc.y, p.y);\nlet col = mix(vec3<f32>(1.0, 0.82, 0.25), vec3<f32>(0.95, 0.25, 0.5), clamp((p.y - (cc.y - r)) / max(2.0 * r, 1.0), 0.0, 1.0));\nreturn sg_out(px, col, disc * mix(1.0, band, lower));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "poster", columns: 12, asymmetry: 0.1, ornament: "none", align: "center", imageTreatment: "grain", sectionGap: 104, gutter: 48 },
-          motion: { signature: "float", stiffness: 120, damping: 16, stagger: 90 }
+          }
         },
         "risograph": {
           looks: {
@@ -1923,9 +1856,7 @@ orbital RasmThemeOrbital {
             "text/numeral/idle": { textColor: "ring", font: "700 200px display" },
             "morph/default/idle": { fill: "secondary", stroke: "foreground", strokeWidth: 2 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_rot(p: vec2<f32>, a: f32) -> vec2<f32> { let c = cos(a); let s = sin(a); return vec2<f32>(c * p.x - s * p.y, s * p.x + c * p.y); }\nfn sg_halftone(p: vec2<f32>, cell: f32, ang: f32, rad: f32) -> f32 { let q = sg_rot(p, ang) / cell; let c = fract(q) - vec2<f32>(0.5, 0.5); return (1.0 - smoothstep(rad - 0.08, rad + 0.08, length(c))) * step(0.03, rad); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet r = clamp(1.0 - length(p - c) / (m * 0.55), 0.0, 1.0);\nlet aa = sg_halftone(p, 9.0, 0.2618, r * 0.62);\nlet ab = sg_halftone(p + vec2<f32>(4.0, -3.0), 9.0, 1.309, r * 0.62);\nlet col = mix(vec3<f32>(1.0, 0.28, 0.69), px.color.rgb, aa / (aa + ab + 0.0001));\nreturn sg_out(px, col, max(aa, ab));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "poster", columns: 12, asymmetry: 0.25, ornament: "stamp", align: "start", imageTreatment: "riso", sectionGap: 96, gutter: 40 },
-          motion: { signature: "print-pass", stiffness: 240, damping: 20, stagger: 60 }
+          }
         },
         "scandi": {
           looks: {
@@ -1961,9 +1892,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "400 22px display" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_rot(p: vec2<f32>, a: f32) -> vec2<f32> { let c = cos(a); let s = sin(a); return vec2<f32>(c * p.x - s * p.y, s * p.x + c * p.y); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet stem = c.x + sin(p.y * 0.025) * 6.0;\nvar a = sg_line(p.x - stem, 0.8) * step(10.0, p.y) * step(p.y, s.y - 6.0);\nfor (var i = 0; i < 4; i = i + 1) {\n  let f = f32(i);\n  let yk = s.y * 0.78 - f * s.y * 0.18;\n  let side = select(1.0, -1.0, fract(f * 0.5) > 0.25);\n  let lp = sg_rot(p - vec2<f32>(c.x + sin(yk * 0.025) * 6.0 + side * 13.0, yk - 6.0), side * -0.7);\n  a = max(a, sg_line((length(lp / vec2<f32>(14.0, 5.5)) - 1.0) * 5.5, 0.8));\n}\nreturn sg_out(px, px.color.rgb, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.12, ornament: "none", align: "start", imageTreatment: "grain", sectionGap: 128, gutter: 56 },
-          motion: { signature: "rise", stiffness: 130, damping: 24, stagger: 90 }
+          }
         },
         "sketch": {
           looks: {
@@ -2001,9 +1930,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "700 24px display" },
             "morph/default/idle": { fill: "accent", stroke: "foreground", strokeWidth: 2, corners: { radius: [18, 22, 16, 24], kind: "round" } },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_box(p: vec2<f32>, h: vec2<f32>) -> f32 { let q = abs(p) - h; return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet w = p + vec2<f32>(sin(p.y * 0.11 + 1.0), sin(p.x * 0.09)) * 1.8;\nlet w2 = p + vec2<f32>(sin(p.y * 0.13 + 4.0), sin(p.x * 0.1 + 2.0)) * 2.0 + vec2<f32>(2.0, 1.5);\nlet h = c - vec2<f32>(9.0, 9.0);\nlet a = max(sg_line(sg_box(w - c, h), 0.8), sg_line(sg_box(w2 - c, h), 0.6) * 0.8);\nreturn sg_out(px, px.color.rgb, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "collage", columns: 12, asymmetry: 0.25, ornament: "rule", align: "start", imageTreatment: "grain", sectionGap: 104, gutter: 44 },
-          motion: { signature: "ink-bleed", stiffness: 130, damping: 11, stagger: 110 }
+          }
         },
         "solarpunk": {
           looks: {
@@ -2060,9 +1987,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "600 23px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_seg(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>) -> f32 { let pa = p - a; let ba = b - a; let h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0); return length(pa - ba * h); }\nfn sg_rot(p: vec2<f32>, a: f32) -> vec2<f32> { let c = cos(a); let s = sin(a); return vec2<f32>(c * p.x - s * p.y, s * p.x + c * p.y); }\nfn sg_leaf(p: vec2<f32>, h: f32, t: f32) -> f32 { let rr = (h * h + t * t) / (2.0 * t); let off = rr - t; return max(length(p - vec2<f32>(off, 0.0)) - rr, length(p + vec2<f32>(off, 0.0)) - rr); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nvar col = px.color.rgb;\nvar a = 0.0;\nlet sun = vec2<f32>(s.x * 0.8, s.y * 0.3);\nlet r = m * 0.17;\nlet yellow = vec3<f32>(1.0, 0.78, 0.2);\nlet disc = sg_fill(length(p - sun) - r);\ncol = mix(col, yellow, disc);\na = max(a, disc);\nfor (var i = 0; i < 10; i = i + 1) {\n  let ang = f32(i) * 0.628318;\n  let dir = vec2<f32>(cos(ang), sin(ang));\n  let ray = sg_line(sg_seg(p, sun + dir * r * 1.3, sun + dir * r * 1.9), 1.3);\n  col = mix(col, yellow, ray);\n  a = max(a, ray);\n}\nlet base = vec2<f32>(s.x * 0.2, s.y * 0.92);\nlet green = vec3<f32>(0.3, 0.72, 0.35);\nfor (var j = 0; j < 3; j = j + 1) {\n  let ang = -0.9 + f32(j) * 0.8;\n  let lf = sg_fill(sg_leaf(sg_rot(p - base, ang) - vec2<f32>(0.0, -m * 0.3), m * 0.3, m * 0.1));\n  col = mix(col, green, lf);\n  a = max(a, lf);\n}\nreturn sg_out(px, col, a);\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 112, gutter: 48 },
-          motion: { signature: "float", stiffness: 110, damping: 18, stagger: 100 }
+          }
         },
         "steampunk": {
           looks: {
@@ -2098,9 +2023,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "700 22px display" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 2 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet gc = vec2<f32>(s.x * 0.3, c.y);\nlet r0 = m * 0.3;\nlet q = p - gc;\nlet r = length(q);\nlet u = atan2(q.x, -q.y) * 1.591549;\nlet f = abs(fract(u) - 0.5) * 2.0;\nlet rr = r0 * (1.0 + 0.17 * smoothstep(0.3, 0.6, f));\nlet body = sg_fill(r - rr) * (1.0 - sg_fill(r - r0 * 0.5));\nlet hub = sg_fill(r - r0 * 0.18);\nlet ring = sg_line(r - r0 * 0.7, 0.8);\nlet rv = sg_fill(length(vec2<f32>(fract(p.x / 14.0) * 14.0 - 7.0, p.y - (s.y - 8.0))) - 2.2) * step(s.x * 0.55, p.x);\nreturn sg_out(px, px.color.rgb, max(max(body, hub), max(ring, rv)));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "frame", align: "start", imageTreatment: "engraving", sectionGap: 112, gutter: 48 },
-          motion: { signature: "snap", stiffness: 300, damping: 30, stagger: 40 }
+          }
         },
         "swiss": {
           looks: {
@@ -2139,9 +2062,7 @@ orbital RasmThemeOrbital {
             "morph/default/idle": { fill: "primary" },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet rule = sg_fill(abs(p.y - c.y) - 3.0);\nlet d = min(fract(p.x / 24.0), 1.0 - fract(p.x / 24.0)) * 24.0;\nlet tk = (1.0 - smoothstep(0.3, 1.3, d)) * step(c.y - 16.0, p.y) * step(p.y, c.y - 6.0);\nreturn sg_out(px, px.color.rgb, max(rule, tk));\n}\n", params: [0, 0, 0, 0], live: false } },
             "text/poster/idle": { textColor: "foreground", font: "800 168px display" }
-          },
-          layout: { hero: "offset", columns: 12, asymmetry: 0.33, ornament: "rule", align: "start", imageTreatment: "none", sectionGap: 128, gutter: 24 },
-          motion: { signature: "kinetic", stiffness: 320, damping: 32, stagger: 60 }
+          }
         },
         "terminal": {
           looks: {
@@ -2193,9 +2114,7 @@ orbital RasmThemeOrbital {
             "text/label/idle": { textColor: "foreground", font: "600 13px mono" },
             "morph/default/idle": { fill: "primary" },
             "ornament/signature/idle": { fill: "primary", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_box(p: vec2<f32>, h: vec2<f32>) -> f32 { let q = abs(p) - h; return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn sg_seg(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>) -> f32 { let pa = p - a; let ba = b - a; let h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0); return length(pa - ba * h); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet blink = 1.0 - step(0.5, fract(px.time));\nlet blk = sg_fill(sg_box(p - vec2<f32>(44.0, c.y), vec2<f32>(7.0, 11.0))) * blink;\nlet chev = max(sg_line(sg_seg(p, vec2<f32>(10.0, c.y - 8.0), vec2<f32>(20.0, c.y)), 1.3), sg_line(sg_seg(p, vec2<f32>(20.0, c.y), vec2<f32>(10.0, c.y + 8.0)), 1.3));\nlet scan = step(fract(p.y / 3.0), 0.33) * 0.12;\nreturn sg_out(px, px.color.rgb, max(max(chev, blk), scan));\n}\n", params: [0, 0, 0, 0], live: true } }
-          },
-          layout: { hero: "offset", columns: 12, asymmetry: 0.0, ornament: "rule", align: "start", imageTreatment: "scanline", sectionGap: 80, gutter: 32 },
-          motion: { signature: "snap", stiffness: 400, damping: 40, stagger: 30 }
+          }
         },
         "ukiyo-e": {
           looks: {
@@ -2233,9 +2152,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "400 22px display", on: "card/surface/idle" },
             "morph/default/idle": { fill: "accent", stroke: "primary", strokeWidth: 2 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_line(d: f32, w: f32) -> f32 { return 1.0 - smoothstep(w - 0.7, w + 0.7, abs(d)); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet r = 22.0;\nlet rowH = r * 0.5;\nlet row = floor(p.y / rowH);\nlet xo = (row - 2.0 * floor(row * 0.5)) * r * 0.5;\nlet lx = (fract((p.x + xo) / r) - 0.5) * r;\nlet ly = p.y - (row + 1.0) * rowH;\nlet d = length(vec2<f32>(lx, ly));\nlet arcs = max(sg_line(d - rowH + 0.5, 0.7), max(sg_line(d - rowH * 0.7, 0.7), sg_line(d - rowH * 0.4, 0.7)));\nreturn sg_out(px, px.color.rgb, arcs * step(ly, 0.0));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "editorial", columns: 12, asymmetry: 0.25, ornament: "rule", align: "start", imageTreatment: "duotone", sectionGap: 112, gutter: 56 },
-          motion: { signature: "ink-bleed", stiffness: 100, damping: 20, stagger: 120 }
+          }
         },
         "vaporwave": {
           looks: {
@@ -2290,9 +2207,7 @@ orbital RasmThemeOrbital {
             "window/frame/idle": { fill: "card", stroke: "accent", strokeWidth: 2, corners: { radius: [0, 0, 0, 0], kind: "round" }, shadow: { color: "rgba(255,80,220,0.45)", blur: 18 } },
             "window/titlebar/idle": { fill: "primary", stroke: "accent", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" }, textColor: "primary-foreground", font: "700 13px display" },
             "window/control/idle": { fill: "accent", stroke: "primary", strokeWidth: 1.5, corners: { radius: [0, 0, 0, 0], kind: "round" } }
-          },
-          layout: { hero: "centered", columns: 12, asymmetry: 0.1, ornament: "frame", align: "center", imageTreatment: "glow", sectionGap: 120, gutter: 48 },
-          motion: { signature: "rise", stiffness: 150, damping: 20, stagger: 90 }
+          }
         },
         "wabi-sabi": {
           looks: {
@@ -2346,9 +2261,7 @@ orbital RasmThemeOrbital {
             "toggle/check/off-hovered": { stroke: "input" },
             "toggle/switch/off-idle": { stroke: "input" },
             "toggle/switch/off-hovered": { stroke: "input" }
-          },
-          layout: { hero: "offset", columns: 12, asymmetry: 0.3, ornament: "stamp", align: "start", imageTreatment: "grain", sectionGap: 136, gutter: 64 },
-          motion: { signature: "ink-bleed", stiffness: 90, damping: 24, stagger: 140 }
+          }
         },
         "wayfinding": {
           looks: {
@@ -2420,8 +2333,6 @@ orbital RasmThemeOrbital {
             "toggle/switch/off-idle": { stroke: "border" },
             "toggle/switch/off-hovered": { stroke: "border" }
           },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 32 },
-          motion: { signature: "snap", stiffness: 420, damping: 34, stagger: 60 },
           palette: "inline"
         },
         "vibrant": {
@@ -2486,8 +2397,6 @@ orbital RasmThemeOrbital {
             "textfield/default/idle": { fill: "card", stroke: "foreground", strokeWidth: 2, corners: { radius: [16, 16, 16, 16], kind: "round" }, textColor: "foreground", font: "500 17px body" }
           },
           breakpointLooks: { phone: { "text/label/idle": { textColor: "foreground", font: "700 13px body" }, "text/caption/idle": { textColor: "muted-foreground", font: "500 13px body" }, "text/numeral/idle": { textColor: "#16130F", font: "800 112px display" }, "text/numeral/inverse": { textColor: "#FFFFFF", font: "800 112px display" }, "text/display/idle": { textColor: "foreground", font: "800 46px display" }, "text/title/idle": { textColor: "foreground", font: "800 36px display" }, "text/title/inverse": { textColor: "#FFFFFF", font: "800 36px display" } }, tablet: { "text/numeral/idle": { textColor: "#16130F", font: "800 160px display" }, "text/numeral/inverse": { textColor: "#FFFFFF", font: "800 160px display" }, "text/display/idle": { textColor: "foreground", font: "800 64px display" } } },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 0, gutter: 40 },
-          motion: { signature: "rise", stiffness: 300, damping: 26, stagger: 90 },
           palette: "inline"
         },
         "redline": {
@@ -2551,8 +2460,6 @@ orbital RasmThemeOrbital {
             "toggle/switch/off-idle": { stroke: "border" },
             "toggle/switch/off-hovered": { stroke: "border" }
           },
-          layout: { hero: "split", columns: 12, asymmetry: 0.2, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 112, gutter: 48 },
-          motion: { signature: "rise", stiffness: 160, damping: 24, stagger: 80 },
           palette: "inline"
         },
         "statement": {
@@ -2605,8 +2512,6 @@ orbital RasmThemeOrbital {
             "focus/ring/outer": { stroke: "background", strokeWidth: 6 },
             "focus/ring/inner": { stroke: "ring", strokeWidth: 3 }
           },
-          layout: { hero: "split", columns: 12, asymmetry: 0.15, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 104, gutter: 40 },
-          motion: { signature: "rise", stiffness: 140, damping: 26, stagger: 80 },
           palette: "inline"
         },
         "timeclock": {
@@ -2660,8 +2565,6 @@ orbital RasmThemeOrbital {
             "textfield/default/hovered": { fill: "card", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "card-foreground", font: "400 16px body" },
             "textfield/default/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [12, 12, 12, 12], kind: "round" }, textColor: "card-foreground", font: "400 16px body" }
           },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 32 },
-          motion: { signature: "rise", stiffness: 380, damping: 34, stagger: 60 },
           palette: "inline"
         },
         "signing-desk": {
@@ -2713,8 +2616,6 @@ orbital RasmThemeOrbital {
             "textfield/default/hovered": { fill: "card", stroke: "foreground", strokeWidth: 2, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "500 15px mono", spring: { stiffness: 420, damping: 34 } },
             "textfield/default/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "foreground", font: "500 15px mono", spring: { stiffness: 420, damping: 34 } }
           },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 96, gutter: 32 },
-          motion: { signature: "rise", stiffness: 260, damping: 30, stagger: 80 },
           palette: "inline"
         },
         "greenbar": {
@@ -2753,8 +2654,6 @@ orbital RasmThemeOrbital {
             "ornament/tile/idle": { fill: "muted", corners: { radius: [8, 8, 8, 8], kind: "round" } },
             "ornament/bar/idle": { fill: "primary", corners: { radius: [7, 7, 7, 7], kind: "round" } }
           },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 104, gutter: 32 },
-          motion: { signature: "rise", stiffness: 260, damping: 28, stagger: 70 },
           palette: "inline"
         },
         "wireframe": {
@@ -2809,9 +2708,7 @@ orbital RasmThemeOrbital {
             "toggle/check/off-hovered": { stroke: "input" },
             "toggle/switch/off-idle": { stroke: "input" },
             "toggle/switch/off-hovered": { stroke: "input" }
-          },
-          layout: { hero: "split", columns: 12, asymmetry: 0.1, ornament: "frame", align: "start", imageTreatment: "none", sectionGap: 72, gutter: 32 },
-          motion: { signature: "snap", stiffness: 500, damping: 40, stagger: 40 }
+          }
         },
         "zine": {
           looks: {
@@ -2855,9 +2752,7 @@ orbital RasmThemeOrbital {
             "text/card/idle": { textColor: "card-foreground", font: "400 28px display" },
             "morph/default/idle": { fill: "primary", stroke: "foreground", strokeWidth: 3 },
             "ornament/signature/idle": { fill: "foreground", material: { wgsl: "fn sg_out(px: Pixel, col: vec3<f32>, a: f32) -> vec4<f32> { let k = clamp(a, 0.0, 1.0) * px.color.a; return vec4<f32>(col, k); }\nfn sg_fill(d: f32) -> f32 { return 1.0 - smoothstep(-0.7, 0.7, d); }\nfn sg_rot(p: vec2<f32>, a: f32) -> vec2<f32> { let c = cos(a); let s = sin(a); return vec2<f32>(c * p.x - s * p.y, s * p.x + c * p.y); }\nfn shade(px: Pixel) -> vec4<f32> {\nlet p = px.local;\nlet s = px.size;\nlet c = s * 0.5;\nlet m = min(s.x, s.y);\nlet hx = min(s.x * 0.22, 60.0);\nlet qa = sg_rot(p - vec2<f32>(s.x * 0.3, c.y * 0.8), 0.14);\nlet da = max(abs(qa.y) - 11.0, abs(qa.x) - hx + abs(fract(qa.y / 5.0) - 0.5) * 4.0);\nlet qb = sg_rot(p - vec2<f32>(s.x * 0.7, c.y * 1.2), -0.12);\nlet db = max(abs(qb.y) - 11.0, abs(qb.x) - hx + abs(fract(qb.y / 5.0) - 0.5) * 4.0);\nlet ta = sg_fill(da) * 0.8;\nlet tb = sg_fill(db) * 0.85;\nlet col = mix(px.color.rgb * (0.9 + 0.1 * step(0.5, fract(qa.x / 6.0))), vec3<f32>(0.98, 0.86, 0.45), tb);\nreturn sg_out(px, col, max(ta, tb));\n}\n", params: [0, 0, 0, 0], live: false } }
-          },
-          layout: { hero: "collage", columns: 12, asymmetry: 0.3, ornament: "stamp", align: "start", imageTreatment: "grain", sectionGap: 80, gutter: 32 },
-          motion: { signature: "paper-drop", stiffness: 380, damping: 18, stagger: 50 }
+          }
         }
       }
         @label "Styles"
