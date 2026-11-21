@@ -2,8 +2,8 @@ app std-orb-serve [
   version: "1.0.0",
   inbound: ["cli-serve"],
   env: ["HOME", "FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID"],
-  fs: { "~/.almadar/serve": [create], "~/.almadar/serve/**": [write, create, read], cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create] },
-  description: "std-orb-serve — the `orb serve <file> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]` command (spec/cli/orb-serve.lolo; port of orbital-cli program_command.rs serve_program and server_overrides). It resolves the app with program/read { resolve: true, path }. An app that declares its own http endpoint is composed alone, and --port, --host or --client-dir is refused (status 400): its server's options are set in the program. Without --client-dir the app gets a browser client prepared first: program/eval generate { mode: client, webClient: true } compiles it client-mode into <cwd>/.orbital/serve/<app> and lays the typescript shell's prebuilt web client, with the app's runtime files over it, out in .orbital/serve/<app>/web-client, which becomes the clientDir; when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, that folder's __/firebase/init.json names the Auth emulator for the page. Otherwise it writes ~/.almadar/serve/<app path with / as _>.server.lolo, which imports std-http-server's HttpServerOrbital with the serve options as its call-site config (host, port, portFromEnv false and, with --client-dir made absolute against the working directory and required to lie under it, clientDir relative to the working directory), resolves it with program/read so each knob reaches the trait bodies, and composes the app with std-http-server's resolved program (behavior/resolve, for its header grants) carrying that configured orbital, adding the listen grant for host:port and the anchored cwd read grant of the client dir. The compose, prepare-client and answer half is std-orb-serve-handoff's ServeHandoff, which std-orb-launchpad composes as well. The command never runs the program: it answers a hand-off the bootloader acts on, status 200 with headers orb-run: server, orb-app: the absolute app path, and the composed program's JSON as the body. --open and --no-emulators answer status 500 on stderr with the texts the Rust command bailed with; a port that is not an integer in 0..65535 answers status 400 on stderr; a client dir outside the working directory, an app that names no app or a program that does not resolve or compose answers status 500 on stderr `Error: <reason>`; a missing or second file or an unknown flag answers the usage (status 400, exit 2). Defaults: port 3030, host 127.0.0.1. The resolved app is written (with its catalogs and lazy behaviors) to ~/.almadar/serve/<app path with / as _>.orb, the directory read from the HOME env grant and written under the fs grant ~/.almadar/serve/**; orb-app names that file, so the bootloader finds the catalogs. Unless --no-mock, and when the app does not already seed itself, the server program also composes std-mock-page-seed, and, when the app declares an [identity] entity no trait of it signs in, std-dev-personas over that entity (std-mock-seed-marks answers both texts), so the seeder can sign each owner in and the session starts as the first declared role."
+  fs: { "~/.almadar/serve": [create], "~/.almadar/serve/**": [write, create, read], env HOME: ".almadar/serve/**": [write, create] },
+  description: "std-orb-serve — the `orb serve <file> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]` command (spec/cli/orb-serve.lolo; port of orbital-cli program_command.rs serve_program and server_overrides). It resolves the app with program/read { resolve: true, path }. An app that declares its own http endpoint is composed alone, and --port, --host or --client-dir is refused (status 400): its server's options are set in the program. Without --client-dir the app gets a browser client prepared first: program/eval generate { mode: client, webClient: true } compiles it client-mode into ~/.almadar/serve/<source>.web and lays the typescript shell's prebuilt web client, with the app's runtime files over it, out in ~/.almadar/serve/<source>.web/web-client, which becomes the clientDir; when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, that folder's __/firebase/init.json names the Auth emulator for the page. Otherwise it writes ~/.almadar/serve/<app path with / as _>.server.lolo, which imports std-http-server's HttpServerOrbital with the serve options as its call-site config (host, port, portFromEnv false and, with --client-dir made absolute against the working directory and required to lie under it, clientDir relative to the working directory), resolves it with program/read so each knob reaches the trait bodies, and composes the app with std-http-server's resolved program (behavior/resolve, for its header grants) carrying that configured orbital, adding the listen grant for host:port and the anchored cwd read grant of the client dir. The compose, prepare-client and answer half is std-orb-serve-handoff's ServeHandoff, which std-orb-launchpad composes as well. The command never runs the program: it answers a hand-off the bootloader acts on, status 200 with headers orb-run: server, orb-app: the absolute app path, and the composed program's JSON as the body. --open and --no-emulators answer status 500 on stderr with the texts the Rust command bailed with; a port that is not an integer in 0..65535 answers status 400 on stderr; a client dir outside the working directory, an app that names no app or a program that does not resolve or compose answers status 500 on stderr `Error: <reason>`; a missing or second file or an unknown flag answers the usage (status 400, exit 2). Defaults: port 3030, host 127.0.0.1. The resolved app is written (with its catalogs and lazy behaviors) to ~/.almadar/serve/<app path with / as _>.orb, the directory read from the HOME env grant and written under the fs grant ~/.almadar/serve/**; orb-app names that file, so the bootloader finds the catalogs. Unless --no-mock, and when the app does not already seed itself, the server program also composes std-mock-page-seed, and, when the app declares an [identity] entity no trait of it signs in, std-dev-personas over that entity (std-mock-seed-marks answers both texts), so the seeder can sign each owner in and the session starts as the first declared role."
 ]
 uses Spec from "almadar-std/orb-serve"
 uses Args from "std/behaviors/std-args"
@@ -16,7 +16,9 @@ type ServeAux = { collection : string }
 type ServeTransition = { event : string }
 type ServeMachine = { transitions : [ServeTransition] }
 type ServeTrait = { name : string!, stateMachine : ServeMachine }
-type ServeOrbital = { name : string!, pages : [ServePage], auxiliaryEntities : [ServeAux], traits : [ServeTrait] }
+type ServeKnobText = { default : string }
+type ServeServerConfig = { clientDir : ServeKnobText?, clientAnchor : ServeKnobText? }
+type ServeOrbital = { name : string!, pages : [ServePage], auxiliaryEntities : [ServeAux], traits : [ServeTrait], config : ServeServerConfig? }
 type ServeProgram = { name : string, orbitals : [ServeOrbital] }
 type ServeApp = { program : ServeProgram!, text : string! }
 type ServeAppRead = { program : ServeProgram!, loadedResolved : boolean!, programPath : string! }
@@ -41,6 +43,11 @@ orbital OrbServeOrbital {
     cwd : string = ""
     prepare : boolean @description "Serve prepares the browser client itself (no --client-dir), from the composed program." = false
     source : string @description "The app file itself, whose folder holds its locales/ and public/." = ""
+    home : string = ""
+    serveKey : string @description "The folder under ~/.almadar/serve a prepared client is written to: the source path with / as _, plus .web." = ""
+    serveDir : string = ""
+    declaredDir : string @description "The clientDir the app's own server orbital declares." = ""
+    declaredAnchor : string = ""
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -189,6 +196,8 @@ orbital OrbServeOrbital {
       SERVE_HOME -> idle when (= @payload.value "")
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: HOME is not set; orb serve writes the resolved app under ~/.almadar/serve" })
       SERVE_HOME -> making when (!= @payload.value "")
+        (set @entity.home @payload.value)
+        (set @entity.serveKey (str/concat (str/replaceAll @entity.path "/" "_") ".web"))
         (set @entity.out (os/path-join @payload.value ".almadar/serve" (str/concat (str/replaceAll @entity.path "/" "_") ".orb")))
         (set @entity.serverName (str/concat (str/replaceAll @entity.path "/" "_") ".server.lolo"))
         (set @entity.serverPath (os/path-join @payload.value ".almadar/serve" (str/concat (str/replaceAll @entity.path "/" "_") ".server.lolo")))
@@ -215,7 +224,13 @@ orbital OrbServeOrbital {
         (set @entity.appName (default (object/get (object/get @payload.result "program") "name") ""))
         (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
-        (emit SERVE_DECLARED_READY { program: (object/get @payload.result "program"), serverOrbital: (let ((so (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (if (= @so null) "" (object/get @so "name"))), appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, path: @entity.out })
+        (set @entity.declaredDir (default (let ((so (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (if (= @so null) "" (let ((c (object/get @so "config" null))) (if (= @c null) "" (let ((k (object/get @c "clientDir" null))) (if (= @k null) "" (object/get @k "default" ""))))))) ""))
+        (set @entity.declaredAnchor (default (let ((so (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (if (= @so null) "" (let ((c (object/get @so "config" null))) (if (= @c null) "" (let ((k (object/get @c "clientAnchor" null))) (if (= @k null) "" (object/get @k "default" ""))))))) ""))
+        (set @entity.prepare (and (= @entity.declaredAnchor "home") (str/startsWith @entity.declaredDir ".almadar/serve/") (str/endsWith @entity.declaredDir "/web-client") (> (str/len @entity.declaredDir) 26) (not (str/includes (str/slice @entity.declaredDir 15 (- (str/len @entity.declaredDir) 11)) "/"))))
+        (set @entity.serveKey (if @entity.prepare (str/slice @entity.declaredDir 15 (- (str/len @entity.declaredDir) 11)) @entity.serveKey))
+        (set @entity.serveDir (if @entity.prepare (os/path-join @entity.home ".almadar/serve" @entity.serveKey) ""))
+        (set @entity.rel (if @entity.prepare @entity.declaredDir @entity.rel))
+        (emit SERVE_DECLARED_READY { program: (object/get @payload.result "program"), serverOrbital: (let ((so (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (if (= @so null) "" (object/get @so "name"))), appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: (or @entity.hasClient @entity.prepare), path: @entity.out, prepare: @entity.prepare, serveKey: @entity.serveKey, serveDir: @entity.serveDir, cwd: @entity.cwd, source: @entity.path })
       SERVE_APP_READ -> writing when (and (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) @entity.hasClient)
         (set @entity.appName (default (object/get (object/get @payload.result "program") "name") ""))
         (set @entity.out @payload.result.programPath)
@@ -225,7 +240,8 @@ orbital OrbServeOrbital {
         (set @entity.appName (default (object/get (object/get @payload.result "program") "name") ""))
         (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
-        (set @entity.rel (str/concat ".orbital/serve/" @entity.appName "/web-client"))
+        (set @entity.rel (str/concat ".almadar/serve/" @entity.serveKey "/web-client"))
+        (set @entity.serveDir (os/path-join @entity.home ".almadar/serve" @entity.serveKey))
         (set @entity.hasClient true)
         (set @entity.prepare true)
         (emit SERVE_WRITE_SERVER { })
@@ -249,6 +265,7 @@ orbital OrbServeOrbital {
           "    portFromEnv: false\n"
           "    rateLimit: " (json/stringify @entity.rateLimit) "\n"
           (if @entity.hasClient (str/concat "    clientDir: " (json/stringify @entity.rel) "\n") "")
+          (if @entity.prepare "    clientAnchor: \"home\"\n" "")
           "  }\n}\n"
           @payload.seed)) { key: "serverText" emit: { success: SERVE_SERVER_WRITTEN, failure: SERVE_REFUSED } })
     }
@@ -263,7 +280,7 @@ orbital OrbServeOrbital {
         (set @entity.serverOrbitals (object/get (object/get @payload.result "program") "orbitals" []))
         (behavior/resolve { behavior: "std/behaviors/std-http-server" } {} { key: "serverHeader" emit: { success: SERVE_SERVER_RESOLVED, failure: SERVE_REFUSED } })
       SERVE_SERVER_RESOLVED -> idle
-        (emit SERVE_COMPOSE_READY { programs: [@entity.app, (object/set @payload.result "orbitals" @entity.serverOrbitals)], appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, path: @entity.out, prepare: @entity.prepare, cwd: @entity.cwd, source: @entity.path })
+        (emit SERVE_COMPOSE_READY { programs: [@entity.app, (object/set @payload.result "orbitals" @entity.serverOrbitals)], appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, path: @entity.out, prepare: @entity.prepare, cwd: @entity.cwd, source: @entity.path, serveKey: @entity.serveKey, serveDir: @entity.serveDir })
     }
 
     emits {
@@ -334,9 +351,14 @@ orbital OrbServeOrbital {
         rel : string!
         hasClient : boolean!
         path : string!
+        prepare : boolean!
+        serveKey : string!
+        serveDir : string!
+        cwd : string!
+        source : string!
       }
         @tier "internal"
-        @description "The app declares its own http endpoint, served by its orbital serverOrbital: composed alone, with the serve options set on that orbital."
+        @description "The app declares its own http endpoint, served by its orbital serverOrbital: composed alone, with the serve options set on that orbital. When that orbital's clientDir is home-anchored at .almadar/serve/<key>/web-client, prepare is true and the client is built there."
       SERVE_COMPOSE_READY {
         programs : [ServeProgram]!
         appName : string!
@@ -348,6 +370,8 @@ orbital OrbServeOrbital {
         prepare : boolean!
         cwd : string!
         source : string!
+        serveKey : string!
+        serveDir : string!
       }
         @description "Internal: the resolved server, ready to compose with the app."
         @tier "internal"

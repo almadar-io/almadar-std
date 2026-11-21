@@ -1,8 +1,8 @@
 app std-orb-serve-handoff [
   version: "1.0.0",
   env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "FIREBASE_WEB_CONFIG"],
-  fs: { cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create], "/**": [read] },
-  description: "std-orb-serve-handoff — the half of `orb serve` that turns a resolved app and its server into the bootloader hand-off, composed by std-orb-serve and std-orb-launchpad. It hears the serve engine's SERVE_DECLARED_READY (an app that declares its own http endpoint, composed alone with the serve options set on that orbital) or SERVE_COMPOSE_READY (the app and the std-http-server program that wraps it, composed with the listen grant for host:port and, when a client is served, the anchored cwd read grant of its folder) and composes them with program/compose. Without a client to prepare it answers at once; with one (prepare) it writes the composed program to .orbital/serve/<app>/program.orb, compiles it client-mode with program/eval generate { mode: client, webClient: true } so the typescript shell's prebuilt web client, with the app's runtime files over it, is laid out in .orbital/serve/<app>/web-client, and, when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, writes that folder's __/firebase/init.json naming the Auth emulator for the page. The answer is SERVE_ANSWERED: status 200 with headers orb-run: server and orb-app: the resolved app its lazy files and locale catalogs sit beside, and the composed program's JSON as the body; a refused composition or a client that could not be prepared answers status 500 on stderr `Error: <reason>`.",
+  fs: { env HOME: ".almadar/serve/**": [write, create], "/**": [read] },
+  description: "std-orb-serve-handoff — the half of `orb serve` that turns a resolved app and its server into the bootloader hand-off, composed by std-orb-serve and std-orb-launchpad. It hears the serve engine's SERVE_DECLARED_READY (an app that declares its own http endpoint, composed alone with the serve options set on that orbital) or SERVE_COMPOSE_READY (the app and the std-http-server program that wraps it, composed with the listen grant for host:port and, when a client is served, the anchored cwd read grant of its folder) and composes them with program/compose. Without a client to prepare it answers at once; with one (prepare) it writes the composed program to ~/.almadar/serve/<source>.web/program.orb, compiles it client-mode with program/eval generate { mode: client, webClient: true } so the typescript shell's prebuilt web client, with the app's runtime files over it, is laid out in ~/.almadar/serve/<source>.web/web-client, and, when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, writes that folder's __/firebase/init.json naming the Auth emulator for the page. The answer is SERVE_ANSWERED: status 200 with headers orb-run: server and orb-app: the resolved app its lazy files and locale catalogs sit beside, and the composed program's JSON as the body; a refused composition or a client that could not be prepared answers status 500 on stderr `Error: <reason>`.",
   egress: []
 ]
 type HandoffPage = { protocol : string }
@@ -26,6 +26,8 @@ orbital ServeHandoffOrbital {
     locales : [string] @description "The composed program's declared locales, whose catalogs, as the app file's folder holds them, are copied beside program.orb." = []
     localeCursor : number = 0
     catalog : bytes?
+    serveKey : string @description "The client folder under ~/.almadar/serve (the source path with / as _, plus .web)." = ""
+    serveDir : string = ""
   }
 
   trait ServeHandoff -> HandoffRun [optimistic] {
@@ -35,9 +37,25 @@ orbital ServeHandoffOrbital {
       INIT -> idle
       SERVE_DECLARED_READY -> composing
         (set @entity.path @payload.path)
-        (set @entity.prepare false)
+        (set @entity.prepare @payload.prepare)
+        (set @entity.cwd @payload.cwd)
+        (set @entity.source @payload.source)
+        (set @entity.rel @payload.rel)
+        (set @entity.appName @payload.appName)
+        (set @entity.serveKey @payload.serveKey)
+        (set @entity.serveDir @payload.serveDir)
         (program/compose [@payload.program] { appName: @payload.appName } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
-      SERVE_COMPOSE_READY -> composing when @payload.hasClient
+      SERVE_COMPOSE_READY -> composing when (and @payload.hasClient @payload.prepare)
+        (set @entity.path @payload.path)
+        (set @entity.prepare @payload.prepare)
+        (set @entity.cwd @payload.cwd)
+        (set @entity.source @payload.source)
+        (set @entity.rel @payload.rel)
+        (set @entity.appName @payload.appName)
+        (set @entity.serveKey @payload.serveKey)
+        (set @entity.serveDir @payload.serveDir)
+        (program/compose @payload.programs { appName: @payload.appName overrides: { grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: { fs: [{ anchor: { env: "HOME" }, glob: (str/concat @payload.rel "/**"), modes: ["read"] }] } } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+      SERVE_COMPOSE_READY -> composing when (and @payload.hasClient (not @payload.prepare))
         (set @entity.path @payload.path)
         (set @entity.prepare @payload.prepare)
         (set @entity.cwd @payload.cwd)
@@ -59,7 +77,7 @@ orbital ServeHandoffOrbital {
         (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-app": @entity.path } })
       SERVE_COMPOSED -> preparing when @entity.prepare
         (set @entity.composed @payload.result)
-        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName) } true { key: "prepDir" emit: { success: SERVE_PREP_DIR, failure: SERVE_PREP_FAILED } })
+        (os/mkdir { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey) } true { key: "prepDir" emit: { success: SERVE_PREP_DIR, failure: SERVE_PREP_FAILED } })
     }
 
     state preparing {
@@ -69,7 +87,7 @@ orbital ServeHandoffOrbital {
       SERVE_GENERATE_FAILED -> idle
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " (default @payload.error "")) })
       SERVE_PREP_DIR -> preparing
-        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/program.orb") } (bytes/from-string (json/stringify @entity.composed)) { key: "prepProgram" emit: { success: SERVE_PROGRAM_WRITTEN, failure: SERVE_PREP_FAILED } })
+        (os/write-file { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/program.orb") } (bytes/from-string (json/stringify @entity.composed)) { key: "prepProgram" emit: { success: SERVE_PROGRAM_WRITTEN, failure: SERVE_PREP_FAILED } })
       SERVE_PROGRAM_WRITTEN -> preparing
         (set @entity.locales (if (= @entity.composed null) [] (object/get @entity.composed "locales" [])))
         (set @entity.localeCursor 0)
@@ -78,26 +96,26 @@ orbital ServeHandoffOrbital {
         (os/read-file (str/concat "/" (str/slice (os/path-join (os/path-dir @entity.source) "locales" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") (str/concat @entity.appName ".json")) 1 (str/len (os/path-join (os/path-dir @entity.source) "locales" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") (str/concat @entity.appName ".json"))))) { key: "catalog" emit: { success: SERVE_CATALOG_READ, failure: SERVE_CATALOG_ABSENT } })
       SERVE_CATALOG_READ -> preparing
         (set @entity.catalog @payload.data)
-        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "")) } true { key: "catalogDir" emit: { success: SERVE_CATALOG_DIR, failure: SERVE_PREP_FAILED } })
+        (os/mkdir { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "")) } true { key: "catalogDir" emit: { success: SERVE_CATALOG_DIR, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_DIR -> preparing
-        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "catalogCopy" emit: { success: SERVE_CATALOG_COPIED, failure: SERVE_PREP_FAILED } })
+        (os/write-file { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "catalogCopy" emit: { success: SERVE_CATALOG_COPIED, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_ABSENT -> preparing
         (set @entity.localeCursor (+ @entity.localeCursor 1))
         (emit SERVE_CATALOG_NEXT { })
       SERVE_CATALOG_COPIED -> preparing
-        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "")) } true { key: "clientCatalogDir" emit: { success: SERVE_CATALOG_CLIENT_DIR, failure: SERVE_PREP_FAILED } })
+        (os/mkdir { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/packages/client/public/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "")) } true { key: "clientCatalogDir" emit: { success: SERVE_CATALOG_CLIENT_DIR, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_CLIENT_DIR -> preparing
-        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "clientCatalogCopy" emit: { success: SERVE_CATALOG_CLIENT_COPIED, failure: SERVE_PREP_FAILED } })
+        (os/write-file { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/packages/client/public/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "clientCatalogCopy" emit: { success: SERVE_CATALOG_CLIENT_COPIED, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_CLIENT_COPIED -> preparing
         (set @entity.localeCursor (+ @entity.localeCursor 1))
         (emit SERVE_CATALOG_NEXT { })
       SERVE_CATALOG_NEXT -> preparing when (>= @entity.localeCursor (array/len @entity.locales))
-        (program/eval null { generate: { path: (os/path-join @entity.cwd ".orbital/serve" @entity.appName "program.orb"), output: (os/path-join @entity.cwd ".orbital/serve" @entity.appName), shell: "typescript", mode: "client", webClient: true, source: @entity.source } } { key: "client" emit: { success: SERVE_CLIENT_BUILT, failure: SERVE_GENERATE_FAILED } })
+        (program/eval null { generate: { path: (os/path-join @entity.serveDir "program.orb"), output: @entity.serveDir, shell: "typescript", mode: "client", webClient: true, source: @entity.source } } { key: "client" emit: { success: SERVE_CLIENT_BUILT, failure: SERVE_GENERATE_FAILED } })
       SERVE_CLIENT_BUILT -> preparing
         (os/getenv "FIREBASE_WEB_CONFIG" { key: "webConfig" emit: { success: SERVE_WEB_CONFIG, failure: SERVE_EMU_UNSET } })
       SERVE_WEB_CONFIG -> preparing when (!= (default @payload.value "") "")
         (set @entity.webConfig @payload.value)
-        (os/mkdir { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
+        (os/mkdir { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/web-client/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
       SERVE_WEB_CONFIG -> preparing when (= (default @payload.value "") "")
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "emuHost" emit: { success: SERVE_EMU_HOST, failure: SERVE_EMU_UNSET } })
       SERVE_EMU_UNSET -> preparing
@@ -111,11 +129,11 @@ orbital ServeHandoffOrbital {
         (emit SERVE_CLIENT_READY { })
       SERVE_EMU_PROJECT -> preparing when (!= (default @payload.value "") "")
         (set @entity.emulatorProject @payload.value)
-        (os/mkdir { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
+        (os/mkdir { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/web-client/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
       SERVE_HOSTING_DIR -> preparing when (!= @entity.webConfig "")
-        (os/write-file { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase/init.json") } (bytes/from-string @entity.webConfig) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
+        (os/write-file { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/web-client/__/firebase/init.json") } (bytes/from-string @entity.webConfig) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
       SERVE_HOSTING_DIR -> preparing when (= @entity.webConfig "")
-        (os/write-file { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase/init.json") } (bytes/from-string (json/stringify { apiKey: "emulator", projectId: @entity.emulatorProject, authEmulatorHost: @entity.emulatorHost })) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
+        (os/write-file { anchor: { env: "HOME" } path: (str/concat ".almadar/serve/" @entity.serveKey "/web-client/__/firebase/init.json") } (bytes/from-string (json/stringify { apiKey: "emulator", projectId: @entity.emulatorProject, authEmulatorHost: @entity.emulatorHost })) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
       SERVE_HOSTING_WRITTEN -> preparing
         (emit SERVE_CLIENT_READY { })
       SERVE_CLIENT_READY -> idle
@@ -139,7 +157,7 @@ orbital ServeHandoffOrbital {
       SERVE_CLIENT_BUILT {
         result : HandoffGenerated!
       }
-        @description "program/eval generate: the app compiled client-mode with the shell's prebuilt web client laid out under .orbital/serve/<app>/web-client."
+        @description "program/eval generate: the app compiled client-mode with the shell's prebuilt web client laid out under ~/.almadar/serve/<source>.web/web-client."
         @tier "internal"
       SERVE_EMU_HOST {
         value : string
@@ -167,7 +185,7 @@ orbital ServeHandoffOrbital {
         @description "os/write-file: __/firebase/init.json names the Auth emulator for the page."
         @tier "internal"
       SERVE_PREP_DIR { }
-        @description "os/mkdir: .orbital/serve/<app> exists."
+        @description "os/mkdir: ~/.almadar/serve/<source>.web exists."
         @tier "internal"
       SERVE_PROGRAM_WRITTEN { bytes : number }
         @description "os/write-file: the composed program is written for the client-mode compile, so the client learns its server from the http endpoint."
@@ -227,8 +245,13 @@ orbital ServeHandoffOrbital {
         rel : string!
         hasClient : boolean!
         path : string!
+        prepare : boolean!
+        serveKey : string!
+        serveDir : string!
+        cwd : string!
+        source : string!
       }
-        @description "The app declares its own http endpoint: composed alone, with the serve options set on that orbital."
+        @description "The app declares its own http endpoint: composed alone, with the serve options set on that orbital; prepare builds its home-anchored client first."
       SERVE_COMPOSE_READY {
         programs : [HandoffProgram]!
         appName : string!
@@ -240,6 +263,8 @@ orbital ServeHandoffOrbital {
         prepare : boolean!
         cwd : string!
         source : string!
+        serveKey : string!
+        serveDir : string!
       }
         @description "The resolved server, ready to compose with the app."
     }

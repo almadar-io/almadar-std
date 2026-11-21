@@ -866,7 +866,7 @@
       ]
     },
     {
-      "id": "an app with routes only and no --client-dir marks the client for preparation and serves it from .orbital/serve/<app>/web-client",
+      "id": "an app with routes only and no --client-dir marks the client for preparation and serves it from ~/.almadar/serve/<source>.web/web-client",
       "entity": {
         "cwd": "/work",
         "path": "/work/app.lolo",
@@ -915,7 +915,9 @@
         "prepare": true,
         "cwd": "/work",
         "appName": "app",
-        "rel": ".orbital/serve/app/web-client",
+        "rel": ".almadar/serve/_work_app.lolo.web/web-client",
+        "serveKey": "_work_app.lolo.web",
+        "serveDir": "/home/u/.almadar/serve/_work_app.lolo.web",
         "source": "/work/app.lolo",
         "path": "/home/u/.almadar/serve/x.orb"
       },
@@ -965,7 +967,7 @@
           "event": "SERVE_CLIENT_BUILT",
           "payload": {
             "result": {
-              "webClient": "/work/.orbital/serve/app/web-client"
+              "webClient": "/home/u/.almadar/serve/_work_app.lolo.web/web-client"
             }
           },
           "expect": {
@@ -1314,6 +1316,276 @@
                 }
               }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "declared server client: a server whose client folder is home-anchored under ~/.almadar/serve has serve prepare it",
+      "entity": {
+        "home": "/home/u",
+        "cwd": "/work",
+        "path": "/work/lp.lolo"
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "lp",
+                "orbitals": [
+                  {
+                    "name": "Api",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ],
+                    "config": {
+                      "clientDir": {
+                        "default": ".almadar/serve/lp/web-client"
+                      },
+                      "clientAnchor": {
+                        "default": "home"
+                      }
+                    }
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_lp.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emitCounts": {
+              "SERVE_DECLARED_READY": 1
+            },
+            "emits": [
+              {
+                "event": "SERVE_DECLARED_READY",
+                "payload": {
+                  "prepare": true,
+                  "hasClient": true,
+                  "rel": ".almadar/serve/lp/web-client",
+                  "serveKey": "lp",
+                  "serveDir": "/home/u/.almadar/serve/lp",
+                  "source": "/work/lp.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: declared server client: the same folder anchored to the working directory is served as it is",
+      "entity": {
+        "home": "/home/u",
+        "cwd": "/work",
+        "path": "/work/lp.lolo"
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "lp",
+                "orbitals": [
+                  {
+                    "name": "Api",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ],
+                    "config": {
+                      "clientDir": {
+                        "default": ".almadar/serve/lp/web-client"
+                      },
+                      "clientAnchor": {
+                        "default": "cwd"
+                      }
+                    }
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_lp.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emitCounts": {
+              "SERVE_DECLARED_READY": 1
+            },
+            "emits": [
+              {
+                "event": "SERVE_DECLARED_READY",
+                "payload": {
+                  "prepare": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: declared server client: a home folder outside ~/.almadar/serve/<key>/web-client is served as it is",
+      "entity": {
+        "home": "/home/u",
+        "cwd": "/work",
+        "path": "/work/lp.lolo"
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "lp",
+                "orbitals": [
+                  {
+                    "name": "Api",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ],
+                    "config": {
+                      "clientDir": {
+                        "default": "dist/client"
+                      },
+                      "clientAnchor": {
+                        "default": "home"
+                      }
+                    }
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_lp.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emitCounts": {
+              "SERVE_DECLARED_READY": 1
+            },
+            "emits": [
+              {
+                "event": "SERVE_DECLARED_READY",
+                "payload": {
+                  "prepare": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "declared server client: the hand-off prepares a declared server marked for preparation before answering",
+      "steps": [
+        {
+          "trait": "ServeHandoff",
+          "from": "idle",
+          "event": "SERVE_DECLARED_READY",
+          "payload": {
+            "program": {
+              "name": "lp",
+              "orbitals": []
+            },
+            "serverOrbital": "Api",
+            "appName": "lp",
+            "host": "",
+            "port": 0,
+            "rel": ".almadar/serve/lp/web-client",
+            "hasClient": true,
+            "path": "/home/u/.almadar/serve/_work_lp.lolo.orb",
+            "prepare": true,
+            "serveKey": "lp",
+            "serveDir": "/home/u/.almadar/serve/lp",
+            "cwd": "/work",
+            "source": "/work/lp.lolo"
+          },
+          "expect": {
+            "state": "composing"
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "composing",
+          "event": "SERVE_COMPOSED",
+          "payload": {
+            "result": {
+              "behavior": "lp"
+            }
+          },
+          "expect": {
+            "state": "preparing",
+            "emitCounts": {
+              "SERVE_ANSWERED": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: declared server client: a declared server not marked for preparation is answered at once",
+      "steps": [
+        {
+          "trait": "ServeHandoff",
+          "from": "idle",
+          "event": "SERVE_DECLARED_READY",
+          "payload": {
+            "program": {
+              "name": "lp",
+              "orbitals": []
+            },
+            "serverOrbital": "Api",
+            "appName": "lp",
+            "host": "",
+            "port": 0,
+            "rel": ".almadar/serve/lp/web-client",
+            "hasClient": true,
+            "path": "/home/u/.almadar/serve/_work_lp.lolo.orb",
+            "prepare": false,
+            "serveKey": "lp",
+            "serveDir": "/home/u/.almadar/serve/lp",
+            "cwd": "/work",
+            "source": "/work/lp.lolo"
+          },
+          "expect": {
+            "state": "composing"
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "composing",
+          "event": "SERVE_COMPOSED",
+          "payload": {
+            "result": {
+              "behavior": "lp"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emitCounts": {
+              "SERVE_ANSWERED": 1
+            }
           }
         }
       ]
