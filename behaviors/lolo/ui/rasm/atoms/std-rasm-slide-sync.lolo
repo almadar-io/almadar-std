@@ -1,6 +1,6 @@
 app std-rasm-slide-sync [
   version: "0.1.0",
-  description: "std-rasm-slide-sync — keeps every window that shows one talk on the same slide. It holds one row per deck and signed-in person (the slide, the step, whether the screen is blanked and when the talk's clock started) in the bound SlideCursor entity, its id the deck's id and the person's joined by a colon and `owner` the person; bind a persistent entity whose policies give each person their own row, so the row reaches that person's other windows and devices and nobody else's. An anonymous viewer saves and reads nothing: each visitor of a public talk moves alone. When the deck named by `deck` moves here (RASM_SLIDE) or the stage named by `stage` blanks or starts its clock (RASM_STAGE), the row is saved. A save made in another window arrives here as CURSOR_KEPT with none of this window's own saves outstanding: the row is read again and, where it differs from what this window shows, RASM_SLIDE_TO and RASM_STAGE_SET put the deck and the stage on it. A window that opens late reads the row once on mount and joins the talk where it is. A save or a read that fails is announced as RASM_SLIDE_SYNC_FAILED and changes nothing here. It paints nothing."
+  description: "std-rasm-slide-sync — keeps every window that shows one talk on the same slide. It holds one row per deck and signed-in person (the slide, the step, whether the screen is blanked and when the talk's clock started) in the bound SlideCursor entity, its id the deck's id and the person's joined by a colon and `owner` the person; bind a persistent entity whose policies give each person their own row, so the row reaches that person's other windows and devices and nobody else's. An anonymous viewer saves and reads nothing: each visitor of a public talk moves alone. When the deck named by `deck` moves here (RASM_SLIDE) or the stage named by `stage` blanks or starts its clock (RASM_STAGE), the row is saved. Each save announces CURSOR_KEPT, which the composing page routes back to CURSOR_MOVED; a save made in another window arrives through that route, the row is read again and, when another window wrote it and it differs from what this window shows, RASM_SLIDE_TO and RASM_STAGE_SET put the deck and the stage on it. Each window stamps its saves with an id of its own, so its own saves are never applied back to it. A window that opens late reads the row once on mount and joins the talk where it is. A save or a read that fails is announced as RASM_SLIDE_SYNC_FAILED and changes nothing here. It paints nothing."
 ]
 
 orbital RasmSlideSyncOrbital {
@@ -11,7 +11,8 @@ orbital RasmSlideSyncOrbital {
     step : number @description "How many of the slide's builds are revealed." = 0
     blank : boolean @description "The screen is blanked." = false
     startedMs : number @description "The epoch-ms instant the talk's clock started, 0 before it." = 0
-    pending : number @description "This window's own saves not yet answered; a CURSOR_KEPT beyond them came from another window." = 0
+    writer : string @description "The window that last saved the row: its `tab`." = ""
+    tab : string @description "This window's own id, made when it mounts; a row this window wrote is not applied back to it." = ""
   }
 
   trait RasmSlideSync -> @rebindable SlideCursor {
@@ -19,30 +20,28 @@ orbital RasmSlideSyncOrbital {
 
     state idle {
       INIT -> idle when (!= @user.id "anonymous")
+        (set @entity.tab (str/concat "" (time/epoch-ms @now) "-" (default (math/randomInt 0 1000000000) 0)))
         (fetch SlideCursor { filter: { id: (str/concat @config.deck ":" @user.id) }, limit: 1, emit: { success: CURSOR_READ, failure: CURSOR_UNREAD } })
       INIT -> idle when (= @user.id "anonymous")
       RASM_SLIDE -> idle when (and (!= @user.id "anonymous") (= ?id @config.deck) (or (!= ?index @entity.index) (!= (default ?step 0) @entity.step)))
         (set @entity.index ?index)
         (set @entity.step (default ?step 0))
-        (set @entity.pending (+ @entity.pending 1))
-        (persist upsert SlideCursor { id: (str/concat @config.deck ":" @user.id), owner: @user.id, index: ?index, step: (default ?step 0), blank: @entity.blank, startedMs: @entity.startedMs } { emit: { success: CURSOR_KEPT, failure: CURSOR_UNKEPT } })
+        (persist upsert SlideCursor { id: (str/concat @config.deck ":" @user.id), owner: @user.id, writer: @entity.tab, index: ?index, step: (default ?step 0), blank: @entity.blank, startedMs: @entity.startedMs } { emit: { success: CURSOR_KEPT, failure: CURSOR_UNKEPT } })
       RASM_SLIDE -> idle when (not (and (!= @user.id "anonymous") (= ?id @config.deck) (or (!= ?index @entity.index) (!= (default ?step 0) @entity.step))))
       RASM_STAGE -> idle when (and (!= @user.id "anonymous") (= ?id @config.stage) (or (!= ?blank @entity.blank) (!= ?startedMs @entity.startedMs)))
         (set @entity.blank ?blank)
         (set @entity.startedMs ?startedMs)
-        (set @entity.pending (+ @entity.pending 1))
-        (persist upsert SlideCursor { id: (str/concat @config.deck ":" @user.id), owner: @user.id, index: @entity.index, step: @entity.step, blank: ?blank, startedMs: ?startedMs } { emit: { success: CURSOR_KEPT, failure: CURSOR_UNKEPT } })
+        (persist upsert SlideCursor { id: (str/concat @config.deck ":" @user.id), owner: @user.id, writer: @entity.tab, index: @entity.index, step: @entity.step, blank: ?blank, startedMs: ?startedMs } { emit: { success: CURSOR_KEPT, failure: CURSOR_UNKEPT } })
       RASM_STAGE -> idle when (not (and (!= @user.id "anonymous") (= ?id @config.stage) (or (!= ?blank @entity.blank) (!= ?startedMs @entity.startedMs))))
-      CURSOR_KEPT -> idle when (> @entity.pending 0)
-        (set @entity.pending (- @entity.pending 1))
-      CURSOR_KEPT -> idle when (<= @entity.pending 0)
+      CURSOR_KEPT -> idle
+      CURSOR_MOVED -> idle when (!= @user.id "anonymous")
         (fetch SlideCursor { filter: { id: (str/concat @config.deck ":" @user.id) }, limit: 1, emit: { success: CURSOR_READ, failure: CURSOR_UNREAD } })
+      CURSOR_MOVED -> idle when (= @user.id "anonymous")
       CURSOR_UNKEPT -> idle
-        (set @entity.pending (math/max 0 (- @entity.pending 1)))
         (emit RASM_SLIDE_SYNC_FAILED { error: (default ?error "the slide could not be saved") })
       CURSOR_READ -> idle
         (let ((row (array/find ?data (fn r (= @r.id (str/concat @config.deck ":" @user.id))))))
-          (when (!= @row null)
+          (when (and (!= @row null) (!= @row.writer @entity.tab))
             (do
               (when (or (!= @row.blank @entity.blank) (!= @row.startedMs @entity.startedMs))
                 (do
@@ -59,6 +58,9 @@ orbital RasmSlideSyncOrbital {
     }
 
     emits {
+      CURSOR_KEPT -> external { }
+        @description "The row was saved. Route it to CURSOR_MOVED on the composing page (`<Sync>.CURSOR_KEPT -> CURSOR_MOVED`): a save made in another window arrives through that route, and the row is read again."
+        @tier "domain"
       RASM_SLIDE_TO -> external {
         id : string!
         index : number!
@@ -85,8 +87,8 @@ orbital RasmSlideSyncOrbital {
         @description "The deck moved in this window: save the slide and step."
       RASM_STAGE { id : string!  blank : boolean!  startedMs : number! }
         @description "The stage blanked or started its clock in this window: save it."
-      CURSOR_KEPT { }
-        @description "The row was saved, by this window or by another."
+      CURSOR_MOVED { }
+        @description "The row was saved, in this window or in another: read it again."
       CURSOR_UNKEPT { error : string, code : string }
         @description "The row could not be saved."
       CURSOR_READ { data : [SlideCursor]!, totalCount : number }

@@ -1,0 +1,74 @@
+app std-rasm-defer [
+  version: "0.2.0",
+  description: "std-rasm-defer — holds the latest RASM_PLACE entry for one id and forwards it on the next frame, so a section a page places lays out in its own dispatch instead of inside the one that placed every section. A placement naming `id` records that entry and moves to waiting; later placements in the same frame replace it; a 16 ms tick in waiting emits RASM_PLACE { placed: [entry] } and returns to ready. Placements that do not name `id` are ignored. Route the page's RASM_PLACE here as DEFER_PLACE (Page.RASM_PLACE -> DEFER_PLACE) and the section's own RASM_PLACE listen to this trait to use it."
+]
+;; @capabilities "defer a section's layout to the next frame, split a page layout across dispatches"
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+
+orbital RasmDeferOrbital {
+  entity RasmDeferRun [runtime] {
+    id : string!
+    held : RasmPlaced? @description "The latest placement of `id` waiting to be forwarded, null when none is." = null
+    sends : number @description "Counts forwards, so each is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmDefer -> RasmDeferRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      DEFER_PLACE -> waiting when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.held (array/find ?placed (fn p (= @p.id @config.id))))
+      DEFER_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+    }
+
+    state waiting {
+      INIT -> ready
+      DEFER_PLACE -> waiting when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.held (array/find ?placed (fn p (= @p.id @config.id))))
+      DEFER_PLACE -> waiting when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      DEFER_TICK -> ready when (!= @entity.held null)
+        (let ((none : [RasmPlaced] []) (h : RasmPlaced? @entity.held))
+          (do
+            (set @entity.sends (+ @entity.sends 1))
+            (emit RASM_PLACE { placed: (if (= @h null) @none [@h]), n: @entity.sends })))
+        (set @entity.held null)
+      DEFER_TICK -> ready when (= @entity.held null)
+    }
+
+    ticks {
+      deferTick every 16ms in waiting
+        (emit DEFER_TICK { n: 0 })
+    }
+
+    emits {
+      DEFER_TICK -> internal {
+        n : number!
+      }
+        @description "A frame passed while a placement waits: forward it."
+        @tier "internal"
+      RASM_PLACE -> external {
+        placed : [RasmPlaced]!
+        n : number
+      }
+        @description "The held placement, forwarded in its own dispatch."
+        @tier "primary"
+    }
+
+    listens {
+      DEFER_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "A page placement routed in (Page.RASM_PLACE -> DEFER_PLACE): the entry for `id` is held until the next frame. Its own input is not RASM_PLACE, so the placement it forwards is never caught again (EXEC-QUEUE-2)."
+    }
+
+    config {
+      id : string = "section"
+        @label "Id"
+        @description "The placed id this trait holds and forwards."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmDeferStart -> RasmDefer
+}

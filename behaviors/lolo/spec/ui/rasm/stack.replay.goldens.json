@@ -1270,7 +1270,7 @@
       "now": 1700000000000
     },
     {
-      "id": "control-entry-stack-for-another-id-leaves-entered-ms-zero",
+      "id": "control-entry-stack-for-another-id-starts-no-entry-and-repaints-nothing",
       "config": {
         "id": "panel",
         "axis": "vertical",
@@ -1324,9 +1324,10 @@
             "staggerMs": 70
           },
           "expect": {
-            "entity": {
-              "enteredMs": 0,
-              "enterIndex": -1
+            "state": "ready",
+            "emitCounts": {
+              "STACK_PAINT": 0,
+              "RASM_PAINT": 0
             }
           }
         }
@@ -5489,6 +5490,88 @@
                 }
               }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-entry-for-other-ids-repaints-nothing",
+      "config": {
+        "id": "s",
+        "axis": "vertical",
+        "gap": 0,
+        "padding": 0,
+        "look": "",
+        "children": []
+      },
+      "entity": {
+        "id": "s",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "someoneElse"
+            ],
+            "staggerMs": 70,
+            "entries": []
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "STACK_PAINT": 0,
+              "RASM_PAINT": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-entry-naming-this-id-repaints-with-its-entry",
+      "config": {
+        "id": "s",
+        "axis": "vertical",
+        "gap": 0,
+        "padding": 0,
+        "look": "",
+        "children": []
+      },
+      "entity": {
+        "id": "s",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "s"
+            ],
+            "staggerMs": 70,
+            "entries": []
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "STACK_PAINT": 1
+            },
+            "entity": {
+              "enterIndex": 0
+            }
           }
         }
       ]

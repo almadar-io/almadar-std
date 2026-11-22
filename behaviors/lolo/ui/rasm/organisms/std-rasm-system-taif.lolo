@@ -1,0 +1,72 @@
+app std-rasm-system-taif [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-taif — the Taif design system for a Rasm page, in two modes, day (the default) and desert night: anchored on the colours of Taif: its rose fields, the Hejaz mountains and the turquoise and lapis of zellige tilework (https://en.wikipedia.org/wiki/Zellige). Colour: #F0E5CF sand ground, #2C2518 ink, #17807A turquoise with #2B4AA0 lapis, #E0A21B saffron and a #C8456A Taif rose accent; night is #12131F with turquoise and saffron. Type: Reem Kufi over Cairo, Arabic-first. Grid: 12 columns on a plain ground with no repeating pattern; a page lays its own scenes and colours over it. Motion: shapes plop down like wet clay, squash and settle (the taif-plop easing); scenes scrub with the scroll. Interaction: a card lifts off its printed shadow; a press stamps it flat. Imagery: the page's own scenes and illustrations; the system adds no texture. Voice: blunt, first person, plain facts. Components: buttons are inked pills on a hard offset shadow; cards are map callouts with one square corner. Data: contour bands. Sound: an oud pluck on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "taif"
+    palette: { background: "#F0E5CF", foreground: "#2C2518", card: "#FAF4E6", "card-foreground": "#2C2518", surface: "#F5ECD8", muted: "#ECE0C6", "muted-foreground": "#5A4F3A", border: "#2C2518", input: "#8A7A58", primary: "#17807A", "primary-hover": "#126862", "primary-foreground": "#FFFAF0", secondary: "#FAF4E6", "secondary-foreground": "#2C2518", "secondary-hover": "#ECDFC2", accent: "#C8456A", "accent-foreground": "#FFF5F7", ring: "#2B4AA0", placeholder: "#7A6E55", "series-1": "#17807A", "series-2": "#2B4AA0", "series-3": "#E0A21B", "series-4": "#C8456A", "series-5": "#8A6A3A" }
+    modes: {
+      day: { palette: {}, looks: { "surface/ground/idle": { fill: "background" } } }
+      night: { palette: { background: "#12131F", foreground: "#F3E8CF", card: "#1A1C2E", "card-foreground": "#F3E8CF", surface: "#1F2237", muted: "#1D2038", "muted-foreground": "#B9BFD8", border: "#F3E8CF", input: "#9AA0C4", primary: "#3FD0C6", "primary-hover": "#6FE3D8", "primary-foreground": "#06201E", secondary: "#1A1C2E", "secondary-foreground": "#F3E8CF", "secondary-hover": "#282C47", accent: "#F08FA6", "accent-foreground": "#2A0D16", ring: "#7F9BFF", placeholder: "#8D93B8", "series-1": "#3FD0C6", "series-2": "#7F9BFF", "series-3": "#F0B73A", "series-4": "#F08FA6", "series-5": "#C9B98F" }, looks: { "surface/ground/idle": { fill: "background" } } }
+    }
+    mode: "day"
+    fonts: { display: { family: "Reem Kufi", file: "https://raw.githubusercontent.com/google/fonts/main/ofl/reemkufi/ReemKufi%5Bwght%5D.ttf", generic: "sans-serif" }, body: { family: "Cairo", file: "https://raw.githubusercontent.com/google/fonts/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf", generic: "sans-serif" }, mono: { family: "Cairo", file: "https://raw.githubusercontent.com/google/fonts/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf", generic: "sans-serif" } }
+    looks: {
+        "surface/ground/idle": { fill: "background" },
+        "stack/card/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [14, 14, 14, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 14, offsetX: 2, offsetY: 6 }, spring: { stiffness: 200, damping: 20 } },
+        "stack/panel/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [14, 14, 14, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 14, offsetX: 2, offsetY: 6 }, spring: { stiffness: 200, damping: 20 } },
+        "stack/hero/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.5, corners: { radius: [22, 22, 22, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 22, offsetX: 3, offsetY: 10 } },
+        "stack/bar/idle": { fill: "surface", stroke: "foreground", strokeWidth: 1, corners: { radius: [0, 0, 0, 0], kind: "round" } },
+        "text/poster/idle": { textColor: "foreground", font: "800 160px display" },
+        "card/surface/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [14, 14, 14, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 14, offsetX: 2, offsetY: 6 }, spring: { stiffness: 200, damping: 20 } },
+        "card/surface/hovered": { fill: "card", stroke: "foreground", strokeWidth: 2.25, corners: { radius: [14, 14, 14, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 24, offsetX: 3, offsetY: 14 }, spring: { stiffness: 240, damping: 13 } },
+        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [14, 14, 14, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 14, offsetX: 2, offsetY: 6 }, spring: { stiffness: 200, damping: 20 } },
+        "card/surface/pressed": { fill: "surface", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [14, 14, 14, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 4, offsetX: 0, offsetY: 1 }, spring: { stiffness: 240, damping: 13 } },
+        "card/header/idle": { fill: "surface", textColor: "foreground", font: "800 24px display", corners: { radius: [14, 14, 0, 0], kind: "round" }, on: "card/header/idle" },
+        "card/divider/idle": { stroke: "border", strokeWidth: 1, strokeDash: [1, 5] },
+        "card/media/idle": { fill: "muted", corners: { radius: [14, 14, 0, 0], kind: "round" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "400 14px body", on: "card/surface/idle" },
+        "panel/surface/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [14, 14, 14, 0], kind: "round" }, shadow: { color: "rgba(44,37,24,0.24)", blur: 14, offsetX: 2, offsetY: 6 }, spring: { stiffness: 200, damping: 20 } },
+        "panel/header/idle": { fill: "surface", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [14, 14, 0, 0], kind: "round" }, textColor: "foreground", font: "800 22px display", on: "panel/header/idle" },
+        "panel/divider/idle": { stroke: "border", strokeWidth: 1, strokeDash: [1, 5] },
+        "section/band/idle": { fill: "surface" },
+        "section/rule/idle": { stroke: "foreground", strokeWidth: 1 },
+        "grid/rule/idle": { stroke: "border", strokeWidth: 1, strokeDash: [1, 5] },
+        "grid/border/idle": { stroke: "foreground", strokeWidth: 1.5, fill: "" },
+        "focus/ring/outer": { stroke: "card", strokeWidth: 7 },
+        "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
+        "pressable/primary/idle": { fill: "primary", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "primary-foreground", font: "700 17px display", spring: { stiffness: 120, damping: 11 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 4, offsetY: 5 } },
+        "pressable/primary/hovered": { fill: "primary-hover", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "primary-foreground", font: "700 17px display", spring: { stiffness: 120, damping: 11 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 6, offsetY: 8 } },
+        "pressable/primary/pressed": { fill: "primary", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "primary-foreground", font: "700 17px display", spring: { stiffness: 160, damping: 12 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 1, offsetY: 1 } },
+        "pressable/primary/focused": { fill: "primary", stroke: "ring", strokeWidth: 4, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "primary-foreground", font: "700 17px display", spring: { stiffness: 120, damping: 11 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 4, offsetY: 5 } },
+        "pressable/secondary/idle": { fill: "card", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 120, damping: 11 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 3, offsetY: 4 } },
+        "pressable/secondary/hovered": { fill: "secondary-hover", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 120, damping: 11 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 5, offsetY: 6 } },
+        "pressable/secondary/pressed": { fill: "card", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 160, damping: 12 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 1, offsetY: 1 } },
+        "pressable/secondary/focused": { fill: "card", stroke: "ring", strokeWidth: 4, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "secondary-foreground", font: "600 16px display", spring: { stiffness: 120, damping: 11 }, shadow: { color: "#1F1D2B", blur: 0, offsetX: 3, offsetY: 4 } },
+        "pressable/secondary/disabled": { fill: "muted", stroke: "muted-foreground", strokeWidth: 2, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "muted-foreground", font: "600 16px display" },
+        "textfield/default/idle": { fill: "card", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [12, 12, 12, 0], kind: "round" }, textColor: "foreground", font: "400 17px body" },
+        "textfield/default/hovered": { fill: "surface", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [12, 12, 12, 0], kind: "round" }, textColor: "foreground", font: "400 17px body" },
+        "textfield/default/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [12, 12, 12, 0], kind: "round" }, textColor: "foreground", font: "400 17px body" },
+        "textfield/default/placeholder": { textColor: "muted-foreground", font: "400 17px body" },
+        "text/display/idle": { textColor: "foreground", font: "800 88px display" },
+        "text/title/idle": { textColor: "foreground", font: "800 38px display" },
+        "text/eyebrow/idle": { textColor: "series-2", font: "700 14px body" },
+        "text/body/idle": { textColor: "foreground", font: "400 18px body" },
+        "text/card/idle": { textColor: "card-foreground", font: "800 24px display", on: "card/surface/idle" },
+        "text/label/idle": { textColor: "foreground", font: "700 13px body" },
+        "text/caption/idle": { textColor: "muted-foreground", font: "400 13px body" },
+        "morph/default/idle": { fill: "accent", stroke: "foreground", strokeWidth: 1.5 },
+        "image/none/idle": { fill: "surface", stroke: "foreground", strokeWidth: 1.25, corners: { radius: [14, 14, 14, 0], kind: "round" }, material: { wgsl: "fn im_px(px: Pixel, off: vec2<f32>) -> vec4<f32> { return textureSampleLevel(target_a, target_sampler, px.uv + off / max(px.size, vec2<f32>(1.0, 1.0)), 0.0); }\nfn shade(px: Pixel) -> vec4<f32> { return im_px(px, vec2<f32>(0.0, 0.0)) * px.color.a; }\n", params: [0, 0, 0, 0], live: false } },
+        "ornament/rule/idle": { fill: "foreground", material: { wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n  let y = abs(px.local.y - px.size.y * 0.5);\n  let line = 1.0 - smoothstep(0.5, 1.5, y);\n  let tx = abs(fract(px.local.x / 16.0) * 16.0 - 8.0);\n  let tick = (1.0 - smoothstep(0.5, 1.5, tx)) * (1.0 - smoothstep(3.0, 5.0, y));\n  return vec4<f32>(px.color.rgb, px.color.a * max(line, tick));\n}\n", params: [0, 0, 0, 0], live: false } }
+      }
+    layout: { hero: "full-bleed", columns: 12, asymmetry: 0.2, ornament: "frame", align: "start", imageTreatment: "engraving", sectionGap: 112, gutter: 24 }
+    motion: { signature: "taif-rise", stiffness: 170, damping: 22, stagger: 70, enterMs: 760, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 28, scale: 1, rotate: 0 }, { at: 0.6, opacity: 1, offsetX: 0, offsetY: -2, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+    sounds: { down: { path: "oud-press.mp3", volume: 0.45 } }
+    soundBase: "https://osama.almadar.io/audio/"
+  }
+}

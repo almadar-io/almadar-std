@@ -1,0 +1,63 @@
+app std-rasm-settle [
+  version: "0.2.0",
+  description: "std-rasm-settle — gathers the RASM_EXTENT reports of a page's sections and hands them to the page stack as one RASM_MEASURED on the next frame, so the page lays out once per wave instead of once per section, and that layout runs in its own dispatch rather than inside the one that changed the sections. The first extent of a wave records it and moves to waiting; later extents only record (the latest per section). A 16 ms tick in waiting emits RASM_MEASURED { items } with the latest extent of each section, in the order they first arrived, and returns to ready. Route sections' RASM_EXTENT here (Section.RASM_EXTENT -> Settle.SETTLE_EXTENT) instead of to the page stack to use it; a page that routes them to the page stack is unchanged."
+]
+;; @capabilities "batch layout reports, coalesce section heights, lay a page out once per frame"
+
+type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
+
+orbital RasmSettleOrbital {
+  entity RasmSettleRun [runtime] {
+    id : string!
+    items : Map string RasmMeasureItem @description "The latest extent of each section reported in this wave, by its id." = {}
+    order : [string] @description "The section ids of this wave in the order they first reported." = []
+  }
+
+  trait RasmSettle -> RasmSettleRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SETTLE_EXTENT -> waiting
+        (set @entity.items (object/set @entity.items ?id { id: ?id, width: ?w, height: ?h, lines: 0 }))
+        (set @entity.order (if (array/includes @entity.order ?id) @entity.order (array/append @entity.order ?id)))
+    }
+
+    state waiting {
+      INIT -> ready
+      SETTLE_EXTENT -> waiting
+        (set @entity.items (object/set @entity.items ?id { id: ?id, width: ?w, height: ?h, lines: 0 }))
+        (set @entity.order (if (array/includes @entity.order ?id) @entity.order (array/append @entity.order ?id)))
+      SETTLE_TICK -> ready
+        (let ((none : [RasmMeasureItem] []))
+          (emit RASM_MEASURED { items: (array/reduce @entity.order @none (fn acc id (let ((it : RasmMeasureItem? (object/get @entity.items @id null))) (if (= @it null) @acc (array/append @acc @it))))) }))
+        (set @entity.items {})
+        (set @entity.order [])
+    }
+
+    ticks {
+      settleTick every 16ms in waiting
+        (emit SETTLE_TICK { n: 0 })
+    }
+
+    emits {
+      SETTLE_TICK -> internal {
+        n : number!
+      }
+        @description "A frame passed while a wave waits: hand its extents to the page stack."
+        @tier "internal"
+      RASM_MEASURED -> external {
+        items : [RasmMeasureItem]!
+      }
+        @description "The wave's extents in one batch, for the page stack to lay out once."
+        @tier "primary"
+    }
+
+    listens {
+      SETTLE_EXTENT { id : string!  w : number!  h : number!  n : number }
+        @description "A section's extent: recorded for this wave; the first of a wave starts the wait for the next frame."
+    }
+  }
+
+  page boot as RasmSettleStart -> RasmSettle
+}

@@ -65,7 +65,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/describe': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
-    description: 'Describe a trait value (its knobs, the events it emits and listens to, and its transition events), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages). It carries no vectors and no forwarded controls: `orb behaviors describe` attaches them.',
+    description: 'Describe a trait value (its knobs, the events it emits and listens to, and its transition events), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages). It carries no vectors and no forwarded controls: `orb behaviors describe` attaches them. With `options.detail: "summary"` a whole behavior is answered as its app knobs and, per orbital, only its value and the names of its traits, with no per-trait knobs, config or expectations: what a caller that only lists the traits of a behavior reads, at a fraction of the cost.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
@@ -74,8 +74,8 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
       {
         name: 'options',
-        type: openShape({ key: STRING, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
-        description: 'Emit configuration ({ emit: { success, failure } })',
+        type: openShape({ key: STRING, detail: STRING, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `detail: "summary"` answers only the app knobs and trait names of a whole behavior',
         optional: true,
       },
     ],

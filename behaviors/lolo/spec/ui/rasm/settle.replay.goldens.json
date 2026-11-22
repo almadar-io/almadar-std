@@ -1,0 +1,164 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-settle.lolo",
+  "trait": "RasmSettle",
+  "cases": [
+    {
+      "id": "the-first-extent-of-a-wave-records-it-and-waits-for-the-next-frame",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SETTLE_EXTENT",
+          "payload": {
+            "id": "a",
+            "w": 1000,
+            "h": 300
+          },
+          "expect": {
+            "state": "waiting",
+            "emitCounts": {
+              "RASM_MEASURED": 0
+            },
+            "entity": {
+              "order": [
+                "a"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-later-extent-in-the-same-wave-only-records",
+      "config": {},
+      "entity": {
+        "id": "s",
+        "items": {
+          "a": {
+            "id": "a",
+            "width": 1000,
+            "height": 300,
+            "lines": 0
+          }
+        },
+        "order": [
+          "a"
+        ]
+      },
+      "steps": [
+        {
+          "from": "waiting",
+          "event": "SETTLE_EXTENT",
+          "payload": {
+            "id": "b",
+            "w": 1000,
+            "h": 500
+          },
+          "expect": {
+            "state": "waiting",
+            "emitCounts": {
+              "RASM_MEASURED": 0
+            },
+            "entity": {
+              "order": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-frame-tick-hands-every-recorded-extent-in-one-measure",
+      "config": {},
+      "entity": {
+        "id": "s",
+        "items": {
+          "a": {
+            "id": "a",
+            "width": 1000,
+            "height": 300,
+            "lines": 0
+          },
+          "b": {
+            "id": "b",
+            "width": 1000,
+            "height": 500,
+            "lines": 0
+          }
+        },
+        "order": [
+          "a",
+          "b"
+        ]
+      },
+      "steps": [
+        {
+          "from": "waiting",
+          "event": "SETTLE_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_MEASURED",
+                "payload": {
+                  "items": [
+                    {
+                      "id": "a",
+                      "width": 1000,
+                      "height": 300,
+                      "lines": 0
+                    },
+                    {
+                      "id": "b",
+                      "width": 1000,
+                      "height": 500,
+                      "lines": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "items": {},
+              "order": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-extent-after-the-tick-starts-a-new-wave",
+      "config": {},
+      "entity": {
+        "id": "s",
+        "items": {},
+        "order": []
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SETTLE_EXTENT",
+          "payload": {
+            "id": "a",
+            "w": 1000,
+            "h": 320
+          },
+          "expect": {
+            "state": "waiting",
+            "emitCounts": {
+              "RASM_MEASURED": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

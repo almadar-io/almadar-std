@@ -1,0 +1,232 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-defer.lolo",
+  "trait": "RasmDefer",
+  "cases": [
+    {
+      "id": "a-placement-for-its-id-is-held-for-the-next-frame",
+      "config": {
+        "id": "sec"
+      },
+      "entity": {
+        "id": "d"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DEFER_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10
+                }
+              },
+              {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 900,
+                  "w": 1280,
+                  "h": 1200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "waiting",
+            "emitCounts": {
+              "RASM_PLACE": 0
+            },
+            "entity": {
+              "held": {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 900,
+                  "w": 1280,
+                  "h": 1200
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-later-placement-in-the-same-frame-replaces-the-held-one",
+      "config": {
+        "id": "sec"
+      },
+      "entity": {
+        "id": "d",
+        "held": {
+          "id": "sec",
+          "rect": {
+            "x": 0,
+            "y": 900,
+            "w": 1280,
+            "h": 1200
+          }
+        }
+      },
+      "steps": [
+        {
+          "from": "waiting",
+          "event": "DEFER_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 960,
+                  "w": 1280,
+                  "h": 1200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "waiting",
+            "emitCounts": {
+              "RASM_PLACE": 0
+            },
+            "entity": {
+              "held": {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 960,
+                  "w": 1280,
+                  "h": 1200
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-frame-tick-forwards-the-latest-placement",
+      "config": {
+        "id": "sec"
+      },
+      "entity": {
+        "id": "d",
+        "held": {
+          "id": "sec",
+          "rect": {
+            "x": 0,
+            "y": 960,
+            "w": 1280,
+            "h": 1200
+          }
+        }
+      },
+      "steps": [
+        {
+          "from": "waiting",
+          "event": "DEFER_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PLACE",
+                "payload": {
+                  "placed": [
+                    {
+                      "id": "sec",
+                      "rect": {
+                        "x": 0,
+                        "y": 960,
+                        "w": 1280,
+                        "h": 1200
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-placement-for-other-ids-is-ignored",
+      "config": {
+        "id": "sec"
+      },
+      "entity": {
+        "id": "d"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "DEFER_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "other",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PLACE": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-its-own-forwarded-placement-is-not-held-again",
+      "config": {
+        "id": "sec"
+      },
+      "entity": {
+        "id": "d"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "sec",
+                "rect": {
+                  "x": 0,
+                  "y": 900,
+                  "w": 1280,
+                  "h": 1200
+                }
+              }
+            ],
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PLACE": 0,
+              "DEFER_TICK": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -45,19 +45,21 @@ orbital RasmIconOrbital {
       RASM_STYLE -> ready
         (set @entity.paints (+ @entity.paints 1))
         (emit ICON_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate))))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate)))))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
         (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
         (set @entity.paints (+ @entity.paints 1))
         (emit ICON_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
-      RASM_ENTER -> ready
+      RASM_ENTER -> ready when (array/includes ?order @config.id)
         (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.enterIndex (array/indexOf ?order @config.id))
         (set @entity.enteredMs (if (array/includes ?order @config.id) (time/epoch-ms @now) @entity.enteredMs))
         (set @entity.staggerMs ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit ICON_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (not (array/includes ?order @config.id))
       ICON_PAINT -> ready
         (let ((l (object/get @entity.looks (if (= @config.look "") (str/concat "icon/" @config.intent "/idle") @config.look) null)) (r @entity.rect))
           (when (and (!= @l null) (!= @r null) (> @r.w 0) (> @r.h 0))

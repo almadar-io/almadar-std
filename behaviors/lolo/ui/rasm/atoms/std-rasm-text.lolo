@@ -58,7 +58,8 @@ orbital RasmTextOrbital {
         (set @entity.looks ?looks)
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate))))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate)))))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
         (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
         (set @entity.placedMs (if (= @entity.placedMs 0) (time/epoch-ms @now) @entity.placedMs))
@@ -75,13 +76,14 @@ orbital RasmTextOrbital {
         (emit TEXT_PAINT { n: @entity.paints })
       RASM_TEXT_VALUE -> ready when (!= ?id @config.id)
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
-      RASM_ENTER -> ready
+      RASM_ENTER -> ready when (array/includes ?order @config.id)
         (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
         (set @entity.enterIndex (array/indexOf ?order @config.id))
         (set @entity.enteredMs (if (array/includes ?order @config.id) (time/epoch-ms @now) @entity.enteredMs))
         (set @entity.staggerMs ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (not (array/includes ?order @config.id))
       TEXT_PAINT -> ready
         (let ((l (object/get @entity.looks (if (= @config.look "") (str/concat "text/" @config.intent (if (= @config.tone "inverse") "/inverse" "/idle")) @config.look) null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null)) (if (> @r.w 0) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @l.backing "plate") [{ type: draw-shape, id: (str/concat @config.id ":plate"), shape: "rect", anchor: "top-left", position: { x: (- @r.x 8), y: (- @r.y 8), z: @config.z }, width: (+ @r.w 16), height: (+ @r.h 16), fill: @l.fill, corners: { radius: [6, 6, 6, 6], kind: "round" }, hit: false }] []), texts: [(object/merge (object/merge (object/merge (object/merge (object/merge { id: @config.id, key: (default @entity.key @config.text), x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: (if (> @config.maxChars 0) (math/min @r.w (* (* @config.maxChars 0.5) (default (str/to-number (str/replace (default (array/find (str/split (default @l.font "") " ") (fn q (str/includes @q "px"))) "") "px" "")) 16))) @r.w), wrap: (!= @config.intent "numeral"), align: (if @entity.centered "center" (if (= @entity.dir "rtl") "right" "left")), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: (if (array/includes ["poster", "display", "title"] @config.intent) "heading" "text"), level: (if (array/includes ["poster", "display", "title"] @config.intent) (if (> @config.headingLevel 0) @config.headingLevel (if (= @config.intent "title") 2 1)) null), animation: (if (>= @idx 0) (if (= @entity.entry null) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null) } (if (or @config.vertical (!= @entity.rotate 0)) { rotate: @entity.rotate, vertical: @config.vertical, pivotX: (+ @r.x (/ @r.w 2)), pivotY: (+ @r.y (/ @r.h 2)) } {})) (if (and (= @config.fit "shrink") (> @r.h 0)) { height: @r.h, fit: "shrink", minSize: @config.minSize } {})) (if (= @config.reveal "type") { reveal: { startMs: (if (> @entity.enteredMs 0) @entity.enteredMs @entity.placedMs), perGlyphMs: @config.revealMs, durationMs: @config.revealMs } } {})) (if (= @l.backing "halo") { halo: { color: (default @l.fill ""), width: 4 } } {})) (if (= @config.param "") {} { params: (object/set {} @config.param (default (format/number (default @entity.value @config.value) { decimals: @config.decimals }) "")) }))] }))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [] }))))
     }

@@ -326,7 +326,7 @@
       "now": 1700000000000
     },
     {
-      "id": "control-entry-text-for-another-id-leaves-entered-ms-zero",
+      "id": "control-entry-text-for-another-id-starts-no-entry-and-repaints-nothing",
       "config": {
         "id": "t",
         "text": "hi",
@@ -396,9 +396,10 @@
             "staggerMs": 70
           },
           "expect": {
-            "entity": {
-              "enteredMs": 0,
-              "enterIndex": -1
+            "state": "ready",
+            "emitCounts": {
+              "TEXT_PAINT": 0,
+              "RASM_PAINT": 0
             }
           }
         }
@@ -2787,6 +2788,193 @@
                 }
               }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-placement-at-the-same-rect-repaints-nothing",
+      "config": {
+        "id": "t",
+        "text": "hi",
+        "z": 1
+      },
+      "entity": {
+        "id": "t",
+        "looks": {
+          "text/body/idle": {
+            "textColor": "#fff",
+            "font": "16px sans"
+          }
+        },
+        "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 200,
+          "h": 40
+        },
+        "rotate": 0
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "t",
+                "rect": {
+                  "x": 10,
+                  "y": 20,
+                  "w": 200,
+                  "h": 40
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "TEXT_PAINT": 0,
+              "RASM_PAINT": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-placement-at-a-moved-rect-repaints",
+      "config": {
+        "id": "t",
+        "text": "hi",
+        "z": 1
+      },
+      "entity": {
+        "id": "t",
+        "looks": {
+          "text/body/idle": {
+            "textColor": "#fff",
+            "font": "16px sans"
+          }
+        },
+        "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 200,
+          "h": 40
+        },
+        "rotate": 0
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "t",
+                "rect": {
+                  "x": 10,
+                  "y": 60,
+                  "w": 200,
+                  "h": 40
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "TEXT_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-entry-for-other-ids-repaints-nothing",
+      "config": {
+        "id": "t",
+        "text": "hi",
+        "z": 1
+      },
+      "entity": {
+        "id": "t",
+        "looks": {
+          "text/body/idle": {
+            "textColor": "#fff",
+            "font": "16px sans"
+          }
+        },
+        "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 200,
+          "h": 40
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "someoneElse"
+            ],
+            "staggerMs": 70,
+            "entries": []
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "TEXT_PAINT": 0,
+              "RASM_PAINT": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-entry-naming-this-id-repaints-with-its-entry",
+      "config": {
+        "id": "t",
+        "text": "hi",
+        "z": 1
+      },
+      "entity": {
+        "id": "t",
+        "looks": {
+          "text/body/idle": {
+            "textColor": "#fff",
+            "font": "16px sans"
+          }
+        },
+        "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 200,
+          "h": 40
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "t"
+            ],
+            "staggerMs": 70,
+            "entries": []
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "TEXT_PAINT": 1
+            },
+            "entity": {
+              "enterIndex": 0
+            }
           }
         }
       ]

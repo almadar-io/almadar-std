@@ -28,7 +28,8 @@ orbital RasmScrubOrbital {
         (set @entity.sends (+ @entity.sends 1))
         (emit SCRUB_SEND { n: @entity.sends })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.anchor) (and (!= @config.relativeTo "") (= @p.id @config.relativeTo))))))
-      RASM_RESIZE -> ready
+      RASM_RESIZE -> ready when (= ?height @entity.viewH)
+      RASM_RESIZE -> ready when (!= ?height @entity.viewH)
         (set @entity.viewH ?height)
         (set @entity.sends (+ @entity.sends 1))
         (emit SCRUB_SEND { n: @entity.sends })
