@@ -4556,6 +4556,88 @@
    "now": 1760531445678
   },
   {
+   "id": "lolo-a-pass-handing-out-a-tick-and-a-late-reply-queues-both",
+   "note": "A held tick run names its tick, not an event; a pass carrying one with a late reply must not be refused, or the reply is lost (2026-11-22: std-accounting's seeder stalled on lolo).",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "from": "live",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "runs": [
+       { "run": "run-1", "kind": "tick", "trait": "Scan", "tick": "weekly" },
+       { "run": "run-2", "trait": "MockDataMockSeed", "event": "DS_WRITE_NEXT" }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestKernel": "lolo",
+      "guestKernelThen": "leg",
+      "guestKernelQueue": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelQueue": [
+        { "kind": "run", "then": "run", "run": "run-1" },
+        { "kind": "run", "then": "run", "run": "run-2" }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-a-run-offered-again-is-queued-once",
+   "note": "The host offers every held run on each pass until a leg begins it (a refused pass loses nothing), so a run already queued or being begun is not queued again.",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "from": "live",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "runs": [
+       { "run": "run-1", "kind": "tick", "trait": "Scan", "tick": "weekly" },
+       { "run": "run-2", "trait": "MockDataMockSeed", "event": "DS_WRITE_NEXT" },
+       { "run": "run-3", "trait": "MockDataMockSeed", "event": "DS_WRITER" }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestKernel": "lolo",
+      "guestKernelThen": "run",
+      "guestKernelRun": "run-1",
+      "guestKernelQueue": [{ "kind": "run", "then": "run", "run": "run-2" }]
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "entity": {
+       "guestKernelQueue": [
+        { "kind": "run", "then": "run", "run": "run-2" },
+        { "kind": "run", "then": "run", "run": "run-3" }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
    "id": "a-toast-is-gone-from-the-next-tick",
    "steps": [
     {
@@ -18240,6 +18322,158 @@
         "payload": {
          "leg": "guest-1:0:1",
          "response": "{\"success\":true}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-a-leg-the-kernel-failed-is-abandoned-on-its-host",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_FAILURE",
+     "payload": {
+      "error": "boom"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "run",
+      "guestKernelLeg": "leg-3"
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "effects": [
+       {
+        "type": "when",
+        "routed": true,
+        "nested": [
+         {
+          "type": "program/dispatch",
+          "routed": true,
+          "arg2": {
+           "guest": "@entity.guestHandle",
+           "lolo": "abandon",
+           "leg": "@entity.guestKernelLeg",
+           "error": "@payload.error"
+          }
+         }
+        ]
+       }
+      ],
+      "entity": {
+       "guestKernelThen": "",
+       "guestKernelLeg": ""
+      },
+      "emits": [
+       {
+        "event": "GUEST_NOTICE",
+        "payload": {
+         "message": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-control-a-failure-with-no-open-leg-abandons-nothing",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_FAILURE",
+     "payload": {
+      "error": "boom"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "run",
+      "guestKernelLeg": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "effects": [
+       {
+        "type": "when",
+        "status": "skipped",
+        "routed": false
+       }
+      ],
+      "emits": [
+       {
+        "event": "GUEST_NOTICE",
+        "payload": {
+         "message": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lolo-an-abandon-the-host-refuses-is-told",
+   "config": {
+    "split": true
+   },
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "from": "live",
+     "event": "GUEST_KERNEL_ABANDON_FAILED",
+     "payload": {
+      "error": "program/dispatch: no open leg leg-3"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestLeg": "",
+      "guestViewer": "tab-1",
+      "guestViewerOrbital": "Split",
+      "guestKernel": "lolo",
+      "guestKernelThen": "",
+      "guestKernelLeg": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_NOTICE",
+        "payload": {
+         "message": "program/dispatch: no open leg leg-3"
         }
        }
       ]

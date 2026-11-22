@@ -1,0 +1,47 @@
+app std-rasm-loader [
+  version: "0.1.0",
+  locales: [en, ar, sl, es],
+  description: "std-rasm-loader — a Rasm page's boot loader: one full-viewport loading-state (untilReady) in the center slot showing the `quotes` knob's lines one at a time in the active locale, each up for `messageMs`, over the `background` colour in the `foreground` colour, with the optional `title` above them and, under them, pulsing dots with the `label` message as its visible loading status. It paints once on INIT and is never cleared: the prerendered page carries it as static HTML, so it shows before any script runs, and it fades by CSS once every scene canvas reports it is laid out (data-orb-ready). The lines rotate by CSS alone. An empty `quotes` knob renders nothing."
+]
+
+orbital RasmLoaderOrbital {
+  entity RasmLoaderRun [runtime] {
+    id : string!
+  }
+
+  trait RasmLoader -> RasmLoaderRun [client] {
+    initial: shown
+
+    state shown {
+      INIT -> shown
+        (when (> (array/len @config.quotes) 0)
+          (render-ui center {
+            type: loading-state
+            untilReady: true
+            messages: (let ((qs : [MessageKey] @config.quotes)) (array/map @qs (fn q (i18n/t @q))))
+            messageMs: @config.messageMs
+            title: (if (= @config.title "") "" (i18n/t @config.title))
+            background: @config.background
+            foreground: @config.foreground
+            message: (i18n/t @config.label)
+          }))
+    }
+
+    config {
+      quotes : [MessageKey] = []
+        @description "The catalog keys of the lines the loader rotates through, in order."
+      messageMs : number = 5000
+        @description "How long each line stays up, in ms."
+      title : string = ""
+        @description "An optional catalog key shown above the lines; empty shows none."
+      label : MessageKey = "loader.loading"
+        @description "The catalog key of the visible loading status under the dots."
+      background : string = "#FFFFFF"
+        @description "The loader's background colour."
+      foreground : string = "#111111"
+        @description "The loader's text colour."
+    }
+  }
+
+  page "/rasm-loader" -> RasmLoader
+}

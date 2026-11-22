@@ -85,7 +85,7 @@ type GuestPaint = { slot : string!, trait : string!, orbital : string?, embedded
 type GuestHostAsk = { trait : string!, op : string!, ask : string! }
 type GuestMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
 type GuestSeed = { trait : string!, event : string! }
-type GuestHeldRun = { run : string!, trait : string!, event : string! }
+type GuestHeldRun = { run : string!, trait : string!, kind : "tick"?, tick : string?, event : string? }
 type GuestKernelWork = { kind : "attach" | "mount" | "leg" | "viewer" | "plain" | "run"!, then : string!, address : string, payload : GuestJson?, orbital : string, leg : string, body : string, run : string, route : string, seeds : [GuestSeed], persona : string, clientId : string }
 type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, hostAsks : [GuestHostAsk]?, client : GuestProgram?, seeds : [GuestSeed]?, browserRuns : [string]? }
 type GuestJson = string | number | boolean | [GuestJson?] | Map string GuestJson?
@@ -124,6 +124,7 @@ orbital GuestSessionOrbital {
     guestKernel : "native" | "lolo" @description "The kernel running the open guest's split server legs: native (the orbital-rust kernel), or lolo (std-kernel-dispatch stepping the guest one transition at a time with kernel/commit; a testing path). GUEST_OPEN kernel or the stage's kernel switch picks it; it holds for later opens." = native
     guestKernelRefusal : string @description "Why the guest asked for cannot open on the .lolo kernel; empty when it can or runs native." = ""
     guestKernelLeg : string @description "The .lolo leg being run: the handle program/dispatch { lolo: begin } answered." = ""
+    guestKernelRun : string @description "The held run the kernel last took from its queue to begin; the host offers a run on every pass until it is begun, so it is not queued again." = ""
     guestKernelThen : string @description "What the .lolo kernel's work in flight answers when it ends (leg, viewer, stepped, personas, identity-seeded, persona-acted, viewer-credential, credential, run, attach, boot, mount); empty while the kernel is free." = ""
     guestKernelQueue : [GuestKernelWork] @description "The .lolo kernel's work waiting for the work in flight to end, in arrival order." = []
     guestKernelBrowser : [string] @description "The traits a .lolo-kernel guest's viewer runs (program/open browserRuns), which its kernel leaves to the browser." = []
@@ -831,6 +832,7 @@ orbital GuestSessionOrbital {
           (do
             (set @entity.guestKernelQueue (array/drop @entity.guestKernelQueue 1))
             (set @entity.guestKernelThen @w.then)
+            (set @entity.guestKernelRun (default @w.run ""))
             (when (= @w.kind "attach") (program/self { guest: @entity.guestHandle, emit: { success: GUEST_KERNEL_PROGRAM_READ, failure: GUEST_KERNEL_PROGRAM_UNREAD } }))
             (when (= @w.kind "mount") (emit GUEST_KERNEL_MOUNT_SEEDS { route: (default @w.route ""), seeds: (default @w.seeds []) }))
             (when (= @w.kind "leg") (emit GUEST_LEG_AGAIN { guest: @entity.guestHandle, leg: (default @w.leg ""), orbital: (default @w.orbital ""), body: (default @w.body "") }))
@@ -852,6 +854,9 @@ orbital GuestSessionOrbital {
         (emit GUEST_KERNEL_ATTACH { program: ?result, guest: @entity.guestHandle, browser: @entity.guestKernelBrowser })
       GUEST_KERNEL_PROGRAM_UNREAD -> live
         (emit GUEST_KERNEL_FAILURE { error: (default ?error "The guest's program could not be read for the .lolo kernel") })
+      GUEST_KERNEL_ABANDONED -> live
+      GUEST_KERNEL_ABANDON_FAILED -> live
+        (emit GUEST_NOTICE { message: (default ?error "The guest's host could not close the leg the .lolo kernel failed") })
       GUEST_KERNEL_OPENED -> live
         (set @entity.guestKernelThen "")
         (emit GUEST_KERNEL_NEXT {})
@@ -896,6 +901,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestKernelThen "")
         (emit GUEST_KERNEL_NEXT {})
       GUEST_KERNEL_FAILURE -> live
+        (when (!= @entity.guestKernelLeg "") (program/dispatch "" {} { guest: @entity.guestHandle, lolo: "abandon", leg: @entity.guestKernelLeg, error: ?error } { emit: { success: GUEST_KERNEL_ABANDONED, failure: GUEST_KERNEL_ABANDON_FAILED } }))
         (when (= @entity.guestKernelThen "leg") (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error }))
         (when (array/includes ["viewer", "stepped", "persona-acted"] @entity.guestKernelThen) (emit GUEST_STEP_FAILED { error: ?error }))
         (when (= @entity.guestKernelThen "personas") (emit GUEST_PERSONAS_FAILED { error: ?error }))
@@ -947,7 +953,7 @@ orbital GuestSessionOrbital {
       GUEST_TICKED -> live when (= ?guest @entity.guestHandle)
         (when (and (= @entity.guestKernel "lolo") (> (array/len (default ?runs [])) 0))
           (do
-            (set @entity.guestKernelQueue (array/concat @entity.guestKernelQueue (array/map (default ?runs []) (fn r { kind: "run", then: "run", run: @r.run }))))
+            (set @entity.guestKernelQueue (array/concat @entity.guestKernelQueue (array/map (array/filter (default ?runs []) (fn r (and (not (and (!= @entity.guestKernelThen "") (= @r.run @entity.guestKernelRun))) (not (array/some @entity.guestKernelQueue (fn w (= (default @w.run "") @r.run))))))) (fn r { kind: "run", then: "run", run: @r.run }))))
             (emit GUEST_KERNEL_NEXT {})))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?outcomes []) })
         (set @entity.guestPaints (array/reduce ?rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
@@ -1446,6 +1452,12 @@ orbital GuestSessionOrbital {
         result : GuestProgram!
       }
       GUEST_KERNEL_PROGRAM_UNREAD {
+        error : string
+      }
+      GUEST_KERNEL_ABANDONED {
+        result : GuestJson
+      }
+      GUEST_KERNEL_ABANDON_FAILED {
         error : string
       }
       GUEST_LEG_FAILED {

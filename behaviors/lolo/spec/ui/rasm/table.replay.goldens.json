@@ -1,0 +1,398 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-table.lolo",
+  "trait": "RasmTable",
+  "cases": [
+    {
+      "id": "a-placed-table-paints",
+      "config": {
+        "id": "tb",
+        "columns": [
+          {
+            "key": "req",
+            "label": "t.req",
+            "share": 3,
+            "kind": "text"
+          },
+          {
+            "key": "dec",
+            "label": "t.dec",
+            "share": 1,
+            "kind": "pill"
+          }
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "cells": {
+              "req": "t.r1",
+              "dec": "t.pending"
+            },
+            "tones": {
+              "dec": "pending"
+            }
+          },
+          {
+            "id": "r2",
+            "cells": {
+              "req": "t.r2",
+              "dec": "t.ok"
+            },
+            "tones": {
+              "dec": "ok"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "on": "s2",
+            "row": "r1",
+            "key": "dec",
+            "value": "t.ok",
+            "tone": "ok"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "tb",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 600,
+                  "h": 200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "TABLE_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-step-entry-changes-the-cell-and-washes-the-row",
+      "config": {
+        "id": "tb",
+        "columns": [
+          {
+            "key": "req",
+            "label": "t.req",
+            "share": 3,
+            "kind": "text"
+          },
+          {
+            "key": "dec",
+            "label": "t.dec",
+            "share": 1,
+            "kind": "pill"
+          }
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "cells": {
+              "req": "t.r1",
+              "dec": "t.pending"
+            },
+            "tones": {
+              "dec": "pending"
+            }
+          },
+          {
+            "id": "r2",
+            "cells": {
+              "req": "t.r2",
+              "dec": "t.ok"
+            },
+            "tones": {
+              "dec": "ok"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "on": "s2",
+            "row": "r1",
+            "key": "dec",
+            "value": "t.ok",
+            "tone": "ok"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 600,
+          "h": 200
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "s2"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "TABLE_PAINT": 1
+            },
+            "entity": {
+              "cells": {
+                "r1:dec": "t.ok"
+              },
+              "tones": {
+                "r1:dec": "ok"
+              },
+              "changed": "r1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unrelated-entry-changes-nothing",
+      "config": {
+        "id": "tb",
+        "columns": [
+          {
+            "key": "req",
+            "label": "t.req",
+            "share": 3,
+            "kind": "text"
+          },
+          {
+            "key": "dec",
+            "label": "t.dec",
+            "share": 1,
+            "kind": "pill"
+          }
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "cells": {
+              "req": "t.r1",
+              "dec": "t.pending"
+            },
+            "tones": {
+              "dec": "pending"
+            }
+          },
+          {
+            "id": "r2",
+            "cells": {
+              "req": "t.r2",
+              "dec": "t.ok"
+            },
+            "tones": {
+              "dec": "ok"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "on": "s2",
+            "row": "r1",
+            "key": "dec",
+            "value": "t.ok",
+            "tone": "ok"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 600,
+          "h": 200
+        },
+        "changed": ""
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "other"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "TABLE_PAINT"
+            ],
+            "entity": {
+              "changed": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unplaced-table-paints-nothing",
+      "config": {
+        "id": "tb",
+        "columns": [
+          {
+            "key": "req",
+            "label": "t.req",
+            "share": 3,
+            "kind": "text"
+          },
+          {
+            "key": "dec",
+            "label": "t.dec",
+            "share": 1,
+            "kind": "pill"
+          }
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "cells": {
+              "req": "t.r1",
+              "dec": "t.pending"
+            },
+            "tones": {
+              "dec": "pending"
+            }
+          },
+          {
+            "id": "r2",
+            "cells": {
+              "req": "t.r2",
+              "dec": "t.ok"
+            },
+            "tones": {
+              "dec": "ok"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "on": "s2",
+            "row": "r1",
+            "key": "dec",
+            "value": "t.ok",
+            "tone": "ok"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "TABLE_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-paint-of-a-placed-table-emits-one-paint",
+      "config": {
+        "id": "tb",
+        "columns": [
+          {
+            "key": "req",
+            "label": "t.req",
+            "share": 3,
+            "kind": "text"
+          },
+          {
+            "key": "dec",
+            "label": "t.dec",
+            "share": 1,
+            "kind": "pill"
+          }
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "cells": {
+              "req": "t.r1",
+              "dec": "t.pending"
+            },
+            "tones": {
+              "dec": "pending"
+            }
+          },
+          {
+            "id": "r2",
+            "cells": {
+              "req": "t.r2",
+              "dec": "t.ok"
+            },
+            "tones": {
+              "dec": "ok"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "on": "s2",
+            "row": "r1",
+            "key": "dec",
+            "value": "t.ok",
+            "tone": "ok"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 600,
+          "h": 200
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "TABLE_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

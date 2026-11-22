@@ -59,6 +59,7 @@ orbital RasmSurfaceOrbital {
     breakpoint : string @description "The breakpoint the last announced size is in, empty before the first size and the table are known." = ""
     sizedW : number @description "The width the canvas last reported, 0 before it did." = 0
     repaints : number @description "Counts repaints, so each repaint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    laidOut : boolean @description "True once the root child reports the extent it already has: the layout reached its fixed point, its sections placed and painted, and the canvas says so (ready)." = false
     focused : string @description "The control id the last RASM_FOCUS named, empty for none: the surface draws the two-tone focus ring around the paint node of that id." = ""
   }
 
@@ -113,6 +114,7 @@ orbital RasmSurfaceOrbital {
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> ready when (not (or (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH)) (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))))
+        (set @entity.laidOut (or @entity.laidOut (= ?id @config.rootChild)))
       SURFACE_RESIZE -> ready
         (set @entity.sizedW ?width)
         (let ((hit (array/filter @entity.breakpoints (fn b (<= @b.min ?width)))) (floor (let ((d (array/find @entity.breakpoints (fn b (= @b.name "desktop"))))) (if (= @d null) 0 @d.min)))) (when (and (> (array/len @hit) 0) (!= (object/get (array/last @hit) "name") @entity.breakpoint)) (do (set @entity.breakpoint (object/get (array/last @hit) "name")) (emit RASM_BREAKPOINT { name: (object/get (array/last @hit) "name"), width: ?width, chain: (array/reverse (array/map (array/filter @hit (fn b (or (< (object/get (array/last @hit) "min") @floor) (>= @b.min @floor)))) (fn b @b.name))) }))))
@@ -160,6 +162,8 @@ orbital RasmSurfaceOrbital {
       SURFACE_REPAINT -> ready
         (render-ui main {
           type: canvas
+          role: @config.landmark
+          ready: @entity.laidOut
           mode: "2d"
           projection: "free"
           painter: "orbital"
@@ -285,6 +289,7 @@ orbital RasmSurfaceOrbital {
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> dirty when (not (or (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH)) (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))))
+        (set @entity.laidOut (or @entity.laidOut (= ?id @config.rootChild)))
       SURFACE_RESIZE -> dirty
         (set @entity.sizedW ?width)
         (let ((hit (array/filter @entity.breakpoints (fn b (<= @b.min ?width)))) (floor (let ((d (array/find @entity.breakpoints (fn b (= @b.name "desktop"))))) (if (= @d null) 0 @d.min)))) (when (and (> (array/len @hit) 0) (!= (object/get (array/last @hit) "name") @entity.breakpoint)) (do (set @entity.breakpoint (object/get (array/last @hit) "name")) (emit RASM_BREAKPOINT { name: (object/get (array/last @hit) "name"), width: ?width, chain: (array/reverse (array/map (array/filter @hit (fn b (or (< (object/get (array/last @hit) "min") @floor) (>= @b.min @floor)))) (fn b @b.name))) }))))
@@ -332,6 +337,8 @@ orbital RasmSurfaceOrbital {
       SURFACE_REPAINT -> ready
         (render-ui main {
           type: canvas
+          role: @config.landmark
+          ready: @entity.laidOut
           mode: "2d"
           projection: "free"
           painter: "orbital"
@@ -672,6 +679,10 @@ orbital RasmSurfaceOrbital {
       scrollReportMs : number = 100
         @label "Scroll report interval"
         @description "With pageScroll on, the least time in ms between two RASM_PAGE_SCROLLED while the page moves; the resting offset is always reported."
+        @tier "presentation"
+      landmark : "main" | "region" = main
+        @label "Landmark"
+        @description "The landmark role the canvas region takes: main for a surface that is the page's content, region for one inside another page's main."
         @tier "presentation"
     }
   }

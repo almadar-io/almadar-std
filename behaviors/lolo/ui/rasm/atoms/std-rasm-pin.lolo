@@ -1,6 +1,6 @@
 app std-rasm-pin [
-  version: "0.1.0",
-  description: "std-rasm-pin — pins one placed child to the top corner at the reading end of a placed rect, or with `edge` bottom to the bottom corner of the view (the surface height RASM_RESIZE reports; a fixed child stays there as the page scrolls). On RASM_PLACE for `anchor` it stores that rect and, when `enabled`, emits RASM_PLACE for `child` with the declared size inside the margin, narrowed to fit the anchor; RASM_DIRECTION moves the corner (right under ltr, left under rtl) and places again."
+  version: "0.2.0",
+  description: "std-rasm-pin — pins one placed child to the top corner at the reading end (or, with `side` start, the reading start) of a placed rect, or with `edge` bottom to the bottom corner of the view (the surface height RASM_RESIZE reports; a fixed child stays there as the page scrolls). On RASM_PLACE for `anchor` it stores that rect and, when `enabled`, emits RASM_PLACE for `child` with the declared size inside the margin, narrowed to fit the anchor; RASM_DIRECTION moves the corner (right under ltr, left under rtl) and places again."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -37,7 +37,7 @@ orbital RasmPinOrbital {
       RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
       PIN_PLACE -> ready when (and @config.enabled (!= @entity.rect null) (or (= @config.edge "top") (> @entity.viewH 0)))
         (let ((sh (object/get @config.variants @entity.variant null))) (let ((cw (default (if (= @sh null) null @sh.width) @config.width)) (ch (default (if (= @sh null) null @sh.height) @config.height)) (cm (default (if (= @sh null) null @sh.margin) @config.margin))) (let ((r @entity.rect) (w (math/min @cw (- @entity.rect.w (+ (* 2 @cm) @config.inset)))))
-          (emit RASM_PLACE { placed: [{ id: @config.child, rect: { x: (if (= @entity.dir "rtl") (+ @r.x (+ @cm @config.inset)) (- (+ @r.x @r.w) (+ @w (+ @cm @config.inset)))), y: (if (= @config.edge "bottom") (- (+ @r.y @entity.viewH) (+ @ch @cm)) (+ @r.y @cm)), w: @w, h: @ch } }] }))))
+          (emit RASM_PLACE { placed: [{ id: @config.child, rect: { x: (if (= (= @entity.dir "rtl") (= @config.side "end")) (+ @r.x (+ @cm @config.inset)) (- (+ @r.x @r.w) (+ @w (+ @cm @config.inset)))), y: (if (= @config.edge "bottom") (- (+ @r.y @entity.viewH) (+ @ch @cm)) (+ @r.y @cm)), w: @w, h: @ch } }] }))))
       PIN_PLACE -> ready when (not (and @config.enabled (!= @entity.rect null) (or (= @config.edge "top") (> @entity.viewH 0))))
     }
 
@@ -86,6 +86,10 @@ orbital RasmPinOrbital {
       edge : "top" | "bottom" = "top"
         @label "Edge"
         @description "Which corner at the reading end: the anchor's top, or the bottom of the view (the surface height)."
+        @tier "presentation"
+      side : "end" | "start" = "end"
+        @label "Side"
+        @description "Which top corner: the reading end (right under ltr, left under rtl) or the reading start, for a logo that leads the page."
         @tier "presentation"
       margin : number = 12
         @label "Margin"

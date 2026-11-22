@@ -1,0 +1,154 @@
+app std-rasm-table [
+  version: "0.1.0",
+  description: "std-rasm-table — a data table painted by one trait: a frame, a header band with each column's label, and one row per record with a divider, its cells written as text or as a pill (a rounded badge whose look follows the cell's tone, such as pending or approved). The composer declares the columns (a key, a message key label, a share of the width and a kind) and the rows (an id, message keys by column key, and pill tones by column key). Steps change it over time: each step names the id whose RASM_ENTER (from a std-rasm-stream line or a std-rasm-presence group) triggers it and sets one cell of one row, optionally with a new tone; the row that changed is washed in the table/changed/idle look as it fades in, so a running system can be seen updating a record. Columns lay out from the reading start (mirrored under rtl). Looks (prefix `lookSet`, default table): table/frame/idle, table/header/idle (fill, text colour and font of the labels), table/row/idle (divider stroke, text colour and font of the cells), table/pill-<tone>/idle (pill fill, text colour and font) and table/changed/idle.",
+  locales: [en, ar, sl]
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmTableColumn = { key : string!, label : MessageKey!, share : number!, kind : "text" | "pill" }
+type RasmTableRow = { id : string!, cells : Map string MessageKey!, tones : Map string string }
+type RasmTableStep = { on : string!, row : string!, key : string!, value : MessageKey!, tone : string }
+
+orbital RasmTableOrbital {
+  entity RasmTableRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the table, null until placed." = null
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced: columns run from its start." = "ltr"
+    cells : Map string MessageKey @description "Cells a step has changed, keyed row id, a colon and column key." = {}
+    tones : Map string string @description "Pill tones a step has changed, keyed like cells." = {}
+    changed : string @description "The id of the row the last step changed, washed as it fades in; empty before any step." = ""
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmTable -> RasmTableRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TABLE_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TABLE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TABLE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready when (array/some @config.steps (fn s (array/includes ?order @s.on)))
+        (set @entity.cells (let ((hits (array/filter @config.steps (fn s (array/includes ?order @s.on))))) (array/reduce @hits @entity.cells (fn acc s (object/set @acc (str/concat @s.row ":" @s.key) @s.value)))))
+        (set @entity.tones (let ((hits (array/filter @config.steps (fn s (array/includes ?order @s.on))))) (array/reduce @hits @entity.tones (fn acc s (if (= (default @s.tone "") "") @acc (object/set @acc (str/concat @s.row ":" @s.key) @s.tone))))))
+        (set @entity.changed (let ((hits (array/filter @config.steps (fn s (array/includes ?order @s.on))))) (let ((last (array/nth @hits (- (array/len @hits) 1)))) (if (= @last null) @entity.changed @last.row))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TABLE_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (not (array/some @config.steps (fn s (array/includes ?order @s.on))))
+      TABLE_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (fr (default (object/get @entity.looks (str/concat @config.lookSet "/frame/idle") null) {})) (hd (default (object/get @entity.looks (str/concat @config.lookSet "/header/idle") null) {})) (rw (default (object/get @entity.looks (str/concat @config.lookSet "/row/idle") null) {})) (ch (default (object/get @entity.looks (str/concat @config.lookSet "/changed/idle") null) {})) (total (math/max 1 (array/reduce @config.columns 0 (fn acc c (+ @acc @c.share))))) (inner (- @r.w (* 2 @config.padX))) (fade { durationMs: 420, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 6 }, { at: 1, opacity: 1, offsetY: 0 }] }))
+          (let ((cols (array/map (array/range (array/len @config.columns)) (fn i (let ((c (array/nth @config.columns @i)) (before (array/reduce (array/filter (array/range (array/len @config.columns)) (fn j (< @j @i))) 0 (fn acc j (+ @acc (let ((cj (array/nth @config.columns @j))) (if (= @cj null) 0 @cj.share))))))) (let ((w (* @inner (/ (default @c.share 0) @total))) (x0 (* @inner (/ @before @total)))) { c: @c, w: @w, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ @config.padX (+ @x0 @w))) (+ @r.x (+ @config.padX @x0))) }))))))
+            (emit RASM_PAINT {
+              id: @config.id,
+              z: @config.z,
+              texts: (array/concat
+                (array/map @cols (fn k { id: (str/concat @config.id ":head:" @k.c.key), key: @k.c.label, x: (if (= @entity.dir "rtl") (+ @k.x @k.w) @k.x), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: @k.w, wrap: false }))
+                (array/flatten (array/map (array/range (array/len @config.rows)) (fn ri (let ((row (array/nth @config.rows @ri))) (let ((cy (+ (+ @r.y @config.headerH) (+ (* @ri @config.rowH) (/ @config.rowH 2)))) (hot (and (!= @entity.changed "") (= @row.id @entity.changed)))) (array/map @cols (fn k (let ((ck (str/concat @row.id ":" @k.c.key)) (pill (= @k.c.kind "pill"))) (let ((tone (default (object/get @entity.tones @ck null) (default (object/get (default @row.tones {}) @k.c.key null) "default"))) (val : MessageKey (default (object/get @entity.cells @ck null) (default (object/get @row.cells @k.c.key null) "")))) (let ((pl (default (object/get @entity.looks (str/concat @config.lookSet "/pill-" @tone "/idle") null) {})) (pw (math/min @config.pillW (- @k.w 4)))) { id: (str/concat @config.id ":cell:" @ck), key: @val, x: (if @pill (if (= @entity.dir "rtl") (- (+ @k.x @k.w) (/ @pw 2)) (+ @k.x (/ @pw 2))) (if (= @entity.dir "rtl") (+ @k.x @k.w) @k.x)), y: @cy, z: (+ @config.z 4), align: (if @pill "center" (if (= @entity.dir "rtl") "right" "left")), baseline: "middle", color: (if @pill @pl.textColor @rw.textColor), font: (if @pill @pl.font @rw.font), width: (if @pill (- @pw 8) @k.w), wrap: false, animation: (if (and @hot (or (!= (object/get @entity.cells @ck null) null) (!= (object/get @entity.tones @ck null) null))) @fade null) }))))))))))),
+              nodes: (array/concat
+                [{ type: draw-shape, id: (str/concat @config.id ":frame"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: (+ @config.headerH (* (array/len @config.rows) @config.rowH)), fill: @fr.fill, stroke: @fr.stroke, strokeWidth: @fr.strokeWidth, corners: @fr.corners, shadow: @fr.shadow, hit: false },
+                 { type: draw-shape, id: (str/concat @config.id ":header"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: (+ @config.z 1) }, width: @r.w, height: @config.headerH, fill: @hd.fill, stroke: @hd.stroke, strokeWidth: @hd.strokeWidth, corners: @hd.corners, hit: false }]
+                (array/flatten (array/map (array/range (array/len @config.rows)) (fn ri (let ((row (array/nth @config.rows @ri))) (let ((ry (+ (+ @r.y @config.headerH) (* @ri @config.rowH))) (hot (and (!= @entity.changed "") (= @row.id @entity.changed)))) (array/concat
+                  (if @hot [{ type: draw-shape, id: (str/concat @config.id ":changed"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: @ry, z: (+ @config.z 1) }, width: (- @r.w 2), height: @config.rowH, fill: @ch.fill, stroke: @ch.stroke, strokeWidth: @ch.strokeWidth, corners: @ch.corners, animation: @fade, hit: false }] [])
+                  (if (> @ri 0) [{ type: draw-shape, id: (str/concat @config.id ":rule:" @row.id), shape: rect, anchor: "top-left", position: { x: @r.x, y: @ry, z: (+ @config.z 2) }, width: @r.w, height: (default @rw.strokeWidth 1), fill: @rw.stroke, hit: false }] [])
+                  (array/flatten (array/map (array/filter @cols (fn k (= @k.c.kind "pill"))) (fn k (let ((ck (str/concat @row.id ":" @k.c.key))) (let ((tone (default (object/get @entity.tones @ck null) (default (object/get (default @row.tones {}) @k.c.key null) "default")))) (let ((pl (default (object/get @entity.looks (str/concat @config.lookSet "/pill-" @tone "/idle") null) {})) (pw (math/min @config.pillW (- @k.w 4)))) [{ type: draw-shape, id: (str/concat @config.id ":pill:" @ck), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @k.x @k.w) @pw) @k.x), y: (+ @ry (/ (- @config.rowH @config.pillH) 2)), z: (+ @config.z 3) }, width: @pw, height: @config.pillH, fill: @pl.fill, stroke: @pl.stroke, strokeWidth: @pl.strokeWidth, corners: @pl.corners, animation: (if (and @hot (!= (object/get @entity.tones @ck null) null)) @fade null), hit: false }])))))))))))))
+            })))
+      TABLE_PAINT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      TABLE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the table from the stored rect, looks and changed cells."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The frame, header, dividers, pills and every cell text for the surface to collect."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: columns run from its start."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the table's rect when it is placed."
+      RASM_ENTER { order : [string]!  staggerMs : number }
+        @description "An entry naming a step's `on` id applies that step: one cell (and tone) of one row changes and the row is washed."
+    }
+
+    config {
+      id : string = "table"
+        @label "Id"
+        @description "The table's RASM_PLACE key and paint id."
+        @tier "presentation"
+      lookSet : string = "table"
+        @label "Look set"
+        @description "The prefix of this widget's look keys (`<lookSet>/frame/idle` and the rest), so two widgets on one page can wear different looks."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; header, rules, pills and texts paint above."
+        @tier "presentation"
+      columns : [RasmTableColumn] = []
+        @label "Columns"
+        @description "The columns from the reading start: the key cells use, the header label, a share of the width and whether cells are text or pills."
+        @tier "domain"
+      rows : [RasmTableRow] = []
+        @label "Rows"
+        @description "The records in order: an id, the message key of each cell by column key, and the tone of each pill cell by column key."
+        @tier "domain"
+      steps : [RasmTableStep] = []
+        @label "Steps"
+        @description "Changes over time: when an entry names `on`, the cell `key` of row `row` becomes `value`, with `tone` for a pill when given."
+        @tier "domain"
+      headerH : number = 40
+        @label "Header height"
+        @description "The header band's height in px."
+        @tier "presentation"
+      rowH : number = 52
+        @label "Row height"
+        @description "Each row's height in px."
+        @tier "presentation"
+      padX : number = 16
+        @label "Side padding"
+        @description "Space in px between the frame and the first and last column."
+        @tier "presentation"
+      pillW : number = 104
+        @label "Pill width"
+        @description "A pill's width in px, narrowed to fit its column."
+        @tier "presentation"
+      pillH : number = 26
+        @label "Pill height"
+        @description "A pill's height in px."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmTableStart -> RasmTable
+}

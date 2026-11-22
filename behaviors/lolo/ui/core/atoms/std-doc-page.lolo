@@ -106,16 +106,18 @@ orbital DocPageOrbital {
                 children: [{
                   type: typography
                   content: (if (== @entity.sidebarLabel "") @config.sidebarLabel @entity.sidebarLabel)
+                  aria-hidden: true
                   variant: label
                   weight: semibold
                   className: (if (and (== @config.sidebarLabel "") (== @entity.sidebarLabel "")) hidden "px-3")
                 }, {
                   type: doc-sidebar
                   items: (array/map (if (== (array/len @entity.navItems) 0) @config.navItems @entity.navItems) (fn a { label: @a.label, href: (default @a.href ""), active: (or (default @a.active false) (and (!= @entity.path "") (= (default @a.href "") @entity.path))), items: (array/map (default @a.items []) (fn b { label: @b.label, href: (default @b.href ""), active: (or (default @b.active false) (and (!= @entity.path "") (= (default @b.href "") @entity.path))), items: (array/map (default @b.items []) (fn c { label: @c.label, href: (default @c.href ""), active: (or (default @c.active false) (and (!= @entity.path "") (= (default @c.href "") @entity.path))), items: [] })) })) }))
-                  aria-label: @config.sidebarLabel
+                  aria-label: (if (== @entity.sidebarLabel "") @config.sidebarLabel @entity.sidebarLabel)
                 }]
               }, {
                 type: stack
+                role: main
                 direction: vertical
                 gap: lg
                 className: "min-w-0"

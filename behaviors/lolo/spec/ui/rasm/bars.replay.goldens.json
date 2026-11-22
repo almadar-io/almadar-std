@@ -1,0 +1,275 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-bars.lolo",
+  "trait": "RasmBars",
+  "cases": [
+    {
+      "id": "a-placed-chart-paints",
+      "config": {
+        "id": "bc",
+        "bars": [
+          {
+            "label": "b.w1",
+            "shown": "b.v1",
+            "value": 4
+          },
+          {
+            "label": "b.w2",
+            "shown": "b.v2",
+            "value": 8
+          }
+        ],
+        "steps": [
+          {
+            "on": "k2",
+            "bar": 1,
+            "value": 9,
+            "shown": "b.v9"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "bc",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 200
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "BARS_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-step-entry-changes-the-bar-and-highlights-it",
+      "config": {
+        "id": "bc",
+        "bars": [
+          {
+            "label": "b.w1",
+            "shown": "b.v1",
+            "value": 4
+          },
+          {
+            "label": "b.w2",
+            "shown": "b.v2",
+            "value": 8
+          }
+        ],
+        "steps": [
+          {
+            "on": "k2",
+            "bar": 1,
+            "value": 9,
+            "shown": "b.v9"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 400,
+          "h": 200
+        },
+        "hot": -1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "k2"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "BARS_PAINT": 1
+            },
+            "entity": {
+              "values": {
+                "b1": 9
+              },
+              "shown": {
+                "b1": "b.v9"
+              },
+              "hot": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unrelated-entry-changes-no-bar",
+      "config": {
+        "id": "bc",
+        "bars": [
+          {
+            "label": "b.w1",
+            "shown": "b.v1",
+            "value": 4
+          },
+          {
+            "label": "b.w2",
+            "shown": "b.v2",
+            "value": 8
+          }
+        ],
+        "steps": [
+          {
+            "on": "k2",
+            "bar": 1,
+            "value": 9,
+            "shown": "b.v9"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 400,
+          "h": 200
+        },
+        "hot": -1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "zz"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "BARS_PAINT"
+            ],
+            "entity": {
+              "hot": -1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-placed-chart-paint-emits-one-paint",
+      "config": {
+        "id": "bc",
+        "bars": [
+          {
+            "label": "b.w1",
+            "shown": "b.v1",
+            "value": 4
+          },
+          {
+            "label": "b.w2",
+            "shown": "b.v2",
+            "value": 8
+          }
+        ],
+        "steps": [
+          {
+            "on": "k2",
+            "bar": 1,
+            "value": 9,
+            "shown": "b.v9"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 400,
+          "h": 200
+        },
+        "hot": -1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "BARS_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unplaced-chart-paints-nothing",
+      "config": {
+        "id": "bc",
+        "bars": [
+          {
+            "label": "b.w1",
+            "shown": "b.v1",
+            "value": 4
+          },
+          {
+            "label": "b.w2",
+            "shown": "b.v2",
+            "value": 8
+          }
+        ],
+        "steps": [
+          {
+            "on": "k2",
+            "bar": 1,
+            "value": 9,
+            "shown": "b.v9"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "BARS_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

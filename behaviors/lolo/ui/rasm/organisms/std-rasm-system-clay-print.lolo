@@ -9,7 +9,7 @@ uses Shell from "std/behaviors/std-rasm-page"
 orbital RasmPage = Shell.orbitals.RasmPage {
   config {
     system: "clay-print"
-    palette: {background: "#F7F0E3", foreground: "#1F1D2B", card: "#FFFBF3", "card-foreground": "#1F1D2B", surface: "#F0E6D3", muted: "#E7DCC7", "muted-foreground": "#55505F", border: "#1F1D2B", input: "#1F1D2B", primary: "#FF5B3A", "primary-hover": "#F24C2B", "primary-foreground": "#1F1D2B", secondary: "#FFFBF3", "secondary-foreground": "#1F1D2B", "secondary-hover": "#F3E7D2", accent: "#2F5BEA", "accent-foreground": "#FFFBF3", ring: "#2F5BEA", "series-1": "#FF5B3A", "series-2": "#2F5BEA", "series-3": "#FFC93C", "series-4": "#2BB58C", "series-5": "#B45CE0"}
+    palette: {background: "#F7F0E3", foreground: "#1F1D2B", card: "#FFFBF3", "card-foreground": "#1F1D2B", surface: "#F0E6D3", muted: "#E7DCC7", "muted-foreground": "#55505F", border: "#1F1D2B", input: "#1F1D2B", primary: "#FF5B3A", "primary-hover": "#F24C2B", "primary-foreground": "#1F1D2B", secondary: "#FFFBF3", "secondary-foreground": "#1F1D2B", "secondary-hover": "#F3E7D2", accent: "#2F5BEA", "accent-ink": "#2649C4", "accent-foreground": "#FFFBF3", ring: "#2F5BEA", "series-1": "#FF5B3A", "series-2": "#2F5BEA", "series-3": "#FFC93C", "series-4": "#2BB58C", "series-5": "#B45CE0"}
     fonts: { display: { family: "Unbounded", file: "https://almadar-kflow-assets.web.app/fonts/unbounded/Unbounded%5Bwght%5D.ttf", generic: "sans-serif" }, body: { family: "Varela Round", file: "https://almadar-kflow-assets.web.app/fonts/varelaround/VarelaRound-Regular.ttf", generic: "sans-serif" } }
     looks: {
         "surface/ground/idle": { fill: "background", material: { wgsl: "fn cp_blob(p: vec2<f32>, c: vec2<f32>, r: f32) -> f32 { return r - length(p - c); }\nfn shade(px: Pixel) -> vec4<f32> {\n  let asp = px.size.x / max(px.size.y, 1.0);\n  let p = px.uv * vec2<f32>(asp, 1.0);\n  let t = px.time * 0.18;\n  let y = px.scroll * 0.15;\n  var col = px.color.rgb;\n  let b1 = cp_blob(p, vec2<f32>(0.12 * asp, 0.22 + sin(t) * 0.02 - y), 0.17);\n  let b2 = cp_blob(p, vec2<f32>(0.9 * asp, 0.7 + sin(t * 0.7 + 2.0) * 0.03 - y), 0.22);\n  col = mix(col, vec3<f32>(1.0, 0.36, 0.23), smoothstep(-0.004, 0.004, b1) * 0.1);\n  col = mix(col, vec3<f32>(0.18, 0.36, 0.92), smoothstep(-0.004, 0.004, cp_blob(p, vec2<f32>(0.9 * asp + 0.006, 0.7 + sin(t * 0.7 + 2.0) * 0.03 - y + 0.004), 0.22)) * 0.09);\n  let cell = px.local / 9.0;\n  let g = fract(cell) - vec2<f32>(0.5, 0.5);\n  let hd = 1.0 - smoothstep(0.1, 0.16, length(g));\n  col = col - vec3<f32>(0.06, 0.06, 0.05) * hd * 0.35;\n  let grain = fract(sin(dot(floor(px.local), vec2<f32>(12.9898, 78.233))) * 43758.5453);\n  col = col - vec3<f32>(grain * 0.025);\n  return vec4<f32>(col, px.color.a);\n}\n", params: [0, 0, 0, 0], live: true } },
@@ -34,7 +34,7 @@ orbital RasmPage = Shell.orbitals.RasmPage {
         "pressable/ghost/pressed": { fill: "muted", textColor: "foreground", font: "600 15px display", corners: { radius: [999, 999, 999, 999], kind: "round" } },
         "text/display/idle": { textColor: "foreground", font: "800 72px display", spring: { stiffness: 120, damping: 11 } },
         "text/title/idle": { textColor: "foreground", font: "700 40px display", spring: { stiffness: 120, damping: 11 } },
-        "text/eyebrow/idle": { textColor: "accent", font: "700 14px display", spring: { stiffness: 120, damping: 11 } },
+        "text/eyebrow/idle": { textColor: "accent-ink", font: "700 14px display", spring: { stiffness: 120, damping: 11 } },
         "text/body/idle": { textColor: "muted-foreground", font: "400 19px body", spring: { stiffness: 120, damping: 11 } },
         "text/card/idle": { textColor: "card-foreground", font: "700 22px display" },
         "text/card/inverse": { textColor: "card", font: "700 22px display" },
@@ -74,7 +74,7 @@ orbital RasmPage = Shell.orbitals.RasmPage {
         "machine/edge/lit": { stroke: "accent", strokeWidth: 3.5 },
         "machine/event/idle": { textColor: "muted-foreground", font: "400 13px mono" },
         "machine/event/lit": { textColor: "primary-foreground", font: "700 13px mono" },
-        "orbit/label/active": { textColor: "accent", font: "700 18px display" },
+        "orbit/label/active": { textColor: "accent-ink", font: "700 18px display" },
         "source/code/idle": { fill: "card", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [22, 22, 22, 22], kind: "round" }, textColor: "foreground", font: "400 14px mono", shadow: { color: "#1F1D2B", blur: 0, offsetX: 4, offsetY: 5 } },
         "focus/ring/outer": { stroke: "background", strokeWidth: 7 },
         "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },

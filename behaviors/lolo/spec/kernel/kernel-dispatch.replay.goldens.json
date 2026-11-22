@@ -10926,6 +10926,120 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-mount-leg-settles-its-mount-work-on-its-host-before-its-first-seed",
+   "note": "EXEC-SEED-7 on a .lolo leg: the $MOUNT deliveries have run (the queue is empty), the seeds wait in next, so the kernel asks the host to settle the leg's lineage before the first seed.",
+   "steps": [
+    {
+     "trait": "KernelDispatch",
+     "from": "ready",
+     "event": "KERNEL_NEXT",
+     "payload": { "left": 5 },
+     "entity": {
+      "id": "k",
+      "guest": "guest-1",
+      "leg": "leg-1",
+      "legSettle": true,
+      "runLeft": 5,
+      "last": { "q": [], "states": {}, "frames": {}, "outcomes": [], "emitted": [], "collapsed": [], "seen": [], "pending": [], "later": [], "scopes": [], "refused": "", "next": [{ "trait": "Shelf", "event": "INIT", "payload": {}, "at": -1, "seed": false, "row": "", "completion": false, "src": "" }], "nextPending": ["Shelf"], "held": [], "paints": [], "navs": [] }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "program/dispatch",
+        "arg2": { "guest": "@entity.guest", "lolo": "settle", "leg": "@entity.leg" }
+       }
+      ],
+      "emits": [
+       { "event": "KERNEL_SETTLE_FAILED" },
+       { "event": "KERNEL_FAILED", "payload": { "error": "The leg's $MOUNT work could not settle: program/dispatch: no open guest 'guest-1' (it was never opened or is closed)" } }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-leg-with-nothing-to-settle-takes-its-next-seed",
+   "steps": [
+    {
+     "trait": "KernelDispatch",
+     "from": "ready",
+     "event": "KERNEL_NEXT",
+     "payload": { "left": 5 },
+     "entity": {
+      "id": "k",
+      "guest": "guest-1",
+      "leg": "leg-1",
+      "legSettle": false,
+      "runLeft": 5,
+      "last": { "q": [], "states": {}, "frames": {}, "outcomes": [], "emitted": [], "collapsed": [], "seen": [], "pending": [], "later": [], "scopes": [], "refused": "", "next": [{ "trait": "Shelf", "event": "INIT", "payload": {}, "at": -1, "seed": false, "row": "", "completion": false, "src": "" }], "nextPending": ["Shelf"], "held": [], "paints": [], "navs": [] }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       { "type": "set" }
+      ],
+      "neverEmits": ["KERNEL_SETTLE_FAILED", "KERNEL_SETTLED"]
+     }
+    }
+   ]
+  },
+  {
+   "id": "settled-replies-run-in-the-leg-as-completions-naming-their-run",
+   "steps": [
+    {
+     "trait": "KernelDispatch",
+     "from": "ready",
+     "event": "KERNEL_SETTLED",
+     "payload": { "result": { "runs": [{ "run": "run-7", "trait": "Seeder", "event": "SIGNED", "payload": { "ok": true }, "entityId": "row-9" }] } },
+     "entity": {
+      "id": "k",
+      "guest": "guest-1",
+      "leg": "leg-1",
+      "legSettle": true,
+      "runLeft": 5,
+      "last": { "q": [], "states": {}, "frames": {}, "outcomes": [], "emitted": [], "collapsed": [], "seen": [], "pending": [], "later": [], "scopes": [], "refused": "", "next": [{ "trait": "Shelf", "event": "INIT", "payload": {}, "at": -1, "seed": false, "row": "", "completion": false, "src": "" }], "nextPending": ["Shelf"], "held": [], "paints": [], "navs": [] }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "entity": {
+       "legSettle": true,
+       "last": { "q": [{ "trait": "Seeder", "event": "SIGNED", "payload": { "ok": true }, "at": -1, "seed": false, "row": "", "completion": true, "src": "", "run": "run-7", "runRow": "row-9" }], "states": {}, "frames": {}, "outcomes": [], "emitted": [], "collapsed": [], "seen": [], "pending": [], "later": [], "scopes": [], "refused": "", "next": [{ "trait": "Shelf", "event": "INIT", "payload": {}, "at": -1, "seed": false, "row": "", "completion": false, "src": "" }], "nextPending": ["Shelf"], "held": [], "paints": [], "navs": [] }
+      },
+      "emits": [{ "event": "KERNEL_NEXT", "payload": { "left": 5 } }]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-settle-with-no-replies-left-lets-the-seeds-run",
+   "steps": [
+    {
+     "trait": "KernelDispatch",
+     "from": "ready",
+     "event": "KERNEL_SETTLED",
+     "payload": { "result": { "runs": [] } },
+     "entity": {
+      "id": "k",
+      "guest": "guest-1",
+      "leg": "leg-1",
+      "legSettle": true,
+      "runLeft": 5,
+      "last": { "q": [], "states": {}, "frames": {}, "outcomes": [], "emitted": [], "collapsed": [], "seen": [], "pending": [], "later": [], "scopes": [], "refused": "", "next": [], "nextPending": [], "held": [], "paints": [], "navs": [] }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "entity": { "legSettle": false },
+      "emits": [{ "event": "KERNEL_NEXT", "payload": { "left": 5 } }]
+     }
+    }
+   ]
   }
  ]
 }

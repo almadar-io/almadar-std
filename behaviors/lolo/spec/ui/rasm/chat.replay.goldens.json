@@ -1,0 +1,405 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-chat.lolo",
+  "trait": "RasmChat",
+  "cases": [
+    {
+      "id": "a-placed-panel-paints",
+      "config": {
+        "id": "ch",
+        "title": "chat.title",
+        "placeholder": "chat.placeholder",
+        "messages": [
+          {
+            "on": "",
+            "side": "user",
+            "key": "m.ask"
+          },
+          {
+            "on": "s1",
+            "side": "agent",
+            "key": "m.one"
+          },
+          {
+            "on": "s2",
+            "side": "agent",
+            "key": "m.two"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "ch",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 360,
+                  "h": 600
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "CHAT_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-step-entry-shows-its-message-as-the-newest",
+      "config": {
+        "id": "ch",
+        "title": "chat.title",
+        "placeholder": "chat.placeholder",
+        "messages": [
+          {
+            "on": "",
+            "side": "user",
+            "key": "m.ask"
+          },
+          {
+            "on": "s1",
+            "side": "agent",
+            "key": "m.one"
+          },
+          {
+            "on": "s2",
+            "side": "agent",
+            "key": "m.two"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 600
+        },
+        "entered": [],
+        "newest": -1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "s2"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "CHAT_PAINT": 1
+            },
+            "entity": {
+              "entered": [
+                "s2"
+              ],
+              "newest": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-entered-message-is-not-entered-again",
+      "config": {
+        "id": "ch",
+        "title": "chat.title",
+        "placeholder": "chat.placeholder",
+        "messages": [
+          {
+            "on": "",
+            "side": "user",
+            "key": "m.ask"
+          },
+          {
+            "on": "s1",
+            "side": "agent",
+            "key": "m.one"
+          },
+          {
+            "on": "s2",
+            "side": "agent",
+            "key": "m.two"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 600
+        },
+        "entered": [
+          "s1"
+        ],
+        "newest": 1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "s1"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "CHAT_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-measured-bubble-height-repaints",
+      "config": {
+        "id": "ch",
+        "title": "chat.title",
+        "placeholder": "chat.placeholder",
+        "messages": [
+          {
+            "on": "",
+            "side": "user",
+            "key": "m.ask"
+          },
+          {
+            "on": "s1",
+            "side": "agent",
+            "key": "m.one"
+          },
+          {
+            "on": "s2",
+            "side": "agent",
+            "key": "m.two"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 600
+        },
+        "heights": {}
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "ch:msg:0",
+                "width": 200,
+                "height": 44,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "CHAT_PAINT": 1
+            },
+            "entity": {
+              "heights": {
+                "ch:msg:0": 44
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-same-height-again-repaints-nothing",
+      "config": {
+        "id": "ch",
+        "title": "chat.title",
+        "placeholder": "chat.placeholder",
+        "messages": [
+          {
+            "on": "",
+            "side": "user",
+            "key": "m.ask"
+          },
+          {
+            "on": "s1",
+            "side": "agent",
+            "key": "m.one"
+          },
+          {
+            "on": "s2",
+            "side": "agent",
+            "key": "m.two"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 600
+        },
+        "heights": {
+          "ch:msg:0": 44
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "ch:msg:0",
+                "width": 200,
+                "height": 44,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "CHAT_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-another-texts-measure-is-ignored",
+      "config": {
+        "id": "ch",
+        "title": "chat.title",
+        "placeholder": "chat.placeholder",
+        "messages": [
+          {
+            "on": "",
+            "side": "user",
+            "key": "m.ask"
+          },
+          {
+            "on": "s1",
+            "side": "agent",
+            "key": "m.one"
+          },
+          {
+            "on": "s2",
+            "side": "agent",
+            "key": "m.two"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 600
+        },
+        "heights": {}
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_MEASURED",
+          "payload": {
+            "items": [
+              {
+                "id": "other:msg:0",
+                "width": 200,
+                "height": 44,
+                "lines": 2
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "CHAT_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-placed-panel-paint-emits-one-paint",
+      "config": {
+        "id": "ch",
+        "title": "chat.title",
+        "placeholder": "chat.placeholder",
+        "messages": [
+          {
+            "on": "",
+            "side": "user",
+            "key": "m.ask"
+          },
+          {
+            "on": "s1",
+            "side": "agent",
+            "key": "m.one"
+          },
+          {
+            "on": "s2",
+            "side": "agent",
+            "key": "m.two"
+          }
+        ]
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 600
+        },
+        "entered": [],
+        "heights": {},
+        "newest": -1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "CHAT_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

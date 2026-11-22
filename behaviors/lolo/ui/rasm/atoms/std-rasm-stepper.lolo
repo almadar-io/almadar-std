@@ -1,0 +1,129 @@
+app std-rasm-stepper [
+  version: "0.1.0",
+  description: "std-rasm-stepper — a horizontal progress stepper painted by one trait: a row of numbered circles joined by lines, each with its label, where the steps before the current one are done (filled, with a check mark), the current one is filled with its number, and the rest are outlined. The composer declares the steps, each with a message key label and the id whose RASM_ENTER (from a std-rasm-stream line or a std-rasm-presence group) makes it the current step, and the step current from the start. A step that becomes current fades in. Mirrored under rtl. Looks (prefix `lookSet`, default stepper): stepper/done/idle and stepper/current/idle (circle fill, mark and number colour, font), stepper/todo/idle (circle stroke, number colour, font), stepper/line/idle (stroke of the joining line before the current step) and stepper/line-todo/idle, and stepper/label/idle (label colour and font).",
+  locales: [en, ar, sl]
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmStepperStep = { label : MessageKey!, number : MessageKey!, on : string! }
+
+orbital RasmStepperOrbital {
+  entity RasmStepperRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the stepper, null until placed." = null
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced: steps run from its start." = "ltr"
+    current : number @description "The index of the current step; -1 means the configured start." = -1
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmStepper -> RasmStepperRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STEPPER_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STEPPER_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STEPPER_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready when (array/some @config.steps (fn s (and (!= @s.on "") (array/includes ?order @s.on))))
+        (set @entity.current (array/reduce (array/range (array/len @config.steps)) @entity.current (fn acc i (let ((s (array/nth @config.steps @i))) (if (and (!= @s.on "") (array/includes ?order @s.on)) @i @acc)))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STEPPER_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (not (array/some @config.steps (fn s (and (!= @s.on "") (array/includes ?order @s.on)))))
+      STEPPER_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (n (math/max 1 (array/len @config.steps))) (cur (if (< @entity.current 0) @config.start @entity.current)) (dn (default (object/get @entity.looks (str/concat @config.lookSet "/done/idle") null) {})) (cu (default (object/get @entity.looks (str/concat @config.lookSet "/current/idle") null) {})) (td (default (object/get @entity.looks (str/concat @config.lookSet "/todo/idle") null) {})) (ln (default (object/get @entity.looks (str/concat @config.lookSet "/line/idle") null) {})) (lt (default (object/get @entity.looks (str/concat @config.lookSet "/line-todo/idle") null) {})) (lb (default (object/get @entity.looks (str/concat @config.lookSet "/label/idle") null) {})) (fade { durationMs: 380, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 6 }, { at: 1, opacity: 1, offsetY: 0 }] }))
+          (let ((slot (/ @r.w @n)) (d @config.size) (cy (+ @r.y (/ @config.size 2))))
+            (let ((cx (array/map (array/range @n) (fn i (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ (* @i @slot) (/ @slot 2))) (+ @r.x (+ (* @i @slot) (/ @slot 2))))))))
+              (emit RASM_PAINT {
+                id: @config.id,
+                z: @config.z,
+                texts: (array/concat
+                  (array/map (array/range (array/len @config.steps)) (fn i (let ((s (array/nth @config.steps @i)) (lk (if (< @i @cur) @dn (if (= @i @cur) @cu @td))) (mk : MessageKey (if (< @i @cur) @config.doneMark @s.number))) { id: (str/concat @config.id ":num:" @i), key: @mk, x: (default (array/nth @cx @i) 0), y: @cy, z: (+ @config.z 3), align: "center", baseline: "middle", color: @lk.textColor, font: @lk.font, animation: (if (= @i @cur) @fade null) })))
+                  (array/map (array/range (array/len @config.steps)) (fn i (let ((s (array/nth @config.steps @i))) { id: (str/concat @config.id ":label:" @i), key: @s.label, x: (default (array/nth @cx @i) 0), y: (+ @r.y (+ @config.size 10)), z: (+ @config.z 3), align: "center", baseline: "top", color: @lb.textColor, font: @lb.font, width: (- @slot 8), wrap: true })))),
+                nodes: (array/concat
+                  (array/map (array/filter (array/range (array/len @config.steps)) (fn i (> @i 0))) (fn i (let ((lk (if (<= @i @cur) @ln @lt)) (a (default (array/nth @cx (- @i 1)) 0)) (b (default (array/nth @cx @i) 0))) { type: draw-shape, id: (str/concat @config.id ":line:" @i), shape: rect, anchor: "top-left", position: { x: (+ (math/min @a @b) (+ (/ @d 2) 6)), y: (- @cy (/ (default @lk.strokeWidth 2) 2)), z: (+ @config.z 1) }, width: (math/max 0 (- (math/abs (- @b @a)) (+ @d 12))), height: (default @lk.strokeWidth 2), fill: @lk.stroke, hit: false })))
+                  (array/map (array/range (array/len @config.steps)) (fn i (let ((lk (if (< @i @cur) @dn (if (= @i @cur) @cu @td)))) { type: draw-shape, id: (str/concat @config.id ":dot:" @i), shape: ellipse, anchor: "top-left", position: { x: (- (default (array/nth @cx @i) 0) (/ @d 2)), y: @r.y, z: (+ @config.z 2) }, width: @d, height: @d, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, animation: (if (= @i @cur) @fade null), hit: false }))))
+              }))))
+      STEPPER_PAINT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      STEPPER_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the stepper from the stored rect, looks and current step."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The circles, joining lines, numbers, check marks and labels for the surface to collect."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: steps run from its start."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the stepper's rect when it is placed."
+      RASM_ENTER { order : [string]!  staggerMs : number }
+        @description "An entry naming a step's `on` id makes it the current step; the ones before it are done."
+    }
+
+    config {
+      id : string = "stepper"
+        @label "Id"
+        @description "The stepper's RASM_PLACE key and paint id."
+        @tier "presentation"
+      lookSet : string = "stepper"
+        @label "Look set"
+        @description "The prefix of this widget's look keys (`<lookSet>/frame/idle` and the rest), so two widgets on one page can wear different looks."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; circles and texts paint above."
+        @tier "presentation"
+      steps : [RasmStepperStep] = []
+        @label "Steps"
+        @description "The steps from the reading start: the label, the number shown in the circle, and the entry id that makes the step current."
+        @tier "domain"
+      start : number = 0
+        @label "Start"
+        @description "The index of the step current before any entry."
+        @tier "domain"
+      doneMark : MessageKey = "stepper.done"
+        @label "Done mark"
+        @description "The mark written in a done step's circle."
+        @tier "presentation"
+      size : number = 36
+        @label "Circle size"
+        @description "A circle's diameter in px."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmStepperStart -> RasmStepper
+}

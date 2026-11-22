@@ -1,10 +1,10 @@
 app std-rasm-stream [
-  version: "0.1.0",
-  description: "std-rasm-stream — a line feed that arrives over time, for a terminal pane or a conversation. The composer declares the lines in order, each with the paint ids it shows, the paint ids of a typing indicator shown while that line is pending, the text ids that type themselves in (RASM_ENTER, so a std-rasm-text with reveal type writes out glyph by glyph from that instant), and the milliseconds to wait after the line before it. On boot, one 100 ms tick later (so it follows anything else that shows paints at boot, such as a wizard's first step), every line and indicator is hidden (RASM_VISIBLE) and the first line's wait starts; a 100 ms tick counts the wait, and when it is reached the line is shown, its typing indicator is hidden, its text ids type in and the next line's indicator appears. The last line sends STREAM_DONE; with a `cursor` paint id the cursor then blinks `blinks` times (a toggle every 500 ms, a finite run, never longer than five seconds at the default) and stays on. RASM_STREAM_SKIP shows every line at once; RASM_STREAM_REPLAY hides them all and plays the feed again. With `startOn` set the lines stay hidden after boot until a std-rasm-presence RASM_ENTER whose order names that id, so a feed below the fold plays as its section scrolls into view. Under reduced motion (RASM_MOTION) the whole feed shows at once with no typing and no blink. Hidden paints are not measured, so a stack that sizes its rows from them grows as each line arrives."
+  version: "0.2.0",
+  description: "std-rasm-stream — a line feed that arrives over time, for a terminal pane or a conversation. The composer declares the lines in order, each with the paint ids it shows, the paint ids of a typing indicator shown while that line is pending, the text ids that type themselves in (RASM_ENTER, so a std-rasm-text with reveal type writes out glyph by glyph from that instant), and the milliseconds to wait after the line before it, and optionally the paint ids the line replaces (`hides`, hidden as it shows, so a card can leave one place as it lands in another). On boot, one 100 ms tick later (so it follows anything else that shows paints at boot, such as a wizard's first step), every line and indicator is hidden (RASM_VISIBLE) and the first line's wait starts; a 100 ms tick counts the wait, and when it is reached the line is shown, its typing indicator is hidden, its text ids type in and the next line's indicator appears. The last line sends STREAM_DONE; with a `cursor` paint id the cursor then blinks `blinks` times (a toggle every 500 ms, a finite run, never longer than five seconds at the default) and stays on. RASM_STREAM_SKIP shows every line at once; RASM_STREAM_REPLAY hides them all and plays the feed again. With `startOn` set the lines stay hidden after boot until a std-rasm-presence RASM_ENTER whose order names that id, so a feed below the fold plays as its section scrolls into view. Under reduced motion (RASM_MOTION) the whole feed shows at once with no typing and no blink. Hidden paints are not measured, so a stack that sizes its rows from them grows as each line arrives."
 ]
 ;; @capabilities "streaming lines, typed commands, terminal output, chat messages arriving, typing indicator, blinking cursor, log feed"
 
-type RasmStreamLine = { shows : [string]!, typing : [string], type : [string], waitMs : number! }
+type RasmStreamLine = { shows : [string]!, typing : [string], type : [string], waitMs : number!, hides : [string] }
 type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
 type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
 
@@ -32,7 +32,7 @@ orbital RasmStreamOrbital {
         (set @entity.toggles 0)
       RASM_BOOT -> done when (or @entity.reduced (<= (array/len @config.lines) 0))
         (set @entity.next (array/len @config.lines))
-        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (array/concat (default @l.typing []) (default @l.hides []))))) })
       RASM_ENTER -> waiting when (and (!= @config.startOn "") (array/includes ?order @config.startOn))
         (set @entity.cued true)
       RASM_ENTER -> waiting when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
@@ -44,7 +44,7 @@ orbital RasmStreamOrbital {
       RASM_MOTION -> done when ?reduced
         (set @entity.reduced true)
         (set @entity.next (array/len @config.lines))
-        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (array/concat (default @l.typing []) (default @l.hides []))))) })
       RASM_MOTION -> priming when (not ?reduced)
         (set @entity.reduced false)
       STREAM_PRIME -> running when (or (= @config.startOn "") @entity.cued)
@@ -57,7 +57,7 @@ orbital RasmStreamOrbital {
       RASM_ENTER -> priming when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
       RASM_STREAM_SKIP -> done
         (set @entity.next (array/len @config.lines))
-        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (array/concat (default @l.typing []) (default @l.hides []))))) })
         (emit STREAM_DONE { id: @config.id })
     }
 
@@ -67,7 +67,7 @@ orbital RasmStreamOrbital {
       RASM_MOTION -> done when ?reduced
         (set @entity.reduced true)
         (set @entity.next (array/len @config.lines))
-        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (array/concat (default @l.typing []) (default @l.hides []))))) })
       RASM_MOTION -> armed when (not ?reduced)
         (set @entity.reduced false)
       RASM_ENTER -> running when (and (!= @config.startOn "") (array/includes ?order @config.startOn))
@@ -78,7 +78,7 @@ orbital RasmStreamOrbital {
       RASM_ENTER -> armed when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
       RASM_STREAM_SKIP -> done
         (set @entity.next (array/len @config.lines))
-        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (array/concat (default @l.typing []) (default @l.hides []))))) })
         (emit STREAM_DONE { id: @config.id })
       RASM_STREAM_REPLAY -> running
         (set @entity.next 0)
@@ -94,49 +94,49 @@ orbital RasmStreamOrbital {
       RASM_MOTION -> done when ?reduced
         (set @entity.reduced true)
         (set @entity.next (array/len @config.lines))
-        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (array/concat (default @l.typing []) (default @l.hides []))))) })
       RASM_MOTION -> running when (not ?reduced)
         (set @entity.reduced false)
-      STREAM_WAIT -> running when (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 })) (let ((ln (default (array/nth @config.lines ?index) @none))) (> (array/len (default @ln.typing [])) 0)))
-        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 }))
+      STREAM_WAIT -> running when (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines ?index) @none))) (> (array/len (default @ln.typing [])) 0)))
+        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] }))
           (let ((ln (default (array/nth @config.lines ?index) @none)))
             (do
               (emit RASM_VISIBLE { owner: @config.id, shown: (default @ln.typing []), hidden: [] })
               (emit RASM_ENTER { order: (default @ln.typing []), staggerMs: 0, entries: [] }))))
-      STREAM_WAIT -> running when (not (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 })) (let ((ln (default (array/nth @config.lines ?index) @none))) (> (array/len (default @ln.typing [])) 0))))
-      STREAM_TICK -> running when (< (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs)))
+      STREAM_WAIT -> running when (not (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines ?index) @none))) (> (array/len (default @ln.typing [])) 0))))
+      STREAM_TICK -> running when (< (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs)))
         (set @entity.waited (+ @entity.waited 100))
-      STREAM_TICK -> running when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (< (+ @entity.next 1) (array/len @config.lines)))
-        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 }))
+      STREAM_TICK -> running when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (< (+ @entity.next 1) (array/len @config.lines)))
+        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] }))
           (let ((ln (default (array/nth @config.lines @entity.next) @none)))
             (do
-              (emit RASM_VISIBLE { owner: @config.id, shown: @ln.shows, hidden: (default @ln.typing []) })
+              (emit RASM_VISIBLE { owner: @config.id, shown: @ln.shows, hidden: (array/concat (default @ln.typing []) (default @ln.hides [])) })
               (emit RASM_ENTER { order: (default @ln.type []), staggerMs: 0, entries: [] })
               (set @entity.next (+ @entity.next 1))
               (set @entity.waited 0)
               (emit STREAM_WAIT { index: @entity.next }))))
-      STREAM_TICK -> blinking when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (>= (+ @entity.next 1) (array/len @config.lines)) (!= @config.cursor ""))
-        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 }))
+      STREAM_TICK -> blinking when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (>= (+ @entity.next 1) (array/len @config.lines)) (!= @config.cursor ""))
+        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] }))
           (let ((ln (default (array/nth @config.lines @entity.next) @none)))
             (do
-              (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat @ln.shows [@config.cursor]), hidden: (default @ln.typing []) })
+              (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat @ln.shows [@config.cursor]), hidden: (array/concat (default @ln.typing []) (default @ln.hides [])) })
               (emit RASM_ENTER { order: (default @ln.type []), staggerMs: 0, entries: [] })
               (set @entity.next (array/len @config.lines))
               (set @entity.waited 0)
               (set @entity.toggles 0)
               (emit STREAM_DONE { id: @config.id }))))
-      STREAM_TICK -> done when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (>= (+ @entity.next 1) (array/len @config.lines)) (= @config.cursor ""))
-        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0 }))
+      STREAM_TICK -> done when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (>= (+ @entity.next 1) (array/len @config.lines)) (= @config.cursor ""))
+        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] }))
           (let ((ln (default (array/nth @config.lines @entity.next) @none)))
             (do
-              (emit RASM_VISIBLE { owner: @config.id, shown: @ln.shows, hidden: (default @ln.typing []) })
+              (emit RASM_VISIBLE { owner: @config.id, shown: @ln.shows, hidden: (array/concat (default @ln.typing []) (default @ln.hides [])) })
               (emit RASM_ENTER { order: (default @ln.type []), staggerMs: 0, entries: [] })
               (set @entity.next (array/len @config.lines))
               (set @entity.waited 0)
               (emit STREAM_DONE { id: @config.id }))))
       RASM_STREAM_SKIP -> done
         (set @entity.next (array/len @config.lines))
-        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (array/concat (default @l.typing []) (default @l.hides []))))) })
         (emit STREAM_DONE { id: @config.id })
       RASM_STREAM_REPLAY -> running
         (set @entity.next 0)

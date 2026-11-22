@@ -1,0 +1,170 @@
+app std-rasm-chat [
+  version: "0.1.0",
+  description: "std-rasm-chat — an assistant conversation panel painted by one trait: a header with the assistant's name, the conversation as bubbles (the person's on the reading end, the assistant's on the reading start), and an input box at the foot. The composer declares the messages in order, each with its side, its message key and the id whose RASM_ENTER (from a std-rasm-stream line or a std-rasm-presence group) makes it appear; a message with an empty id is there from the start. Bubble heights come from the canvas's text measurements (RASM_MEASURED, wired from the surface), and when the conversation outgrows the panel the newest bubbles stay in view, as in a chat that scrolls to the bottom. The newest bubble fades in. Mirrored under rtl. Looks (prefix `lookSet`, default chat): chat/panel/idle, chat/header/idle (title colour and font, divider stroke), chat/user/idle and chat/agent/idle (bubble fill, corners, text colour and font), chat/input/idle (box fill, stroke, corners, placeholder colour and font).",
+  locales: [en, ar, sl]
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
+type RasmChatMessage = { on : string!, side : "user" | "agent", key : MessageKey! }
+
+orbital RasmChatOrbital {
+  entity RasmChatRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the panel, null until placed." = null
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced: the person's bubbles sit at its end." = "ltr"
+    entered : [string] @description "The message ids that have entered so far." = []
+    newest : number @description "The index of the message that appeared last, faded in; -1 before any entered." = -1
+    heights : Map string number @description "Measured text heights by text id." = {}
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmChat -> RasmChatRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CHAT_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CHAT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CHAT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready when (array/some @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on)))))
+        (set @entity.newest (array/reduce (array/range (array/len @config.messages)) @entity.newest (fn acc i (let ((m (array/nth @config.messages @i))) (if (and (!= @m.on "") (array/includes ?order @m.on)) @i @acc)))))
+        (set @entity.entered (array/concat @entity.entered (array/map (array/filter @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on))))) (fn m @m.on))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CHAT_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (not (array/some @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on))))))
+      RASM_MEASURED -> ready when (array/some ?items (fn it (and (str/startsWith @it.id (str/concat @config.id ":msg:")) (!= (object/get @entity.heights @it.id -1) @it.height))))
+        (set @entity.heights (array/reduce ?items @entity.heights (fn acc it (if (str/startsWith @it.id (str/concat @config.id ":msg:")) (object/set @acc @it.id @it.height) @acc))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CHAT_PAINT { n: @entity.paints })
+      RASM_MEASURED -> ready when (not (array/some ?items (fn it (and (str/startsWith @it.id (str/concat @config.id ":msg:")) (!= (object/get @entity.heights @it.id -1) @it.height)))))
+      CHAT_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (pn (default (object/get @entity.looks (str/concat @config.lookSet "/panel/idle") null) {})) (hd (default (object/get @entity.looks (str/concat @config.lookSet "/header/idle") null) {})) (us (default (object/get @entity.looks (str/concat @config.lookSet "/user/idle") null) {})) (ag (default (object/get @entity.looks (str/concat @config.lookSet "/agent/idle") null) {})) (ip (default (object/get @entity.looks (str/concat @config.lookSet "/input/idle") null) {})) (fade { durationMs: 380, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 10 }, { at: 1, opacity: 1, offsetY: 0 }] }))
+          (let ((top (+ @r.y (+ @config.headerH @config.gap))) (bottom (- (+ @r.y @r.h) (+ @config.inputH (* 2 @config.gap)))) (bw (* (- @r.w (* 2 @config.padX)) @config.bubbleShare)) (vis (array/filter (array/range (array/len @config.messages)) (fn i (let ((m (array/nth @config.messages @i))) (and true (or (= @m.on "") (array/includes @entity.entered @m.on))))))))
+            (let ((hs (array/map @vis (fn i (+ (default (object/get @entity.heights (str/concat @config.id ":msg:" @i) null) @config.lineH) (* 2 @config.padY))))))
+              (let ((total (array/reduce @hs 0 (fn acc h (+ @acc (+ @h @config.gap))))))
+                (let ((start (math/min @top (- @bottom @total))) (laid (array/map (array/range (array/len @vis)) (fn j { i: (default (array/nth @vis @j) 0), h: (default (array/nth @hs @j) 0), y: (array/reduce (array/filter (array/range (array/len @vis)) (fn q (< @q @j))) 0 (fn acc q (+ @acc (+ (default (array/nth @hs @q) 0) @config.gap)))) }))))
+                  (let ((shown (array/filter (array/map @laid (fn l { i: @l.i, h: @l.h, y: (+ (math/min @top (- @bottom @total)) @l.y) })) (fn l (>= @l.y @top)))))
+                    (emit RASM_PAINT {
+                      id: @config.id,
+                      z: @config.z,
+                      texts: (array/concat
+                        [{ id: (str/concat @config.id ":title"), key: @config.title, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @config.padX) (+ @r.x @config.padX)), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: (- @r.w (* 2 @config.padX)), wrap: false },
+                         { id: (str/concat @config.id ":placeholder"), key: @config.placeholder, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ @config.padX 14)) (+ @r.x (+ @config.padX 14))), y: (- (+ @r.y @r.h) (+ @config.gap (/ @config.inputH 2))), z: (+ @config.z 2), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @ip.textColor, font: @ip.font, width: (- @r.w (* 2 (+ @config.padX 14))), wrap: false }]
+                        (array/map @shown (fn l (let ((m (array/nth @config.messages @l.i))) (let ((mine (= (default @m.side "agent") "user")) (lk (if (= (default @m.side "agent") "user") @us @ag))) (let ((atEnd (if (= @entity.dir "rtl") (not @mine) @mine))) { id: (str/concat @config.id ":msg:" @l.i), key: @m.key, x: (if @atEnd (- (+ @r.x @r.w) (+ @config.padX (- @bw @config.padX))) (+ @r.x (* 2 @config.padX))), y: (+ @l.y @config.padY), z: (+ @config.z 4), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @lk.textColor, font: @lk.font, width: (- @bw (* 2 @config.padX)), wrap: true, measure: true, animation: (if (= @l.i @entity.newest) @fade null) })))))),
+                      nodes: (array/concat
+                        [{ type: draw-shape, id: (str/concat @config.id ":panel"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @pn.fill, stroke: @pn.stroke, strokeWidth: @pn.strokeWidth, corners: @pn.corners, hit: false },
+                         { type: draw-shape, id: (str/concat @config.id ":rule"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (+ @r.y @config.headerH), z: (+ @config.z 1) }, width: @r.w, height: (default @hd.strokeWidth 1), fill: @hd.stroke, hit: false },
+                         { type: draw-shape, id: (str/concat @config.id ":input"), shape: rect, anchor: "top-left", position: { x: (+ @r.x @config.padX), y: (- (+ @r.y @r.h) (+ @config.gap @config.inputH)), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.padX)), height: @config.inputH, fill: @ip.fill, stroke: @ip.stroke, strokeWidth: @ip.strokeWidth, corners: @ip.corners, hit: false }]
+                        (array/map @shown (fn l (let ((m (array/nth @config.messages @l.i))) (let ((mine (= (default @m.side "agent") "user")) (lk (if (= (default @m.side "agent") "user") @us @ag))) (let ((atEnd (if (= @entity.dir "rtl") (not @mine) @mine))) { type: draw-shape, id: (str/concat @config.id ":bubble:" @l.i), shape: rect, anchor: "top-left", position: { x: (if @atEnd (- (+ @r.x @r.w) (+ @config.padX @bw)) (+ @r.x @config.padX)), y: @l.y, z: (+ @config.z 3) }, width: @bw, height: @l.h, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, corners: @lk.corners, animation: (if (= @l.i @entity.newest) @fade null), hit: false }))))))
+                    })))))))
+      CHAT_PAINT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      CHAT_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the panel from the stored rect, looks, entered messages and measured heights."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The panel, header rule, input box, every visible bubble and their texts for the surface to collect."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: the person's bubbles sit at its end."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the panel's rect when it is placed."
+      RASM_ENTER { order : [string]!  staggerMs : number }
+        @description "An entry naming a message's `on` id makes that message appear, newest faded in."
+      RASM_MEASURED { items : [RasmMeasureItem]! }
+        @description "Canvas text measurements of this panel's bubble texts, wired from the surface; bubbles lay out again when a height changes."
+    }
+
+    config {
+      id : string = "chat"
+        @label "Id"
+        @description "The panel's RASM_PLACE key and paint id."
+        @tier "presentation"
+      lookSet : string = "chat"
+        @label "Look set"
+        @description "The prefix of this widget's look keys (`<lookSet>/frame/idle` and the rest), so two widgets on one page can wear different looks."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; bubbles and texts paint above."
+        @tier "presentation"
+      title : MessageKey = "chat.title"
+        @label "Title"
+        @description "The assistant's name in the header."
+        @tier "domain"
+      placeholder : MessageKey = "chat.placeholder"
+        @label "Placeholder"
+        @description "The hint in the input box at the foot."
+        @tier "domain"
+      messages : [RasmChatMessage] = []
+        @label "Messages"
+        @description "The conversation in order: the entry id that shows each one (empty for from the start), its side and its message key."
+        @tier "domain"
+      headerH : number = 48
+        @label "Header height"
+        @description "The header's height in px."
+        @tier "presentation"
+      inputH : number = 44
+        @label "Input height"
+        @description "The input box's height in px."
+        @tier "presentation"
+      padX : number = 14
+        @label "Side padding"
+        @description "Space in px at the panel's sides and inside a bubble."
+        @tier "presentation"
+      padY : number = 10
+        @label "Bubble padding"
+        @description "Space in px above and below a bubble's text."
+        @tier "presentation"
+      gap : number = 12
+        @label "Gap"
+        @description "Space in px between bubbles and around the header and input."
+        @tier "presentation"
+      lineH : number = 22
+        @label "Line height"
+        @description "A bubble text's height in px before the canvas has measured it."
+        @tier "presentation"
+      bubbleShare : number = 0.84
+        @label "Bubble width"
+        @description "A bubble's width as a share of the panel's inner width."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmChatStart -> RasmChat
+}

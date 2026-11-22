@@ -1,1067 +1,1226 @@
 {
- "atom": "../ui/rasm/atoms/std-rasm-stream.lolo",
- "trait": "RasmStream",
- "cases": [
-  {
-   "id": "boot-primes-without-touching-any-paint",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x"
-   },
-   "steps": [
+  "atom": "../ui/rasm/atoms/std-rasm-stream.lolo",
+  "trait": "RasmStream",
+  "cases": [
     {
-     "from": "waiting",
-     "event": "RASM_BOOT",
-     "payload": {},
-     "expect": {
-      "state": "priming",
-      "neverEmits": [
-       "RASM_VISIBLE",
-       "STREAM_WAIT"
+      "id": "boot-primes-without-touching-any-paint",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "waiting",
+          "event": "RASM_BOOT",
+          "payload": {},
+          "expect": {
+            "state": "priming",
+            "neverEmits": [
+              "RASM_VISIBLE",
+              "STREAM_WAIT"
+            ]
+          }
+        }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-prime-tick-hides-every-line-and-starts-the-first-wait",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x"
-   },
-   "steps": [
-    {
-     "from": "priming",
-     "event": "STREAM_PRIME",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [],
-         "hidden": [
-          "a",
-          "a:t",
-          "ad",
-          "b",
-          "cur"
-         ]
-        }
-       },
-       {
-        "event": "STREAM_WAIT",
-        "payload": {
-         "index": 0
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-skip-while-priming-shows-everything-without-waiting",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x"
-   },
-   "steps": [
-    {
-     "from": "priming",
-     "event": "RASM_STREAM_SKIP",
-     "payload": {},
-     "expect": {
-      "state": "done",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "a",
-          "a:t",
-          "b",
-          "cur"
-         ],
-         "hidden": [
-          "ad"
-         ]
-        }
-       },
-       {
-        "event": "STREAM_DONE",
-        "payload": {
-         "id": "feed"
-        }
-       }
-      ],
-      "neverEmits": [
-       "STREAM_WAIT"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-boot-under-reduced-motion-shows-everything-at-once",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "reduced": true
-   },
-   "steps": [
-    {
-     "from": "waiting",
-     "event": "RASM_BOOT",
-     "payload": {},
-     "expect": {
-      "state": "done",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "a",
-          "a:t",
-          "b",
-          "cur"
-         ],
-         "hidden": [
-          "ad"
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "STREAM_WAIT"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-first-wait-shows-the-typing-indicator",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x"
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "STREAM_WAIT",
-     "payload": {
-      "index": 0
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "ad"
-         ],
-         "hidden": []
-        }
-       },
-       {
-        "event": "RASM_ENTER",
-        "payload": {
-         "order": [
-          "ad"
-         ],
-         "staggerMs": 0,
-         "entries": []
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-line-without-a-typing-indicator-shows-nothing-while-pending",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x"
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "STREAM_WAIT",
-     "payload": {
-      "index": 1
-     },
-     "expect": {
-      "state": "running",
-      "neverEmits": [
-       "RASM_VISIBLE",
-       "RASM_ENTER"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-tick-short-of-the-wait-only-counts",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 0,
-    "waited": 0
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "STREAM_TICK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "running",
-      "neverEmits": [
-       "RASM_VISIBLE",
-       "RASM_ENTER"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-tick-that-reaches-the-wait-shows-the-line-and-types-its-text",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 0,
-    "waited": 100
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "STREAM_TICK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "a",
-          "a:t"
-         ],
-         "hidden": [
-          "ad"
-         ]
-        }
-       },
-       {
-        "event": "RASM_ENTER",
-        "payload": {
-         "order": [
-          "a:t"
-         ],
-         "staggerMs": 0,
-         "entries": []
-        }
-       },
-       {
-        "event": "STREAM_WAIT",
-        "payload": {
-         "index": 1
-        }
-       }
-      ],
-      "neverEmits": [
-       "STREAM_DONE"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-last-line-with-a-cursor-starts-the-blink",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 1,
-    "waited": 200
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "STREAM_TICK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "blinking",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "b",
-          "cur"
-         ],
-         "hidden": []
-        }
-       },
-       {
-        "event": "STREAM_DONE",
-        "payload": {
-         "id": "feed"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-the-last-line-without-a-cursor-is-done",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 1,
-    "waited": 200
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "STREAM_TICK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "done",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "b"
-         ],
-         "hidden": []
-        }
-       },
-       {
-        "event": "STREAM_DONE",
-        "payload": {
-         "id": "feed"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-blink-toggles-the-cursor-off-then-stays-on-after-the-last-blink",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 2,
-    "toggles": 0
-   },
-   "steps": [
-    {
-     "from": "blinking",
-     "event": "STREAM_BLINK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "blinking",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [],
-         "hidden": [
-          "cur"
-         ]
-        }
-       }
-      ]
-     }
     },
     {
-     "from": "blinking",
-     "event": "STREAM_BLINK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "blinking",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "cur"
-         ],
-         "hidden": []
+      "id": "the-prime-tick-hides-every-line-and-starts-the-first-wait",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "priming",
+          "event": "STREAM_PRIME",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [],
+                  "hidden": [
+                    "a",
+                    "a:t",
+                    "ad",
+                    "b",
+                    "cur"
+                  ]
+                }
+              },
+              {
+                "event": "STREAM_WAIT",
+                "payload": {
+                  "index": 0
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
     },
     {
-     "from": "blinking",
-     "event": "STREAM_BLINK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "blinking",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [],
-         "hidden": [
-          "cur"
-         ]
+      "id": "control-skip-while-priming-shows-everything-without-waiting",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "priming",
+          "event": "RASM_STREAM_SKIP",
+          "payload": {},
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "a",
+                    "a:t",
+                    "b",
+                    "cur"
+                  ],
+                  "hidden": [
+                    "ad"
+                  ]
+                }
+              },
+              {
+                "event": "STREAM_DONE",
+                "payload": {
+                  "id": "feed"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STREAM_WAIT"
+            ]
+          }
         }
-       }
       ]
-     }
     },
     {
-     "from": "blinking",
-     "event": "STREAM_BLINK",
-     "payload": {
-      "n": 0
-     },
-     "expect": {
-      "state": "done",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "cur"
-         ],
-         "hidden": []
+      "id": "control-boot-under-reduced-motion-shows-everything-at-once",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "reduced": true
+      },
+      "steps": [
+        {
+          "from": "waiting",
+          "event": "RASM_BOOT",
+          "payload": {},
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "a",
+                    "a:t",
+                    "b",
+                    "cur"
+                  ],
+                  "hidden": [
+                    "ad"
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "STREAM_WAIT"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "skip-shows-every-line-and-reports-done",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 0
-   },
-   "steps": [
+    },
     {
-     "from": "running",
-     "event": "RASM_STREAM_SKIP",
-     "payload": {},
-     "expect": {
-      "state": "done",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "a",
-          "a:t",
-          "b",
-          "cur"
-         ],
-         "hidden": [
-          "ad"
-         ]
+      "id": "the-first-wait-shows-the-typing-indicator",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_WAIT",
+          "payload": {
+            "index": 0
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "ad"
+                  ],
+                  "hidden": []
+                }
+              },
+              {
+                "event": "RASM_ENTER",
+                "payload": {
+                  "order": [
+                    "ad"
+                  ],
+                  "staggerMs": 0,
+                  "entries": []
+                }
+              }
+            ]
+          }
         }
-       },
-       {
-        "event": "STREAM_DONE",
-        "payload": {
-         "id": "feed"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "replay-hides-everything-and-waits-for-the-first-line-again",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 2
-   },
-   "steps": [
+    },
     {
-     "from": "done",
-     "event": "RASM_STREAM_REPLAY",
-     "payload": {},
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [],
-         "hidden": [
-          "a",
-          "a:t",
-          "ad",
-          "b",
-          "cur"
-         ]
+      "id": "control-a-line-without-a-typing-indicator-shows-nothing-while-pending",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_WAIT",
+          "payload": {
+            "index": 1
+          },
+          "expect": {
+            "state": "running",
+            "neverEmits": [
+              "RASM_VISIBLE",
+              "RASM_ENTER"
+            ]
+          }
         }
-       },
-       {
-        "event": "STREAM_WAIT",
-        "payload": {
-         "index": 0
+      ]
+    },
+    {
+      "id": "a-tick-short-of-the-wait-only-counts",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 0,
+        "waited": 0
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "running",
+            "neverEmits": [
+              "RASM_VISIBLE",
+              "RASM_ENTER"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-replay-under-reduced-motion-stays-shown",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 2,
-    "reduced": true
-   },
-   "steps": [
+    },
     {
-     "from": "done",
-     "event": "RASM_STREAM_REPLAY",
-     "payload": {},
-     "expect": {
-      "state": "done",
-      "neverEmits": [
-       "RASM_VISIBLE",
-       "STREAM_WAIT"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "reduced-motion-while-running-shows-everything",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 1
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "RASM_MOTION",
-     "payload": {
-      "reduced": true
-     },
-     "expect": {
-      "state": "done",
-      "emits": [
-       {
-        "event": "RASM_VISIBLE",
-        "payload": {
-         "owner": "feed",
-         "shown": [
-          "a",
-          "a:t",
-          "b",
-          "cur"
-         ],
-         "hidden": [
-          "ad"
-         ]
+      "id": "the-tick-that-reaches-the-wait-shows-the-line-and-types-its-text",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 0,
+        "waited": 100
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "a",
+                    "a:t"
+                  ],
+                  "hidden": [
+                    "ad"
+                  ]
+                }
+              },
+              {
+                "event": "RASM_ENTER",
+                "payload": {
+                  "order": [
+                    "a:t"
+                  ],
+                  "staggerMs": 0,
+                  "entries": []
+                }
+              },
+              {
+                "event": "STREAM_WAIT",
+                "payload": {
+                  "index": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "STREAM_DONE"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-motion-not-reduced-keeps-the-feed-running",
-   "config": {
-    "id": "feed",
-    "lines": [
-     {
-      "shows": [
-       "a",
-       "a:t"
-      ],
-      "typing": [
-       "ad"
-      ],
-      "type": [
-       "a:t"
-      ],
-      "waitMs": 200
-     },
-     {
-      "shows": [
-       "b"
-      ],
-      "typing": [],
-      "type": [],
-      "waitMs": 300
-     }
-    ],
-    "cursor": "cur",
-    "blinks": 2
-   },
-   "entity": {
-    "id": "x",
-    "next": 1
-   },
-   "steps": [
+    },
     {
-     "from": "running",
-     "event": "RASM_MOTION",
-     "payload": {
-      "reduced": false
-     },
-     "expect": {
-      "state": "running",
-      "neverEmits": [
-       "RASM_VISIBLE"
+      "id": "the-last-line-with-a-cursor-starts-the-blink",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 1,
+        "waited": 200
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "blinking",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "b",
+                    "cur"
+                  ],
+                  "hidden": []
+                }
+              },
+              {
+                "event": "STREAM_DONE",
+                "payload": {
+                  "id": "feed"
+                }
+              }
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "control-the-last-line-without-a-cursor-is-done",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 1,
+        "waited": 200
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "b"
+                  ],
+                  "hidden": []
+                }
+              },
+              {
+                "event": "STREAM_DONE",
+                "payload": {
+                  "id": "feed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-blink-toggles-the-cursor-off-then-stays-on-after-the-last-blink",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 2,
+        "toggles": 0
+      },
+      "steps": [
+        {
+          "from": "blinking",
+          "event": "STREAM_BLINK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "blinking",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [],
+                  "hidden": [
+                    "cur"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "blinking",
+          "event": "STREAM_BLINK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "blinking",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "cur"
+                  ],
+                  "hidden": []
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "blinking",
+          "event": "STREAM_BLINK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "blinking",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [],
+                  "hidden": [
+                    "cur"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "blinking",
+          "event": "STREAM_BLINK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "cur"
+                  ],
+                  "hidden": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "skip-shows-every-line-and-reports-done",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 0
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "RASM_STREAM_SKIP",
+          "payload": {},
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "a",
+                    "a:t",
+                    "b",
+                    "cur"
+                  ],
+                  "hidden": [
+                    "ad"
+                  ]
+                }
+              },
+              {
+                "event": "STREAM_DONE",
+                "payload": {
+                  "id": "feed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "replay-hides-everything-and-waits-for-the-first-line-again",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 2
+      },
+      "steps": [
+        {
+          "from": "done",
+          "event": "RASM_STREAM_REPLAY",
+          "payload": {},
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [],
+                  "hidden": [
+                    "a",
+                    "a:t",
+                    "ad",
+                    "b",
+                    "cur"
+                  ]
+                }
+              },
+              {
+                "event": "STREAM_WAIT",
+                "payload": {
+                  "index": 0
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-replay-under-reduced-motion-stays-shown",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 2,
+        "reduced": true
+      },
+      "steps": [
+        {
+          "from": "done",
+          "event": "RASM_STREAM_REPLAY",
+          "payload": {},
+          "expect": {
+            "state": "done",
+            "neverEmits": [
+              "RASM_VISIBLE",
+              "STREAM_WAIT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reduced-motion-while-running-shows-everything",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 1
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": true
+          },
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "a",
+                    "a:t",
+                    "b",
+                    "cur"
+                  ],
+                  "hidden": [
+                    "ad"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-motion-not-reduced-keeps-the-feed-running",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 1
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "RASM_MOTION",
+          "payload": {
+            "reduced": false
+          },
+          "expect": {
+            "state": "running",
+            "neverEmits": [
+              "RASM_VISIBLE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-line-hides-the-paints-it-replaces",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200,
+            "hides": [
+              "old",
+              "old:t"
+            ]
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "cur",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 0,
+        "waited": 100
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "a",
+                    "a:t"
+                  ],
+                  "hidden": [
+                    "ad",
+                    "old",
+                    "old:t"
+                  ]
+                }
+              },
+              {
+                "event": "RASM_ENTER",
+                "payload": {
+                  "order": [
+                    "a:t"
+                  ],
+                  "staggerMs": 0,
+                  "entries": []
+                }
+              },
+              {
+                "event": "STREAM_WAIT",
+                "payload": {
+                  "index": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "STREAM_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-last-line-hides-the-paints-it-replaces",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300,
+            "hides": [
+              "prev"
+            ]
+          }
+        ],
+        "cursor": "",
+        "blinks": 2
+      },
+      "entity": {
+        "id": "x",
+        "next": 1,
+        "waited": 200
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "b"
+                  ],
+                  "hidden": [
+                    "prev"
+                  ]
+                }
+              },
+              {
+                "event": "STREAM_DONE",
+                "payload": {
+                  "id": "feed"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

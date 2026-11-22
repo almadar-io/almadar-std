@@ -1,5 +1,5 @@
 app std-rasm-zoomthrough [
-  version: "0.1.0",
+  version: "0.2.0",
   description: "std-rasm-zoomthrough — a camera that flies through nested layers as the page scrolls: layer 0 is the whole scene, every next layer is a detail of one point of the layer before it, and scrolling zooms into that point until the detail takes over the view, again and again. Each layer is a drawing (nodes in a width by height box) with the box point to dive into (focusX, focusY). Layer i is drawn at scale zoom^(u - i) about its focus, u being the camera depth from 0 to the last layer along the scroll range; it fades in as the layer before it nears its own focus and out once the next one is in, so the layers cross over at matching scale. Each layer's caption (when it has one) rides the same fade as scroll-clock text motion. The canvas plays everything from the scroll offset every frame, backwards on the way up, with no repaint while the page moves. While the camera settles the focus moves from centerX of the stage to its middle, which makes room for copy beside the first drawing. Pin the stage with the page's `fixed` list; on the breakpoints in `quietOn` it paints nothing, for a composer that lays the layers out as plain pictures there. Under reduced motion only layer 0 is painted at rest."
 ]
 
@@ -28,7 +28,7 @@ orbital RasmZoomthroughOrbital {
       INIT -> ready
       RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)))))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
-        (set @entity.scene (let ((it (array/find ?placed (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @it null) @entity.scene @it.rect)))
+        (set @entity.scene (let ((it (array/find ?placed (fn p (and (!= @config.anchor "") (= @p.id @config.anchor))))) (end (array/find ?placed (fn p (and (!= @config.until "") (= @p.id @config.until)))))) (if (= @it null) @entity.scene (if (= @end null) @it.rect { x: @it.rect.x, y: @it.rect.y, w: @it.rect.w, h: (- (+ @end.rect.y @end.rect.h) @it.rect.y) }))))
         (set @entity.paints (+ @entity.paints 1))
         (emit ZOOM_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor))))))
@@ -107,6 +107,10 @@ orbital RasmZoomthroughOrbital {
       anchor : string = ""
         @label "Anchor"
         @description "The placed id of the section whose scroll drives the flight (the runway); empty uses the stage's own rect."
+        @tier "presentation"
+      until : string = ""
+        @label "Until"
+        @description "The placed id of a later section where the runway ends: the flight runs from the anchor's top to this section's bottom, so one camera can fly across several sections; empty ends it at the anchor's bottom."
         @tier "presentation"
       enter : number = 0
         @label "Enter at"

@@ -1,0 +1,259 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-stepper.lolo",
+  "trait": "RasmStepper",
+  "cases": [
+    {
+      "id": "a-placed-stepper-paints",
+      "config": {
+        "id": "st",
+        "steps": [
+          {
+            "label": "s.crawl",
+            "number": "s.n1",
+            "on": ""
+          },
+          {
+            "label": "s.pages",
+            "number": "s.n2",
+            "on": "a2"
+          },
+          {
+            "label": "s.checks",
+            "number": "s.n3",
+            "on": "a3"
+          }
+        ],
+        "start": 0
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "st",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 600,
+                  "h": 80
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "STEPPER_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-step-entry-makes-that-step-current",
+      "config": {
+        "id": "st",
+        "steps": [
+          {
+            "label": "s.crawl",
+            "number": "s.n1",
+            "on": ""
+          },
+          {
+            "label": "s.pages",
+            "number": "s.n2",
+            "on": "a2"
+          },
+          {
+            "label": "s.checks",
+            "number": "s.n3",
+            "on": "a3"
+          }
+        ],
+        "start": 0
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 600,
+          "h": 80
+        },
+        "current": -1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "a3"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "STEPPER_PAINT": 1
+            },
+            "entity": {
+              "current": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unrelated-entry-keeps-the-current-step",
+      "config": {
+        "id": "st",
+        "steps": [
+          {
+            "label": "s.crawl",
+            "number": "s.n1",
+            "on": ""
+          },
+          {
+            "label": "s.pages",
+            "number": "s.n2",
+            "on": "a2"
+          },
+          {
+            "label": "s.checks",
+            "number": "s.n3",
+            "on": "a3"
+          }
+        ],
+        "start": 0
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 600,
+          "h": 80
+        },
+        "current": 1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ENTER",
+          "payload": {
+            "order": [
+              "zz"
+            ],
+            "staggerMs": 0
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "STEPPER_PAINT"
+            ],
+            "entity": {
+              "current": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-placed-stepper-paint-emits-one-paint",
+      "config": {
+        "id": "st",
+        "steps": [
+          {
+            "label": "s.crawl",
+            "number": "s.n1",
+            "on": ""
+          },
+          {
+            "label": "s.pages",
+            "number": "s.n2",
+            "on": "a2"
+          },
+          {
+            "label": "s.checks",
+            "number": "s.n3",
+            "on": "a3"
+          }
+        ],
+        "start": 0
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 600,
+          "h": 80
+        },
+        "current": -1
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "STEPPER_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unplaced-stepper-paints-nothing",
+      "config": {
+        "id": "st",
+        "steps": [
+          {
+            "label": "s.crawl",
+            "number": "s.n1",
+            "on": ""
+          },
+          {
+            "label": "s.pages",
+            "number": "s.n2",
+            "on": "a2"
+          },
+          {
+            "label": "s.checks",
+            "number": "s.n3",
+            "on": "a3"
+          }
+        ],
+        "start": 0
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "STEPPER_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

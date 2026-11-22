@@ -1,0 +1,140 @@
+app std-rasm-bars [
+  version: "0.1.0",
+  description: "std-rasm-bars — a column chart painted by one trait: a baseline, one bar per value scaled to the largest (or to `max` when set), its label under it and its value above it. The composer declares the bars (a message key label, a message key for the written value, and the number) and steps that change a bar over time: each step names the id whose RASM_ENTER (from a std-rasm-stream line or a std-rasm-presence group) triggers it, the bar's index, its new number and written value. A bar a step changed is drawn in the highlight look and grows into place. Bars run from the reading start (mirrored under rtl). Looks (prefix `lookSet`, default bars): bars/bar/idle (fill, corners), bars/hot/idle (the changed bar), bars/axis/idle (baseline stroke), bars/label/idle and bars/value/idle (text colour and font).",
+  locales: [en, ar, sl]
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmBar = { label : MessageKey!, shown : MessageKey!, value : number! }
+type RasmBarStep = { on : string!, bar : number!, value : number!, shown : MessageKey! }
+
+orbital RasmBarsOrbital {
+  entity RasmBarsRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the chart, null until placed." = null
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced: bars run from its start." = "ltr"
+    values : Map string number @description "Bar numbers a step has changed, keyed by bar index." = {}
+    shown : Map string MessageKey @description "Written values a step has changed, keyed by bar index." = {}
+    hot : number @description "The index of the bar the last step changed; -1 before any step." = -1
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmBars -> RasmBarsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BARS_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BARS_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BARS_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready when (array/some @config.steps (fn s (array/includes ?order @s.on)))
+        (set @entity.values (array/reduce (array/filter @config.steps (fn s (array/includes ?order @s.on))) @entity.values (fn acc s (object/set @acc (str/concat "b" @s.bar) @s.value))))
+        (set @entity.shown (array/reduce (array/filter @config.steps (fn s (array/includes ?order @s.on))) @entity.shown (fn acc s (object/set @acc (str/concat "b" @s.bar) @s.shown))))
+        (set @entity.hot (array/reduce (array/filter @config.steps (fn s (array/includes ?order @s.on))) @entity.hot (fn acc s @s.bar)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BARS_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (not (array/some @config.steps (fn s (array/includes ?order @s.on))))
+      BARS_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (n (math/max 1 (array/len @config.bars))) (bl (default (object/get @entity.looks (str/concat @config.lookSet "/bar/idle") null) {})) (ht (default (object/get @entity.looks (str/concat @config.lookSet "/hot/idle") null) {})) (ax (default (object/get @entity.looks (str/concat @config.lookSet "/axis/idle") null) {})) (lb (default (object/get @entity.looks (str/concat @config.lookSet "/label/idle") null) {})) (vl (default (object/get @entity.looks (str/concat @config.lookSet "/value/idle") null) {})) (grow { durationMs: 520, loop: false, keyframes: [{ at: 0, opacity: 0.2, offsetY: 24 }, { at: 1, opacity: 1, offsetY: 0 }] }))
+          (let ((vals (array/map (array/range (array/len @config.bars)) (fn i (let ((b (array/nth @config.bars @i))) (default (object/get @entity.values (str/concat "b" @i) null) @b.value))))) (slot (/ @r.w @n)) (base (- (+ @r.y @r.h) @config.labelH)))
+            (let ((top (if (> @config.max 0) @config.max (math/max 1 (array/reduce @vals 0 (fn acc v (math/max @acc @v)))))) (room (- (- @r.h @config.labelH) @config.valueH)) (bw (* @slot @config.barShare)))
+              (emit RASM_PAINT {
+                id: @config.id,
+                z: @config.z,
+                texts: (array/flatten (array/map (array/range (array/len @config.bars)) (fn i (let ((b (array/nth @config.bars @i)) (cx (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ (* @i @slot) (/ @slot 2))) (+ @r.x (+ (* @i @slot) (/ @slot 2))))) (h (* @room (default (/ (default (array/nth @vals @i) 0) @top) 0))) (sv : MessageKey (default (object/get @entity.shown (str/concat "b" @i) null) @b.shown))) [{ id: (str/concat @config.id ":label:" @i), key: @b.label, x: @cx, y: (+ @base 8), z: (+ @config.z 3), align: "center", baseline: "top", color: @lb.textColor, font: @lb.font, width: (- @slot 4), wrap: false }, { id: (str/concat @config.id ":value:" @i), key: @sv, x: @cx, y: (- (- @base @h) 6), z: (+ @config.z 3), align: "center", baseline: "bottom", color: @vl.textColor, font: @vl.font, width: (- @slot 4), wrap: false, animation: (if (= @i @entity.hot) @grow null) }])))),
+                nodes: (array/concat
+                  [{ type: draw-shape, id: (str/concat @config.id ":axis"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @base, z: (+ @config.z 1) }, width: @r.w, height: (default @ax.strokeWidth 1), fill: @ax.stroke, hit: false }]
+                  (array/map (array/range (array/len @config.bars)) (fn i (let ((cx (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ (* @i @slot) (/ @slot 2))) (+ @r.x (+ (* @i @slot) (/ @slot 2))))) (h (* @room (default (/ (default (array/nth @vals @i) 0) @top) 0))) (lk (if (= @i @entity.hot) @ht @bl))) { type: draw-shape, id: (str/concat @config.id ":bar:" @i), shape: rect, anchor: "top-left", position: { x: (- @cx (/ @bw 2)), y: (- @base @h), z: (+ @config.z 2) }, width: @bw, height: (math/max 1 @h), fill: @lk.fill, corners: @lk.corners, animation: (if (= @i @entity.hot) @grow null), hit: false }))))
+              }))))
+      BARS_PAINT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      BARS_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the chart from the stored rect, looks and changed bars."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The baseline, the bars, their labels and written values for the surface to collect."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: bars run from its start."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the chart's rect when it is placed."
+      RASM_ENTER { order : [string]!  staggerMs : number }
+        @description "An entry naming a step's `on` id changes that bar's number and written value and highlights it."
+    }
+
+    config {
+      id : string = "bars"
+        @label "Id"
+        @description "The chart's RASM_PLACE key and paint id."
+        @tier "presentation"
+      lookSet : string = "bars"
+        @label "Look set"
+        @description "The prefix of this widget's look keys (`<lookSet>/frame/idle` and the rest), so two widgets on one page can wear different looks."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; bars and texts paint above."
+        @tier "presentation"
+      bars : [RasmBar] = []
+        @label "Bars"
+        @description "The bars from the reading start: a label, the written value and the number it scales by."
+        @tier "domain"
+      steps : [RasmBarStep] = []
+        @label "Steps"
+        @description "Changes over time: when an entry names `on`, bar `bar` takes `value` and is written as `shown`."
+        @tier "domain"
+      max : number = 0
+        @label "Scale"
+        @description "The number a full-height bar stands for; 0 scales to the largest bar."
+        @tier "presentation"
+      labelH : number = 28
+        @label "Label room"
+        @description "The room in px under the baseline for the labels."
+        @tier "presentation"
+      valueH : number = 22
+        @label "Value room"
+        @description "The room in px over the tallest bar for its written value."
+        @tier "presentation"
+      barShare : number = 0.56
+        @label "Bar width"
+        @description "A bar's width as a share of its slot."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmBarsStart -> RasmBars
+}

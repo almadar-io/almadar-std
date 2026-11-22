@@ -3886,6 +3886,276 @@
           }
         }
       ]
+    },
+    {
+      "id": "the-canvas-is-the-pages-main-landmark-by-default",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "role": "main"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "paints": {},
+            "hidden": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-surface-inside-another-page-declares-a-region-landmark",
+      "config": {
+        "landmark": "region"
+      },
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "role": "region"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "paints": {},
+            "hidden": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-canvas-is-not-ready-before-the-root-reports-its-layout",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "ready": false
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "paints": {},
+            "hidden": [],
+            "laidOut": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-root-extent-that-changes-the-layout-is-not-yet-laid-out",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_EXTENT",
+          "payload": {
+            "id": "root",
+            "w": 552,
+            "h": 1800
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "contentH": 1800
+            }
+          }
+        },
+        {
+          "from": "ready",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "ready": false
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-another-childs-extent-leaves-the-surface-not-laid-out",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_EXTENT",
+          "payload": {
+            "id": "card",
+            "w": 100,
+            "h": 40
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "laidOut": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-laid-out-surface-paints-a-ready-canvas",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "ready": true
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "paints": {},
+            "hidden": [],
+            "laidOut": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-root-reporting-the-extent-it-already-has-marks-the-surface-laid-out",
+      "config": {},
+      "entity": {
+        "id": "s",
+        "contentH": 1800
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_EXTENT",
+          "payload": {
+            "id": "root",
+            "w": 552,
+            "h": 1800
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "laidOut": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-fill-surface-root-within-a-pixel-of-its-height-is-laid-out",
+      "config": {
+        "fill": true
+      },
+      "entity": {
+        "id": "s",
+        "fillMin": 900
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_EXTENT",
+          "payload": {
+            "id": "root",
+            "w": 552,
+            "h": 900.5
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "laidOut": true
+            }
+          }
+        }
+      ]
     }
   ]
 }

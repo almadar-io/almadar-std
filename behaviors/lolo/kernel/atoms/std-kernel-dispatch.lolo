@@ -6,7 +6,9 @@ app std-kernel-dispatch [
 ;; @capabilities "lolo kernel, dispatch worklist, kernel step fold, parallel kernel"
 
 type KFrame = { row : SExpr? }
-type KItem = { trait : string!, event : string!, payload : SExpr, at : number!, seed : boolean!, row : string!, completion : boolean!, src : string! }
+type KItem = { trait : string!, event : string!, payload : SExpr, at : number!, seed : boolean!, row : string!, completion : boolean!, src : string!, run : string?, runRow : string? }
+type KSettledRun = { run : string!, trait : string!, event : string!, payload : SExpr, entityId : string! }
+type KSettled = { runs : [KSettledRun]! }
 type KOutcome = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
 type KEmit = { trait : string!, event : string!, payload : SExpr }
 type KRoute = { orbital : string!, trait : string!, at : number!, trigger : string!, event : string!, sourceKind : "any" | "trait" | "orbital", sourceOrbital : string!, sourceTrait : string!, keyed : boolean!, guarded : boolean!, mapped : boolean! }
@@ -41,7 +43,7 @@ type KNativeOpen = { guest : string!, states : Map string string!, outcomes : [K
 type KCompare = { step : number!, trait : string!, event : string!, equal : boolean!, nativeStates : Map string string!, loloStates : Map string string!, nativeOutcomes : [KNativeOutcome]!, loloOutcomes : [KOutcome]!, nativeRefused : string!, loloRefused : string! }
 type KStep = { fired : boolean!, to : string!, before : SExpr?, entity : SExpr?, emits : [KStepEmit]!, delivered : boolean!, key : string?, keyRequired : boolean?, rejected : string?, deliveryRejected : SExpr?, quiet : boolean?, rendered : [KPaint]?, navigations : [KNav]?, failure : string? }
 type KAskAt = { at : number! }
-type KStepAsk = { trait : string!, from : string, event : string, payload : SExpr, entity : SExpr, entityId : string, entry : boolean, delivery : KAskAt, mount : KMountAsk, emitter : string, tick : string, leg : string }
+type KStepAsk = { trait : string!, from : string, event : string, payload : SExpr, entity : SExpr, entityId : string, entry : boolean, delivery : KAskAt, mount : KMountAsk, emitter : string, tick : string, leg : string, run : string }
 type KAsk = { wait : boolean!, request : KStepAsk!, acc : KRun! }
 
 orbital KernelDispatchOrbital {
@@ -65,6 +67,7 @@ orbital KernelDispatchOrbital {
     hosts : [KHost]! = []
     shares : Map string KShare! = {}
     leg : string! = ""
+    legSettle : boolean! @description "A mount leg's $MOUNT work is still to settle on its host before its first seed (EXEC-SEED-7)." = false
     legRow : string! = ""
     legTrait : string! = ""
     legEvent : string! = ""
@@ -193,6 +196,7 @@ orbital KernelDispatchOrbital {
       KERNEL_LEG -> ready
         (set @entity.runs (+ @entity.runs 1))
         (set @entity.leg ?leg)
+        (set @entity.legSettle (and (= ?run.kind "mount") (!= (default ?run.route "") "")))
         (set @entity.legRow ?run.entityId)
         (set @entity.legTrait (default ?run.trait ""))
         (set @entity.legEvent (default ?run.event ""))
@@ -231,10 +235,25 @@ orbital KernelDispatchOrbital {
             (set @entity.legFallback ""))
           (do
             (set @entity.leg "")
+            (set @entity.legSettle false)
             (set @entity.legRow "")
             (set @entity.legFallback "")
             (emit KERNEL_DISPATCHED { states: (let ((held : Map string string @entity.states)) (array/reduce @entity.last.outcomes @held (fn (acc o) (object/set @acc @o.trait @o.to)))), outcomes: @entity.last.outcomes, emitted: @entity.last.emitted, collapsed: @entity.last.collapsed, cut: (> (+ (array/len @entity.last.q) (array/len @entity.last.later)) 0), refused: @entity.last.refused, rendered: @entity.last.paints, navigations: @entity.last.navs })))
-      KERNEL_NEXT -> ready when (and (> @entity.runLeft 0) (or (> (array/len @entity.last.q) 0) (> (array/len @entity.last.next) 0)))
+      KERNEL_NEXT -> ready when (and (> @entity.runLeft 0) (= (array/len @entity.last.q) 0) (> (array/len @entity.last.next) 0) @entity.legSettle (!= @entity.leg ""))
+        (program/dispatch "" {} { guest: @entity.guest, lolo: "settle", leg: @entity.leg } { emit: { success: KERNEL_SETTLED, failure: KERNEL_SETTLE_FAILED } })
+      KERNEL_SETTLED -> ready when (= (array/len (object/get (default (as ?result KSettled) { runs: [] }) "runs")) 0)
+        (set @entity.legSettle false)
+        (emit KERNEL_NEXT { left: @entity.runLeft })
+      KERNEL_SETTLED -> ready when (> (array/len (object/get (default (as ?result KSettled) { runs: [] }) "runs")) 0)
+        (let ((settled : KSettled (default (as ?result KSettled) { runs: [] })))
+          (set @entity.last (object/set @entity.last "q" (array/map @settled.runs (fn r { trait: @r.trait, event: @r.event, payload: (default @r.payload {}), at: -1, seed: false, row: "", completion: true, src: "", run: @r.run, runRow: @r.entityId })))))
+        (emit KERNEL_NEXT { left: @entity.runLeft })
+      KERNEL_SETTLE_FAILED -> ready
+        (set @entity.legSettle false)
+        (set @entity.leg "")
+        (set @entity.legRow "")
+        (emit KERNEL_FAILED { error: (str/concat "The leg's $MOUNT work could not settle: " (default ?error "")) })
+      KERNEL_NEXT -> ready when (and (> @entity.runLeft 0) (or (> (array/len @entity.last.q) 0) (> (array/len @entity.last.next) 0)) (not (and (= (array/len @entity.last.q) 0) (> (array/len @entity.last.next) 0) @entity.legSettle (!= @entity.leg ""))))
         (set @entity.runLeft (- @entity.runLeft 1))
         (let ((acc : KRun @entity.last))
          (let ((ask : KAsk
@@ -281,7 +300,7 @@ orbital KernelDispatchOrbital {
                                                         { trait: @it.trait, from: @from, delivery: { at: @it.at }, mount: { route: (object/get (default (as @it.payload KMountAsk) { route: "" }) "route") }, entityId: @it.row })
                                                       (if (= @it.row "")
                                                         { trait: @it.trait, from: @from, delivery: { at: @it.at }, emitter: @it.src, payload: @it.payload }
-                                                        { trait: @it.trait, from: @from, delivery: { at: @it.at }, emitter: @it.src, payload: @it.payload, entityId: @it.row }))))) (if (= @entity.leg "") {} (if (= @it.row "") { leg: @entity.leg, entityId: @entity.legRow } { leg: @entity.leg }))), acc: @acc }))))))))))))
+                                                        { trait: @it.trait, from: @from, delivery: { at: @it.at }, emitter: @it.src, payload: @it.payload, entityId: @it.row }))))) (if (= @entity.leg "") {} (if (!= (default @it.run "") "") { leg: @entity.leg, run: (default @it.run ""), entityId: (default @it.runRow "") } (if (= @it.row "") { leg: @entity.leg, entityId: @entity.legRow } { leg: @entity.leg })))), acc: @acc }))))))))))))
           (if @ask.wait
             (if (or @entity.attached (!= @entity.leg ""))
               (kernel/commit @entity.guest @ask.request { emit: { success: KERNEL_STEPPED, failure: KERNEL_STEP_REFUSED } })
@@ -425,6 +444,8 @@ orbital KernelDispatchOrbital {
       KERNEL_ROWS { rows : [KRow]! }
       KERNEL_FACTS { routes : [KRoute]!, mounts : [KMount]!, hosts : [KHost]! }
       KERNEL_MACHINE_UNREAD { }
+      KERNEL_SETTLED { result : SExpr }
+      KERNEL_SETTLE_FAILED { error : string }
       KernelParity.KERNEL_LOAD -> KERNEL_LOAD
       KernelParity.KERNEL_MOUNT -> KERNEL_MOUNT
       KernelParity.KERNEL_DISPATCH -> KERNEL_DISPATCH
