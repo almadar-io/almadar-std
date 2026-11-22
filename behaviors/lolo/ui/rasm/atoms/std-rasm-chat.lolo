@@ -47,12 +47,17 @@ orbital RasmChatOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit CHAT_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
-      RASM_ENTER -> ready when (array/some @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on)))))
+      RASM_ENTER -> ready when (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))
+        (set @entity.entered [])
+        (set @entity.newest -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CHAT_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (and (not (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))) (array/some @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on))))))
         (set @entity.newest (array/reduce (array/range (array/len @config.messages)) @entity.newest (fn acc i (let ((m (array/nth @config.messages @i))) (if (and (!= @m.on "") (array/includes ?order @m.on)) @i @acc)))))
         (set @entity.entered (array/concat @entity.entered (array/map (array/filter @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on))))) (fn m @m.on))))
         (set @entity.paints (+ @entity.paints 1))
         (emit CHAT_PAINT { n: @entity.paints })
-      RASM_ENTER -> ready when (not (array/some @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on))))))
+      RASM_ENTER -> ready when (and (not (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))) (not (array/some @config.messages (fn m (and (!= @m.on "") (array/includes ?order @m.on) (not (array/includes @entity.entered @m.on)))))))
       RASM_MEASURED -> ready when (array/some ?items (fn it (and (str/startsWith @it.id (str/concat @config.id ":msg:")) (!= (object/get @entity.heights @it.id -1) @it.height))))
         (set @entity.heights (array/reduce ?items @entity.heights (fn acc it (if (str/startsWith @it.id (str/concat @config.id ":msg:")) (object/set @acc @it.id @it.height) @acc))))
         (set @entity.paints (+ @entity.paints 1))
@@ -114,6 +119,10 @@ orbital RasmChatOrbital {
       id : string = "chat"
         @label "Id"
         @description "The panel's RASM_PLACE key and paint id."
+        @tier "presentation"
+      resetOn : string = ""
+        @label "Reset on"
+        @description "An entry id that clears every applied step and repaints, so a looping demonstration starts each run clean; empty never resets."
         @tier "presentation"
       lookSet : string = "chat"
         @label "Look set"

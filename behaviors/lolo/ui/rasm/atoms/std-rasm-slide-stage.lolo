@@ -16,7 +16,7 @@ type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmTextParams = Map string string
 type RasmText = { id : string!, key : MessageKey!, params : RasmTextParams?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, width : number?, wrap : boolean?, height : number?, fit : "none" | "shrink"?, minSize : number?, animation : RasmAnimation? }
-type StageSlide = { layout : "title" | "statement" | "points" | "figure" | "evidence"!, eyebrow : MessageKey, title : MessageKey, lines : [MessageKey], shown : number, accent : boolean, notes : [MessageKey], say : MessageKey, minute : number }
+type StageSlide = { layout : "title" | "statement" | "points" | "figure" | "evidence"!, eyebrow : MessageKey, title : MessageKey, lines : [MessageKey], shown : number, accent : boolean, notes : [MessageKey], say : MessageKey, minute : number, tone : string, mark : MessageKey }
 type StageSpec = { id : string!, key : MessageKey!, look : string!, x : number!, y : number!, width : number!, height : number!, baseline : string!, order : number!, startMs : number! }
 
 orbital RasmSlideStageOrbital {
@@ -166,19 +166,20 @@ orbital RasmSlideStageOrbital {
       STAGE_PAINT -> ready when (and (!= @entity.rect null) (not @entity.presenting))
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (blankS : StageSlide { layout: "statement" }) (L @entity.looks) (n (array/len @config.slides)) (noSpec : [StageSpec] []) (noKeys : [MessageKey] []))
           (let ((s (default (array/nth @config.slides @entity.index) @blankS)) (m (* @r.w @config.margin)) (z @config.z))
-            (let ((lines (default @s.lines @noKeys)) (tw (- @r.w (* 2 @m))) (x0 (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @m) (+ @r.x @m))) (eb : MessageKey? (default @s.eyebrow null)) (ti : MessageKey? (default @s.title null)))
+            (let ((lines (default @s.lines @noKeys)) (tw (* (- @r.w (* 2 @m)) (if (or @entity.overview (not (object/has @s mark))) 1 0.62))) (x0 (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @m) (+ @r.x @m))) (eb : MessageKey? (default @s.eyebrow null)) (ti : MessageKey? (default @s.title null)))
               (let ((vis (math/min (array/len @lines) (+ (default @s.shown (array/len @lines)) (* @entity.step (if (= @s.layout "evidence") 2 1))))) (builds (< (default @s.shown (array/len @lines)) (array/len @lines))) (colgap (* @r.w 0.04)) (colw (/ (- @tw (* @r.w 0.04)) 2)))
                 (let ((specs (array/concat
                         (if (= @eb null) @noSpec [{ id: (str/concat @config.id ":eyebrow"), key: @eb, look: "text/eyebrow/idle", x: @x0, y: (+ @r.y (* @r.h (if (= @s.layout "title") 0.26 (if (= @s.layout "figure") 0.07 0.1)))), width: @tw, height: (* @r.h 0.05), baseline: "top", order: 0, startMs: @entity.movedMs }])
                         (if (= @ti null) @noSpec [{ id: (str/concat @config.id ":title"), key: @ti, look: (if (= @s.layout "title") "text/display/idle" (if (= @s.layout "statement") (if (default @s.accent false) "text/statement/accent" "text/statement/idle") "text/title/idle")), x: @x0, y: (+ @r.y (* @r.h (if (= @s.layout "title") 0.33 (if (= @s.layout "statement") 0.18 (if (= @s.layout "figure") 0.11 0.15))))), width: @tw, height: (* @r.h (if (= @s.layout "title") 0.3 (if (= @s.layout "statement") 0.42 (if (= @s.layout "figure") 0.12 0.16)))), baseline: "top", order: 1, startMs: @entity.movedMs }])
                         (array/map (array/range 0 (if (= @s.layout "figure") (math/min 1 @vis) @vis)) (fn i (let ((k : MessageKey (default (array/nth @lines @i) "stage.next")) (newest (and (> @entity.steppedMs 0) (>= @i (- @vis (if (= @s.layout "evidence") 2 1))))))
                           { id: (str/concat @config.id ":line:" @i), key: @k, look: (if (= @s.layout "evidence") (if (= (math/mod @i 2) 1) "text/caption/idle" "text/body/strong") (if (= @s.layout "figure") "text/caption/idle" (if (= @s.layout "title") "text/body/idle" (if (and @builds (< @i (- @vis 1))) "text/body/idle" "text/body/strong")))), x: (if (and (= @s.layout "evidence") (>= @i 2)) (if (= @entity.dir "rtl") (- @x0 (+ @colw @colgap)) (+ @x0 (+ @colw @colgap))) @x0), y: (+ @r.y (* @r.h (if (= @s.layout "evidence") (if (= (math/mod @i 2) 1) 0.8 0.38) (if (= @s.layout "figure") 0.91 (if (= @s.layout "title") (+ 0.68 (* @i 0.075)) (if (= @s.layout "statement") (+ 0.64 (* @i 0.11)) (+ 0.33 (* @i 0.115)))))))), width: (if (= @s.layout "evidence") @colw @tw), height: (* @r.h (if (= @s.layout "evidence") (if (= (math/mod @i 2) 1) 0.1 0.4) (if (or (= @s.layout "points") (= @s.layout "statement")) 0.105 0.07))), baseline: "top", order: (if @newest 0 (+ 2 @i)), startMs: (if @newest @entity.steppedMs @entity.movedMs) })))
+                        (let ((mk : MessageKey? (default @s.mark null))) (if (= @mk null) @noSpec [{ id: (str/concat @config.id ":mark"), key: @mk, look: "text/mark/idle", x: (if (= @entity.dir "rtl") (- @x0 (* @tw 1.1)) (+ @x0 (* @tw 1.1))), y: (+ @r.y (* @r.h 0.2)), width: (* @tw 0.51), height: (* @r.h 0.46), baseline: "top", order: 0, startMs: @entity.movedMs }]))
                         (let ((fl : MessageKey @config.forLabel) (al : MessageKey @config.againstLabel)) (if (!= @s.layout "evidence") @noSpec (array/concat [{ id: (str/concat @config.id ":for"), key: @fl, look: "text/eyebrow/idle", x: @x0, y: (+ @r.y (* @r.h 0.31)), width: @colw, height: (* @r.h 0.05), baseline: "top", order: 2, startMs: @entity.movedMs }] (if (< @vis 3) @noSpec [{ id: (str/concat @config.id ":against"), key: @al, look: "text/eyebrow/idle", x: (if (= @entity.dir "rtl") (- @x0 (+ @colw @colgap)) (+ @x0 (+ @colw @colgap))), y: (+ @r.y (* @r.h 0.31)), width: @colw, height: (* @r.h 0.05), baseline: "top", order: 0, startMs: (if (> @entity.steppedMs 0) @entity.steppedMs @entity.movedMs) }])))))))
                   (emit RASM_PAINT { n: ?n, id: @config.id, z: @z,
                     texts: (array/concat
                       (if (or @entity.blank @entity.overview) (let ((none : [RasmText] [])) @none)
-                        (array/map @specs (fn t (let ((lk (default (object/get @L @t.look null) {})) (lead (* @t.order @config.staggerMs)))
-                          { id: @t.id, key: @t.key, x: @t.x, y: @t.y, z: (+ @z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: @t.baseline, color: @lk.textColor, font: @lk.font, width: @t.width, wrap: true, height: @t.height, fit: "shrink", minSize: 14, animation: (if (or @entity.reduced (= @t.startMs 0)) null { durationMs: (+ @config.enterMs @lead), startMs: @t.startMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: @config.rise }, { at: (/ @lead (+ @config.enterMs @lead)), opacity: 0, offsetY: @config.rise }, { at: 1, opacity: 1, offsetY: 0 }] }) }))))
+                        (array/map @specs (fn t (let ((lk (default (object/get @L @t.look null) {})) (tk (default (object/get @L (str/concat @t.look ":" (default @s.tone "")) null) {})) (lead (* @t.order @config.staggerMs)))
+                          { id: @t.id, key: @t.key, x: @t.x, y: @t.y, z: (+ @z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: @t.baseline, color: (default @tk.textColor @lk.textColor), font: @lk.font, width: @t.width, wrap: true, height: @t.height, fit: "shrink", minSize: 14, animation: (if (or @entity.reduced (= @t.startMs 0)) null { durationMs: (+ @config.enterMs @lead), startMs: @t.startMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: @config.rise }, { at: (/ @lead (+ @config.enterMs @lead)), opacity: 0, offsetY: @config.rise }, { at: 1, opacity: 1, offsetY: 0 }] }) }))))
                       (if (and @entity.overview (not @entity.blank))
                         (let ((cols @config.overviewCols) (gap (* @r.w 0.012)) (tl (default (object/get @L "slides/tile/idle" null) {})))
                           (let ((cw (/ (- @tw (* (- @cols 1) @gap)) @cols)))
@@ -188,11 +189,19 @@ orbital RasmSlideStageOrbital {
                                   (if (= @ok null) @none [{ id: (str/concat @config.id ":tile:" @i ":title"), key: @ok, x: (+ @cx 10), y: (+ @cy (* @ch 0.34)), z: (+ @z 31), align: "left", baseline: "top", color: @tl.textColor, font: @tl.font, width: (- @cw 20), wrap: true, height: (* @ch 0.6), fit: "shrink", minSize: 9 }])))))))))
                         (let ((none : [RasmText] [])) @none))),
                     nodes: (array/concat
-                      (let ((tr (default (object/get @L "slides/track/idle" null) {})) (pg (default (object/get @L "slides/progress/idle" null) {})) (ct (default (object/get @L "slides/counter/idle" null) {})) (none : [node] []))
+                      (let ((tr (default (object/get @L "slides/track/idle" null) {})) (pg (default (object/get @L (str/concat "slides/progress/idle:" (default @s.tone "")) null) (default (object/get @L "slides/progress/idle" null) {}))) (ct (default (object/get @L "slides/counter/idle" null) {})) (none : [node] []))
                         (if (or (not @config.progress) @entity.blank) @none
                           [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- (+ @r.y @r.h) 3), z: (+ @z 2) }, width: @r.w, height: 3, fill: @tr.fill, hit: false },
                            { type: draw-shape, id: (str/concat @config.id ":progress"), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (* @r.w (/ (+ @entity.index 1) (math/max 1 @n)))) @r.x), y: (- (+ @r.y @r.h) 3), z: (+ @z 3) }, width: (* @r.w (/ (+ @entity.index 1) (math/max 1 @n))), height: 3, fill: @pg.fill, hit: false },
                            { type: draw-text, id: (str/concat @config.id ":counter"), text: (str/concat "" (+ @entity.index 1) " / " @n), anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (+ @r.x @m) (- (+ @r.x @r.w) @m)), y: (- (+ @r.y @r.h) 18), z: (+ @z 3) }, align: (if (= @entity.dir "rtl") "left" "right"), baseline: "bottom", color: @ct.textColor, font: @ct.font, hit: false }]))
+                      (let ((none : [node] []) (cl (default (object/get @L (str/concat "slides/rail/idle:" (default @s.tone "")) null) {})))
+                        (if (or @entity.reduced @entity.blank @entity.overview (= @entity.movedMs 0) (not (object/has @s mark)) (!= @s.layout "statement")) @none
+                          [{ type: draw-shape, id: (str/concat @config.id ":curtain"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: (+ @z 25) }, width: @r.w, height: @r.h, fill: @cl.fill, animation: { durationMs: @config.curtainMs, startMs: @entity.movedMs, loop: false, keyframes: [{ at: 0, opacity: 1, offsetY: 0 }, { at: 0.35, opacity: 1, offsetY: 0 }, { at: 1, opacity: 0, offsetY: (* -0.12 @r.h) }] }, hit: false }]))
+                      (let ((none : [node] []) (seg (* @r.w 0.03)) (sg (* @r.w 0.006)))
+                        (if (or (= (array/len @config.tones) 0) @entity.blank @entity.overview) @none
+                          (array/map (array/range 0 (array/len @config.tones)) (fn i (let ((tn (default (array/nth @config.tones @i) "")))
+                            (let ((rl (if (= @tn (default @s.tone "")) (default (object/get @L (str/concat "slides/rail/idle:" @tn) null) {}) (default (object/get @L "slides/rail/idle" null) {}))))
+                              { type: draw-shape, id: (str/concat @config.id ":rail:" @i), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (- (+ @r.x @r.w) @m) (+ (* (+ @i 1) @seg) (* @i @sg))) (+ (+ @r.x @m) (* @i (+ @seg @sg)))), y: (+ @r.y (* @r.h 0.045)), z: (+ @z 2) }, width: @seg, height: 4, fill: @rl.fill, hit: false }))))))
                       (let ((none : [node] []) (pt (default (object/get @L "slides/pointer/idle" null) {})))
                         (if (or (not @entity.pointer) @entity.blank) @none
                           [{ type: draw-shape, id: (str/concat @config.id ":pointer"), shape: "ellipse", anchor: "center", position: { x: @entity.px, y: @entity.py, z: (+ @z 40) }, radiusX: @config.pointerR, radiusY: @config.pointerR, fill: @pt.fill, shadow: @pt.shadow, hit: false }]))
@@ -317,6 +326,10 @@ orbital RasmSlideStageOrbital {
         @label "Id"
         @description "The stage's placed id and paint id; the deck's marks paint under it."
         @tier "domain"
+      tones : [string] = []
+        @label "Tones"
+        @description "The deck's chapters in order, each a tone name. A slide names its chapter with `tone`; the stage paints one rail segment per tone, the current one in the look `slides/rail/idle:<tone>`, and colours the slide's text and progress from the looks named `<look>:<tone>` where the theme has them."
+        @tier "domain"
       figure : string = "figure"
         @label "Figure id"
         @description "The id a figure slide's rect is announced under, for the painter that fills it."
@@ -336,6 +349,10 @@ orbital RasmSlideStageOrbital {
       margin : number = 0.08
         @label "Margin"
         @description "The side margin as a share of the stage's width."
+        @tier "presentation"
+      curtainMs : number = 700
+        @label "Chapter curtain time"
+        @description "How long, in milliseconds, the chapter-coloured curtain takes to lift when a statement slide that carries a `mark` opens."
         @tier "presentation"
       enterMs : number = 520
         @label "Entrance duration"

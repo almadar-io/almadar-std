@@ -1221,6 +1221,156 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-looping-feed-starts-again-after-its-last-line",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "",
+        "blinks": 2,
+        "loop": true
+      },
+      "entity": {
+        "id": "x",
+        "next": 1,
+        "waited": 200
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "b"
+                  ],
+                  "hidden": []
+                }
+              },
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [],
+                  "hidden": [
+                    "a",
+                    "a:t",
+                    "ad",
+                    "b"
+                  ]
+                }
+              },
+              {
+                "event": "STREAM_WAIT",
+                "payload": {
+                  "index": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "STREAM_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-feed-without-loop-ends-done",
+      "config": {
+        "id": "feed",
+        "lines": [
+          {
+            "shows": [
+              "a",
+              "a:t"
+            ],
+            "typing": [
+              "ad"
+            ],
+            "type": [
+              "a:t"
+            ],
+            "waitMs": 200
+          },
+          {
+            "shows": [
+              "b"
+            ],
+            "typing": [],
+            "type": [],
+            "waitMs": 300
+          }
+        ],
+        "cursor": "",
+        "blinks": 2,
+        "loop": false
+      },
+      "entity": {
+        "id": "x",
+        "next": 1,
+        "waited": 200
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "STREAM_TICK",
+          "payload": {
+            "n": 0
+          },
+          "expect": {
+            "state": "done",
+            "emits": [
+              {
+                "event": "RASM_VISIBLE",
+                "payload": {
+                  "owner": "feed",
+                  "shown": [
+                    "b"
+                  ],
+                  "hidden": []
+                }
+              },
+              {
+                "event": "STREAM_DONE",
+                "payload": {
+                  "id": "feed"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

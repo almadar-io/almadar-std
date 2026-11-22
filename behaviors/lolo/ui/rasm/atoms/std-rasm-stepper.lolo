@@ -14,6 +14,7 @@ type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmKey = { k : MessageKey! }
 type RasmStepperStep = { label : MessageKey!, number : MessageKey!, on : string! }
 
 orbital RasmStepperOrbital {
@@ -44,11 +45,15 @@ orbital RasmStepperOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit STEPPER_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
-      RASM_ENTER -> ready when (array/some @config.steps (fn s (and (!= @s.on "") (array/includes ?order @s.on))))
+      RASM_ENTER -> ready when (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))
+        (set @entity.current -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STEPPER_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (and (not (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))) (array/some @config.steps (fn s (and (!= @s.on "") (array/includes ?order @s.on)))))
         (set @entity.current (array/reduce (array/range (array/len @config.steps)) @entity.current (fn acc i (let ((s (array/nth @config.steps @i))) (if (and (!= @s.on "") (array/includes ?order @s.on)) @i @acc)))))
         (set @entity.paints (+ @entity.paints 1))
         (emit STEPPER_PAINT { n: @entity.paints })
-      RASM_ENTER -> ready when (not (array/some @config.steps (fn s (and (!= @s.on "") (array/includes ?order @s.on)))))
+      RASM_ENTER -> ready when (and (not (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))) (not (array/some @config.steps (fn s (and (!= @s.on "") (array/includes ?order @s.on))))))
       STEPPER_PAINT -> ready when (!= @entity.rect null)
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (n (math/max 1 (array/len @config.steps))) (cur (if (< @entity.current 0) @config.start @entity.current)) (dn (default (object/get @entity.looks (str/concat @config.lookSet "/done/idle") null) {})) (cu (default (object/get @entity.looks (str/concat @config.lookSet "/current/idle") null) {})) (td (default (object/get @entity.looks (str/concat @config.lookSet "/todo/idle") null) {})) (ln (default (object/get @entity.looks (str/concat @config.lookSet "/line/idle") null) {})) (lt (default (object/get @entity.looks (str/concat @config.lookSet "/line-todo/idle") null) {})) (lb (default (object/get @entity.looks (str/concat @config.lookSet "/label/idle") null) {})) (fade { durationMs: 380, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 6 }, { at: 1, opacity: 1, offsetY: 0 }] }))
           (let ((slot (/ @r.w @n)) (d @config.size) (cy (+ @r.y (/ @config.size 2))))
@@ -57,11 +62,11 @@ orbital RasmStepperOrbital {
                 id: @config.id,
                 z: @config.z,
                 texts: (array/concat
-                  (array/map (array/range (array/len @config.steps)) (fn i (let ((s (array/nth @config.steps @i)) (lk (if (< @i @cur) @dn (if (= @i @cur) @cu @td))) (mk : MessageKey (if (< @i @cur) @config.doneMark @s.number))) { id: (str/concat @config.id ":num:" @i), key: @mk, x: (default (array/nth @cx @i) 0), y: @cy, z: (+ @config.z 3), align: "center", baseline: "middle", color: @lk.textColor, font: @lk.font, animation: (if (= @i @cur) @fade null) })))
-                  (array/map (array/range (array/len @config.steps)) (fn i (let ((s (array/nth @config.steps @i))) { id: (str/concat @config.id ":label:" @i), key: @s.label, x: (default (array/nth @cx @i) 0), y: (+ @r.y (+ @config.size 10)), z: (+ @config.z 3), align: "center", baseline: "top", color: @lb.textColor, font: @lb.font, width: (- @slot 8), wrap: true })))),
+                  (array/map (array/range (array/len @config.steps)) (fn i (let ((s (array/nth @config.steps @i)) (lk (if (< @i @cur) @dn (if (= @i @cur) @cu @td)))) { id: (str/concat @config.id ":num:" @i), key: (let ((kk (as { k: (if (< @i @cur) @config.doneMark @s.number) } RasmKey))) @kk.k), x: (default (array/nth @cx @i) 0), y: @cy, z: (+ @config.z 3), align: "center", baseline: "middle", color: @lk.textColor, font: @lk.font, animation: (if (= @i @cur) @fade null) })))
+                  (array/map (array/range (array/len @config.steps)) (fn i (let ((s (array/nth @config.steps @i))) { id: (str/concat @config.id ":label:" @i), key: (let ((kk (as { k: @s.label } RasmKey))) @kk.k), x: (- (default (array/nth @cx @i) 0) (/ (- @slot 8) 2)), y: (+ @r.y (+ @config.size 10)), z: (+ @config.z 3), align: "center", baseline: "top", color: @lb.textColor, font: @lb.font, width: (- @slot 8), wrap: true })))),
                 nodes: (array/concat
                   (array/map (array/filter (array/range (array/len @config.steps)) (fn i (> @i 0))) (fn i (let ((lk (if (<= @i @cur) @ln @lt)) (a (default (array/nth @cx (- @i 1)) 0)) (b (default (array/nth @cx @i) 0))) { type: draw-shape, id: (str/concat @config.id ":line:" @i), shape: rect, anchor: "top-left", position: { x: (+ (math/min @a @b) (+ (/ @d 2) 6)), y: (- @cy (/ (default @lk.strokeWidth 2) 2)), z: (+ @config.z 1) }, width: (math/max 0 (- (math/abs (- @b @a)) (+ @d 12))), height: (default @lk.strokeWidth 2), fill: @lk.stroke, hit: false })))
-                  (array/map (array/range (array/len @config.steps)) (fn i (let ((lk (if (< @i @cur) @dn (if (= @i @cur) @cu @td)))) { type: draw-shape, id: (str/concat @config.id ":dot:" @i), shape: ellipse, anchor: "top-left", position: { x: (- (default (array/nth @cx @i) 0) (/ @d 2)), y: @r.y, z: (+ @config.z 2) }, width: @d, height: @d, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, animation: (if (= @i @cur) @fade null), hit: false }))))
+                  (array/map (array/range (array/len @config.steps)) (fn i (let ((lk (if (< @i @cur) @dn (if (= @i @cur) @cu @td)))) { type: draw-shape, id: (str/concat @config.id ":dot:" @i), shape: rect, anchor: "top-left", position: { x: (- (default (array/nth @cx @i) 0) (/ @d 2)), y: @r.y, z: (+ @config.z 2) }, width: @d, height: @d, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, corners: { radius: [(/ @d 2), (/ @d 2), (/ @d 2), (/ @d 2)], kind: "round" }, animation: (if (= @i @cur) @fade null), hit: false }))))
               }))))
       STEPPER_PAINT -> ready when (= @entity.rect null)
     }
@@ -97,6 +102,10 @@ orbital RasmStepperOrbital {
       id : string = "stepper"
         @label "Id"
         @description "The stepper's RASM_PLACE key and paint id."
+        @tier "presentation"
+      resetOn : string = ""
+        @label "Reset on"
+        @description "An entry id that clears every applied step and repaints, so a looping demonstration starts each run clean; empty never resets."
         @tier "presentation"
       lookSet : string = "stepper"
         @label "Look set"

@@ -12,7 +12,7 @@ type RasmSpring = { stiffness : number!, damping : number! }
 type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, strokeDash : [number], corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
-type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmKeyframe = { at : number!, opacity : number, offsetX : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, height : number?, fit : "none" | "shrink"?, minSize : number?, animation : RasmAnimation? }
 type ArchiCell = { col : number!, row : number!, w : number!, h : number! }
@@ -20,7 +20,7 @@ type ArchiLayer = { id : string!, label : MessageKey, row : number!, h : number!
 type ArchiElement = { id : string!, kind : "block" | "component" | "service" | "interface" | "actor" | "role" | "process" | "function" | "data"!, label : MessageKey, col : number!, row : number!, w : number!, h : number! }
 type ArchiGroup = { id : string!, label : MessageKey, col : number!, row : number!, w : number!, h : number! }
 type ArchiRelation = { id : string!, from : string!, to : string!, kind : "serving" | "triggering" | "flow" | "realization" | "composition" | "access" | "association"! }
-type ArchiView = { show : [string]!, accent : [string], dim : [string], at : Map string ArchiCell }
+type ArchiView = { show : [string]!, accent : [string], dim : [string], at : Map string ArchiCell, tokens : [string] }
 type ArchiCue = { slide : number!, step : number!, view : number! }
 
 orbital RasmArchimateOrbital {
@@ -67,7 +67,7 @@ orbital RasmArchimateOrbital {
       ARCHI_PAINT -> ready when (and (!= @entity.rect null) (>= @entity.view 0) (> (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) @r.w) 0))
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (L @entity.looks) (noIds : [string] []) (blankV : ArchiView { show: [] }) (noAt : Map string ArchiCell {}) (z @config.z) (blankL : ArchiLayer { id: "", row: 0, h: 0 }) (blankG : ArchiGroup { id: "", col: 0, row: 0, w: 0, h: 0 }) (blankE : ArchiElement { id: "", kind: "component", col: 0, row: 0, w: 0, h: 0 }))
           (let ((v (default (array/nth @config.views @entity.view) @blankV)) (pv (if (>= @entity.prev 0) (default (array/nth @config.views @entity.prev) @blankV) @blankV)) (cw (/ @r.w @config.cols)) (ch (/ @r.h @config.rows)) (g @config.gap) (ground (default (object/get @L "surface/ground/idle" null) {})))
-            (let ((show @v.show) (acc (default @v.accent @noIds)) (dim (default @v.dim @noIds)) (at (default @v.at @noAt)) (was @pv.show) (anim : RasmAnimation? (if (or @entity.reduced (= @entity.cuedMs 0)) null { durationMs: @config.fadeMs, startMs: @entity.cuedMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] })))
+            (let ((show @v.show) (acc (default @v.accent @noIds)) (dim (default @v.dim @noIds)) (tok (default @v.tokens @noIds)) (at (default @v.at @noAt)) (was @pv.show) (anim : RasmAnimation? (if (or @entity.reduced (= @entity.cuedMs 0)) null { durationMs: @config.fadeMs, startMs: @entity.cuedMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] })))
               (let ((els (array/filter (array/range 0 (array/len @config.elements)) (fn i (let ((e (default (array/nth @config.elements @i) @blankE))) (array/includes @show @e.id))))))
                 (emit RASM_PAINT { n: ?n, id: @config.id, z: @z,
                   texts: (array/concat
@@ -95,6 +95,9 @@ orbital RasmArchimateOrbital {
                                         (let ((bx (- @ex (* @ux @hl))) (by (- @ey (* @uy @hl))) (lsx (if (= @rl.kind "composition") (+ @sx (* @ux (* 2 @hl))) @sx)) (lsy (if (= @rl.kind "composition") (+ @sy (* @uy (* 2 @hl))) @sy)))
                                           (array/concat
                                             [{ type: draw-shape, id: (str/concat @config.id ":rel:" @rl.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @z 3) }, d: (str/concat "M" @lsx " " @lsy " L" (if @closed @bx @ex) " " (if @closed @by @ey)), fill: "", stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, strokeDash: (if (or (= @rl.kind "flow") (= @rl.kind "realization")) [8, 6] (if (= @rl.kind "access") [2, 5] null)), animation: (if (array/includes @was @rl.id) null @anim), hit: false }]
+                                            (let ((tl (default (object/get @L "archi/token/idle" null) {})))
+                                              (if (or @entity.reduced (not (array/includes @tok @rl.id))) @none
+                                                [{ type: draw-shape, id: (str/concat @config.id ":rel:" @rl.id ":token"), shape: "ellipse", anchor: "center", position: { x: @sx, y: @sy, z: (+ @z 6) }, radiusX: @config.tokenR, radiusY: @config.tokenR, fill: @tl.fill, shadow: @tl.shadow, animation: { durationMs: @config.tokenMs, startMs: @entity.cuedMs, loop: true, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 0.12, opacity: 1, offsetX: (* 0.12 (- @ex @sx)), offsetY: (* 0.12 (- @ey @sy)) }, { at: 0.78, opacity: 1, offsetX: (* 0.9 (- @ex @sx)), offsetY: (* 0.9 (- @ey @sy)) }, { at: 0.9, opacity: 0, offsetX: (- @ex @sx), offsetY: (- @ey @sy) }, { at: 1, opacity: 0, offsetX: (- @ex @sx), offsetY: (- @ey @sy) }] }, hit: false }]))
                                             (if (or (= @rl.kind "association") (= @rl.kind "composition")) @none
                                               [{ type: draw-shape, id: (str/concat @config.id ":rel:" @rl.id ":head"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @z 4) }, d: (str/concat "M" (- @bx (* @uy @hw)) " " (+ @by (* @ux @hw)) " L" @ex " " @ey " L" (+ @bx (* @uy @hw)) " " (- @by (* @ux @hw)) (if @closed " Z" "")), fill: (if (or (= @rl.kind "triggering") (= @rl.kind "flow")) @lk.stroke (if (= @rl.kind "realization") @ground.fill "")), stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, animation: (if (array/includes @was @rl.id) null @anim), hit: false }])
                                             (if (!= @rl.kind "composition") @none
@@ -189,6 +192,14 @@ orbital RasmArchimateOrbital {
       markScale : number = 1.2
         @label "Mark scale"
         @description "The scale of the kind mark in an element's corner; 1 draws it 16px."
+        @tier "presentation"
+      tokenMs : number = 1800
+        @label "Token travel time"
+        @description "How long, in milliseconds, a token takes to travel a relation a view names in `tokens`; it then starts again."
+        @tier "presentation"
+      tokenR : number = 7
+        @label "Token radius"
+        @description "The radius, in pixels, of a travelling token."
         @tier "presentation"
       fadeMs : number = 480
         @label "Fade"

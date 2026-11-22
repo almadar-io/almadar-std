@@ -12,8 +12,9 @@ type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
-type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, maxWidth : number? }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmKey = { k : MessageKey! }
 type RasmBar = { label : MessageKey!, shown : MessageKey!, value : number! }
 type RasmBarStep = { on : string!, bar : number!, value : number!, shown : MessageKey! }
 
@@ -24,7 +25,7 @@ orbital RasmBarsOrbital {
     rect : RasmRect? @description "The rect RASM_PLACE gave the chart, null until placed." = null
     dir : "ltr" | "rtl" @description "The reading direction the surface announced: bars run from its start." = "ltr"
     values : Map string number @description "Bar numbers a step has changed, keyed by bar index." = {}
-    shown : Map string MessageKey @description "Written values a step has changed, keyed by bar index." = {}
+    applied : [number] @description "The indices of the steps applied so far, in order; the latest for a bar wins." = []
     hot : number @description "The index of the bar the last step changed; -1 before any step." = -1
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
@@ -47,13 +48,19 @@ orbital RasmBarsOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit BARS_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
-      RASM_ENTER -> ready when (array/some @config.steps (fn s (array/includes ?order @s.on)))
+      RASM_ENTER -> ready when (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))
+        (set @entity.applied [])
+        (set @entity.hot -1)
+        (set @entity.values {})
+        (set @entity.paints (+ @entity.paints 1))
+        (emit BARS_PAINT { n: @entity.paints })
+      RASM_ENTER -> ready when (and (not (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))) (array/some @config.steps (fn s (array/includes ?order @s.on))))
         (set @entity.values (array/reduce (array/filter @config.steps (fn s (array/includes ?order @s.on))) @entity.values (fn acc s (object/set @acc (str/concat "b" @s.bar) @s.value))))
-        (set @entity.shown (array/reduce (array/filter @config.steps (fn s (array/includes ?order @s.on))) @entity.shown (fn acc s (object/set @acc (str/concat "b" @s.bar) @s.shown))))
+        (set @entity.applied (array/concat @entity.applied (array/filter (array/range (array/len @config.steps)) (fn j (let ((s (array/nth @config.steps @j))) (array/includes ?order @s.on))))))
         (set @entity.hot (array/reduce (array/filter @config.steps (fn s (array/includes ?order @s.on))) @entity.hot (fn acc s @s.bar)))
         (set @entity.paints (+ @entity.paints 1))
         (emit BARS_PAINT { n: @entity.paints })
-      RASM_ENTER -> ready when (not (array/some @config.steps (fn s (array/includes ?order @s.on))))
+      RASM_ENTER -> ready when (and (not (and (!= @config.resetOn "") (array/includes ?order @config.resetOn))) (not (array/some @config.steps (fn s (array/includes ?order @s.on)))))
       BARS_PAINT -> ready when (!= @entity.rect null)
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (n (math/max 1 (array/len @config.bars))) (bl (default (object/get @entity.looks (str/concat @config.lookSet "/bar/idle") null) {})) (ht (default (object/get @entity.looks (str/concat @config.lookSet "/hot/idle") null) {})) (ax (default (object/get @entity.looks (str/concat @config.lookSet "/axis/idle") null) {})) (lb (default (object/get @entity.looks (str/concat @config.lookSet "/label/idle") null) {})) (vl (default (object/get @entity.looks (str/concat @config.lookSet "/value/idle") null) {})) (grow { durationMs: 520, loop: false, keyframes: [{ at: 0, opacity: 0.2, offsetY: 24 }, { at: 1, opacity: 1, offsetY: 0 }] }))
           (let ((vals (array/map (array/range (array/len @config.bars)) (fn i (let ((b (array/nth @config.bars @i))) (default (object/get @entity.values (str/concat "b" @i) null) @b.value))))) (slot (/ @r.w @n)) (base (- (+ @r.y @r.h) @config.labelH)))
@@ -61,7 +68,7 @@ orbital RasmBarsOrbital {
               (emit RASM_PAINT {
                 id: @config.id,
                 z: @config.z,
-                texts: (array/flatten (array/map (array/range (array/len @config.bars)) (fn i (let ((b (array/nth @config.bars @i)) (cx (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ (* @i @slot) (/ @slot 2))) (+ @r.x (+ (* @i @slot) (/ @slot 2))))) (h (* @room (default (/ (default (array/nth @vals @i) 0) @top) 0))) (sv : MessageKey (default (object/get @entity.shown (str/concat "b" @i) null) @b.shown))) [{ id: (str/concat @config.id ":label:" @i), key: @b.label, x: @cx, y: (+ @base 8), z: (+ @config.z 3), align: "center", baseline: "top", color: @lb.textColor, font: @lb.font, width: (- @slot 4), wrap: false }, { id: (str/concat @config.id ":value:" @i), key: @sv, x: @cx, y: (- (- @base @h) 6), z: (+ @config.z 3), align: "center", baseline: "bottom", color: @vl.textColor, font: @vl.font, width: (- @slot 4), wrap: false, animation: (if (= @i @entity.hot) @grow null) }])))),
+                texts: (array/flatten (array/map (array/range (array/len @config.bars)) (fn i (let ((b (array/nth @config.bars @i)) (cx (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ (* @i @slot) (/ @slot 2))) (+ @r.x (+ (* @i @slot) (/ @slot 2))))) (h (* @room (default (/ (default (array/nth @vals @i) 0) @top) 0))) (ls (array/find (array/reverse (array/map @entity.applied (fn j (array/nth @config.steps @j)))) (fn s (= @s.bar @i))))) [{ id: (str/concat @config.id ":label:" @i), key: (let ((kk (as { k: @b.label } RasmKey))) @kk.k), x: @cx, y: (+ @base 8), z: (+ @config.z 3), align: "center", baseline: "top", color: @lb.textColor, font: @lb.font, maxWidth: (- @slot 4) }, { id: (str/concat @config.id ":value:" @i), key: (let ((kk (as { k: (if (= @ls null) @b.shown @ls.shown) } RasmKey))) @kk.k), x: @cx, y: (- (- @base @h) 6), z: (+ @config.z 3), align: "center", baseline: "bottom", color: @vl.textColor, font: @vl.font, maxWidth: (- @slot 4), animation: (if (= @i @entity.hot) @grow null) }])))),
                 nodes: (array/concat
                   [{ type: draw-shape, id: (str/concat @config.id ":axis"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @base, z: (+ @config.z 1) }, width: @r.w, height: (default @ax.strokeWidth 1), fill: @ax.stroke, hit: false }]
                   (array/map (array/range (array/len @config.bars)) (fn i (let ((cx (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ (* @i @slot) (/ @slot 2))) (+ @r.x (+ (* @i @slot) (/ @slot 2))))) (h (* @room (default (/ (default (array/nth @vals @i) 0) @top) 0))) (lk (if (= @i @entity.hot) @ht @bl))) { type: draw-shape, id: (str/concat @config.id ":bar:" @i), shape: rect, anchor: "top-left", position: { x: (- @cx (/ @bw 2)), y: (- @base @h), z: (+ @config.z 2) }, width: @bw, height: (math/max 1 @h), fill: @lk.fill, corners: @lk.corners, animation: (if (= @i @entity.hot) @grow null), hit: false }))))
@@ -100,6 +107,10 @@ orbital RasmBarsOrbital {
       id : string = "bars"
         @label "Id"
         @description "The chart's RASM_PLACE key and paint id."
+        @tier "presentation"
+      resetOn : string = ""
+        @label "Reset on"
+        @description "An entry id that clears every applied step and repaints, so a looping demonstration starts each run clean; empty never resets."
         @tier "presentation"
       lookSet : string = "bars"
         @label "Look set"

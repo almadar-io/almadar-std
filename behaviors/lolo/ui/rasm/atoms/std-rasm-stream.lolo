@@ -1,6 +1,6 @@
 app std-rasm-stream [
-  version: "0.2.0",
-  description: "std-rasm-stream — a line feed that arrives over time, for a terminal pane or a conversation. The composer declares the lines in order, each with the paint ids it shows, the paint ids of a typing indicator shown while that line is pending, the text ids that type themselves in (RASM_ENTER, so a std-rasm-text with reveal type writes out glyph by glyph from that instant), and the milliseconds to wait after the line before it, and optionally the paint ids the line replaces (`hides`, hidden as it shows, so a card can leave one place as it lands in another). On boot, one 100 ms tick later (so it follows anything else that shows paints at boot, such as a wizard's first step), every line and indicator is hidden (RASM_VISIBLE) and the first line's wait starts; a 100 ms tick counts the wait, and when it is reached the line is shown, its typing indicator is hidden, its text ids type in and the next line's indicator appears. The last line sends STREAM_DONE; with a `cursor` paint id the cursor then blinks `blinks` times (a toggle every 500 ms, a finite run, never longer than five seconds at the default) and stays on. RASM_STREAM_SKIP shows every line at once; RASM_STREAM_REPLAY hides them all and plays the feed again. With `startOn` set the lines stay hidden after boot until a std-rasm-presence RASM_ENTER whose order names that id, so a feed below the fold plays as its section scrolls into view. Under reduced motion (RASM_MOTION) the whole feed shows at once with no typing and no blink. Hidden paints are not measured, so a stack that sizes its rows from them grows as each line arrives."
+  version: "0.3.0",
+  description: "std-rasm-stream — a line feed that arrives over time, for a terminal pane or a conversation. The composer declares the lines in order, each with the paint ids it shows, the paint ids of a typing indicator shown while that line is pending, the text ids that type themselves in (RASM_ENTER, so a std-rasm-text with reveal type writes out glyph by glyph from that instant), and the milliseconds to wait after the line before it, and optionally the paint ids the line replaces (`hides`, hidden as it shows, so a card can leave one place as it lands in another). On boot, one 100 ms tick later (so it follows anything else that shows paints at boot, such as a wizard's first step), every line and indicator is hidden (RASM_VISIBLE) and the first line's wait starts; a 100 ms tick counts the wait, and when it is reached the line is shown, its typing indicator is hidden, its text ids type in and the next line's indicator appears. The last line sends STREAM_DONE (or, with `loop` on, the feed hides its lines and starts again); with a `cursor` paint id the cursor then blinks `blinks` times (a toggle every 500 ms, a finite run, never longer than five seconds at the default) and stays on. RASM_STREAM_SKIP shows every line at once; RASM_STREAM_REPLAY hides them all and plays the feed again. With `startOn` set the lines stay hidden after boot until a std-rasm-presence RASM_ENTER whose order names that id, so a feed below the fold plays as its section scrolls into view. Under reduced motion (RASM_MOTION) the whole feed shows at once with no typing and no blink. Hidden paints are not measured, so a stack that sizes its rows from them grows as each line arrives."
 ]
 ;; @capabilities "streaming lines, typed commands, terminal output, chat messages arriving, typing indicator, blinking cursor, log feed"
 
@@ -125,7 +125,17 @@ orbital RasmStreamOrbital {
               (set @entity.waited 0)
               (set @entity.toggles 0)
               (emit STREAM_DONE { id: @config.id }))))
-      STREAM_TICK -> done when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (>= (+ @entity.next 1) (array/len @config.lines)) (= @config.cursor ""))
+      STREAM_TICK -> running when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (>= (+ @entity.next 1) (array/len @config.lines)) (= @config.cursor "") @config.loop)
+        (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] }))
+          (let ((ln (default (array/nth @config.lines @entity.next) @none)))
+            (do
+              (emit RASM_VISIBLE { owner: @config.id, shown: @ln.shows, hidden: (array/concat (default @ln.typing []) (default @ln.hides [])) })
+              (emit RASM_ENTER { order: (default @ln.type []), staggerMs: 0, entries: [] })
+              (set @entity.next 0)
+              (set @entity.waited 0)
+              (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: (array/concat (array/flatten (array/map @config.lines (fn l (array/concat @l.shows (default @l.typing []))))) (if (= @config.cursor "") [] [@config.cursor])) })
+              (emit STREAM_WAIT { index: 0 }))))
+      STREAM_TICK -> done when (and (>= (+ @entity.waited 100) (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] })) (let ((ln (default (array/nth @config.lines @entity.next) @none))) @ln.waitMs))) (>= (+ @entity.next 1) (array/len @config.lines)) (= @config.cursor "") (not @config.loop))
         (let ((none : RasmStreamLine { shows: [], typing: [], type: [], waitMs: 0, hides: [] }))
           (let ((ln (default (array/nth @config.lines @entity.next) @none)))
             (do
@@ -273,6 +283,10 @@ orbital RasmStreamOrbital {
       startOn : string = ""
         @label "Start on"
         @description "Empty plays the feed one tick after boot. An id holds every line hidden until a RASM_ENTER whose order names that id arrives (or a RASM_STREAM_REPLAY), so a feed further down the page plays as it scrolls into view."
+        @tier "presentation"
+      loop : boolean = false
+        @label "Loop"
+        @description "Start again after the last line: its wait is the pause, its entries fire, every line hides and the first line's wait begins, so a demonstration keeps playing; no STREAM_DONE is sent."
         @tier "presentation"
     }
   }

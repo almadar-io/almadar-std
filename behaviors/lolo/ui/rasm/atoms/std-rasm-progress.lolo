@@ -1,6 +1,6 @@
 app std-rasm-progress [
   version: "0.1.0",
-  description: "std-rasm-progress — a bar bound to the page scroll: the fraction the reader has scrolled through the page, painted as a track with a fill from the reading start to that fraction of the placed rect (the right end under rtl). It reads the offset and the scroll range RASM_PAGE_SCROLLED reports (so the surface needs pageScroll on) and repaints on every report; a page that does not scroll paints an empty track. Place it in a grid or stack cell and list its id in the page's `fixed` knob to keep it in view as a reading-progress bar. Looks are range/default/track and range/default/fill unless the knobs name others."
+  description: "std-rasm-progress — a bar bound to the page scroll: the fraction the reader has scrolled through the page, painted as a track with a fill from the reading start to that fraction of the placed rect (the right end under rtl). It reads the scroll range RASM_PAGE_SCROLLED reports (so the surface needs pageScroll on). Once the surface reports motion allowed (RASM_MOTION reduced false), it paints the fill once on the page-scroll clock, sliding inside the clipped track, and repaints only when the rect, looks, direction or range change; until then, and under reduced motion, it repaints the fill at the reported offset on every report. A page that does not scroll paints an empty track. Place it in a grid or stack cell and list its id in the page's `fixed` knob to keep it in view as a reading-progress bar. Looks are range/default/track and range/default/fill unless the knobs name others."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -22,6 +22,7 @@ orbital RasmProgressOrbital {
     offset : number @description "The page scroll offset in px the last RASM_PAGE_SCROLLED reported." = 0
     range : number @description "The page's scroll range in px the last RASM_PAGE_SCROLLED reported, 0 when the page does not scroll." = 0
     dir : "ltr" | "rtl" @description "The reading direction the surface announced: the fill grows from the reading start." = "ltr"
+    clocked : boolean @description "True once the surface reports motion allowed: the fill follows the page-scroll clock." = false
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -43,12 +44,26 @@ orbital RasmProgressOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit PROGRESS_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
-      RASM_PAGE_SCROLLED -> ready
+      RASM_MOTION -> ready
+        (set @entity.clocked (not ?reduced))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PROGRESS_PAINT { n: @entity.paints })
+      RASM_PAGE_SCROLLED -> ready when (or (not @entity.clocked) (!= ?max @entity.range))
         (set @entity.offset ?offset)
         (set @entity.range ?max)
         (set @entity.paints (+ @entity.paints 1))
         (emit PROGRESS_PAINT { n: @entity.paints })
-      PROGRESS_PAINT -> ready when (!= @entity.rect null)
+      RASM_PAGE_SCROLLED -> ready when (and @entity.clocked (= ?max @entity.range))
+        (set @entity.offset ?offset)
+      PROGRESS_PAINT -> ready when (and (!= @entity.rect null) @entity.clocked)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (tl (default (object/get @entity.looks @config.trackLook null) {})) (fl (default (object/get @entity.looks @config.fillLook null) {})) (rtl (= @entity.dir "rtl")))
+          (emit RASM_PAINT {
+            id: @config.id,
+            z: @config.z,
+            texts: [],
+            nodes: (let ((bar : [node] (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @tl.fill, corners: @tl.corners, hit: false }] (if (> @entity.range 0) [{ type: draw-group, id: (str/concat @config.id ":clip"), position: { x: 0, y: 0 }, clip: { x: @r.x, y: @r.y, width: @r.w, height: @r.h }, items: [{ type: draw-group, id: (str/concat @config.id ":slide"), position: { x: 0, y: 0 }, animation: { clock: "scroll", from: 0, to: @entity.range, keyframes: [{ at: 0, offsetX: 0 }, { at: 1, offsetX: (if @rtl (- 0 @r.w) @r.w) }] }, items: [{ type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: (if @rtl (+ @r.x @r.w) (- @r.x @r.w)), y: @r.y, z: (+ @config.z 1) }, width: @r.w, height: @r.h, fill: @fl.fill, corners: @fl.corners, hit: false }] }] }] [])))) @bar)
+          }))
+      PROGRESS_PAINT -> ready when (and (!= @entity.rect null) (not @entity.clocked))
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (tl (default (object/get @entity.looks @config.trackLook null) {})) (fl (default (object/get @entity.looks @config.fillLook null) {})) (frac (if (> @entity.range 0) (math/clamp (/ @entity.offset @entity.range) 0 1) 0)))
           (let ((fw (* @r.w @frac)))
             (emit RASM_PAINT {
@@ -84,7 +99,9 @@ orbital RasmProgressOrbital {
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take the bar's rect when it is placed."
       RASM_PAGE_SCROLLED { offset : number!  max : number! }
-        @description "Take the page scroll offset and range; the fill is their quotient."
+        @description "Take the page scroll offset and range; the fill is their quotient. On the scroll clock only a new range repaints."
+      RASM_MOTION { reduced : boolean! }
+        @description "The surface's reduced-motion preference: allowed, the fill follows the page-scroll clock; reduced, it repaints per report."
     }
 
     config {

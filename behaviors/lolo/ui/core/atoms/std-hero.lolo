@@ -55,6 +55,11 @@ orbital HeroOrbital {
         @description "hero = full-width page opener with an h1; banner = contained call-to-action with an h2, drawn as a card on a plain band, and straight on the band when `surface` colors it; header = compact opener at the top of an app page"
         @synonyms "cta banner, call to action, callout, page header, masthead"
         @tier "presentation"
+      landmark : "none" | "main" = none
+        @label "Landmark"
+        @description "main when the hero is the whole page (a not-found or error page): it becomes the page's main landmark and its headline the page's h1; none inside a page that has its own main"
+        @synonyms "main region, page landmark"
+        @tier "presentation"
       eyebrow : string = ""
         @label "Eyebrow"
         @description "Small badge above the headline; empty hides it"
@@ -171,6 +176,7 @@ orbital HeroOrbital {
           type: typography
           content: @config.headline
           variant: (if (== @config.look hero) h1 h2)
+          as: (if (or (== @config.look hero) (== @config.landmark main)) h1 h2)
           weight: bold
           align: (if (== @config.alignment center) center left)
           className: "tracking-tight text-balance"
@@ -245,6 +251,7 @@ orbital HeroOrbital {
         @tier "internal"
       stackedContent : render-ui = {
         type: box
+        role: (if (== @config.landmark main) main null)
         paddingY: (if (== @config.look hero) "2xl" (if (== @config.look banner) xl lg))
         bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (or (== @config.surface inverse) (== @config.surface image)) inverse transparent)))
         rounded: (if (== @config.look header) "2xl" none)
@@ -309,6 +316,7 @@ orbital HeroOrbital {
         @tier "internal"
       sideContent : render-ui = {
         type: box
+        role: (if (== @config.landmark main) main null)
         paddingY: (if (== @config.look hero) "2xl" (if (== @config.look banner) xl lg))
         bg: (if (== @config.surface muted) muted (if (== @config.surface accent) gradient (if (or (== @config.surface inverse) (== @config.surface image)) inverse transparent)))
         rounded: (if (== @config.look header) "2xl" none)
