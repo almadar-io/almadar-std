@@ -97,7 +97,7 @@ type GuestHostDispatch = { kind : "dispatch" | "push", clientId : string!, targe
 type GuestStagedDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson?, seq : number! }
 type GuestClientProgram = SExpr
 type GuestStates = Map string string
-type GuestLegRun = { kind : "targeted" | "mount" | "discover" | "completion", trait : string?, event : string?, payload : SExpr?, entityId : string!, seeds : [GuestSeed]?, route : string?, traits : [string]?, failure : string?, key : string? }
+type GuestLegRun = { kind : "targeted" | "mount" | "discover" | "completion" | "tick", trait : string?, event : string?, payload : SExpr?, entityId : string!, seeds : [GuestSeed]?, route : string?, traits : [string]?, failure : string?, key : string?, tick : string?, rows : [string]? }
 type GuestLegBegun = { leg : string?, run : GuestLegRun?, states : Map string string?, answered : GuestJson? }
 type GuestWireAnswer = { emittedEvents : [GuestEmitted]? }
 type GuestAccess = { verdict : string!, signIn : string, returnTo : string, viewer : string }
@@ -299,9 +299,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestKernel (default ?kernel @entity.guestKernel))
         (set @entity.guestKernelRefusal (if (= (default ?kernel @entity.guestKernel) "native") ""
           (if (not @config.split) "The .lolo kernel runs split guests only: open this program on native."
-          (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native."
-          (if (array/some ?program.orbitals (fn o (array/some (default @o.traits []) (fn t (> (array/len (default @t.ticks [])) 0)))))
-            "This program declares ticks, which its host runs on the native kernel: open it on native." "")))))
+          (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native." ""))))
         (set @entity.guestLocal false)
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
@@ -400,9 +398,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestKernel (default ?kernel @entity.guestKernel))
         (set @entity.guestKernelRefusal (if (= (default ?kernel @entity.guestKernel) "native") ""
           (if (not @config.split) "The .lolo kernel runs split guests only: open this program on native."
-          (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native."
-          (if (array/some ?program.orbitals (fn o (array/some (default @o.traits []) (fn t (> (array/len (default @t.ticks [])) 0)))))
-            "This program declares ticks, which its host runs on the native kernel: open it on native." "")))))
+          (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native." ""))))
         (emit GUEST_CLEARED {})
         (set @entity.guestStartRoute (default ?route ""))
         (set @entity.guestProgram ?program)
@@ -590,9 +586,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestKernel (default ?kernel @entity.guestKernel))
         (set @entity.guestKernelRefusal (if (= (default ?kernel @entity.guestKernel) "native") ""
           (if (not @config.split) "The .lolo kernel runs split guests only: open this program on native."
-          (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native."
-          (if (array/some ?program.orbitals (fn o (array/some (default @o.traits []) (fn t (> (array/len (default @t.ticks [])) 0)))))
-            "This program declares ticks, which its host runs on the native kernel: open it on native." "")))))
+          (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native." ""))))
         (set @entity.guestStartRoute (default ?route ""))
         (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
         (set @entity.guestLocal false)
@@ -1580,6 +1574,10 @@ orbital GuestSessionOrbital {
 
   trait GuestStage -> GuestStageRun [client] {
     config {
+      reportMoves : boolean = true
+        @label "Report moves"
+        @description "On, the guest view reports the transitions its kernel took as GUEST_VIEW_MOVED (relayed as GUEST_VIEW_MOVES) for a host that draws them; off, it reports none."
+        @tier "domain"
       slot : string = "main"
         @label "Guest slot"
         @description "The slot of the guest's page-root paint this stage shows."
@@ -1880,7 +1878,7 @@ orbital GuestSessionOrbital {
             (if (and (!= @entity.guestClient null) @entity.guestSignInAsked)
             { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.signInTitle, message: @config.signInMessage }] }
             (if (!= @entity.guestClient null)
-            { type: guest-view, guest: @entity.guestHandle, source: "", deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, theme: @entity.guestTheme, program: (as @entity.guestClient GuestClientProgram), leg: GUEST_LEG_SENT, legTaken: GUEST_LEG_TAKEN, legAnswers: @entity.guestLegs, lazy: GUEST_LAZY_SENT, lazyTaken: GUEST_LAZY_TAKEN, lazyAnswers: @entity.guestLazy, hostDispatches: @entity.guestDispatches, dispatchesTaken: GUEST_DISPATCHES_TAKEN, epoch: @entity.guestEpoch, moved: GUEST_VIEW_MOVED, signIn: GUEST_VIEW_SIGN_IN, signedIn: @entity.guestSignedIn, children: [] }
+            { type: guest-view, guest: @entity.guestHandle, source: "", deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, theme: @entity.guestTheme, program: (as @entity.guestClient GuestClientProgram), leg: GUEST_LEG_SENT, legTaken: GUEST_LEG_TAKEN, legAnswers: @entity.guestLegs, lazy: GUEST_LAZY_SENT, lazyTaken: GUEST_LAZY_TAKEN, lazyAnswers: @entity.guestLazy, hostDispatches: @entity.guestDispatches, dispatchesTaken: GUEST_DISPATCHES_TAKEN, epoch: @entity.guestEpoch, moved: (if @config.reportMoves GUEST_VIEW_MOVED null), signIn: GUEST_VIEW_SIGN_IN, signedIn: @entity.guestSignedIn, children: [] }
             (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait)))))))
               (if (= @paint null)
                 (if (= @entity.guestHandle "")

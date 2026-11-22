@@ -1,0 +1,48 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-slide-sync.lolo",
+  "trait": "RasmSlideSync",
+  "cases": [
+    {"id": "an anonymous viewer's mount reads nothing", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "event": "INIT", "payload": {}, "expect": {"state": "idle", "neverEmits": ["CURSOR_READ", "RASM_SLIDE_SYNC_FAILED"]}}]},
+    {"id": "an anonymous viewer's deck move changes nothing", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "event": "RASM_SLIDE", "payload": {"id": "slides", "index": 2, "step": 1}, "expect": {"state": "idle", "neverEmits": ["CURSOR_KEPT", "CURSOR_UNKEPT"]}}]},
+    {"id": "an anonymous viewer's stage change changes nothing", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "event": "RASM_STAGE", "payload": {"id": "stage", "blank": true, "startedMs": 500}, "expect": {"state": "idle", "neverEmits": ["CURSOR_KEPT", "CURSOR_UNKEPT"]}}]},
+    {"id": "a signed-in viewer's deck move sets the slide and step and raises pending", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "RASM_SLIDE", "payload": {"id": "slides", "index": 2, "step": 1}, "expect": {"state": "idle", "entity": {"index": 2, "step": 1}, "effects": [{"type": "set", "arg0": "@entity.pending", "arg1": ["+", "@entity.pending", 1]}], "emits": [{"event": "CURSOR_KEPT", "payload": {"id": "slides:u1", "owner": "u1", "index": 2, "step": 1}}]}}]},
+    {"id": "the same slide and step again changes nothing", "config": {}, "entity": {"id": "x", "index": 2, "step": 1}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "RASM_SLIDE", "payload": {"id": "slides", "index": 2, "step": 1}, "expect": {"state": "idle", "neverEmits": ["CURSOR_KEPT", "CURSOR_UNKEPT"]}}]},
+    {"id": "a move of another deck changes nothing", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "RASM_SLIDE", "payload": {"id": "other", "index": 2, "step": 1}, "expect": {"state": "idle", "neverEmits": ["CURSOR_KEPT", "CURSOR_UNKEPT"]}}]},
+    {"id": "a signed-in viewer's stage blank sets it and raises pending", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "RASM_STAGE", "payload": {"id": "stage", "blank": true, "startedMs": 500}, "expect": {"state": "idle", "entity": {"blank": true, "startedMs": 500}, "effects": [{"type": "set", "arg0": "@entity.pending", "arg1": ["+", "@entity.pending", 1]}], "emits": [{"event": "CURSOR_KEPT", "payload": {"id": "slides:u1", "owner": "u1", "blank": true, "startedMs": 500}}]}}]},
+    {"id": "a stage change of only the clock sets it and raises pending", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "RASM_STAGE", "payload": {"id": "stage", "blank": false, "startedMs": 900}, "expect": {"state": "idle", "entity": {"startedMs": 900}, "effects": [{"type": "set", "arg0": "@entity.pending", "arg1": ["+", "@entity.pending", 1]}], "emits": [{"event": "CURSOR_KEPT", "payload": {"id": "slides:u1", "blank": false, "startedMs": 900}}]}}]},
+    {"id": "unchanged stage values change nothing", "config": {}, "entity": {"id": "x", "blank": true, "startedMs": 500}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "RASM_STAGE", "payload": {"id": "stage", "blank": true, "startedMs": 500}, "expect": {"state": "idle", "neverEmits": ["CURSOR_KEPT", "CURSOR_UNKEPT"]}}]},
+    {"id": "a change of another stage changes nothing", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "RASM_STAGE", "payload": {"id": "other", "blank": true, "startedMs": 500}, "expect": {"state": "idle", "neverEmits": ["CURSOR_KEPT", "CURSOR_UNKEPT"]}}]},
+    {"id": "a kept save with one outstanding lowers pending and emits nothing", "config": {}, "entity": {"id": "x", "pending": 1}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_KEPT", "payload": {}, "expect": {"state": "idle", "entity": {"pending": 0}, "neverEmits": ["RASM_SLIDE_TO", "RASM_STAGE_SET", "RASM_SLIDE_SYNC_FAILED"]}}]},
+    {"id": "a failed save lowers pending and announces the error", "config": {}, "entity": {"id": "x", "pending": 2}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_UNKEPT", "payload": {"error": "offline"}, "expect": {"state": "idle", "entity": {"pending": 1}, "emits": [{"event": "RASM_SLIDE_SYNC_FAILED", "payload": {"error": "offline"}}]}}]},
+    {"id": "a failed save with no error announces the default text", "config": {}, "entity": {"id": "x", "pending": 1}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_UNKEPT", "payload": {}, "expect": {"state": "idle", "entity": {"pending": 0}, "emits": [{"event": "RASM_SLIDE_SYNC_FAILED", "payload": {"error": "the slide could not be saved"}}]}}]},
+    {"id": "a failed save never lowers pending below zero", "config": {}, "entity": {"id": "x", "pending": 0}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_UNKEPT", "payload": {}, "expect": {"state": "idle", "entity": {"pending": 0}, "emits": [{"event": "RASM_SLIDE_SYNC_FAILED", "payload": {"error": "the slide could not be saved"}}]}}]},
+    {"id": "a read row with another slide and step puts the deck on it", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_READ", "payload": {"data": [{"id": "slides:u1", "index": 3, "step": 2, "blank": false, "startedMs": 0}]}, "expect": {"state": "idle", "entity": {"index": 3, "step": 2}, "emits": [{"event": "RASM_SLIDE_TO", "payload": {"id": "slides", "index": 3, "step": 2}}], "neverEmits": ["RASM_STAGE_SET"]}}]},
+    {"id": "a read row equal to what the entity holds emits nothing", "config": {}, "entity": {"id": "x", "index": 3, "step": 2}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_READ", "payload": {"data": [{"id": "slides:u1", "index": 3, "step": 2, "blank": false, "startedMs": 0}]}, "expect": {"state": "idle", "entity": {"index": 3, "step": 2}, "neverEmits": ["RASM_SLIDE_TO", "RASM_STAGE_SET"]}}]},
+    {"id": "a read row with another blank and clock puts the stage on it", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_READ", "payload": {"data": [{"id": "slides:u1", "index": 0, "step": 0, "blank": true, "startedMs": 700}]}, "expect": {"state": "idle", "entity": {"blank": true, "startedMs": 700}, "emits": [{"event": "RASM_STAGE_SET", "payload": {"id": "stage", "blank": true, "startedMs": 700}}], "neverEmits": ["RASM_SLIDE_TO"]}}]},
+    {"id": "a read row for another id emits nothing", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_READ", "payload": {"data": [{"id": "slides:u2", "index": 3, "step": 2, "blank": true, "startedMs": 700}]}, "expect": {"state": "idle", "neverEmits": ["RASM_SLIDE_TO", "RASM_STAGE_SET"]}}]},
+    {"id": "an empty read emits nothing", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_READ", "payload": {"data": []}, "expect": {"state": "idle", "neverEmits": ["RASM_SLIDE_TO", "RASM_STAGE_SET"]}}]},
+    {"id": "a failed read is announced", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_UNREAD", "payload": {"error": "denied"}, "expect": {"state": "idle", "emits": [{"event": "RASM_SLIDE_SYNC_FAILED", "payload": {"error": "denied"}}]}}]},
+    {"id": "a failed read with no error announces the default text", "config": {}, "entity": {"id": "x"}, "steps": [
+      {"from": "idle", "identity": {"id": "u1"}, "event": "CURSOR_UNREAD", "payload": {}, "expect": {"state": "idle", "emits": [{"event": "RASM_SLIDE_SYNC_FAILED", "payload": {"error": "the slide could not be read"}}]}}]}
+  ]
+}

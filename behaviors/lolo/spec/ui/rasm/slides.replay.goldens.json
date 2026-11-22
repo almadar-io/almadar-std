@@ -947,6 +947,177 @@
           }
         }
       ]
+    },
+    {
+      "id": "an advance key on a slide with builds reveals the first step and does not move on",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"pageDown"},"expect":{"state":"ready","entity":{"step":1},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":1}}],"neverEmits":["SLIDES_GO"]}}
+      ]
+    },
+    {
+      "id": "the second advance key reveals the second step and the third moves to the next slide",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"pageDown"},"expect":{"state":"ready","entity":{"step":1},"neverEmits":["SLIDES_GO"]}},
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"pageDown"},"expect":{"state":"ready","entity":{"step":2},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":2}}],"neverEmits":["SLIDES_GO"]}},
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"pageDown"},"expect":{"state":"ready","emits":[{"event":"SLIDES_GO","payload":{"to":1,"forward":true}}]}}
+      ]
+    },
+    {
+      "id": "an advance key on a slide without builds moves on at once",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 2},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"pageDown"},"expect":{"state":"ready","emits":[{"event":"SLIDES_GO","payload":{"to":3,"forward":true}}],"neverEmits":["RASM_SLIDE"]}}
+      ]
+    },
+    {
+      "id": "a back key with a step revealed steps back and does not move",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 1, "step": 1},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"pageUp"},"expect":{"state":"ready","entity":{"index":1,"step":0},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":1,"step":0}}],"neverEmits":["SLIDES_GO"]}}
+      ]
+    },
+    {
+      "id": "a back key at step zero asks for the previous slide backwards",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 1, "step": 0},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"pageUp"},"expect":{"state":"ready","emits":[{"event":"SLIDES_GO","payload":{"to":0,"forward":false}}]}}
+      ]
+    },
+    {
+      "id": "going backwards lands on the last step of the slide it arrives at",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 1},
+      "steps": [
+        {"from":"ready","event":"SLIDES_GO","payload":{"to":0,"forward":false},"expect":{"state":"ready","entity":{"index":0,"step":2},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":2}}]}}
+      ]
+    },
+    {
+      "id": "going forwards lands on step zero of the slide it arrives at",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 0, "step": 2},
+      "steps": [
+        {"from":"ready","event":"SLIDES_GO","payload":{"to":1,"forward":true},"expect":{"state":"ready","entity":{"index":1,"step":0},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":1,"step":0}}]}}
+      ]
+    },
+    {
+      "id": "a move that carries a step lands on that step",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 1},
+      "steps": [
+        {"from":"ready","event":"SLIDES_GO","payload":{"to":0,"forward":false,"step":1},"expect":{"state":"ready","entity":{"index":0,"step":1},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":1}}]}}
+      ]
+    },
+    {
+      "id": "a move that carries a step past the slide's builds is capped at the last step",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 0},
+      "steps": [
+        {"from":"ready","event":"SLIDES_GO","payload":{"to":1,"forward":true,"step":5},"expect":{"state":"ready","entity":{"index":1,"step":1},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":1,"step":1}}]}}
+      ]
+    },
+    {
+      "id": "with the extended advance keys increase and activate advance",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page","advanceKeys":["pageDown","increase","activate"],"backKeys":["pageUp","decrease"]},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"increase"},"expect":{"state":"ready","entity":{"step":1},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":1}}]}},
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"activate"},"expect":{"state":"ready","entity":{"step":2},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":2}}]}}
+      ]
+    },
+    {
+      "id": "with the extended back keys decrease steps back",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page","advanceKeys":["pageDown","increase","activate"],"backKeys":["pageUp","decrease"]},
+      "entity": {"id": "x", "step": 2},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"decrease"},"expect":{"state":"ready","entity":{"step":1},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":1}}],"neverEmits":["SLIDES_GO"]}}
+      ]
+    },
+    {
+      "id": "with the default keys increase does nothing",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_KEY","payload":{"key":"increase"},"expect":{"state":"ready","neverEmits":["SLIDES_GO","RASM_SLIDE"]}}
+      ]
+    },
+    {
+      "id": "a remote setting another step of the same slide sets the step",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_SLIDE_TO","payload":{"id":"deck","index":0,"step":2},"expect":{"state":"ready","entity":{"step":2},"emits":[{"event":"RASM_SLIDE","payload":{"id":"deck","index":0,"step":2}}],"neverEmits":["SLIDES_GO"]}}
+      ]
+    },
+    {
+      "id": "a remote naming another slide asks for that slide at that step",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_SLIDE_TO","payload":{"id":"deck","index":1,"step":1},"expect":{"state":"ready","emits":[{"event":"SLIDES_GO","payload":{"to":1,"forward":true,"step":1}}]}}
+      ]
+    },
+    {
+      "id": "a remote naming another deck does nothing",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_SLIDE_TO","payload":{"id":"other","index":1,"step":1},"expect":{"state":"ready","neverEmits":["SLIDES_GO","RASM_SLIDE"]}}
+      ]
+    },
+    {
+      "id": "a remote naming the current slide and step does nothing",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "index": 0, "step": 1},
+      "steps": [
+        {"from":"ready","event":"RASM_SLIDE_TO","payload":{"id":"deck","index":0,"step":1},"expect":{"state":"ready","entity":{"index":0,"step":1},"neverEmits":["SLIDES_GO","RASM_SLIDE"]}}
+      ]
+    },
+    {
+      "id": "with the wheel off a wheel turn asks for nothing",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page","wheel":false},
+      "entity": {"id": "x"},
+      "steps": [
+        {"from":"ready","event":"RASM_WHEEL","payload":{"target":"page","x":10,"y":10,"dx":0,"dy":120},"expect":{"state":"ready","neverEmits":["SLIDES_GO"]}}
+      ]
+    },
+    {
+      "id": "with the swipe off a vertical drag asks for nothing",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page","swipe":false},
+      "entity": {"id": "x", "armed": true, "downX": 5, "downY": 400},
+      "steps": [
+        {"from":"ready","event":"RASM_POINTER","payload":{"kind":"up","id":"page","x":8,"y":200},"expect":{"state":"ready","neverEmits":["SLIDES_GO"]}}
+      ]
+    },
+    {
+      "id": "with the swipe off a tap on a dot still goes to its slide",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page","swipe":false},
+      "entity": {"id": "x", "armed": true, "downX": 5, "downY": 400},
+      "steps": [
+        {"from":"ready","event":"RASM_POINTER","payload":{"kind":"up","id":"d2","x":5,"y":400},"expect":{"state":"ready","emits":[{"event":"SLIDES_GO","payload":{"to":2,"forward":true}}]}}
+      ]
+    },
+    {
+      "id": "with the wipe on a move paints the wipe panel",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page"},
+      "entity": {"id": "x", "movedMs": 5, "anchor": {"x":0,"y":0,"w":100,"h":50}},
+      "steps": [
+        {"from":"ready","event":"SLIDES_PAINT","payload":{"n":1},"expect":{"state":"ready","emits":[{"event":"RASM_PAINT","payload":{"id":"deck","nodes":[{"type":"draw-shape","id":"deck:wipe","shape":"rect","anchor":"top-left","position":{"x":0,"y":0,"z":40},"width":100,"height":50,"fill":null,"hit":false,"animation":{"durationMs":560,"startMs":5,"loop":false,"keyframes":[{"at":0,"opacity":1,"offsetY":-50},{"at":0.5,"opacity":1,"offsetY":0},{"at":1,"opacity":1,"offsetY":50}]}}]}}]}}
+      ]
+    },
+    {
+      "id": "with the wipe off a move paints no wipe panel",
+      "config": {"id":"deck","slides":[{"paints":["a1"],"steps":2},{"paints":["b1"],"steps":1},{"paints":["c1"]}],"dots":["d0","d1","d2"],"anchor":"page","wipe":false},
+      "entity": {"id": "x", "movedMs": 5, "anchor": {"x":0,"y":0,"w":100,"h":50}},
+      "steps": [
+        {"from":"ready","event":"SLIDES_PAINT","payload":{"n":1},"expect":{"state":"ready","emits":[{"event":"RASM_PAINT","payload":{"id":"deck","nodes":[]}}]}}
+      ]
     }
   ]
 }

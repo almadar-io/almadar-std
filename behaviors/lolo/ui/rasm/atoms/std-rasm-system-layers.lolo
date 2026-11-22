@@ -19,6 +19,7 @@ type RasmLayout = { hero : "centered" | "split" | "offset" | "full-bleed" | "pos
 type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
 type RasmMotion = { signature : string!, stiffness : number!, damping : number!, stagger : number!, enterMs : number, keyframes : [RasmEntryKey] }
 type RasmSound = { path : string!, volume : number, loop : boolean, poolSize : number, autostart : boolean, crossfade : boolean, crossfadeDurationMs : number }
+type RasmSystemMode = { palette : Map string string!, looks : Map string RasmLook! }
 
 orbital RasmSystemLayersOrbital {
   entity RasmSystemLayersRun [runtime] {
@@ -31,7 +32,7 @@ orbital RasmSystemLayersOrbital {
     state ready {
       INIT -> ready
       RASM_SYSTEM_ASK -> ready when (and (!= @config.system "") (= ?name @config.system))
-        (emit RASM_SYSTEM_SET { name: @config.system, looks: @config.looks, breakpointLooks: @config.systemBreakpointLooks, palette: @config.palette, fonts: @config.fonts, layout: @config.layout, motion: @config.motion, sounds: @config.sounds, soundBase: @config.soundBase })
+        (emit RASM_SYSTEM_SET { name: @config.system, looks: @config.looks, breakpointLooks: @config.systemBreakpointLooks, palette: @config.palette, fonts: @config.fonts, modes: @config.modes, mode: @config.mode, layout: @config.layout, motion: @config.motion, sounds: @config.sounds, soundBase: @config.soundBase })
       RASM_SYSTEM_ASK -> ready when (not (and (!= @config.system "") (= ?name @config.system)))
     }
 
@@ -42,6 +43,8 @@ orbital RasmSystemLayersOrbital {
         breakpointLooks : Map string (Map string RasmLook)!
         palette : Map string string!
         fonts : Map string RasmFont!
+        modes : Map string RasmSystemMode!
+        mode : string!
         layout : RasmLayout?
         motion : RasmMotion?
         sounds : Map string RasmSound!
@@ -77,6 +80,14 @@ orbital RasmSystemLayersOrbital {
       fonts : Map string RasmFont = {}
         @label "Fonts"
         @description "The system's type layer: the face and font file of each role."
+        @tier "presentation"
+      modes : Map string RasmSystemMode = {}
+        @label "Modes"
+        @description "The system's modes by name (day, night, …): each lays a palette and looks over the system's."
+        @tier "presentation"
+      mode : string = ""
+        @label "Mode"
+        @description "The mode the system is worn in first, a key of `modes`; empty wears none."
         @tier "presentation"
       layout : RasmLayout? = null
         @label "Layout"

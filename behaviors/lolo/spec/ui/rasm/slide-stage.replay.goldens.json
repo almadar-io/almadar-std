@@ -1,0 +1,1548 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-slide-stage.lolo",
+ "trait": "RasmSlideStage",
+ "cases": [
+  {
+   "id": "a placement for the stage's id stores the rect and announces the figure and repaints",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "n": 1,
+      "placed": [
+       {
+        "id": "stage",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1000,
+         "h": 600
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 1000,
+        "h": 600
+       }
+      },
+      "emits": [
+       {
+        "event": "STAGE_FIGURE"
+       },
+       {
+        "event": "STAGE_PAINT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a placement for another id changes nothing",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "n": 1,
+      "placed": [
+       {
+        "id": "other",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1000,
+         "h": 600
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "STAGE_FIGURE",
+       "STAGE_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a figure slide announces the rect under the title under the figure id",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "figure",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "index": 2
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "n": 1,
+      "placed": [
+       {
+        "id": "stage",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1000,
+         "h": 600
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STAGE_FIGURE"
+       },
+       {
+        "event": "STAGE_PAINT"
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "figure",
+           "rect": {
+            "x": 40,
+            "y": 150,
+            "w": 920,
+            "h": 384
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a slide that is not a figure announces a zero-size rect",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "figure",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "index": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "n": 1,
+      "placed": [
+       {
+        "id": "stage",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 1000,
+         "h": 600
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STAGE_FIGURE"
+       },
+       {
+        "event": "STAGE_PAINT"
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "figure",
+           "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a slide of the deck sets the index and step",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "points",
+      "title": "countdown.days",
+      "lines": [
+       "stage.next",
+       "stage.target"
+      ]
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_SLIDE",
+     "payload": {
+      "id": "slides",
+      "index": 1,
+      "step": 1
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 1,
+       "step": 1
+      },
+      "emits": [
+       {
+        "event": "RASM_STAGE"
+       },
+       {
+        "event": "STAGE_FIGURE"
+       },
+       {
+        "event": "STAGE_PAINT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a slide of another deck changes nothing",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_SLIDE",
+     "payload": {
+      "id": "other",
+      "index": 1,
+      "step": 1
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_STAGE",
+       "STAGE_FIGURE",
+       "STAGE_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the first move off the first slide starts the clock and a later move does not announce it again",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_SLIDE",
+     "payload": {
+      "id": "slides",
+      "index": 1,
+      "step": 0
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_STAGE",
+        "payload": {
+         "id": "stage",
+         "blank": false
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_SLIDE",
+     "payload": {
+      "id": "slides",
+      "index": 2,
+      "step": 0
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "index": 2
+      },
+      "neverEmits": [
+       "RASM_STAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "staying on the first slide does not start the clock",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_SLIDE",
+     "payload": {
+      "id": "slides",
+      "index": 0,
+      "step": 0
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_STAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the blank key toggles the blank screen and announces it",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyB"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "blank": true
+      },
+      "emits": [
+       {
+        "event": "RASM_STAGE",
+        "payload": {
+         "id": "stage",
+         "blank": true
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyB"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "blank": false
+      },
+      "emits": [
+       {
+        "event": "RASM_STAGE",
+        "payload": {
+         "id": "stage",
+         "blank": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the overview key toggles the overview",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyO"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "overview": true
+      },
+      "neverEmits": [
+       "RASM_STAGE"
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyO"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "overview": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the pointer key toggles the pointer",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyP"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "pointer": true
+      },
+      "neverEmits": [
+       "RASM_STAGE"
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyP"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "pointer": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unknown key code changes nothing",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyZ"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_STAGE",
+       "STAGE_FIGURE",
+       "STAGE_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "escape closes the overview",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "overview": true
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_KEY",
+     "payload": {
+      "key": "escape"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "overview": false
+      },
+      "emits": [
+       {
+        "event": "STAGE_FIGURE"
+       },
+       {
+        "event": "STAGE_PAINT"
+       }
+      ],
+      "neverEmits": [
+       "RASM_STAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "escape closes the blank screen and announces it",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "blank": true
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_KEY",
+     "payload": {
+      "key": "escape"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "blank": false
+      },
+      "emits": [
+       {
+        "event": "RASM_STAGE",
+        "payload": {
+         "id": "stage",
+         "blank": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "escape with neither open does nothing",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_KEY",
+     "payload": {
+      "key": "escape"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_STAGE",
+       "STAGE_FIGURE",
+       "STAGE_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a set for the stage's id puts the blank screen and the clock start",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_STAGE_SET",
+     "payload": {
+      "id": "stage",
+      "blank": true,
+      "startedMs": 12345
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "blank": true,
+       "startedMs": 12345
+      },
+      "emits": [
+       {
+        "event": "STAGE_FIGURE"
+       },
+       {
+        "event": "STAGE_PAINT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a set for another id changes nothing",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_STAGE_SET",
+     "payload": {
+      "id": "other",
+      "blank": true,
+      "startedMs": 12345
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "STAGE_FIGURE",
+       "STAGE_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "with the overview open a press on a tile asks the deck for that slide and closes the overview",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     },
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "overview": true,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "stage:tile:2",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "overview": false
+      },
+      "emits": [
+       {
+        "event": "RASM_SLIDE_TO",
+        "payload": {
+         "id": "slides",
+         "index": 2,
+         "step": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "with tapNav an up on the right half asks to advance",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "tapNav": true,
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    },
+    "presenting": true
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "page",
+      "x": 800,
+      "y": 300
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_STAGE_ADVANCE",
+        "payload": {
+         "id": "slides"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RASM_STAGE_BACK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "with tapNav an up on the left half asks to go back",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "tapNav": true,
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    },
+    "presenting": true
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "page",
+      "x": 200,
+      "y": 300
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_STAGE_BACK",
+        "payload": {
+         "id": "slides"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RASM_STAGE_ADVANCE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "without tapNav an up asks for neither",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "tapNav": false,
+    "slides": [
+     {
+      "layout": "title",
+      "title": "countdown.days"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "page",
+      "x": 800,
+      "y": 300
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_STAGE_ADVANCE",
+       "RASM_STAGE_BACK"
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "page",
+      "x": 200,
+      "y": 300
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_STAGE_ADVANCE",
+       "RASM_STAGE_BACK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the audience paint of a points slide at step 1 carries the title, the eyebrow and two lines",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "points",
+      "eyebrow": "countdown.days",
+      "title": "countdown.hours",
+      "lines": [
+       "stage.next",
+       "stage.target",
+       "countdown.days"
+      ],
+      "shown": 1
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "step": 1,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "STAGE_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "stage",
+         "texts": [
+          {
+           "id": "stage:eyebrow",
+           "key": "countdown.days",
+           "x": 80,
+           "y": 60,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 840,
+           "wrap": true,
+           "height": 30,
+           "fit": "shrink",
+           "minSize": 14,
+           "animation": null
+          },
+          {
+           "id": "stage:title",
+           "key": "countdown.hours",
+           "x": 80,
+           "y": 90,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 840,
+           "wrap": true,
+           "height": 96,
+           "fit": "shrink",
+           "minSize": 14,
+           "animation": null
+          },
+          {
+           "id": "stage:line:0",
+           "key": "stage.next",
+           "x": 80,
+           "y": 210,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 840,
+           "wrap": true,
+           "height": 60,
+           "fit": "shrink",
+           "minSize": 14,
+           "animation": null
+          },
+          {
+           "id": "stage:line:1",
+           "key": "stage.target",
+           "x": 80,
+           "y": 276,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 840,
+           "wrap": true,
+           "height": 60,
+           "fit": "shrink",
+           "minSize": 14,
+           "animation": null
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the audience paint with the screen blank carries no texts",
+   "config": {
+    "id": "stage",
+    "slides": [
+     {
+      "layout": "points",
+      "eyebrow": "countdown.days",
+      "title": "countdown.hours",
+      "lines": [
+       "stage.next",
+       "stage.target",
+       "countdown.days"
+      ],
+      "shown": 1
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "step": 1,
+    "blank": true,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "STAGE_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "stage",
+         "texts": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the presenter view paints the notes",
+   "config": {
+    "id": "stage",
+    "view": "presenter",
+    "slides": [
+     {
+      "layout": "points",
+      "title": "countdown.hours",
+      "lines": [
+       "stage.next"
+      ],
+      "notes": [
+       "stage.next",
+       "stage.target"
+      ]
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    },
+    "presenting": true
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "STAGE_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "stage",
+         "texts": [
+          {
+           "id": "stage:p:title",
+           "key": "countdown.hours",
+           "x": 40,
+           "y": 48,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 580,
+           "wrap": true,
+           "height": 60,
+           "fit": "shrink",
+           "minSize": 12
+          },
+          {
+           "id": "stage:p:note:0",
+           "key": "stage.next",
+           "x": 40,
+           "y": 228,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 580,
+           "wrap": true,
+           "height": 57,
+           "fit": "shrink",
+           "minSize": 12
+          },
+          {
+           "id": "stage:p:note:1",
+           "key": "stage.target",
+           "x": 40,
+           "y": 288,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 580,
+           "wrap": true,
+           "height": 57,
+           "fit": "shrink",
+           "minSize": 12
+          },
+          {
+           "id": "stage:p:nextLabel",
+           "key": "std-rasm-slide-stage:stage.next",
+           "x": 660,
+           "y": 48,
+           "z": 11,
+           "align": "left",
+           "baseline": "top",
+           "color": null,
+           "font": null,
+           "width": 300,
+           "wrap": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a tick repaints the presenter view once the talk has started",
+   "config": {
+    "id": "stage",
+    "view": "presenter",
+    "slides": [
+     {
+      "layout": "points",
+      "title": "countdown.hours"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "startedMs": 1000,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    },
+    "presenting": true
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "STAGE_TICK",
+     "payload": {
+      "n": 0
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STAGE_PAINT"
+       },
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "stage"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a tick does not repaint the presenter view before the talk has started",
+   "config": {
+    "id": "stage",
+    "view": "presenter",
+    "slides": [
+     {
+      "layout": "points",
+      "title": "countdown.hours"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "STAGE_TICK",
+     "payload": {
+      "n": 0
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "STAGE_PAINT",
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a tick does not repaint the audience view",
+   "config": {
+    "id": "stage",
+    "view": "audience",
+    "slides": [
+     {
+      "layout": "points",
+      "title": "countdown.hours"
+     }
+    ]
+   },
+   "entity": {
+    "id": "s",
+    "startedMs": 1000,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 1000,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "STAGE_TICK",
+     "payload": {
+      "n": 0
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "STAGE_PAINT",
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the notes key turns the window to the speaker's side and back",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "slides": [
+     {
+      "layout": "statement"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyN"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "presenting": true,
+       "turned": true
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_HOTKEY",
+     "payload": {
+      "code": "KeyN"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "presenting": false,
+       "turned": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a breakpoint named in presenterOn starts on the speaker's side",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "presenterOn": [
+     "phone"
+    ],
+    "slides": [
+     {
+      "layout": "statement"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_BREAKPOINT",
+     "payload": {
+      "name": "phone",
+      "width": 390,
+      "chain": [
+       "phone"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "presenting": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a breakpoint not named in presenterOn stays on the slide",
+   "config": {
+    "id": "stage",
+    "deck": "slides",
+    "presenterOn": [
+     "phone"
+    ],
+    "slides": [
+     {
+      "layout": "statement"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "presenting": true
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_BREAKPOINT",
+     "payload": {
+      "name": "desktop",
+      "width": 1280,
+      "chain": [
+       "desktop"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "presenting": false
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

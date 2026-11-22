@@ -1,6 +1,6 @@
 app std-rasm-stream [
   version: "0.1.0",
-  description: "std-rasm-stream — a line feed that arrives over time, for a terminal pane or a conversation. The composer declares the lines in order, each with the paint ids it shows, the paint ids of a typing indicator shown while that line is pending, the text ids that type themselves in (RASM_ENTER, so a std-rasm-text with reveal type writes out glyph by glyph from that instant), and the milliseconds to wait after the line before it. On boot, one 100 ms tick later (so it follows anything else that shows paints at boot, such as a wizard's first step), every line and indicator is hidden (RASM_VISIBLE) and the first line's wait starts; a 100 ms tick counts the wait, and when it is reached the line is shown, its typing indicator is hidden, its text ids type in and the next line's indicator appears. The last line sends STREAM_DONE; with a `cursor` paint id the cursor then blinks `blinks` times (a toggle every 500 ms, a finite run, never longer than five seconds at the default) and stays on. RASM_STREAM_SKIP shows every line at once; RASM_STREAM_REPLAY hides them all and plays the feed again. Under reduced motion (RASM_MOTION) the whole feed shows at once with no typing and no blink. Hidden paints are not measured, so a stack that sizes its rows from them grows as each line arrives."
+  description: "std-rasm-stream — a line feed that arrives over time, for a terminal pane or a conversation. The composer declares the lines in order, each with the paint ids it shows, the paint ids of a typing indicator shown while that line is pending, the text ids that type themselves in (RASM_ENTER, so a std-rasm-text with reveal type writes out glyph by glyph from that instant), and the milliseconds to wait after the line before it. On boot, one 100 ms tick later (so it follows anything else that shows paints at boot, such as a wizard's first step), every line and indicator is hidden (RASM_VISIBLE) and the first line's wait starts; a 100 ms tick counts the wait, and when it is reached the line is shown, its typing indicator is hidden, its text ids type in and the next line's indicator appears. The last line sends STREAM_DONE; with a `cursor` paint id the cursor then blinks `blinks` times (a toggle every 500 ms, a finite run, never longer than five seconds at the default) and stays on. RASM_STREAM_SKIP shows every line at once; RASM_STREAM_REPLAY hides them all and plays the feed again. With `startOn` set the lines stay hidden after boot until a std-rasm-presence RASM_ENTER whose order names that id, so a feed below the fold plays as its section scrolls into view. Under reduced motion (RASM_MOTION) the whole feed shows at once with no typing and no blink. Hidden paints are not measured, so a stack that sizes its rows from them grows as each line arrives."
 ]
 ;; @capabilities "streaming lines, typed commands, terminal output, chat messages arriving, typing indicator, blinking cursor, log feed"
 
@@ -15,6 +15,7 @@ orbital RasmStreamOrbital {
     waited : number @description "Milliseconds counted toward the next line." = 0
     toggles : number @description "Cursor visibility changes made so far." = 0
     reduced : boolean @description "The viewer's reduced-motion preference from RASM_MOTION." = false
+    cued : boolean @description "With startOn set, whether a RASM_ENTER naming it has arrived." = false
   }
 
   trait RasmStream -> RasmStreamRun [client] {
@@ -32,6 +33,9 @@ orbital RasmStreamOrbital {
       RASM_BOOT -> done when (or @entity.reduced (<= (array/len @config.lines) 0))
         (set @entity.next (array/len @config.lines))
         (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+      RASM_ENTER -> waiting when (and (!= @config.startOn "") (array/includes ?order @config.startOn))
+        (set @entity.cued true)
+      RASM_ENTER -> waiting when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
     }
 
     state priming {
@@ -43,18 +47,50 @@ orbital RasmStreamOrbital {
         (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
       RASM_MOTION -> priming when (not ?reduced)
         (set @entity.reduced false)
-      STREAM_PRIME -> running
+      STREAM_PRIME -> running when (or (= @config.startOn "") @entity.cued)
         (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: (array/concat (array/flatten (array/map @config.lines (fn l (array/concat @l.shows (default @l.typing []))))) (if (= @config.cursor "") [] [@config.cursor])) })
         (emit STREAM_WAIT { index: 0 })
+      STREAM_PRIME -> armed when (and (!= @config.startOn "") (not @entity.cued))
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: (array/concat (array/flatten (array/map @config.lines (fn l (array/concat @l.shows (default @l.typing []))))) (if (= @config.cursor "") [] [@config.cursor])) })
+      RASM_ENTER -> priming when (and (!= @config.startOn "") (array/includes ?order @config.startOn))
+        (set @entity.cued true)
+      RASM_ENTER -> priming when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
       RASM_STREAM_SKIP -> done
         (set @entity.next (array/len @config.lines))
         (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
         (emit STREAM_DONE { id: @config.id })
     }
 
+    state armed {
+      INIT -> waiting
+      RASM_BOOT -> armed
+      RASM_MOTION -> done when ?reduced
+        (set @entity.reduced true)
+        (set @entity.next (array/len @config.lines))
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+      RASM_MOTION -> armed when (not ?reduced)
+        (set @entity.reduced false)
+      RASM_ENTER -> running when (and (!= @config.startOn "") (array/includes ?order @config.startOn))
+        (set @entity.cued true)
+        (set @entity.next 0)
+        (set @entity.waited 0)
+        (emit STREAM_WAIT { index: 0 })
+      RASM_ENTER -> armed when (not (and (!= @config.startOn "") (array/includes ?order @config.startOn)))
+      RASM_STREAM_SKIP -> done
+        (set @entity.next (array/len @config.lines))
+        (emit RASM_VISIBLE { owner: @config.id, shown: (array/concat (array/flatten (array/map @config.lines (fn l @l.shows))) (if (= @config.cursor "") [] [@config.cursor])), hidden: (array/flatten (array/map @config.lines (fn l (default @l.typing [])))) })
+        (emit STREAM_DONE { id: @config.id })
+      RASM_STREAM_REPLAY -> running
+        (set @entity.next 0)
+        (set @entity.waited 0)
+        (set @entity.toggles 0)
+        (emit STREAM_WAIT { index: 0 })
+    }
+
     state running {
       INIT -> waiting
       RASM_BOOT -> running
+      RASM_ENTER -> running
       RASM_MOTION -> done when ?reduced
         (set @entity.reduced true)
         (set @entity.next (array/len @config.lines))
@@ -113,6 +149,7 @@ orbital RasmStreamOrbital {
     state blinking {
       INIT -> waiting
       RASM_BOOT -> blinking
+      RASM_ENTER -> blinking
       RASM_MOTION -> done when ?reduced
         (set @entity.reduced true)
         (emit RASM_VISIBLE { owner: @config.id, shown: [@config.cursor], hidden: [] })
@@ -137,6 +174,7 @@ orbital RasmStreamOrbital {
     state done {
       INIT -> waiting
       RASM_BOOT -> done
+      RASM_ENTER -> done
       RASM_MOTION -> done
         (set @entity.reduced ?reduced)
       RASM_STREAM_SKIP -> done
@@ -203,6 +241,8 @@ orbital RasmStreamOrbital {
     listens {
       RASM_BOOT { }
         @description "The surface mounted: hide every line and start the first wait."
+      RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
+        @description "With startOn set, the feed plays from the first line when an entry names that id (a std-rasm-presence onView group as its section arrives)."
       RASM_MOTION { reduced : boolean! }
         @description "The viewer's reduced-motion preference: reduced shows the whole feed at once, with no typing and no blink."
       RASM_STREAM_SKIP { }
@@ -229,6 +269,10 @@ orbital RasmStreamOrbital {
       blinks : number = 4
         @label "Blinks"
         @description "How many times the cursor goes off and on after the last line before it stays on."
+        @tier "presentation"
+      startOn : string = ""
+        @label "Start on"
+        @description "Empty plays the feed one tick after boot. An id holds every line hidden until a RASM_ENTER whose order names that id arrives (or a RASM_STREAM_REPLAY), so a feed further down the page plays as it scrolls into view."
         @tier "presentation"
     }
   }

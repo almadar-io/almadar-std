@@ -22,6 +22,7 @@ type RasmSound = { path : string!, volume : number, loop : boolean, poolSize : n
 type RasmTransition = { durationMs : number!, distance : number!, staggerMs : number!, owners : [string]!, still : [string]! }
 type RasmStackShape = { axis : "vertical" | "horizontal" | "layer"!, gap : number!, padding : number!, look : string!, children : [RasmChild]! }
 type RasmChild = { id : string!, size : "fixed" | "fill" | "measure"!, main : number, cross : number, min : number }
+type RasmSystemMode = { palette : Map string string!, looks : Map string RasmLook! }
 
 uses ThemeAtom from "std/behaviors/std-rasm-theme"
 uses TrendAtom from "std/behaviors/std-rasm-trend"
@@ -50,11 +51,16 @@ orbital RasmPage {
       systemBreakpointLooks: @config.systemBreakpointLooks
       palette: @config.palette
       fonts: @config.fonts
+      modes: @config.modes
+      mode: @config.mode
+      pageLooks: @config.pageLooks
+      pagePalette: @config.pagePalette
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
       Cycle.RASM_THEME_SET -> RASM_THEME_SET
+      ModeToggle.RASM_MODE_NEXT -> RASM_MODE_NEXT
       Layers.RASM_SYSTEM_SET -> RASM_SYSTEM_SET
       Trend.RASM_TREND -> RASM_TREND
     }
@@ -80,6 +86,8 @@ orbital RasmPage {
       systemBreakpointLooks: @config.systemBreakpointLooks
       palette: @config.palette
       fonts: @config.fonts
+      modes: @config.modes
+      mode: @config.mode
       layout: @config.layout
       motion: @config.motion
       sounds: @config.sounds
@@ -99,7 +107,7 @@ orbital RasmPage {
       rootRect: { x: 0, y: 0, w: 1280, h: 800 }
       fill: true
       pageScroll: true
-      fixed: (array/concat (array/concat @config.fixed (let ((ids : [string] (if @config.switcher ["themeBar", "themePrev", "themeLabel", "themeNext"] []))) @ids)) (let ((snd : [string] (if (> (array/len (object/keys @config.sounds)) 0) ["soundToggle"] []))) @snd))
+      fixed: (array/concat (array/concat @config.fixed (let ((ids : [string] (if @config.switcher ["themeBar", "themePrev", "themeLabel", "themeNext"] []))) @ids)) (array/concat (let ((snd : [string] (if (> (array/len (object/keys @config.sounds)) 0) ["soundToggle"] []))) @snd) (let ((md : [string] (if (> (array/len (object/keys @config.modes)) 0) ["modeToggle"] []))) @md)))
       fixedOn: @config.fixedOn
       transition: @config.transition
       scrollReportMs: 120
@@ -116,12 +124,13 @@ orbital RasmPage {
       ThemeNext.RASM_PAINT -> RASM_PAINT
       ThemeLabel.RASM_PAINT -> RASM_PAINT
       SoundToggle.RASM_PAINT -> RASM_PAINT
+      ModeToggle.RASM_PAINT -> RASM_PAINT
     }
   }
 
   trait Focus = FocusAtom.traits.RasmFocus {
     config {
-      order: (array/concat (let ((ids : [string] (if @config.switcher ["themePrev", "themeNext"] []))) @ids) (let ((snd : [string] (if (> (array/len (object/keys @config.sounds)) 0) ["soundToggle"] []))) @snd))
+      order: (array/concat (let ((ids : [string] (if @config.switcher ["themePrev", "themeNext"] []))) @ids) (array/concat (let ((snd : [string] (if (> (array/len (object/keys @config.sounds)) 0) ["soundToggle"] []))) @snd) (let ((md : [string] (if (> (array/len (object/keys @config.modes)) 0) ["modeToggle"] []))) @md)))
     }
     listens {
       Surface.RASM_KEY -> RASM_KEY
@@ -174,7 +183,7 @@ orbital RasmPage {
 
   trait ThemeEnter = PresenceAtom.traits.RasmPresence {
     config {
-      order: ["themeBar", "themePrev", "themeLabel", "themeNext", "soundToggle"]
+      order: ["themeBar", "themePrev", "themeLabel", "themeNext", "soundToggle", "modeToggle"]
       staggerMs: 60
     }
     listens {
@@ -321,6 +330,45 @@ orbital RasmPage {
     }
   }
 
+  trait ModePin = PinAtom.traits.RasmPin {
+    config {
+      anchor: "page"
+      child: "modeToggle"
+      enabled: (> (array/len (object/keys @config.modes)) 0)
+      edge: bottom
+      width: 44
+      height: 44
+      margin: (if (> (array/len (object/keys @config.sounds)) 0) 68 16)
+    }
+    listens {
+      Surface.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Surface.RASM_RESIZE -> RASM_RESIZE
+    }
+  }
+
+  trait ModeToggle = PressAtom.traits.RasmPressable {
+    config {
+      id: "modeToggle"
+      label: "mode.toggle"
+      intent: secondary
+      icon: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18Z M12 3v18"
+      iconOnly: true
+      action: RASM_MODE_NEXT
+      order: 903
+      z: 51
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      ModePin.RASM_PLACE -> RASM_PLACE
+      ThemeEnter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+
   trait Sound = AudioAtom.traits.AudioCue {
     config {
       slot: floating
@@ -362,6 +410,22 @@ orbital RasmPage {
     fonts : Map string RasmFont = {}
       @label "Fonts"
       @description "The system's type layer: the face and font file of each role (display, body, mono)."
+      @tier "presentation"
+    modes : Map string RasmSystemMode = {}
+      @label "Modes"
+      @description "The system's modes by name in toggle order (day, night, …): each lays a palette and looks over the system's. Set, a mode toggle pinned to the bottom corner (modeToggle) steps through them."
+      @tier "presentation"
+    mode : string = ""
+      @label "Mode"
+      @description "The mode the page starts in, a key of `modes`; empty wears none."
+      @tier "presentation"
+    pageLooks : Map string RasmLook = {}
+      @label "Page looks"
+      @description "Looks the page lays over its system's (and its mode's) looks, for roles the page adds, such as one colour per chapter of a story."
+      @tier "presentation"
+    pagePalette : Map string string = {}
+      @label "Page palette"
+      @description "Colours the page lays over its system's (and its mode's) palette, by name, for the roles its page looks name."
       @tier "presentation"
     layout : RasmLayout? = null
       @label "Layout"
@@ -421,5 +485,5 @@ orbital RasmPage {
       @tier "presentation"
   }
 
-  page "/page" as RasmPageRoute -> Theme, Trend, Layers, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel, SoundPin, SoundToggle, Sound
+  page "/page" as RasmPageRoute -> Theme, Trend, Layers, Surface, Focus, Page, Cycle, Pin, ThemeEnter, ThemeBar, ThemePrev, ThemeNext, ThemeLabel, SoundPin, SoundToggle, Sound, ModePin, ModeToggle
 }

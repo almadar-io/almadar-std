@@ -1,0 +1,407 @@
+app std-rasm-slide-stage [
+  version: "0.1.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-slide-stage — paints the slide a std-rasm-slides deck is on, from data. The `slides` knob lists each slide's layout (title, statement, points or figure), its eyebrow, title and lines as message keys, how many lines show before the first build (`shown`; each step of the deck reveals one more), and the speaker's notes. RASM_SLIDE { id, index, step } from the deck named by `deck` moves it: the slide's texts rise in one after another, a line revealed by a step rises in alone, and earlier lines of a slide that builds dim so the newest holds the eye. A figure slide keeps the rect under its title for other painters and announces it with RASM_PLACE under the `figure` id (a zero rect on any other slide). It also paints the deck's own marks: a progress line and a k / n counter along the foot, a blank screen (the `blankKey` key), a pointer dot that follows the mouse (`pointerKey`), and an overview grid of every slide's number and title (`overviewKey`) where a press on a tile sends RASM_SLIDE_TO. With view presenter, at a breakpoint named in `presenterOn`, or after the `notesKey` key turns the window, it paints the speaker's side instead: the counter, the slide's title, the sentence to say exactly (`say`), the notes, the next slide's title and a clock of the time since the talk started (the first move off the first slide, or `clockKey`), which turns to the late look once the next slide's `minute` mark has passed; with `tapNav` a tap on the speaker's side's trailing half asks to advance (RASM_STAGE_ADVANCE) and on the leading half to go back (RASM_STAGE_BACK), for a phone. RASM_STAGE { id, blank, startedMs } announces the blank screen and the clock's start, and RASM_STAGE_SET puts them from outside, so several windows can follow one talk. Under reduced motion nothing rises. Looks: text/eyebrow/idle, text/display/idle, text/statement/idle and accent, text/title/idle, text/body/idle and strong, text/caption/idle, text/note/idle and cue, text/clock/idle and late, slides/progress, track, counter, blank, pointer and tile (idle, current)."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmTextParams = Map string string
+type RasmText = { id : string!, key : MessageKey!, params : RasmTextParams?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, width : number?, wrap : boolean?, height : number?, fit : "none" | "shrink"?, minSize : number?, animation : RasmAnimation? }
+type StageSlide = { layout : "title" | "statement" | "points" | "figure"!, eyebrow : MessageKey, title : MessageKey, lines : [MessageKey], shown : number, accent : boolean, notes : [MessageKey], say : MessageKey, minute : number }
+type StageSpec = { id : string!, key : MessageKey!, look : string!, x : number!, y : number!, width : number!, height : number!, baseline : string!, order : number!, startMs : number! }
+
+orbital RasmSlideStageOrbital {
+  entity RasmSlideStageRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the stage, null until placed." = null
+    index : number @description "The slide on show." = 0
+    step : number @description "How many of the slide's builds are revealed." = 0
+    movedMs : number @description "The epoch-ms instant the slide arrived, 0 before any move: its texts rise from here." = 0
+    steppedMs : number @description "The epoch-ms instant of the last step forward on this slide, 0 when none: the newest line rises from here." = 0
+    reduced : boolean @description "The viewer's reduced-motion preference." = false
+    blank : boolean @description "The screen is blanked." = false
+    overview : boolean @description "The overview grid is open." = false
+    pointer : boolean @description "The pointer dot is on." = false
+    px : number @description "Where the pointer last was." = 0
+    py : number = 0
+    startedMs : number @description "The epoch-ms instant the talk started, 0 before it." = 0
+    nowMs : number @description "The instant of the last clock tick." = 0
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced." = "ltr"
+    presenting : boolean @description "The speaker's side is on show in this window." = false
+    turned : boolean @description "The notes key turned this window to the other side." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmSlideStage -> RasmSlideStageRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.presenting (= @config.view "presenter"))
+      RASM_BREAKPOINT -> ready
+        (set @entity.presenting (!= (or (= @config.view "presenter") (array/includes @config.presenterOn ?name)) @entity.turned))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_SLIDE -> ready when (= ?id @config.deck)
+        (let ((t (time/epoch-ms @now)) (st (default ?step 0)))
+          (do
+            (when (and (= @entity.startedMs 0) (!= ?index 0))
+              (do
+                (set @entity.startedMs @t)
+                (set @entity.nowMs @t)
+                (emit RASM_STAGE { id: @config.id, blank: @entity.blank, startedMs: @t })))
+            (set @entity.steppedMs (if (and (= ?index @entity.index) (> @st @entity.step)) @t 0))
+            (set @entity.movedMs (if (= ?index @entity.index) @entity.movedMs @t))
+            (set @entity.step @st)
+            (set @entity.index ?index)
+            (set @entity.overview false)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_SLIDE -> ready when (!= ?id @config.deck)
+      RASM_STAGE_SET -> ready when (= ?id @config.id)
+        (set @entity.blank ?blank)
+        (set @entity.startedMs ?startedMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_STAGE_SET -> ready when (!= ?id @config.id)
+      RASM_HOTKEY -> ready when (= ?code @config.blankKey)
+        (set @entity.blank (not @entity.blank))
+        (emit RASM_STAGE { id: @config.id, blank: @entity.blank, startedMs: @entity.startedMs })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_HOTKEY -> ready when (and (!= ?code @config.blankKey) (= ?code @config.overviewKey))
+        (set @entity.overview (not @entity.overview))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_HOTKEY -> ready when (and (!= ?code @config.blankKey) (!= ?code @config.overviewKey) (= ?code @config.pointerKey))
+        (set @entity.pointer (not @entity.pointer))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_HOTKEY -> ready when (and (!= ?code @config.blankKey) (!= ?code @config.overviewKey) (!= ?code @config.pointerKey) (= ?code @config.clockKey))
+        (let ((t (time/epoch-ms @now)))
+          (do
+            (set @entity.startedMs @t)
+            (set @entity.nowMs @t)
+            (emit RASM_STAGE { id: @config.id, blank: @entity.blank, startedMs: @t })))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_HOTKEY -> ready when (and (!= ?code @config.blankKey) (!= ?code @config.overviewKey) (!= ?code @config.pointerKey) (!= ?code @config.clockKey) (= ?code @config.notesKey))
+        (set @entity.turned (not @entity.turned))
+        (set @entity.presenting (not @entity.presenting))
+        (set @entity.nowMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_HOTKEY -> ready when (not (or (= ?code @config.blankKey) (= ?code @config.overviewKey) (= ?code @config.pointerKey) (= ?code @config.clockKey) (= ?code @config.notesKey)))
+      RASM_KEY -> ready when (and (= ?key "escape") (or @entity.overview @entity.blank))
+        (set @entity.overview false)
+        (when @entity.blank
+          (do
+            (set @entity.blank false)
+            (emit RASM_STAGE { id: @config.id, blank: false, startedMs: @entity.startedMs })))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_KEY -> ready when (not (and (= ?key "escape") (or @entity.overview @entity.blank)))
+      RASM_POINTER -> ready when (and (= ?kind "move") @entity.pointer)
+        (set @entity.px ?x)
+        (set @entity.py ?y)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.overview (str/startsWith ?id (str/concat @config.id ":tile:")))
+        (emit RASM_SLIDE_TO { id: @config.deck, index: (array/indexOf (array/map (array/range 0 (array/len @config.slides)) (fn i (str/concat @config.id ":tile:" @i))) ?id), step: 0 })
+        (set @entity.overview false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_FIGURE { n: @entity.paints })
+        (emit STAGE_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "up") (not @entity.overview) @config.tapNav @entity.presenting (!= @entity.rect null))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })))
+          (if (= (> ?x (+ @r.x (/ @r.w 2))) (!= @entity.dir "rtl"))
+            (emit RASM_STAGE_ADVANCE { id: @config.deck })
+            (emit RASM_STAGE_BACK { id: @config.deck })))
+      RASM_POINTER -> ready when (not (or (and (= ?kind "move") @entity.pointer) (and (= ?kind "up") @entity.overview (str/startsWith ?id (str/concat @config.id ":tile:"))) (and (= ?kind "up") (not @entity.overview) @config.tapNav @entity.presenting (!= @entity.rect null))))
+      STAGE_TICK -> ready when (and @entity.presenting (> @entity.startedMs 0))
+        (set @entity.nowMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit STAGE_PAINT { n: @entity.paints })
+      STAGE_TICK -> ready when (not (and @entity.presenting (> @entity.startedMs 0)))
+      STAGE_FIGURE -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (blankS : StageSlide { layout: "statement" }))
+          (let ((s (default (array/nth @config.slides @entity.index) @blankS)) (m (* @r.w @config.margin)))
+            (emit RASM_PLACE { n: ?n, placed: [{ id: @config.figure, rect: (if (and (= @s.layout "figure") (not @entity.presenting) (not @entity.blank) (not @entity.overview)) { x: (+ @r.x (/ @m 2)), y: (+ @r.y (* @r.h 0.25)), w: (- @r.w @m), h: (* @r.h 0.64) } { x: @r.x, y: @r.y, w: 0, h: 0 }) }] })))
+      STAGE_FIGURE -> ready when (= @entity.rect null)
+      STAGE_PAINT -> ready when (and (!= @entity.rect null) (not @entity.presenting))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (blankS : StageSlide { layout: "statement" }) (L @entity.looks) (n (array/len @config.slides)) (noSpec : [StageSpec] []) (noKeys : [MessageKey] []))
+          (let ((s (default (array/nth @config.slides @entity.index) @blankS)) (m (* @r.w @config.margin)) (z @config.z))
+            (let ((lines (default @s.lines @noKeys)) (tw (- @r.w (* 2 @m))) (x0 (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @m) (+ @r.x @m))) (eb : MessageKey? (default @s.eyebrow null)) (ti : MessageKey? (default @s.title null)))
+              (let ((vis (math/min (array/len @lines) (+ (default @s.shown (array/len @lines)) @entity.step))) (builds (< (default @s.shown (array/len @lines)) (array/len @lines))))
+                (let ((specs (array/concat
+                        (if (= @eb null) @noSpec [{ id: (str/concat @config.id ":eyebrow"), key: @eb, look: "text/eyebrow/idle", x: @x0, y: (+ @r.y (* @r.h (if (= @s.layout "title") 0.26 (if (= @s.layout "figure") 0.07 0.1)))), width: @tw, height: (* @r.h 0.05), baseline: "top", order: 0, startMs: @entity.movedMs }])
+                        (if (= @ti null) @noSpec [{ id: (str/concat @config.id ":title"), key: @ti, look: (if (= @s.layout "title") "text/display/idle" (if (= @s.layout "statement") (if (default @s.accent false) "text/statement/accent" "text/statement/idle") "text/title/idle")), x: @x0, y: (+ @r.y (* @r.h (if (= @s.layout "title") 0.33 (if (= @s.layout "statement") 0.18 (if (= @s.layout "figure") 0.11 0.15))))), width: @tw, height: (* @r.h (if (= @s.layout "title") 0.3 (if (= @s.layout "statement") 0.42 (if (= @s.layout "figure") 0.12 0.16)))), baseline: "top", order: 1, startMs: @entity.movedMs }])
+                        (array/map (array/range 0 (if (= @s.layout "figure") (math/min 1 @vis) @vis)) (fn i (let ((k : MessageKey (default (array/nth @lines @i) "stage.next")) (newest (and (> @entity.steppedMs 0) (= @i (- @vis 1)))))
+                          { id: (str/concat @config.id ":line:" @i), key: @k, look: (if (= @s.layout "figure") "text/caption/idle" (if (= @s.layout "title") "text/body/idle" (if (and @builds (< @i (- @vis 1))) "text/body/idle" "text/body/strong"))), x: @x0, y: (+ @r.y (* @r.h (if (= @s.layout "figure") 0.91 (if (= @s.layout "title") (+ 0.68 (* @i 0.075)) (if (= @s.layout "statement") (+ 0.66 (* @i 0.085)) (+ 0.35 (* @i 0.11))))))), width: @tw, height: (* @r.h (if (= @s.layout "points") 0.1 0.07)), baseline: "top", order: (if @newest 0 (+ 2 @i)), startMs: (if @newest @entity.steppedMs @entity.movedMs) }))))))
+                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @z,
+                    texts: (array/concat
+                      (if (or @entity.blank @entity.overview) (let ((none : [RasmText] [])) @none)
+                        (array/map @specs (fn t (let ((lk (default (object/get @L @t.look null) {})) (lead (* @t.order @config.staggerMs)))
+                          { id: @t.id, key: @t.key, x: @t.x, y: @t.y, z: (+ @z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: @t.baseline, color: @lk.textColor, font: @lk.font, width: @t.width, wrap: true, height: @t.height, fit: "shrink", minSize: 14, animation: (if (or @entity.reduced (= @t.startMs 0)) null { durationMs: (+ @config.enterMs @lead), startMs: @t.startMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: @config.rise }, { at: (/ @lead (+ @config.enterMs @lead)), opacity: 0, offsetY: @config.rise }, { at: 1, opacity: 1, offsetY: 0 }] }) }))))
+                      (if (and @entity.overview (not @entity.blank))
+                        (let ((cols @config.overviewCols) (gap (* @r.w 0.012)) (tl (default (object/get @L "slides/tile/idle" null) {})))
+                          (let ((cw (/ (- @tw (* (- @cols 1) @gap)) @cols)))
+                            (let ((ch (* @cw 0.5625)))
+                              (array/flatten (array/map (array/range 0 @n) (fn i (let ((os (default (array/nth @config.slides @i) @blankS)) (cx (+ (+ @r.x @m) (* (math/mod @i @cols) (+ @cw @gap)))) (cy (+ (+ @r.y (* @r.h 0.1)) (* (math/floor (/ @i @cols)) (+ @ch @gap)))))
+                                (let ((ok : MessageKey? (default @os.title null)) (none : [RasmText] []))
+                                  (if (= @ok null) @none [{ id: (str/concat @config.id ":tile:" @i ":title"), key: @ok, x: (+ @cx 10), y: (+ @cy (* @ch 0.34)), z: (+ @z 31), align: "left", baseline: "top", color: @tl.textColor, font: @tl.font, width: (- @cw 20), wrap: true, height: (* @ch 0.6), fit: "shrink", minSize: 9 }])))))))))
+                        (let ((none : [RasmText] [])) @none))),
+                    nodes: (array/concat
+                      (let ((tr (default (object/get @L "slides/track/idle" null) {})) (pg (default (object/get @L "slides/progress/idle" null) {})) (ct (default (object/get @L "slides/counter/idle" null) {})) (none : [node] []))
+                        (if (or (not @config.progress) @entity.blank) @none
+                          [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- (+ @r.y @r.h) 3), z: (+ @z 2) }, width: @r.w, height: 3, fill: @tr.fill, hit: false },
+                           { type: draw-shape, id: (str/concat @config.id ":progress"), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (* @r.w (/ (+ @entity.index 1) (math/max 1 @n)))) @r.x), y: (- (+ @r.y @r.h) 3), z: (+ @z 3) }, width: (* @r.w (/ (+ @entity.index 1) (math/max 1 @n))), height: 3, fill: @pg.fill, hit: false },
+                           { type: draw-text, id: (str/concat @config.id ":counter"), text: (str/concat "" (+ @entity.index 1) " / " @n), anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (+ @r.x @m) (- (+ @r.x @r.w) @m)), y: (- (+ @r.y @r.h) 18), z: (+ @z 3) }, align: (if (= @entity.dir "rtl") "left" "right"), baseline: "bottom", color: @ct.textColor, font: @ct.font, hit: false }]))
+                      (let ((none : [node] []) (pt (default (object/get @L "slides/pointer/idle" null) {})))
+                        (if (or (not @entity.pointer) @entity.blank) @none
+                          [{ type: draw-shape, id: (str/concat @config.id ":pointer"), shape: "ellipse", anchor: "center", position: { x: @entity.px, y: @entity.py, z: (+ @z 40) }, radiusX: @config.pointerR, radiusY: @config.pointerR, fill: @pt.fill, shadow: @pt.shadow, hit: false }]))
+                      (let ((none : [node] []) (bl (default (object/get @L "slides/blank/idle" null) {})))
+                        (if (not (or @entity.blank @entity.overview)) @none
+                          [{ type: draw-shape, id: (str/concat @config.id ":blank"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: (+ @z 30) }, width: @r.w, height: @r.h, fill: (if @entity.blank @bl.fill (let ((g (default (object/get @L "surface/ground/idle" null) {}))) @g.fill)), hit: false }]))
+                      (let ((none : [node] []) (cols @config.overviewCols) (gap (* @r.w 0.012)) (tl (default (object/get @L "slides/tile/idle" null) {})) (tc (default (object/get @L "slides/tile/current" null) {})))
+                        (if (or (not @entity.overview) @entity.blank) @none
+                          (let ((cw (/ (- @tw (* (- @cols 1) @gap)) @cols)))
+                            (let ((ch (* @cw 0.5625)))
+                              (array/flatten (array/map (array/range 0 @n) (fn i (let ((cx (+ (+ @r.x @m) (* (math/mod @i @cols) (+ @cw @gap)))) (cy (+ (+ @r.y (* @r.h 0.1)) (* (math/floor (/ @i @cols)) (+ @ch @gap)))) (lk (if (= @i @entity.index) @tc @tl)))
+                                [{ type: draw-shape, id: (str/concat @config.id ":tile:" @i), shape: rect, anchor: "top-left", position: { x: @cx, y: @cy, z: (+ @z 31) }, width: @cw, height: @ch, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, corners: @lk.corners, hit: true },
+                                 { type: draw-text, id: (str/concat @config.id ":tile:" @i ":n"), text: (str/concat "" (+ @i 1)), anchor: "top-left", position: { x: (+ @cx 10), y: (+ @cy 8), z: (+ @z 32) }, align: "left", baseline: "top", color: @lk.textColor, font: @lk.font, hit: false }]))))))))) }))))))
+      STAGE_PAINT -> ready when (and (!= @entity.rect null) @entity.presenting)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (blankS : StageSlide { layout: "statement" }) (L @entity.looks) (n (array/len @config.slides)) (noKeys : [MessageKey] []) (none : [RasmText] []))
+          (let ((s (default (array/nth @config.slides @entity.index) @blankS)) (nx (default (array/nth @config.slides (+ @entity.index 1)) @blankS)) (m (* @r.w 0.04)) (z @config.z) (narrow (< @r.w 720)))
+            (let ((notes (default @s.notes @noKeys)) (lw (if @narrow (- @r.w (* 2 @m)) (* @r.w 0.58))) (rx (+ @r.x (* @r.w 0.66))) (rw (* @r.w 0.3)) (ti : MessageKey? (default @s.title null)) (sy : MessageKey? (default @s.say null)) (nt : MessageKey? (default @nx.title null)) (elapsed (if (> @entity.startedMs 0) (math/max 0 (math/floor (/ (- @entity.nowMs @entity.startedMs) 1000))) 0)) (note (default (object/get @L "text/note/idle" null) {})) (cue (default (object/get @L "text/note/cue" null) {})) (cap (default (object/get @L "text/caption/idle" null) {})) (strong (default (object/get @L "text/body/strong" null) {})) (ct (default (object/get @L "slides/counter/idle" null) {})))
+              (let ((late (and (!= (default @nx.minute null) null) (> @elapsed (* 60 (default @nx.minute 0))))) (top (if @narrow 0.16 0.08)))
+                (let ((ck (default (object/get @L (if @late "text/clock/late" "text/clock/idle") null) {})) (nl : MessageKey @config.nextLabel) (tg : MessageKey @config.targetLabel))
+                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @z,
+                    texts: (array/concat
+                      (if (= @ti null) @none [{ id: (str/concat @config.id ":p:title"), key: @ti, x: (+ @r.x @m), y: (+ @r.y (* @r.h @top)), z: (+ @z 1), align: "left", baseline: "top", color: @strong.textColor, font: @strong.font, width: @lw, wrap: true, height: (* @r.h 0.1), fit: "shrink", minSize: 12 }])
+                      (if (= @sy null) @none [{ id: (str/concat @config.id ":p:say"), key: @sy, x: (+ @r.x @m), y: (+ @r.y (* @r.h (+ @top 0.12))), z: (+ @z 1), align: "left", baseline: "top", color: @cue.textColor, font: @cue.font, width: @lw, wrap: true, height: (* @r.h 0.16), fit: "shrink", minSize: 12 }])
+                      (array/map (array/range 0 (array/len @notes)) (fn i (let ((k : MessageKey (default (array/nth @notes @i) "stage.next")))
+                        { id: (str/concat @config.id ":p:note:" @i), key: @k, x: (+ @r.x @m), y: (+ @r.y (* @r.h (+ (+ @top 0.3) (* @i 0.1)))), z: (+ @z 1), align: "left", baseline: "top", color: @note.textColor, font: @note.font, width: @lw, wrap: true, height: (* @r.h 0.095), fit: "shrink", minSize: 12 })))
+                      (if @narrow @none [{ id: (str/concat @config.id ":p:nextLabel"), key: @nl, x: @rx, y: (+ @r.y (* @r.h 0.08)), z: (+ @z 1), align: "left", baseline: "top", color: @cap.textColor, font: @cap.font, width: @rw, wrap: false }])
+                      (if (or @narrow (= @nt null)) @none [{ id: (str/concat @config.id ":p:next"), key: @nt, x: @rx, y: (+ @r.y (* @r.h 0.13)), z: (+ @z 1), align: "left", baseline: "top", color: @strong.textColor, font: @strong.font, width: @rw, wrap: true, height: (* @r.h 0.24), fit: "shrink", minSize: 12 }])
+                      (if (= (default @nx.minute null) null) @none [{ id: (str/concat @config.id ":p:target"), key: @tg, params: { minute: (str/concat "" (default @nx.minute 0)) }, x: (if @narrow (- (+ @r.x @r.w) @m) @rx), y: (+ @r.y (* @r.h (if @narrow 0.1 0.62))), z: (+ @z 1), align: (if @narrow "right" "left"), baseline: "top", color: @cap.textColor, font: @cap.font, width: @rw, wrap: false }])),
+                    nodes: [
+                      { type: draw-text, id: (str/concat @config.id ":p:counter"), text: (str/concat "" (+ @entity.index 1) " / " @n "  ·  " @entity.step " / " (math/max 0 (- (array/len (default @s.lines @noKeys)) (default @s.shown (array/len (default @s.lines @noKeys)))))), anchor: "top-left", position: { x: (+ @r.x @m), y: (+ @r.y (* @r.h 0.03)), z: (+ @z 1) }, align: "left", baseline: "top", color: @ct.textColor, font: @ct.font, hit: false },
+                      { type: draw-text, id: (str/concat @config.id ":p:clock"), text: (str/concat (str/padStart (str/concat "" (math/floor (/ @elapsed 60))) 2 "0") ":" (str/padStart (str/concat "" (math/mod @elapsed 60)) 2 "0")), anchor: "top-left", position: { x: (if @narrow (- (+ @r.x @r.w) @m) @rx), y: (+ @r.y (* @r.h (if @narrow 0.02 0.48))), z: (+ @z 1) }, align: (if @narrow "right" "left"), baseline: "top", color: @ck.textColor, font: @ck.font, hit: false }] }))))))
+      STAGE_PAINT -> ready when (= @entity.rect null)
+    }
+
+    ticks {
+      stageTick every 1000ms in ready
+        (emit STAGE_TICK { n: 0 })
+    }
+
+    emits {
+      STAGE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the slide."
+        @tier "internal"
+      STAGE_FIGURE -> internal {
+        n : number!
+      }
+        @description "Announce the figure rect of the slide on show."
+        @tier "internal"
+      STAGE_TICK -> internal {
+        n : number!
+      }
+        @description "One second passed on the speaker's clock."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The slide on show and the deck's marks, or the speaker's side."
+        @tier "primary"
+      RASM_PLACE -> external {
+        n : number!
+        placed : [RasmPlaced]!
+      }
+        @description "The rect a figure slide keeps for other painters, under the `figure` id; a zero rect on any other slide."
+        @tier "domain"
+      RASM_SLIDE_TO -> external {
+        id : string!
+        index : number!
+        step : number
+      }
+        @description "A tile of the overview was pressed: put the deck on that slide."
+        @tier "domain"
+      RASM_STAGE -> external {
+        id : string!
+        blank : boolean!
+        startedMs : number!
+      }
+        @description "The blank screen changed or the talk's clock started."
+        @tier "domain"
+      RASM_STAGE_ADVANCE -> external {
+        id : string!
+      }
+        @description "A tap on the trailing half asked to advance the deck."
+        @tier "domain"
+      RASM_STAGE_BACK -> external {
+        id : string!
+      }
+        @description "A tap on the leading half asked to go back."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks the slide is painted in."
+      RASM_MOTION { reduced : boolean! }
+        @description "The viewer's reduced-motion preference: reduced, nothing rises."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: rtl sets the slide from the right."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the stage's rect."
+      RASM_BREAKPOINT { name : string!  width : number  chain : [string] }
+        @description "The window's breakpoint: one named in `presenterOn` shows the speaker's side."
+      RASM_SLIDE { id : string!  index : number!  step : number }
+        @description "The deck moved to this slide and step."
+      RASM_STAGE_SET { id : string!  blank : boolean!  startedMs : number! }
+        @description "Put the blank screen and the clock's start from outside, for a window following the same talk."
+      RASM_HOTKEY { code : string! }
+        @description "The blank, overview, pointer and clock keys, each one of the surface's `hotkeys`."
+      RASM_KEY { key : string! }
+        @description "Escape closes the overview and the blank screen."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "The pointer dot follows a move; a release on an overview tile goes to its slide; with tapNav a tap asks to advance or go back."
+    }
+
+    config {
+      id : string = "stage"
+        @label "Id"
+        @description "The stage's placed id and paint id; the deck's marks paint under it."
+        @tier "domain"
+      figure : string = "figure"
+        @label "Figure id"
+        @description "The id a figure slide's rect is announced under, for the painter that fills it."
+        @tier "domain"
+      deck : string = "slides"
+        @label "Deck"
+        @description "The id of the std-rasm-slides deck whose RASM_SLIDE this stage follows."
+        @tier "domain"
+      view : "audience" | "presenter" = audience
+        @label "View"
+        @description "audience paints the slide; presenter paints the speaker's side (notes, next slide, clock)."
+        @tier "domain"
+      slides : [StageSlide] = []
+        @label "Slides"
+        @description "The slides in deck order: layout, eyebrow, title, lines, how many lines show before the first build, whether a statement is set in the accent, the notes, the sentence to say exactly, and the minute of the talk the slide should start at."
+        @tier "domain"
+      margin : number = 0.08
+        @label "Margin"
+        @description "The side margin as a share of the stage's width."
+        @tier "presentation"
+      enterMs : number = 520
+        @label "Entrance duration"
+        @description "How long a text takes to rise in, in ms."
+        @tier "presentation"
+      staggerMs : number = 90
+        @label "Stagger"
+        @description "The delay between one text of an arriving slide and the next, in ms."
+        @tier "presentation"
+      rise : number = 16
+        @label "Rise"
+        @description "How far a text rises as it comes in, in px."
+        @tier "presentation"
+      progress : boolean = true
+        @label "Progress"
+        @description "On, a progress line and a k / n counter run along the foot of the slide."
+        @tier "presentation"
+      blankKey : string = "KeyB"
+        @label "Blank key"
+        @description "The key code that blanks the screen and brings it back; list it in the surface's `hotkeys`."
+        @tier "presentation"
+      overviewKey : string = "KeyO"
+        @label "Overview key"
+        @description "The key that opens and closes the overview grid."
+        @tier "presentation"
+      pointerKey : string = "KeyP"
+        @label "Pointer key"
+        @description "The key that turns the pointer dot on and off."
+        @tier "presentation"
+      notesKey : string = "KeyN"
+        @label "Notes key"
+        @description "The key code that turns this window between the slide and the speaker's side."
+        @tier "presentation"
+      presenterOn : [string] = []
+        @label "Presenter breakpoints"
+        @description "The breakpoints (phone, tablet, desktop, wide) at which a window starts on the speaker's side, such as a phone held as notes and remote."
+        @tier "presentation"
+      clockKey : string = "KeyT"
+        @label "Clock key"
+        @description "The key that starts the talk's clock again from zero."
+        @tier "presentation"
+      overviewCols : number = 6
+        @label "Overview columns"
+        @description "How many tiles the overview sets in a row."
+        @tier "presentation"
+      pointerR : number = 9
+        @label "Pointer radius"
+        @description "The radius in px of the pointer dot."
+        @tier "presentation"
+      tapNav : boolean = false
+        @label "Tap navigation"
+        @description "On, a tap on the trailing half asks to advance and on the leading half to go back, for a phone held as a remote."
+        @tier "presentation"
+      nextLabel : MessageKey = "stage.next"
+        @label "Next label"
+        @description "The label over the next slide's title on the speaker's side."
+        @tier "presentation"
+      targetLabel : MessageKey = "stage.target"
+        @label "Target label"
+        @description "The line naming the minute the next slide should start at; it takes the parameter `minute`."
+        @tier "presentation"
+      z : number = 10
+        @label "Z"
+        @description "Paint order of the slide; the blank screen and the overview sit 30 above it, the pointer 40."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmSlideStageStart -> RasmSlideStage
+}

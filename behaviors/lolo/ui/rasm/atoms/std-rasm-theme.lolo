@@ -23,6 +23,7 @@ type RasmFont = { family : string!, file : string!, generic : "serif" | "sans-se
 type RasmThemeLayer = { palette : Map string string!, fonts : Map string RasmFont! }
 type RasmSound = { path : string!, volume : number, loop : boolean, poolSize : number, autostart : boolean, crossfade : boolean, crossfadeDurationMs : number }
 type RasmStyle = { looks : Map string RasmLook!, breakpointLooks : Map string (Map string RasmLook), palette : "installed" | "inline" }
+type RasmSystemMode = { palette : Map string string!, looks : Map string RasmLook! }
 
 orbital RasmThemeOrbital {
   entity RasmThemeRun [runtime] {
@@ -37,6 +38,10 @@ orbital RasmThemeOrbital {
     systemBreakpointLooks : Map string (Map string RasmLook) @description "The worn system's looks per breakpoint name." = {}
     palette : Map string string @description "The colour layer announced: the palette knob, then the worn system's." = {}
     fonts : Map string RasmFont @description "The type layer announced: the fonts knob, then the worn system's." = {}
+    basePalette : Map string string @description "The worn system's colour layer before its mode is laid over it." = {}
+    baseLooks : Map string RasmLook @description "The worn system's look table before its mode is laid over it." = {}
+    modes : Map string RasmSystemMode @description "The worn system's modes by name (day, night, …): each lays its palette and looks over the system's." = {}
+    mode : string @description "The mode worn: the mode knob, then the last RASM_MODE_SET a worn mode answered; empty wears none." = ""
   }
 
   trait RasmTheme -> RasmThemeRun [client] {
@@ -44,12 +49,18 @@ orbital RasmThemeOrbital {
 
     state ready {
       INIT -> ready
-        (set @entity.palette @config.palette)
+        (set @entity.basePalette @config.palette)
+        (set @entity.baseLooks @config.looks)
+        (set @entity.modes @config.modes)
+        (set @entity.mode @config.mode)
+        (let ((m : RasmSystemMode? (object/get @config.modes @config.mode null)))
+          (set @entity.palette (object/merge @config.palette (default @m.palette {}))))
         (set @entity.fonts @config.fonts)
         (when (!= @config.system "")
           (do
             (set @entity.system @config.system)
-            (set @entity.systemLooks @config.looks)
+            (let ((m : RasmSystemMode? (object/get @config.modes @config.mode null)))
+              (set @entity.systemLooks (object/merge @config.looks (default @m.looks {}))))
             (set @entity.systemBreakpointLooks @config.systemBreakpointLooks)))
         (if (and (!= @entity.system "") (> (array/len (object/keys @entity.systemLooks)) 0))
           (do
@@ -95,13 +106,36 @@ orbital RasmThemeOrbital {
               (emit THEME_ANNOUNCE { restyle: true }))))
       RASM_SYSTEM_SET -> ready
         (set @entity.system ?name)
-        (set @entity.systemLooks ?looks)
+        (set @entity.basePalette ?palette)
+        (set @entity.baseLooks ?looks)
+        (set @entity.modes ?modes)
+        (set @entity.mode (if (!= (object/get ?modes @entity.mode null) null) @entity.mode ?mode))
+        (let ((m : RasmSystemMode? (object/get ?modes (if (!= (object/get ?modes @entity.mode null) null) @entity.mode ?mode) null)))
+          (do
+            (set @entity.systemLooks (object/merge ?looks (default @m.looks {})))
+            (set @entity.palette (object/merge ?palette (default @m.palette {})))))
         (set @entity.systemBreakpointLooks ?breakpointLooks)
-        (set @entity.palette ?palette)
         (set @entity.fonts ?fonts)
         (set @entity.active ?name)
         (set @entity.isStyle true)
         (emit THEME_ANNOUNCE { restyle: true })
+      RASM_MODE_SET -> ready when (!= (object/get @entity.modes ?name null) null)
+        (let ((m : RasmSystemMode? (object/get @entity.modes ?name null)))
+          (do
+            (set @entity.mode ?name)
+            (set @entity.palette (object/merge @entity.basePalette (default @m.palette {})))
+            (set @entity.systemLooks (object/merge @entity.baseLooks (default @m.looks {})))
+            (emit THEME_ANNOUNCE { restyle: false })))
+      RASM_MODE_SET -> ready when (= (object/get @entity.modes ?name null) null)
+      RASM_MODE_NEXT -> ready when (> (array/len (object/keys @entity.modes)) 0)
+        (let ((to : string (default (array/nth (object/keys @entity.modes) (math/mod (+ (array/indexOf (object/keys @entity.modes) @entity.mode) 1) (array/len (object/keys @entity.modes)))) ""))
+              (m : RasmSystemMode? (object/get @entity.modes (default (array/nth (object/keys @entity.modes) (math/mod (+ (array/indexOf (object/keys @entity.modes) @entity.mode) 1) (array/len (object/keys @entity.modes)))) "") null)))
+          (do
+            (set @entity.mode @to)
+            (set @entity.palette (object/merge @entity.basePalette (default @m.palette {})))
+            (set @entity.systemLooks (object/merge @entity.baseLooks (default @m.looks {})))
+            (emit THEME_ANNOUNCE { restyle: false })))
+      RASM_MODE_NEXT -> ready when (= (array/len (object/keys @entity.modes)) 0)
       RASM_THEME_TOGGLE -> ready
         (set @entity.active (if (= @entity.active @config.toggleA) @config.toggleB @config.toggleA))
         (set @entity.isStyle false)
@@ -113,12 +147,12 @@ orbital RasmThemeOrbital {
         (set @entity.breakpoint ?name)
         (emit SPACE_ANNOUNCE)
       THEME_ANNOUNCE -> ready when (not @entity.isStyle)
-        (emit RASM_THEME { name: @entity.active, looks: (object/get @config.presets @entity.active {}), breakpoints: @config.breakpoints, layer: { palette: @entity.palette, fonts: @entity.fonts } })
+        (emit RASM_THEME { name: @entity.active, looks: (object/get @config.presets @entity.active {}), breakpoints: @config.breakpoints, layer: { palette: (object/merge @entity.palette @config.pagePalette), fonts: @entity.fonts } })
         (emit SPACE_ANNOUNCE)
       THEME_ANNOUNCE -> ready when @entity.isStyle
         (let ((style : RasmStyle? (if (= @entity.active @entity.system) { looks: @entity.systemLooks, breakpointLooks: @entity.systemBreakpointLooks } (object/get @config.styles @entity.active null))))
           (do
-            (emit RASM_THEME { name: @entity.active, looks: (array/reduce [(object/get @config.breakpointLooks @entity.breakpoint {}), (object/get (default @style.breakpointLooks {}) @entity.breakpoint {})] (object/merge @config.base @style.looks) (fn acc layer (array/reduce (object/keys @layer) @acc (fn a k (object/set @a @k (object/merge (object/get @a @k {}) (object/get @layer @k {}))))))), breakpoints: @config.breakpoints, layer: { palette: @entity.palette, fonts: @entity.fonts } })
+            (emit RASM_THEME { name: @entity.active, looks: (array/reduce [(object/get @config.breakpointLooks @entity.breakpoint {}), (object/get (default @style.breakpointLooks {}) @entity.breakpoint {})] (object/merge (object/merge @config.base @style.looks) @config.pageLooks) (fn acc layer (array/reduce (object/keys @layer) @acc (fn a k (object/set @a @k (object/merge (object/get @a @k {}) (object/get @layer @k {}))))))), breakpoints: @config.breakpoints, layer: { palette: (object/merge @entity.palette @config.pagePalette), fonts: @entity.fonts } })
             (when ?restyle
               (emit RASM_STYLE { name: @entity.active }))
             (emit SPACE_ANNOUNCE)))
@@ -172,9 +206,15 @@ orbital RasmThemeOrbital {
       RASM_THEME_TOGGLE { }
         @description "Switch to the other preset and announce its looks."
         @synonyms "flip theme"
-      RASM_SYSTEM_SET { name : string!  looks : Map string RasmLook!  breakpointLooks : Map string (Map string RasmLook)!  palette : Map string string!  fonts : Map string RasmFont!  layout : RasmLayout?  motion : RasmMotion?  sounds : Map string RasmSound!  soundBase : string! }
+      RASM_SYSTEM_SET { name : string!  looks : Map string RasmLook!  breakpointLooks : Map string (Map string RasmLook)!  palette : Map string string!  fonts : Map string RasmFont!  modes : Map string RasmSystemMode!  mode : string!  layout : RasmLayout?  motion : RasmMotion?  sounds : Map string RasmSound!  soundBase : string! }
         @description "Wear another design system (std-rasm-system-layers): its looks, breakpoint looks, palette and fonts replace the worn system's, announced as a restyle."
         @synonyms "switch design system"
+      RASM_MODE_SET { name : string! }
+        @description "Wear the worn system's mode of this name (day, night, …): its palette and looks are laid over the system's and announced; a name the system does not declare changes nothing."
+        @synonyms "dark mode, light mode, switch mode"
+      RASM_MODE_NEXT { }
+        @description "Wear the worn system's next mode, in the order `modes` declares them, wrapping; a system with no modes changes nothing."
+        @synonyms "toggle dark mode, toggle day and night"
       RASM_THEME_SET { name : string! }
         @description "Switch to the named preset (any name in `presets`) and announce its looks; an unknown name announces nothing."
         @synonyms "switch theme, toggle preset"
@@ -208,6 +248,22 @@ orbital RasmThemeOrbital {
       fonts : Map string RasmFont = {}
         @label "Fonts"
         @description "The face each font role (display, body, mono) draws in, with its font file: a look font naming the role draws this face instead of the host theme's."
+        @tier "presentation"
+      modes : Map string RasmSystemMode = {}
+        @label "Modes"
+        @description "The design system's modes by name (day, night, …): the worn one lays its palette and looks over the system's palette and looks."
+        @tier "presentation"
+      mode : string = ""
+        @label "Mode"
+        @description "The mode worn on INIT, a key of `modes`; empty wears none."
+        @tier "presentation"
+      pageLooks : Map string RasmLook = {}
+        @label "Page looks"
+        @description "Looks the page lays over its system's (and its mode's) looks, for roles the page adds, such as one colour per chapter of a story."
+        @tier "presentation"
+      pagePalette : Map string string = {}
+        @label "Page palette"
+        @description "Colours the page lays over its system's (and its mode's) palette, by name, for the roles its page looks name."
         @tier "presentation"
       style : string = ""
         @label "Style"

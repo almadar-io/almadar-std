@@ -185,7 +185,7 @@ orbital RasmSurfaceOrbital {
           pointerLeaveEvent: "POINTER_LEAVE"
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
-          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
+          keyMap: (object/merge { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" } (array/reduce (array/range 0 (math/min 6 (array/len @config.hotkeys))) {} (fn acc i (object/set @acc (default (array/nth @config.hotkeys @i) "") (default (array/nth ["KEY_HOT_0", "KEY_HOT_1", "KEY_HOT_2", "KEY_HOT_3", "KEY_HOT_4", "KEY_HOT_5"] @i) "KEY_HOT_0")))))
           drawables: (array/concat (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (let ((own (as (default @t.params {}) RasmTextParams))) (i18n/t @t.key (as (if (= @t.locale null) @own (object/set @own "locale" (default @t.locale ""))) RasmTextParams))) ""))) (let ((shown (if (= @t.vertical true) (str/join (array/map (array/range 0 (str/len @said)) (fn i (str/slice @said @i (+ @i 1)))) "\n") @said))) (let ((made : node { type: draw-text, id: @t.id, text: @shown, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, height: @t.height, fit: @t.fit, minSize: @t.minSize, halo: @t.halo, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said, level: @t.level, order: (+ @t.y (/ (if (= @entity.dir "rtl") (- 0 @t.x) @t.x) 10000)) }) })) (let ((inner : node (if (or (= @t.rotate null) (= @t.rotate 0)) @made { type: draw-group, id: (str/concat @t.id ":rotate"), position: { x: (default @t.pivotX @t.x), y: (default @t.pivotY @t.y) }, rotate: @t.rotate, items: [{ type: draw-group, id: (str/concat @t.id ":origin"), position: { x: (- 0 (default @t.pivotX @t.x)), y: (- 0 (default @t.pivotY @t.y)) }, items: [@made] }] }))) (if (and (= @t.clip null) (= @t.travel null)) @inner { type: draw-group, id: (str/concat @t.id ":frame"), position: { x: 0, y: 0 }, clip: @t.clip, items: [(if (= @t.travel null) @inner { type: draw-group, id: (str/concat @t.id ":travel"), position: { x: 0, y: 0 }, animation: @t.travel, items: [@inner] })] }))))))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil (if @config.pageScroll (math/max @entity.viewH @entity.fillMin) @entity.viewH))) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false, fixed: @config.pageScroll }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m (let ((sc (array/find (object/values @entity.scrubs) (fn s (array/includes @s.paints @m.id))))) (let ((its (if (= @sc null) @m.items (let ((moved : [node] [{ type: draw-group, id: (str/concat @config.id ":scrub:" @m.id), position: { x: 0, y: 0 }, animation: { clock: "scroll", from: (default @sc.from 0), to: (default @sc.to 0), keyframes: (default @sc.keyframes []) }, items: @m.items }])) @moved)))) (if (and (array/includes @config.fixed @m.id) (or (= (array/len @config.fixedOn) 0) (array/includes @config.fixedOn @entity.breakpoint))) (let ((pinned : [node] [{ type: draw-group, id: (str/concat @config.id ":fixed:" @m.id), position: { x: 0, y: 0 }, fixed: true, items: @its }])) @pinned) @its))))))))) (let ((fe (array/find (array/flatten (array/map (array/filter (object/values @entity.paints) (fn e (not (array/includes @entity.hidden @e.id)))) (fn e @e.nodes))) (fn n (= (let ((b (as @n RasmRingBox))) @b.id) @entity.focused)))) (ro (object/get @entity.looks "focus/ring/outer" null)) (ri (object/get @entity.looks "focus/ring/inner" null))) (if (or (= @fe null) (= @ro null) (= @ri null)) [] (let ((b (as @fe RasmRingBox))) (let ((cn (default @b.corners { radius: [0, 0, 0, 0], kind: "round" }))) (array/map [{ d: 4, l: @ro, k: "outer" }, { d: 2, l: @ri, k: "inner" }] (fn s { type: draw-shape, id: (str/concat @config.id ":focus:" @s.k), shape: "rect", anchor: "top-left", position: { x: (- @b.position.x @s.d), y: (- @b.position.y @s.d), z: @b.position.z }, width: (+ (default @b.width 0) (* 2 @s.d)), height: (+ (default @b.height 0) (* 2 @s.d)), stroke: @s.l.stroke, strokeWidth: @s.l.strokeWidth, corners: { radius: (array/map (default @cn.radius [0, 0, 0, 0]) (fn r (+ @r @s.d))), kind: (default @cn.kind "round") }, hit: false })))))))
         })
       POINTER_DOWN -> ready
@@ -223,6 +223,18 @@ orbital RasmSurfaceOrbital {
         (emit RASM_KEY { key: "home" })
       KEY_END -> ready
         (emit RASM_KEY { key: "end" })
+      KEY_HOT_0 -> ready
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 0) "") })
+      KEY_HOT_1 -> ready
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 1) "") })
+      KEY_HOT_2 -> ready
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 2) "") })
+      KEY_HOT_3 -> ready
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 3) "") })
+      KEY_HOT_4 -> ready
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 4) "") })
+      KEY_HOT_5 -> ready
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 5) "") })
     }
 
     state dirty {
@@ -345,7 +357,7 @@ orbital RasmSurfaceOrbital {
           pointerLeaveEvent: "POINTER_LEAVE"
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
-          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
+          keyMap: (object/merge { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" } (array/reduce (array/range 0 (math/min 6 (array/len @config.hotkeys))) {} (fn acc i (object/set @acc (default (array/nth @config.hotkeys @i) "") (default (array/nth ["KEY_HOT_0", "KEY_HOT_1", "KEY_HOT_2", "KEY_HOT_3", "KEY_HOT_4", "KEY_HOT_5"] @i) "KEY_HOT_0")))))
           drawables: (array/concat (let ((g (object/get @entity.looks "surface/ground/idle" null))) (let ((made (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (or (not (array/includes @entity.hidden @e.id)) (array/includes @entity.leaving @e.id)))) (fn e { id: @e.id, items: (let ((raw (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (let ((own (as (default @t.params {}) RasmTextParams))) (i18n/t @t.key (as (if (= @t.locale null) @own (object/set @own "locale" (default @t.locale ""))) RasmTextParams))) ""))) (let ((shown (if (= @t.vertical true) (str/join (array/map (array/range 0 (str/len @said)) (fn i (str/slice @said @i (+ @i 1)))) "\n") @said))) (let ((made : node { type: draw-text, id: @t.id, text: @shown, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, height: @t.height, fit: @t.fit, minSize: @t.minSize, halo: @t.halo, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said, level: @t.level, order: (+ @t.y (/ (if (= @entity.dir "rtl") (- 0 @t.x) @t.x) 10000)) }) })) (let ((inner : node (if (or (= @t.rotate null) (= @t.rotate 0)) @made { type: draw-group, id: (str/concat @t.id ":rotate"), position: { x: (default @t.pivotX @t.x), y: (default @t.pivotY @t.y) }, rotate: @t.rotate, items: [{ type: draw-group, id: (str/concat @t.id ":origin"), position: { x: (- 0 (default @t.pivotX @t.x)), y: (- 0 (default @t.pivotY @t.y)) }, items: [@made] }] }))) (if (and (= @t.clip null) (= @t.travel null)) @inner { type: draw-group, id: (str/concat @t.id ":frame"), position: { x: 0, y: 0 }, clip: @t.clip, items: [(if (= @t.travel null) @inner { type: draw-group, id: (str/concat @t.id ":travel"), position: { x: 0, y: 0 }, animation: @t.travel, items: [@inner] })] }))))))))) (far (* @entity.moveSign @config.transition.distance)) (dur @config.transition.durationMs)) (if (array/includes @entity.leaving @e.id) [{ type: draw-group, id: (str/concat @config.id ":leave:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 1, offsetX: 0 }, { at: 0.98, opacity: 0, offsetX: (- 0 @far) }, { at: 1, opacity: 0, offsetX: (- 0 (* @entity.moveSign (* 4 @entity.viewW))) }] }, items: @raw }] (if (array/includes @entity.entering @e.id) (let ((wait (* (array/indexOf @entity.entering @e.id) @config.transition.staggerMs))) [{ type: draw-group, id: (str/concat @config.id ":enter:" @e.id), position: { x: 0, y: 0 }, animation: { startMs: @entity.movedMs, durationMs: (+ @dur @wait), loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: @far }, { at: (/ @wait (+ @dur @wait)), opacity: 0, offsetX: @far }, { at: 1, opacity: 1, offsetX: 0 }] }, items: @raw }]) @raw))) }))) (tid (array/flatten (array/map @config.targets (fn t @t.fragments))))) (array/concat (array/map @config.targets (fn t { type: draw-group, id: (str/concat @config.id ":target:" @t.id), position: { x: 0, y: 0 }, target: { id: @t.id, width: (math/max 1 (math/ceil @entity.viewW)), height: (math/max 1 (math/ceil (if @config.pageScroll (math/max @entity.viewH @entity.fillMin) @entity.viewH))) }, items: (array/flatten (array/map (array/filter @made (fn m (array/includes @t.fragments @m.id))) (fn m @m.items))) })) (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false, fixed: @config.pageScroll }]) (array/flatten (array/map (array/filter @made (fn m (not (array/includes @tid @m.id)))) (fn m (let ((sc (array/find (object/values @entity.scrubs) (fn s (array/includes @s.paints @m.id))))) (let ((its (if (= @sc null) @m.items (let ((moved : [node] [{ type: draw-group, id: (str/concat @config.id ":scrub:" @m.id), position: { x: 0, y: 0 }, animation: { clock: "scroll", from: (default @sc.from 0), to: (default @sc.to 0), keyframes: (default @sc.keyframes []) }, items: @m.items }])) @moved)))) (if (and (array/includes @config.fixed @m.id) (or (= (array/len @config.fixedOn) 0) (array/includes @config.fixedOn @entity.breakpoint))) (let ((pinned : [node] [{ type: draw-group, id: (str/concat @config.id ":fixed:" @m.id), position: { x: 0, y: 0 }, fixed: true, items: @its }])) @pinned) @its))))))))) (let ((fe (array/find (array/flatten (array/map (array/filter (object/values @entity.paints) (fn e (not (array/includes @entity.hidden @e.id)))) (fn e @e.nodes))) (fn n (= (let ((b (as @n RasmRingBox))) @b.id) @entity.focused)))) (ro (object/get @entity.looks "focus/ring/outer" null)) (ri (object/get @entity.looks "focus/ring/inner" null))) (if (or (= @fe null) (= @ro null) (= @ri null)) [] (let ((b (as @fe RasmRingBox))) (let ((cn (default @b.corners { radius: [0, 0, 0, 0], kind: "round" }))) (array/map [{ d: 4, l: @ro, k: "outer" }, { d: 2, l: @ri, k: "inner" }] (fn s { type: draw-shape, id: (str/concat @config.id ":focus:" @s.k), shape: "rect", anchor: "top-left", position: { x: (- @b.position.x @s.d), y: (- @b.position.y @s.d), z: @b.position.z }, width: (+ (default @b.width 0) (* 2 @s.d)), height: (+ (default @b.height 0) (* 2 @s.d)), stroke: @s.l.stroke, strokeWidth: @s.l.strokeWidth, corners: { radius: (array/map (default @cn.radius [0, 0, 0, 0]) (fn r (+ @r @s.d))), kind: (default @cn.kind "round") }, hit: false })))))))
         })
       POINTER_DOWN -> dirty
@@ -383,6 +395,18 @@ orbital RasmSurfaceOrbital {
         (emit RASM_KEY { key: "home" })
       KEY_END -> dirty
         (emit RASM_KEY { key: "end" })
+      KEY_HOT_0 -> dirty
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 0) "") })
+      KEY_HOT_1 -> dirty
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 1) "") })
+      KEY_HOT_2 -> dirty
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 2) "") })
+      KEY_HOT_3 -> dirty
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 3) "") })
+      KEY_HOT_4 -> dirty
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 4) "") })
+      KEY_HOT_5 -> dirty
+        (emit RASM_HOTKEY { code: (default (array/nth @config.hotkeys 5) "") })
     }
 
     ticks {
@@ -475,6 +499,11 @@ orbital RasmSurfaceOrbital {
       }
         @description "A keyboard intent from the canvas key map; a key a focused text field or combobox handled never reaches it."
         @tier "primary"
+      RASM_HOTKEY -> external {
+        code : string!
+      }
+        @description "One of the page's `hotkeys` was pressed, named by its key code."
+        @tier "primary"
       RASM_BREAKPOINT -> external {
         name : "phone" | "tablet" | "desktop" | "wide"!
         width : number!
@@ -565,6 +594,18 @@ orbital RasmSurfaceOrbital {
         @description "Home pressed."
       KEY_END { }
         @description "End pressed."
+      KEY_HOT_0 { }
+        @description "The hot key in place 0 of `hotkeys` was pressed."
+      KEY_HOT_1 { }
+        @description "The hot key in place 1 of `hotkeys` was pressed."
+      KEY_HOT_2 { }
+        @description "The hot key in place 2 of `hotkeys` was pressed."
+      KEY_HOT_3 { }
+        @description "The hot key in place 3 of `hotkeys` was pressed."
+      KEY_HOT_4 { }
+        @description "The hot key in place 4 of `hotkeys` was pressed."
+      KEY_HOT_5 { }
+        @description "The hot key in place 5 of `hotkeys` was pressed."
     }
 
     config {
@@ -615,6 +656,10 @@ orbital RasmSurfaceOrbital {
       pageScroll : boolean = false
         @label "Page scroll"
         @description "With fill on, the canvas keeps its container's height and the page scrolls inside it: the wheel, a touch that travels and its glide move every paint except the ground and the `fixed` paints, with no layout or repaint, and RASM_PAGE_SCROLLED reports the offset. Off, the canvas grows with its content and the document scrolls it."
+        @tier "presentation"
+      hotkeys : [string] = []
+        @label "Hot keys"
+        @description "Up to six key codes (the keyboard's `code`, such as KeyB) the page listens for anywhere in the window; a press emits RASM_HOTKEY with the code. A key typed into a text field never counts."
         @tier "presentation"
       fixed : [string] = []
         @label "Fixed paints"

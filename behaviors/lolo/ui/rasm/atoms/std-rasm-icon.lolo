@@ -1,6 +1,6 @@
 app std-rasm-icon [
   version: "0.1.0",
-  description: "std-rasm-icon — one icon in its placed rect, centred or at the `align` start or end edge of the reading direction. The icon is a name `set:name` from Iconify (lucide when no set is given), fetched as the SVG https://api.iconify.design/<set>/<name>.svg and painted as a sprite recoloured to the textColor of the look icon/<intent>/idle (default, accent, inverse), so every style and theme recolours it. With a `label` key it announces that text as an image to assistive technology, through a transparent keyed text in the active locale; with no label, or `decorative` on, it is decorative and announces nothing. `mirrorRtl` flips a directional icon (an arrow, a chevron) under a right-to-left surface."
+  description: "std-rasm-icon — one icon in its placed rect, centred or at the `align` start or end edge of the reading direction. The icon is a name `set:name` from Iconify (lucide when no set is given), fetched as the SVG https://api.iconify.design/<set>/<name>.svg and painted as a sprite recoloured to the textColor of the look icon/<intent>/idle (default, accent, inverse), so every style and theme recolours it. With a `label` key it announces that text as an image to assistive technology, through a transparent keyed text in the active locale; with no label, or `decorative` on, it is decorative and announces nothing. `mirrorRtl` flips a directional icon (an arrow, a chevron) under a right-to-left surface. An icon whose id is in a RASM_ENTER order fades and rises in with its section, like a text or a stack."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -12,6 +12,8 @@ type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY :
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop, on : string }
 type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+type RasmEntryKey = { at : number!, opacity : number!, offsetX : number!, offsetY : number!, scale : number, rotate : number }
+type RasmEntryItem = { id : string!, durationMs : number!, keyframes : [RasmEntryKey]! }
 
 orbital RasmIconOrbital {
   entity RasmIconView [runtime] {
@@ -21,6 +23,10 @@ orbital RasmIconOrbital {
     rotate : number @description "The rotation in radians RASM_PLACE gave this icon, 0 when none." = 0
     dir : "ltr" | "rtl" @description "The direction the surface announced; mirrorRtl flips the icon under rtl." = "ltr"
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    entry : RasmEntryItem? @description "This icon's entry from the announced style's choreography, null for the built-in one." = null
+    enterIndex : number @description "This icon's position in the RASM_ENTER order, -1 when it is not in it." = -1
+    enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
+    staggerMs : number @description "The stagger between entries the RASM_ENTER announced." = 0
   }
 
   trait RasmIcon -> RasmIconView [client] {
@@ -45,12 +51,19 @@ orbital RasmIconOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit ICON_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready
+        (set @entity.entry (array/find (default ?entries []) (fn e (= @e.id @config.id))))
+        (set @entity.enterIndex (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (if (array/includes ?order @config.id) (time/epoch-ms @now) @entity.enteredMs))
+        (set @entity.staggerMs ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ICON_PAINT { n: @entity.paints })
       ICON_PAINT -> ready
-        (let ((l (object/get @entity.looks (str/concat "icon/" @config.intent "/idle") null)) (r @entity.rect))
+        (let ((l (object/get @entity.looks (if (= @config.look "") (str/concat "icon/" @config.intent "/idle") @config.look) null)) (r @entity.rect))
           (when (and (!= @l null) (!= @r null) (> @r.w 0) (> @r.h 0))
-            (let ((parts (str/split @config.icon ":")) (side (if (> @config.size 0) @config.size (math/min @r.w @r.h))) (named (and (let ((given : MessageKey? @config.label)) (!= @given null)) (not @config.decorative))))
-              (let ((set (if (str/includes @config.icon ":") (default (array/nth @parts 0) "lucide") "lucide")) (name (if (str/includes @config.icon ":") (default (array/nth @parts 1) "") @config.icon)))
-                (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-sprite, id: @config.id, asset: { url: (str/concat "https://api.iconify.design/" @set "/" @name ".svg") }, anchor: "top-left", position: { x: (if (= @config.align "center") (+ @r.x (/ (- @r.w @side) 2)) (if (= (= @config.align "end") (!= @entity.dir "rtl")) (- (+ @r.x @r.w) @side) @r.x)), y: (+ @r.y (/ (- @r.h @side) 2)), z: @config.z }, width: @side, height: @side, tint: @l.textColor, flipX: (and @config.mirrorRtl (= @entity.dir "rtl")), rotation: @entity.rotate, semantic: (if @named { role: "img", labelledBy: (str/concat @config.id ":name"), order: (+ @r.y (/ (if (= @entity.dir "rtl") (- 0 @r.x) @r.x) 10000)) } null) }], texts: (let ((none : [RasmText] []) (given : MessageKey? @config.label)) (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":name"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] @none)) })))))
+            (let ((idx @entity.enterIndex) (stag @entity.staggerMs) (parts (str/split @config.icon ":")) (side (if (> @config.size 0) @config.size (math/min @r.w @r.h))) (named (and (let ((given : MessageKey? @config.label)) (!= @given null)) (not @config.decorative))))
+              (let ((set (if (str/includes @config.icon ":") (default (array/nth @parts 0) "lucide") "lucide")) (name (if (str/includes @config.icon ":") (default (array/nth @parts 1) "") @config.icon)) (anim (if (>= @idx 0) (if (= @entity.entry null) { durationMs: (+ 520 (* @idx @stag)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @idx @stag) (+ 520 (* @idx @stag))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } { durationMs: @entity.entry.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: @entity.entry.keyframes }) null)))
+                (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-sprite, id: @config.id, asset: { url: (str/concat "https://api.iconify.design/" @set "/" @name ".svg") }, anchor: "top-left", position: { x: (if (= @config.align "center") (+ @r.x (/ (- @r.w @side) 2)) (if (= (= @config.align "end") (!= @entity.dir "rtl")) (- (+ @r.x @r.w) @side) @r.x)), y: (+ @r.y (/ (- @r.h @side) 2)), z: @config.z }, width: @side, height: @side, tint: @l.textColor, flipX: (and @config.mirrorRtl (= @entity.dir "rtl")), rotation: @entity.rotate, animation: @anim, semantic: (if @named { role: "img", labelledBy: (str/concat @config.id ":name"), order: (+ @r.y (/ (if (= @entity.dir "rtl") (- 0 @r.x) @r.x) 10000)) } null) }], texts: (let ((none : [RasmText] []) (given : MessageKey? @config.label)) (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":name"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] @none)) })))))
     }
 
     emits {
@@ -78,6 +91,8 @@ orbital RasmIconOrbital {
       RASM_DIRECTION { direction : "ltr" | "rtl"! }
         @description "The surface's reading direction: under rtl a mirrorRtl icon is flipped."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
+      RASM_ENTER { order : [string]!  staggerMs : number!  entries : [RasmEntryItem] }
+        @description "Play the entry choreography when this icon's id is in the order."
         @description "Take this icon's rect when it is placed and repaint."
     }
 
@@ -101,6 +116,10 @@ orbital RasmIconOrbital {
       intent : "default" | "accent" | "inverse" = "default"
         @label "Intent"
         @description "Selects the look icon/<intent>/idle whose textColor tints the icon: default is the foreground colour, accent the primary colour, inverse the colour set on a primary-filled shape."
+        @tier "presentation"
+      look : string = ""
+        @label "Look"
+        @description "A look key read in place of icon/<intent>/idle (for example icon/eyebrow-insurance/idle, a role a page lays over its system). Empty reads the intent's own look."
         @tier "presentation"
       label : MessageKey?
         @label "Label"

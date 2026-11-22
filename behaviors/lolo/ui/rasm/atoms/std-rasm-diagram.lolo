@@ -1,0 +1,453 @@
+app std-rasm-diagram [
+  version: "0.1.0",
+  description: "std-rasm-diagram — a diagram of boxes and labelled arrows on the Rasm surface, for explaining how something works: a pipeline, a queue, a call and its answer. The composer declares the boxes (`nodes`: a catalog-keyed label, an optional note under it, an optional kind that picks its look) and the arrows (`edges`: source, target, an optional catalog-keyed label). It translates and measures every label on the canvas (RASM_MEASURED), asks a sibling std-graph-layout for the layout (LAYOUT_REQUEST, answered by LAYOUT_READY; the call site picks the layout's direction and routing), then scales the layout to fit its placed rect, centred. `steps` is the order the diagram is read in: a list of steps, each the ids of boxes and arrows that light together; when a RASM_ENTER names one of `playOn` (or the diagram's own id when `playOn` is empty) the steps light one after another `stepMs` apart, a token runs along each arrow as it lights, and everything stays lit. Before that nothing is lit; under reduced motion everything a step names is lit at once with no motion. With rtl the layout mirrors. Looks are diagram/node/<kind>, diagram/node/idle, diagram/node/lit, diagram/note/idle, diagram/edge/idle, diagram/edge/lit, diagram/label/idle, diagram/pill/idle and diagram/token/idle; each role a system leaves out reads the std-rasm-machine look of the same role (machine/state/idle, machine/state/active, machine/event/idle, machine/edge/idle, machine/edge/lit, machine/event/idle, machine/pill/idle, machine/token/idle), so every system that styles machines draws diagrams. It paints no state machine and takes no input."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number, offsetX : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, maxWidth : number? }
+type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
+type DiagramNode = { id : string!, label : MessageKey!, note : MessageKey?, kind : string?, group : string?, at : number?, from : "start" | "end"? }
+type DiagramEdge = { id : string!, source : string!, target : string!, label : MessageKey? }
+type NotedNode = { id : string!, note : MessageKey! }
+type LabelledEdge = { id : string!, label : MessageKey! }
+type LayoutPoint = { x : number!, y : number! }
+type LayoutNode = { id : string!, label : string!, width : number!, height : number! }
+type LayoutEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number! }
+type LayoutPlacedNode = { id : string!, label : string!, width : number!, height : number!, x : number!, y : number!, rank : number! }
+type LayoutRoutedEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number!, points : [LayoutPoint]!, labelX : number!, labelY : number!, reversed : boolean! }
+type DiagramWidths = Map string number
+
+orbital RasmDiagramOrbital {
+  entity RasmDiagramRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave the diagram, null until placed." = null
+    looks : Map string RasmLook @description "The announced look table." = {}
+    direction : "ltr" | "rtl" = "ltr"
+    reduced : boolean = false
+    widths : DiagramWidths @description "Measured label widths by measure id." = {}
+    boxW : DiagramWidths @description "Each box's width in layout units: its widest label plus the padding on both sides." = {}
+    nodes : [LayoutPlacedNode] @description "The placed boxes, in layout units." = []
+    edges : [LayoutRoutedEdge] @description "The routed arrows, in layout units." = []
+    layoutW : number = 0
+    layoutH : number = 0
+    playMs : number @description "The epoch-ms instant the steps started lighting; 0 before the diagram entered." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    error : string @description "Why the layout failed." = ""
+  }
+
+  trait RasmDiagram -> RasmDiagramRun [client] {
+    initial: measuring
+
+    state measuring {
+      INIT -> measuring
+        (set @entity.widths {})
+      DIAGRAM_PAINT -> measuring when (and (!= @entity.rect null) (!= (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null)) null))
+        (let ((r @entity.rect)
+              (ol (default (object/get @entity.looks "diagram/note/idle" null) (object/get @entity.looks "machine/event/idle" null)))
+              (al (default (object/get @entity.looks "diagram/label/idle" null) (object/get @entity.looks "machine/event/idle" null))))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [],
+            texts: (array/concat
+              (array/map @config.nodes (fn nd { id: (str/concat @config.id "-m-n-" @nd.id), key: @nd.label, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "rgba(0,0,0,0)", font: (let ((l (default (object/get @entity.looks (str/concat "diagram/node/" (default @nd.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null))))) (if (= @l null) "" @l.font)), measure: true }))
+              (array/map (array/filter @config.nodes (fn nd (!= @nd.note null))) (fn nd { id: (str/concat @config.id "-m-o-" @nd.id), key: (let ((kn (as @nd NotedNode))) @kn.note), x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "rgba(0,0,0,0)", font: (if (= @ol null) "" @ol.font), measure: true }))
+              (array/map (array/filter @config.edges (fn ed (!= @ed.label null))) (fn ed { id: (str/concat @config.id "-m-e-" @ed.id), key: (let ((ke (as @ed LabelledEdge))) @ke.label), x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "rgba(0,0,0,0)", font: (if (= @al null) "" @al.font), measure: true }))) }))
+      DIAGRAM_PAINT -> measuring when (not (and (!= @entity.rect null) (!= (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null)) null)))
+      RASM_MEASURED -> laying when (and (= @config.form "flow") (let ((wm (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width)))))
+          (and (array/every @config.nodes (fn nd (and (object/has @wm (str/concat @config.id "-m-n-" @nd.id)) (or (= @nd.note null) (object/has @wm (str/concat @config.id "-m-o-" @nd.id))))))
+               (array/every @config.edges (fn ed (or (= @ed.label null) (object/has @wm (str/concat @config.id "-m-e-" @ed.id))))))))
+        (set @entity.widths (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width))))
+        (set @entity.boxW (array/reduce @config.nodes @entity.boxW (fn (acc nd) (object/set @acc @nd.id (+ (* 2 @config.nodePad) (math/max (object/get @entity.widths (str/concat @config.id "-m-n-" @nd.id) 0) (if (= @nd.note null) 0 (object/get @entity.widths (str/concat @config.id "-m-o-" @nd.id) 0))))))))
+        (emit LAYOUT_REQUEST {
+          nodes: (array/map @config.nodes (fn nd { id: @nd.id, label: @nd.id,
+            width: (+ (* 2 @config.nodePad) (math/max (default (object/get @entity.widths (str/concat @config.id "-m-n-" @nd.id)) 0) (if (= @nd.note null) 0 (default (object/get @entity.widths (str/concat @config.id "-m-o-" @nd.id)) 0)))),
+            height: (if (= @nd.note null) @config.nodeHeight (+ @config.nodeHeight @config.noteHeight)) })),
+          edges: (array/map @config.edges (fn ed { id: @ed.id, source: @ed.source, target: @ed.target, label: @ed.id,
+            labelWidth: (if (= @ed.label null) 0 (+ (* 2 @config.labelPad) (default (object/get @entity.widths (str/concat @config.id "-m-e-" @ed.id)) 0))),
+            labelHeight: (if (= @ed.label null) 0 @config.labelHeight) })) })
+      RASM_MEASURED -> showing when (and (!= @config.form "flow") (let ((wm (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width)))))
+          (and (array/every @config.nodes (fn nd (and (object/has @wm (str/concat @config.id "-m-n-" @nd.id)) (or (= @nd.note null) (object/has @wm (str/concat @config.id "-m-o-" @nd.id))))))
+               (array/every @config.edges (fn ed (or (= @ed.label null) (object/has @wm (str/concat @config.id "-m-e-" @ed.id))))))))
+        (set @entity.widths (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width))))
+        (set @entity.boxW (array/reduce @config.nodes @entity.boxW (fn (acc nd) (object/set @acc @nd.id (+ (* 2 @config.nodePad) (math/max (object/get @entity.widths (str/concat @config.id "-m-n-" @nd.id) 0) (if (= @nd.note null) 0 (object/get @entity.widths (str/concat @config.id "-m-o-" @nd.id) 0))))))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_MEASURED -> measuring when (not (let ((wm (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width)))))
+          (and (array/every @config.nodes (fn nd (and (object/has @wm (str/concat @config.id "-m-n-" @nd.id)) (or (= @nd.note null) (object/has @wm (str/concat @config.id "-m-o-" @nd.id))))))
+               (array/every @config.edges (fn ed (or (= @ed.label null) (object/has @wm (str/concat @config.id "-m-e-" @ed.id))))))))
+        (set @entity.widths (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width))))
+      RASM_THEME -> measuring
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_PLACE -> measuring when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_PLACE -> measuring when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> measuring
+        (set @entity.direction ?direction)
+      RASM_MOTION -> measuring
+        (set @entity.reduced ?reduced)
+      RASM_ENTER -> measuring when (and (= @entity.playMs 0) (array/some ?order (fn o (array/includes (if (= (array/len @config.playOn) 0) [@config.id] @config.playOn) @o))))
+        (set @entity.playMs (time/epoch-ms @now))
+      RASM_ENTER -> measuring when (not (and (= @entity.playMs 0) (array/some ?order (fn o (array/includes (if (= (array/len @config.playOn) 0) [@config.id] @config.playOn) @o)))))
+    }
+
+    state laying {
+      INIT -> measuring
+        (set @entity.widths {})
+      LAYOUT_READY -> showing
+        (set @entity.nodes ?nodes)
+        (set @entity.edges ?edges)
+        (set @entity.layoutW ?width)
+        (set @entity.layoutH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      LAYOUT_REJECTED -> laying
+        (set @entity.error ?reason)
+      RASM_THEME -> measuring
+        (set @entity.looks ?looks)
+        (set @entity.widths {})
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_PLACE -> laying when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+      RASM_PLACE -> laying when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> laying
+        (set @entity.direction ?direction)
+      RASM_MOTION -> laying
+        (set @entity.reduced ?reduced)
+      RASM_MEASURED -> laying
+      RASM_ENTER -> laying when (and (= @entity.playMs 0) (array/some ?order (fn o (array/includes (if (= (array/len @config.playOn) 0) [@config.id] @config.playOn) @o))))
+        (set @entity.playMs (time/epoch-ms @now))
+      RASM_ENTER -> laying when (not (and (= @entity.playMs 0) (array/some ?order (fn o (array/includes (if (= (array/len @config.playOn) 0) [@config.id] @config.playOn) @o)))))
+    }
+
+    state showing {
+      INIT -> measuring
+        (set @entity.widths {})
+      RASM_THEME -> measuring
+        (set @entity.looks ?looks)
+        (set @entity.widths {})
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_PLACE -> showing when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (or (= @entity.rect null) (!= @mine.rect.x @entity.rect.x) (!= @mine.rect.y @entity.rect.y) (!= @mine.rect.w @entity.rect.w) (!= @mine.rect.h @entity.rect.h))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_PLACE -> showing when (not (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (or (= @entity.rect null) (!= @mine.rect.x @entity.rect.x) (!= @mine.rect.y @entity.rect.y) (!= @mine.rect.w @entity.rect.w) (!= @mine.rect.h @entity.rect.h)))))
+      RASM_DIRECTION -> showing
+        (set @entity.direction ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_MOTION -> showing
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_MEASURED -> showing
+      RASM_ENTER -> showing when (and (= @entity.playMs 0) (array/some ?order (fn o (array/includes (if (= (array/len @config.playOn) 0) [@config.id] @config.playOn) @o))))
+        (set @entity.playMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit DIAGRAM_PAINT { n: @entity.paints })
+      RASM_ENTER -> showing when (not (and (= @entity.playMs 0) (array/some ?order (fn o (array/includes (if (= (array/len @config.playOn) 0) [@config.id] @config.playOn) @o)))))
+      DIAGRAM_PAINT -> showing when (= @entity.rect null)
+      DIAGRAM_PAINT -> showing when (and (!= @entity.rect null) (= @config.form "flow"))
+        (let ((r @entity.rect) (lw (math/max 1 @entity.layoutW)) (lh (math/max 1 @entity.layoutH)))
+          (let ((s (if (> @r.h 0) (math/min @config.maxScale (/ @r.w @lw) (/ @r.h @lh)) (math/min @config.maxScale (/ @r.w @lw)))))
+            (let ((ox (+ @r.x (/ (- @r.w (* @lw @s)) 2)))
+                  (oy (+ @r.y (if (> @r.h 0) (/ (- @r.h (* @lh @s)) 2) 0)))
+                  (rtl (= @entity.direction "rtl"))
+                  (dur (* @config.stepMs (+ (array/len @config.steps) 1)))
+                  (lit (and (> @entity.playMs 0) (not @entity.reduced)))
+                  (done (and (> @entity.playMs 0) @entity.reduced))
+                  (nlit (default (object/get @entity.looks "diagram/node/lit" null) (object/get @entity.looks "machine/state/active" null)))
+                  (ol (default (object/get @entity.looks "diagram/note/idle" null) (object/get @entity.looks "machine/event/idle" null)))
+                  (el (default (object/get @entity.looks "diagram/edge/idle" null) (object/get @entity.looks "machine/edge/idle" null)))
+                  (elit (default (object/get @entity.looks "diagram/edge/lit" null) (object/get @entity.looks "machine/edge/lit" null)))
+                  (al (default (object/get @entity.looks "diagram/label/idle" null) (object/get @entity.looks "machine/event/idle" null)))
+                  (pl (default (object/get @entity.looks "diagram/pill/idle" null) (object/get @entity.looks "machine/pill/idle" null)))
+                  (tl (default (object/get @entity.looks "diagram/token/idle" null) (object/get @entity.looks "machine/token/idle" null))))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z,
+              texts: (array/concat
+                (array/flatten (array/map (array/filter @entity.edges (fn e (and (> @e.labelWidth 0) (!= @al null) (array/some @config.edges (fn c (and (= @c.id @e.id) (!= @c.label null))))))) (fn e
+                  (let ((ke (as (array/find @config.edges (fn c (= @c.id @e.id))) LabelledEdge))
+                        (lx (if @rtl (- @lw (+ @e.labelX @e.labelWidth)) @e.labelX)))
+                    [{ id: (str/concat @config.id "-l-" @e.id), key: @ke.label, x: (+ @ox (* @s (+ @lx (/ @e.labelWidth 2)))), y: (+ @oy (* @s (+ @e.labelY (/ @e.labelHeight 2)))), z: (+ @config.z 3), align: "center", baseline: "middle", color: @al.textColor, font: @al.font, maxWidth: (math/max 1 (* @s (- @e.labelWidth @config.labelPad))) }]))))
+                (array/flatten (array/map (array/filter @entity.nodes (fn n (array/some @config.nodes (fn c (= @c.id @n.id))))) (fn n
+                  (let ((cfg (array/find @config.nodes (fn c (= @c.id @n.id)))))
+                    (let ((look (default (object/get @entity.looks (str/concat "diagram/node/" (default @cfg.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null))))
+                          (k (array/findIndex @config.steps (fn st (array/includes @st @n.id))))
+                          (nx (if @rtl (- @lw (+ @n.x @n.width)) @n.x))
+                          (hasNote (!= @cfg.note null)))
+                      (let ((tx (+ @ox (* @s (+ @nx (/ @n.width 2)))))
+                            (ty (+ @oy (* @s (if @hasNote (+ @n.y (/ @config.nodeHeight 2) 2) (+ @n.y (/ @n.height 2))))))
+                            (mw (math/max 1 (* @s (- @n.width @config.nodePad)))))
+                        (array/concat
+                          [{ id: (str/concat @config.id "-nt-" @n.id), key: @cfg.label, x: @tx, y: @ty, z: (+ @config.z 3), align: "center", baseline: "middle", color: @look.textColor, font: @look.font, maxWidth: @mw }]
+                          (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) []
+                            [{ id: (str/concat @config.id "-nlt-" @n.id), key: @cfg.label, x: @tx, y: @ty, z: (+ @config.z 4), align: "center", baseline: "middle", color: @nlit.textColor, font: @look.font, maxWidth: @mw, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }])
+                          (if (or (not @hasNote) (= @ol null)) []
+                            [{ id: (str/concat @config.id "-no-" @n.id), key: (let ((kn (as @cfg NotedNode))) @kn.note), x: @tx, y: (+ @oy (* @s (+ @n.y @config.nodeHeight 2))), z: (+ @config.z 4), align: "center", baseline: "middle", color: @ol.textColor, font: @ol.font, maxWidth: @mw }]))))))))),
+              nodes: [{ type: draw-group, id: (str/concat @config.id "-g"), position: { x: @ox, y: @oy, z: @config.z }, scale: @s, items: (array/concat
+                (array/flatten (array/map @entity.edges (fn e
+                  (let ((pts (array/map @e.points (fn p { x: (if @rtl (- @lw @p.x) @p.x), y: @p.y })))
+                        (k (array/findIndex @config.steps (fn st (array/includes @st @e.id)))))
+                    (let ((d (str/concat "M" (str/join (array/map @pts (fn p (str/concat @p.x " " @p.y))) " L")))
+                          (last (array/nth @pts (- (array/len @pts) 1)))
+                          (prev (array/nth @pts (- (array/len @pts) 2)))
+                          (p0 (array/nth @pts 0)))
+                      (let ((len (math/max 0.001 (math/sqrt (+ (* (- @last.x @prev.x) (- @last.x @prev.x)) (* (- @last.y @prev.y) (- @last.y @prev.y)))))))
+                        (let ((ux (/ (- @last.x @prev.x) @len)) (uy (/ (- @last.y @prev.y) @len)))
+                          (let ((head (str/concat "M" @last.x " " @last.y " L" (- (- @last.x (* 9 @ux)) (* 4.5 @uy)) " " (+ (- @last.y (* 9 @uy)) (* 4.5 @ux)) " L" (+ (- @last.x (* 9 @ux)) (* 4.5 @uy)) " " (- (- @last.y (* 9 @uy)) (* 4.5 @ux)) " Z")))
+                            (array/concat
+                              [{ type: draw-shape, id: (str/concat @config.id "-e-" @e.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: @d, fill: "", stroke: @el.stroke, strokeWidth: @el.strokeWidth, opacity: 1, hit: false },
+                               { type: draw-shape, id: (str/concat @config.id "-h-" @e.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: @head, fill: @el.stroke, opacity: 1, hit: false }]
+                              (if (or (< @k 0) (= @elit null) (not (or @lit @done))) []
+                                [{ type: draw-shape, id: (str/concat @config.id "-el-" @e.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 1) }, d: @d, fill: "", stroke: @elit.stroke, strokeWidth: @elit.strokeWidth, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) },
+                                 { type: draw-shape, id: (str/concat @config.id "-hl-" @e.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 1) }, d: @head, fill: @elit.stroke, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }])
+                              (if (or (< @k 0) (= @tl null) (not @lit)) []
+                                (let ((n1 (array/len @pts)) (t0 (/ (* @k @config.stepMs) @dur)) (span (/ (* 0.8 @config.stepMs) @dur)))
+                                  [{ type: draw-shape, id: (str/concat @config.id "-t-" @e.id), shape: "ellipse", anchor: "top-left", position: { x: @p0.x, y: @p0.y, z: (+ @config.z 3) }, radiusX: 6, radiusY: 6, fill: @tl.fill, stroke: @tl.stroke, strokeWidth: @tl.strokeWidth, opacity: 0, hit: false,
+                                    animation: { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: (array/concat [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: @t0, opacity: 0, offsetX: 0, offsetY: 0 }]
+                                      (array/map (array/range 0 @n1) (fn i (let ((p (array/nth @pts @i))) { at: (+ @t0 0.001 (* @span (/ @i (math/max 1 (- @n1 1))))), opacity: 1, offsetX: (- @p.x @p0.x), offsetY: (- @p.y @p0.y) })))
+                                      [{ at: (math/min 1 (+ @t0 @span 0.002)), opacity: 0, offsetX: (- @last.x @p0.x), offsetY: (- @last.y @p0.y) }, { at: 1, opacity: 0, offsetX: (- @last.x @p0.x), offsetY: (- @last.y @p0.y) }]) } }]))
+                              (if (or (= @e.labelWidth 0) (= @pl null)) []
+                                [{ type: draw-shape, id: (str/concat @config.id "-p-" @e.id), shape: "rect", anchor: "top-left", position: { x: (if @rtl (- @lw (+ @e.labelX @e.labelWidth)) @e.labelX), y: @e.labelY, z: (+ @config.z 2) }, width: @e.labelWidth, height: @e.labelHeight, fill: @pl.fill, stroke: @pl.stroke, strokeWidth: @pl.strokeWidth, corners: @pl.corners, opacity: 1, hit: false }]))))))))))
+                (array/flatten (array/map (array/filter @entity.nodes (fn n (array/some @config.nodes (fn c (= @c.id @n.id))))) (fn n
+                  (let ((cfg (array/find @config.nodes (fn c (= @c.id @n.id)))))
+                    (let ((look (default (object/get @entity.looks (str/concat "diagram/node/" (default @cfg.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null))))
+                          (k (array/findIndex @config.steps (fn st (array/includes @st @n.id))))
+                          (nx (if @rtl (- @lw (+ @n.x @n.width)) @n.x)))
+                      (array/concat
+                        [{ type: draw-shape, id: (str/concat @config.id "-n-" @n.id), shape: "rect", anchor: "top-left", position: { x: @nx, y: @n.y, z: (+ @config.z 1) }, width: @n.width, height: @n.height, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, opacity: 1, hit: false }]
+                        (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) []
+                          [{ type: draw-shape, id: (str/concat @config.id "-nl-" @n.id), shape: "rect", anchor: "top-left", position: { x: @nx, y: @n.y, z: (+ @config.z 2) }, width: @n.width, height: @n.height, fill: @nlit.fill, stroke: @nlit.stroke, strokeWidth: @nlit.strokeWidth, corners: @nlit.corners, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }])))))))) }] }))))
+      DIAGRAM_PAINT -> showing when (and (!= @entity.rect null) (= @config.form "rings") (array/some @config.nodes (fn c (= @c.group "core"))))
+        (let ((r @entity.rect) (rtl (= @entity.direction "rtl")) (dur (* @config.stepMs (+ (array/len @config.steps) 1))) (lit (and (> @entity.playMs 0) (not @entity.reduced))) (done (and (> @entity.playMs 0) @entity.reduced)) (nlit (default (object/get @entity.looks "diagram/node/lit" null) (object/get @entity.looks "machine/state/active" null))) (ol (default (object/get @entity.looks "diagram/note/idle" null) (object/get @entity.looks "machine/event/idle" null))) (el (default (object/get @entity.looks "diagram/edge/idle" null) (object/get @entity.looks "machine/edge/idle" null))) (elit (default (object/get @entity.looks "diagram/edge/lit" null) (object/get @entity.looks "machine/edge/lit" null))) (al (default (object/get @entity.looks "diagram/label/idle" null) (object/get @entity.looks "machine/event/idle" null))) (pl (default (object/get @entity.looks "diagram/pill/idle" null) (object/get @entity.looks "machine/pill/idle" null))) (tl (default (object/get @entity.looks "diagram/token/idle" null) (object/get @entity.looks "machine/token/idle" null))) (pad @config.nodePad) (nh @config.nodeHeight) (oh @config.noteHeight) (lhh @config.labelHeight))
+          (let ((core (as (array/find @config.nodes (fn c (= @c.group "core"))) DiagramNode))
+                (rings (array/filter @config.nodes (fn c (= @c.group "ring"))))
+                (arounds (array/filter @config.nodes (fn c (= @c.group "around")))))
+            (let ((cw (object/get @entity.boxW @core.id 0)) (ch (if (= @core.note null) @nh (+ @nh @oh))) (nr (array/len @rings))
+                  (aws (array/map @arounds (fn c (object/get @entity.boxW @c.id 0))))
+                  (amh (array/reduce @arounds 0 (fn (m c) (math/max @m (if (= @c.note null) @nh (+ @nh @oh)))))))
+              (let ((r0 (+ (/ @cw 2) 34))
+                    (aw (+ (array/reduce @aws 0 (fn (a w) (+ @a @w))) (* 24 (math/max 0 (- (array/len @aws) 1))))))
+                (let ((rxo (+ @r0 (* 46 @nr))))
+                  (let ((ryo (math/max (* @rxo 0.58) (+ (/ @ch 2) (* 24 @nr) 16))))
+                    (let ((lw (math/max (+ (* 2 @rxo) (* 2 @pad)) (+ @aw (* 2 @pad))))
+                          (lh (+ @pad @lhh (* 2 @ryo) 44 @amh @pad)))
+                      (let ((cx (/ @lw 2)) (cy (+ @pad @lhh @ryo)) (ay (+ @pad @lhh (* 2 @ryo) 44)) (ax0 (/ (- @lw @aw) 2)))
+                        (let ((s (if (> @r.h 0) (math/min @config.maxScale (/ @r.w @lw) (/ @r.h @lh)) (math/min @config.maxScale (/ @r.w @lw)))))
+                          (let ((ox (+ @r.x (/ (- @r.w (* @lw @s)) 2))) (oy (+ @r.y (if (> @r.h 0) (/ (- @r.h (* @lh @s)) 2) 0))))
+                            (let ((axs (array/map (array/range 0 (array/len @arounds)) (fn j (+ @ax0 (array/reduce (array/take @aws @j) 0 (fn (a w) (+ @a @w 24))))))))
+                              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z,
+                                texts: (array/concat
+                                  (array/flatten (array/map (array/range 0 @nr) (fn i
+                                    (let ((rg (array/nth @rings @i)) (rx (+ @r0 (* 46 (+ @i 1)))))
+                                      (let ((ry (* @ryo (/ @rx @rxo))) (pw (+ (- (object/get @entity.boxW @rg.id 0) (* 2 @pad)) (* 2 @config.labelPad))))
+                                        (if (= @al null) []
+                                          [{ id: (str/concat @config.id "-rt-" @rg.id), key: @rg.label, x: (+ @ox (* @s @cx)), y: (+ @oy (* @s (- @cy @ry))), z: (+ @config.z 3), align: "center", baseline: "middle", color: @al.textColor, font: @al.font, maxWidth: (math/max 1 (* @s @pw)) }]))))))
+                                  (let ((bx (- @cx (/ @cw 2))) (by (- @cy (/ @ch 2))) (k (array/findIndex @config.steps (fn st (array/includes @st @core.id)))))
+                                    (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @core.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null)))) (tx (+ @ox (* @s (+ @bx (/ @cw 2))))) (ty (+ @oy (* @s (if (= @core.note null) (+ @by (/ @ch 2)) (+ @by (/ @nh 2) 2))))) (mw (math/max 1 (* @s (- @cw @pad))))) (array/concat [{ id: (str/concat @config.id "-nt-" @core.id), key: @core.label, x: @tx, y: @ty, z: (+ @config.z 3), align: "center", baseline: "middle", color: @lk.textColor, font: @lk.font, maxWidth: @mw }] (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) [] [{ id: (str/concat @config.id "-nlt-" @core.id), key: @core.label, x: @tx, y: @ty, z: (+ @config.z 4), align: "center", baseline: "middle", color: @nlit.textColor, font: @lk.font, maxWidth: @mw, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }]) (if (or (= @core.note null) (= @ol null)) [] [{ id: (str/concat @config.id "-no-" @core.id), key: (let ((kn (as @core NotedNode))) @kn.note), x: @tx, y: (+ @oy (* @s (+ @by @nh 2))), z: (+ @config.z 4), align: "center", baseline: "middle", color: @ol.textColor, font: @ol.font, maxWidth: @mw }]))))
+                                  (array/flatten (array/map (array/range 0 (array/len @arounds)) (fn j
+                                    (let ((c (array/nth @arounds @j)) (w (array/nth @aws @j)))
+                                      (let ((bx (if @rtl (- @lw (+ (array/nth @axs @j) @w)) (array/nth @axs @j))) (by @ay) (bh (if (= @c.note null) @nh (+ @nh @oh))) (k (array/findIndex @config.steps (fn st (array/includes @st @c.id)))))
+                                        (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @c.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null)))) (tx (+ @ox (* @s (+ @bx (/ @w 2))))) (ty (+ @oy (* @s (if (= @c.note null) (+ @by (/ @bh 2)) (+ @by (/ @nh 2) 2))))) (mw (math/max 1 (* @s (- @w @pad))))) (array/concat [{ id: (str/concat @config.id "-nt-" @c.id), key: @c.label, x: @tx, y: @ty, z: (+ @config.z 3), align: "center", baseline: "middle", color: @lk.textColor, font: @lk.font, maxWidth: @mw }] (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) [] [{ id: (str/concat @config.id "-nlt-" @c.id), key: @c.label, x: @tx, y: @ty, z: (+ @config.z 4), align: "center", baseline: "middle", color: @nlit.textColor, font: @lk.font, maxWidth: @mw, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }]) (if (or (= @c.note null) (= @ol null)) [] [{ id: (str/concat @config.id "-no-" @c.id), key: (let ((kn (as @c NotedNode))) @kn.note), x: @tx, y: (+ @oy (* @s (+ @by @nh 2))), z: (+ @config.z 4), align: "center", baseline: "middle", color: @ol.textColor, font: @ol.font, maxWidth: @mw }]))))))))),
+                                nodes: [{ type: draw-group, id: (str/concat @config.id "-g"), position: { x: @ox, y: @oy, z: @config.z }, scale: @s, items: (array/concat
+                                  (array/flatten (array/map (array/range 0 (array/len @arounds)) (fn j
+                                    (let ((c (array/nth @arounds @j)) (w (array/nth @aws @j)))
+                                      (let ((px (+ (if @rtl (- @lw (+ (array/nth @axs @j) @w)) (array/nth @axs @j)) (/ @w 2))) (k (array/findIndex @config.steps (fn st (array/includes @st @c.id)))))
+                                        (let ((dn (math/min 0.95 (math/max -0.95 (/ (- @px @cx) @rxo)))))
+                                          (let ((d (str/concat "M" @px " " @ay " L" @px " " (+ @cy (* @ryo (math/sqrt (- 1 (* @dn @dn))))))))
+                                            (array/concat
+                                              [{ type: draw-shape, id: (str/concat @config.id "-c-" @c.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: @d, fill: "", stroke: @el.stroke, strokeWidth: @el.strokeWidth, strokeDash: [5, 5], opacity: 1, hit: false }]
+                                              (if (or (< @k 0) (= @elit null) (not (or @lit @done))) []
+                                                [{ type: draw-shape, id: (str/concat @config.id "-cl-" @c.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 1) }, d: @d, fill: "", stroke: @elit.stroke, strokeWidth: @elit.strokeWidth, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }])))))))))
+                                  (array/flatten (array/map (array/range 0 @nr) (fn i
+                                    (let ((rg (array/nth @rings @i)) (rx (+ @r0 (* 46 (+ @i 1)))))
+                                      (let ((ry (* @ryo (/ @rx @rxo))) (k (array/findIndex @config.steps (fn st (array/includes @st @rg.id)))) (pw (+ (- (object/get @entity.boxW @rg.id 0) (* 2 @pad)) (* 2 @config.labelPad))))
+                                        (array/concat
+                                          [{ type: draw-shape, id: (str/concat @config.id "-r-" @rg.id), shape: "ellipse", anchor: "top-left", position: { x: @cx, y: @cy, z: @config.z }, radiusX: @rx, radiusY: @ry, fill: "", stroke: @el.stroke, strokeWidth: @el.strokeWidth, opacity: 1, hit: false }]
+                                          (if (or (< @k 0) (= @elit null) (not (or @lit @done))) []
+                                            [{ type: draw-shape, id: (str/concat @config.id "-rl-" @rg.id), shape: "ellipse", anchor: "top-left", position: { x: @cx, y: @cy, z: (+ @config.z 1) }, radiusX: @rx, radiusY: @ry, fill: "", stroke: @elit.stroke, strokeWidth: @elit.strokeWidth, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }])
+                                          (if (= @pl null) []
+                                            [{ type: draw-shape, id: (str/concat @config.id "-rp-" @rg.id), shape: "rect", anchor: "top-left", position: { x: (- @cx (/ @pw 2)), y: (- (- @cy @ry) (/ @lhh 2)), z: (+ @config.z 2) }, width: @pw, height: @lhh, fill: @pl.fill, stroke: @pl.stroke, strokeWidth: @pl.strokeWidth, corners: @pl.corners, opacity: 1, hit: false }])))))))
+                                  (let ((bx (- @cx (/ @cw 2))) (by (- @cy (/ @ch 2))) (k (array/findIndex @config.steps (fn st (array/includes @st @core.id)))))
+                                    (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @core.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null))))) (array/concat [{ type: draw-shape, id: (str/concat @config.id "-n-" @core.id), shape: "rect", anchor: "top-left", position: { x: @bx, y: @by, z: (+ @config.z 1) }, width: @cw, height: @ch, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, corners: @lk.corners, shadow: @lk.shadow, opacity: 1, hit: false }] (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) [] [{ type: draw-shape, id: (str/concat @config.id "-nl-" @core.id), shape: "rect", anchor: "top-left", position: { x: @bx, y: @by, z: (+ @config.z 2) }, width: @cw, height: @ch, fill: @nlit.fill, stroke: @nlit.stroke, strokeWidth: @nlit.strokeWidth, corners: @nlit.corners, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }]))))
+                                  (array/flatten (array/map (array/range 0 (array/len @arounds)) (fn j
+                                    (let ((c (array/nth @arounds @j)) (w (array/nth @aws @j)))
+                                      (let ((bx (if @rtl (- @lw (+ (array/nth @axs @j) @w)) (array/nth @axs @j))) (by @ay) (bh (if (= @c.note null) @nh (+ @nh @oh))) (k (array/findIndex @config.steps (fn st (array/includes @st @c.id)))))
+                                        (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @c.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null))))) (array/concat [{ type: draw-shape, id: (str/concat @config.id "-n-" @c.id), shape: "rect", anchor: "top-left", position: { x: @bx, y: @by, z: (+ @config.z 1) }, width: @w, height: @bh, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, corners: @lk.corners, shadow: @lk.shadow, opacity: 1, hit: false }] (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) [] [{ type: draw-shape, id: (str/concat @config.id "-nl-" @c.id), shape: "rect", anchor: "top-left", position: { x: @bx, y: @by, z: (+ @config.z 2) }, width: @w, height: @bh, fill: @nlit.fill, stroke: @nlit.stroke, strokeWidth: @nlit.strokeWidth, corners: @nlit.corners, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }]))))))))) }] }))))))))))))
+      DIAGRAM_PAINT -> showing when (and (!= @entity.rect null) (= @config.form "rings") (not (array/some @config.nodes (fn c (= @c.group "core")))))
+      DIAGRAM_PAINT -> showing when (and (!= @entity.rect null) (= @config.form "beats"))
+        (let ((r @entity.rect) (rtl (= @entity.direction "rtl")) (dur (* @config.stepMs (+ (array/len @config.steps) 1))) (lit (and (> @entity.playMs 0) (not @entity.reduced))) (done (and (> @entity.playMs 0) @entity.reduced)) (nlit (default (object/get @entity.looks "diagram/node/lit" null) (object/get @entity.looks "machine/state/active" null))) (ol (default (object/get @entity.looks "diagram/note/idle" null) (object/get @entity.looks "machine/event/idle" null))) (el (default (object/get @entity.looks "diagram/edge/idle" null) (object/get @entity.looks "machine/edge/idle" null))) (elit (default (object/get @entity.looks "diagram/edge/lit" null) (object/get @entity.looks "machine/edge/lit" null))) (al (default (object/get @entity.looks "diagram/label/idle" null) (object/get @entity.looks "machine/event/idle" null))) (pl (default (object/get @entity.looks "diagram/pill/idle" null) (object/get @entity.looks "machine/pill/idle" null))) (tl (default (object/get @entity.looks "diagram/token/idle" null) (object/get @entity.looks "machine/token/idle" null))) (pad @config.nodePad) (nh @config.nodeHeight) (oh @config.noteHeight) (lhh @config.labelHeight))
+          (let ((beats (array/filter @config.nodes (fn c (= @c.group "beat"))))
+                (cards (array/filter @config.nodes (fn c (= @c.group "card")))))
+            (let ((gap (+ 26 (array/reduce @beats 0 (fn (m c) (math/max @m (object/get @entity.boxW @c.id 0))))))
+                  (bmh (array/reduce @beats 0 (fn (m c) (math/max @m (if (= @c.note null) @nh (+ @nh @oh))))))
+                  (cmh (array/reduce @cards 0 (fn (m c) (math/max @m (if (= @c.note null) @nh (+ @nh @oh))))))
+                  (cmw (array/reduce @cards 0 (fn (m c) (math/max @m (object/get @entity.boxW @c.id 0)))))
+                  (nb (array/len @beats)))
+              (let ((lw (+ (* 2 @pad) (* @nb @gap)))
+                    (ry (+ @pad @cmh 44)))
+                (let ((lh (+ @ry 18 @bmh @pad)))
+                  (let ((s (if (> @r.h 0) (math/min @config.maxScale (/ @r.w @lw) (/ @r.h @lh)) (math/min @config.maxScale (/ @r.w @lw)))))
+                    (let ((ox (+ @r.x (/ (- @r.w (* @lw @s)) 2))) (oy (+ @r.y (if (> @r.h 0) (/ (- @r.h (* @lh @s)) 2) 0))))
+                      (let ((cardAt (if (= (array/len @cards) 0) 0 (default (let ((c0 (array/nth @cards 0))) @c0.at) 0)))
+                            (kAfter (if (< (array/len @cards) 2) -1 (let ((c1 (array/nth @cards 1))) (array/findIndex @config.steps (fn st (array/includes @st @c1.id)))))))
+                        (let ((ccx (let ((x (+ @pad (* @gap (+ @cardAt 0.5))))) (if @rtl (- @lw @x) @x))))
+                          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z,
+                            texts: (array/concat
+                              (array/flatten (array/map (array/range 0 @nb) (fn i
+                                (let ((c (array/nth @beats @i)))
+                                  (let ((w (object/get @entity.boxW @c.id 0)) (bh (if (= @c.note null) @nh (+ @nh @oh))) (k (array/findIndex @config.steps (fn st (array/includes @st @c.id)))))
+                                    (let ((bx (let ((x (- (+ @pad (* @gap (+ @i 0.5))) (/ @w 2)))) (if @rtl (- @lw (+ @x @w)) @x))) (by (+ @ry 18)))
+                                      (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @c.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null)))) (tx (+ @ox (* @s (+ @bx (/ @w 2))))) (ty (+ @oy (* @s (if (= @c.note null) (+ @by (/ @bh 2)) (+ @by (/ @nh 2) 2))))) (mw (math/max 1 (* @s (- @w @pad))))) (array/concat [{ id: (str/concat @config.id "-nt-" @c.id), key: @c.label, x: @tx, y: @ty, z: (+ @config.z 3), align: "center", baseline: "middle", color: @lk.textColor, font: @lk.font, maxWidth: @mw }] (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) [] [{ id: (str/concat @config.id "-nlt-" @c.id), key: @c.label, x: @tx, y: @ty, z: (+ @config.z 4), align: "center", baseline: "middle", color: @nlit.textColor, font: @lk.font, maxWidth: @mw, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }]) (if (or (= @c.note null) (= @ol null)) [] [{ id: (str/concat @config.id "-no-" @c.id), key: (let ((kn (as @c NotedNode))) @kn.note), x: @tx, y: (+ @oy (* @s (+ @by @nh 2))), z: (+ @config.z 4), align: "center", baseline: "middle", color: @ol.textColor, font: @ol.font, maxWidth: @mw }])))))))))
+                              (array/flatten (array/map (array/range 0 (array/len @cards)) (fn i
+                                (let ((c (array/nth @cards @i)))
+                                  (let ((w @cmw) (bh @cmh) (k (if (= @i 0) -1 @kAfter)) (bx (- @ccx (/ @cmw 2))) (by @pad))
+                                    (if (or (and (= @i 1) (not (or @lit @done))) (and (= @i 0) @done (>= @kAfter 0))) []
+                                      (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @c.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null)))) (mw (math/max 1 (* @s (- @cmw @pad)))))
+                                        [{ id: (str/concat @config.id "-ct-" @c.id), key: @c.label, x: (+ @ox (* @s @ccx)), y: (+ @oy (* @s (+ @pad (/ @cmh 2)))), z: (+ @config.z 4), align: "center", baseline: "middle", color: @lk.textColor, font: @lk.font, maxWidth: @mw,
+                                          animation: (if (and (= @i 0) @lit (>= @kAfter 0)) { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 1 }, { at: (math/max 0 (/ (* @kAfter @config.stepMs) @dur)), opacity: 1 }, { at: (math/max 0 (/ (+ (* @kAfter @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 0 }, { at: 1, opacity: 0 }] } (if (and (= @i 1) @lit) (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @kAfter @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @kAfter @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) null)) }])))))))),
+                            nodes: [{ type: draw-group, id: (str/concat @config.id "-g"), position: { x: @ox, y: @oy, z: @config.z }, scale: @s, items: (array/concat
+                              [{ type: draw-shape, id: (str/concat @config.id "-ruler"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M" @pad " " @ry " L" (- @lw @pad) " " @ry), fill: "", stroke: @el.stroke, strokeWidth: @el.strokeWidth, opacity: 1, hit: false },
+                               { type: draw-shape, id: (str/concat @config.id "-link"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M" @ccx " " (+ @pad @cmh) " L" @ccx " " (- @ry 8)), fill: "", stroke: @el.stroke, strokeWidth: 1.5, strokeDash: [4, 4], opacity: 1, hit: false }]
+                              (array/flatten (array/map (array/range 0 @nb) (fn i
+                                (let ((c (array/nth @beats @i)))
+                                  (let ((w (object/get @entity.boxW @c.id 0)) (bh (if (= @c.note null) @nh (+ @nh @oh))) (k (array/findIndex @config.steps (fn st (array/includes @st @c.id)))) (tx (let ((x (+ @pad (* @gap (+ @i 0.5))))) (if @rtl (- @lw @x) @x))))
+                                    (let ((bx (- @tx (/ @w 2))) (by (+ @ry 18)))
+                                      (array/concat
+                                        [{ type: draw-shape, id: (str/concat @config.id "-tick-" @c.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M" @tx " " (- @ry 8) " L" @tx " " (+ @ry 8)), fill: "", stroke: @el.stroke, strokeWidth: @el.strokeWidth, opacity: 1, hit: false }]
+                                        (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @c.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null))))) (array/concat [{ type: draw-shape, id: (str/concat @config.id "-n-" @c.id), shape: "rect", anchor: "top-left", position: { x: @bx, y: @by, z: (+ @config.z 1) }, width: @w, height: @bh, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, corners: @lk.corners, shadow: @lk.shadow, opacity: 1, hit: false }] (if (or (< @k 0) (= @nlit null) (not (or @lit @done))) [] [{ type: draw-shape, id: (str/concat @config.id "-nl-" @c.id), shape: "rect", anchor: "top-left", position: { x: @bx, y: @by, z: (+ @config.z 2) }, width: @w, height: @bh, fill: @nlit.fill, stroke: @nlit.stroke, strokeWidth: @nlit.strokeWidth, corners: @nlit.corners, opacity: (if (and @done (>= @k 0)) 1 0), hit: false, animation: (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) }]))))))))))
+                              (array/flatten (array/map (array/range 0 (array/len @cards)) (fn i
+                                (let ((c (array/nth @cards @i)))
+                                  (let ((lk (default (object/get @entity.looks (str/concat "diagram/node/" (default @c.kind "idle")) null) (default (object/get @entity.looks "diagram/node/idle" null) (object/get @entity.looks "machine/state/idle" null)))) (bx (- @ccx (/ @cmw 2))))
+                                    (if (and (= @i 1) (not (or @lit @done))) []
+                                      [{ type: draw-shape, id: (str/concat @config.id "-card-" @c.id), shape: "rect", anchor: "top-left", position: { x: @bx, y: @pad, z: (+ @config.z 1) }, width: @cmw, height: @cmh, fill: (if (= @i 1) (if (= @nlit null) @lk.fill @nlit.fill) @lk.fill), stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, corners: @lk.corners, shadow: @lk.shadow, opacity: (if (and @done (= @i 0) (>= @kAfter 0)) 0 1), hit: false,
+                                        animation: (if (and (= @i 0) @lit (>= @kAfter 0)) { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 1 }, { at: (math/max 0 (/ (* @kAfter @config.stepMs) @dur)), opacity: 1 }, { at: (math/max 0 (/ (+ (* @kAfter @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 0 }, { at: 1, opacity: 0 }] } (if (and (= @i 1) @lit) (if @lit { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (math/max 0 (/ (* @kAfter @config.stepMs) @dur)), opacity: 0 }, { at: (math/max 0 (/ (+ (* @kAfter @config.stepMs) (* 0.35 @config.stepMs)) @dur)), opacity: 1 }, { at: 1, opacity: 1 }] } null) null)) }]))))))
+                              (if (or (not @lit) (= @tl null) (= @nb 0)) []
+                                (let ((x0 (let ((x (+ @pad (* @gap 0.5)))) (if @rtl (- @lw @x) @x))))
+                                  [{ type: draw-shape, id: (str/concat @config.id "-head"), shape: "rect", anchor: "top-left", position: { x: (- @x0 3), y: (- @ry 18), z: (+ @config.z 3) }, width: 6, height: 36, fill: @tl.fill, stroke: @tl.stroke, strokeWidth: @tl.strokeWidth, corners: { radius: [3, 3, 3, 3], kind: "round" }, opacity: 1, hit: false,
+                                    animation: { durationMs: @dur, startMs: @entity.playMs, loop: false, keyframes: (array/concat [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }]
+                                      (array/flatten (array/map (array/range 0 @nb) (fn i (let ((c (array/nth @beats @i))) (let ((k (array/findIndex @config.steps (fn st (array/includes @st @c.id)))) (x (let ((xx (+ @pad (* @gap (+ @i 0.5))))) (if @rtl (- @lw @xx) @xx))))
+                                        (if (< @k 0) [] [{ at: (math/max 0 (/ (* @k @config.stepMs) @dur)), opacity: 1, offsetX: (- @x @x0), offsetY: 0 }, { at: (math/max 0 (/ (+ (* @k @config.stepMs) (* 0.4 @config.stepMs)) @dur)), opacity: 1, offsetX: (- @x @x0), offsetY: 0 }]))))))
+                                      [{ at: 1, opacity: 1, offsetX: (- (let ((xx (+ @pad (* @gap (- @nb 0.5))))) (if @rtl (- @lw @xx) @xx)) @x0), offsetY: 0 }]) } }]))) }] }))))))))))
+    }
+
+    emits {
+      DIAGRAM_PAINT -> internal {
+        n : number!
+      }
+        @description "Paint what the current state shows."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        texts : [RasmText]!
+        nodes : [node]!
+      }
+        @description "The diagram's boxes, arrows and labels as one scaled draw group (or its hidden measuring labels)."
+        @tier "primary"
+      LAYOUT_REQUEST -> external {
+        nodes : [LayoutNode]!
+        edges : [LayoutEdge]!
+      }
+        @description "Ask the sibling std-graph-layout to lay the measured boxes and arrows out."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Keep the looks; fonts may have changed, so labels are measured and laid out again."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rect of this diagram's id; an unchanged rect or another id is ignored."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction; rtl mirrors the layout."
+      RASM_MOTION { reduced : boolean! }
+        @description "Reduced motion: once entered, every step is lit at once with no motion."
+      RASM_MEASURED { items : [RasmMeasureItem]! }
+        @description "Measured labels: once every label of this diagram is measured, ask for the layout."
+      LAYOUT_READY { nodes : [LayoutPlacedNode]!  edges : [LayoutRoutedEdge]!  width : number!  height : number! }
+        @description "The layout: keep it and paint."
+      LAYOUT_REJECTED { reason : string!  ids : [string]! }
+        @description "The layout refused the request: keep the reason; nothing is painted."
+      RASM_ENTER { order : [string]! }
+        @description "Ids that just entered the view: when one of them is in `playOn` (or is this diagram's id), the steps start lighting, once."
+    }
+
+    config {
+      id : string = "diagram"
+        @label "Id"
+        @description "The placed id this diagram paints in."
+        @tier "presentation"
+      z : number = 3
+        @label "Z"
+        @description "The paint order of the diagram on the surface."
+        @tier "presentation"
+      nodes : [DiagramNode] = []
+        @label "Boxes"
+        @description "The boxes: an id, a catalog-keyed label, an optional catalog-keyed note shown under the label, and an optional kind whose look diagram/node/<kind> styles the box."
+        @tier "domain"
+      edges : [DiagramEdge] = []
+        @label "Arrows"
+        @description "The arrows between box ids, each with an optional catalog-keyed label."
+        @tier "domain"
+      form : "flow" | "rings" | "beats" | "queue" | "nest" | "plugs" | "lanes" | "conveyor" = "flow"
+        @label "Form"
+        @description "How the diagram is drawn. flow: boxes and arrows laid out by std-graph-layout. rings: an exploded orbital, the box in group core at the centre, each box in group ring an ellipse around it (inner first), the boxes in group around in a row under it joined to the outer ring. beats: the boxes in group beat on a ruler with a playhead that sweeps to each as its step lights, and the first box in group card above the beat its `at` names, replaced by the second card at that card's step. queue: the boxes in group ticket in the slots their `at` names, front first, each sliding in from its `from` end at its step and, at the step `leaves` names it in, carried down to the box in group desk; the boxes in group end caption the front and the back; a box in group done appears under the row. nest: the boxes in group frame, outer first, drawn one inside the next, with each box's note as a value chip under it that appears at its step. plugs: the box in group plug, the box in group socket and the box in group stamp, with a mismatched tab and slot and the stamp laid over the gap at its step. lanes: the boxes in group lane as lifelines across, and the arrows as messages down the page in order. conveyor: the boxes in group station along a belt, with a sheet that rides to each station as its step lights."
+        @tier "presentation"
+      leaves : [[string]] = []
+        @label "Leaves"
+        @description "For the queue form: by step index, the ticket ids that leave the line at that step."
+        @tier "domain"
+      steps : [[string]] = []
+        @label "Steps"
+        @description "The reading order: each step lists the box and arrow ids that light together. An id in no step is never lit."
+        @tier "domain"
+      playOn : [string] = []
+        @label "Play on"
+        @description "The ids whose RASM_ENTER starts the steps; empty means this diagram's own id."
+        @tier "presentation"
+      stepMs : number = 700
+        @label "Step time"
+        @description "Milliseconds between one step lighting and the next."
+        @tier "presentation"
+      maxScale : number = 1.4
+        @label "Largest scale"
+        @description "The diagram is scaled to fit its rect, never above this."
+        @tier "presentation"
+      nodeHeight : number = 48
+        @label "Box height"
+        @description "A box's height in layout units, without a note."
+        @tier "presentation"
+      noteHeight : number = 22
+        @label "Note height"
+        @description "The extra height in layout units a box with a note gets."
+        @tier "presentation"
+      nodePad : number = 20
+        @label "Box padding"
+        @description "Space in layout units on each side of a box's widest label."
+        @tier "presentation"
+      labelPad : number = 8
+        @label "Arrow label padding"
+        @description "Space in layout units on each side of an arrow's label."
+        @tier "presentation"
+      labelHeight : number = 24
+        @label "Arrow label height"
+        @description "An arrow label's height in layout units."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmDiagramStart -> RasmDiagram
+}

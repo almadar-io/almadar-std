@@ -1,6 +1,6 @@
 app std-rasm-slides [
   version: "0.1.0",
-  description: "std-rasm-slides — a full-screen slide deck. The `slides` knob lists, per slide, the paint ids that make it up; one slide is shown at a time and the rest are hidden with RASM_VISIBLE. A wheel turn on the canvas, PageDown, PageUp, Home, End, a vertical swipe, a press on one of the `dots` controls (or its keyboard activation) moves to another slide: the shown and hidden ids are announced (owner = id, so the surface can transition them), RASM_SLIDE { id, index } tells the rest of the page, and a wipe panel in the theme's primary colour sweeps over the `anchor` rect while the swap happens, forwards or backwards. A ring is drawn round the dot of the current slide, from the dot rects RASM_PLACE gives. A wheel burst is ignored for `lockMs` after a move, so one flick is one slide. Under reduced motion the swap is announced with another owner (`<id>:still`, which the surface does not transition) and no wipe is drawn."
+  description: "std-rasm-slides — a full-screen slide deck. The `slides` knob lists, per slide, the paint ids that make it up; one slide is shown at a time and the rest are hidden with RASM_VISIBLE. A slide may declare `steps`, the number of builds it reveals after it appears: an advance key steps through them before the deck moves on, a back key steps back through them before it moves back (arriving backwards lands on the slide's last step), and RASM_SLIDE carries the step so the slide's painters reveal their parts. `advanceKeys` and `backKeys` name the RASM_KEY keys that advance and go back (PageDown and PageUp by default, which a presentation clicker sends); RASM_SLIDE_TO { id, index, step } puts the deck on a slide and step from outside (a remote, an overview, another window following the same talk). `wheel`, `swipe` and `wipe` turn the wheel, the swipe and the wipe panel off for a deck that is presented, not scrolled. A wheel turn on the canvas, PageDown, PageUp, Home, End, a vertical swipe, a press on one of the `dots` controls (or its keyboard activation) moves to another slide: the shown and hidden ids are announced (owner = id, so the surface can transition them), RASM_SLIDE { id, index } tells the rest of the page, and a wipe panel in the theme's primary colour sweeps over the `anchor` rect while the swap happens, forwards or backwards. A ring is drawn round the dot of the current slide, from the dot rects RASM_PLACE gives. A wheel burst is ignored for `lockMs` after a move, so one flick is one slide. Under reduced motion the swap is announced with another owner (`<id>:still`, which the surface does not transition) and no wipe is drawn."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -14,12 +14,13 @@ type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners 
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
-type RasmSlide = { paints : [string]! }
+type RasmSlide = { paints : [string]!, steps : number }
 
 orbital RasmSlidesOrbital {
   entity RasmSlidesRun [runtime] {
     id : string!
     index : number @description "The slide on show." = 0
+    step : number @description "How many of the slide's builds are revealed." = 0
     looks : Map string RasmLook @description "The announced look table." = {}
     rects : Map string RasmRect @description "The placed rect of every dot control seen so far." = {}
     anchor : RasmRect? @description "The rect the wipe panel sweeps over, null until placed." = null
@@ -51,25 +52,41 @@ orbital RasmSlidesOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit SLIDES_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.anchor) (array/includes @config.dots @p.id)))))
-      RASM_WHEEL -> ready when (> (math/abs ?dy) @config.wheelMin)
+      RASM_WHEEL -> ready when (and @config.wheel (> (math/abs ?dy) @config.wheelMin))
         (let ((t (time/epoch-ms @now)))
           (when (>= @t @entity.lockedMs)
             (emit SLIDES_GO { to: (+ @entity.index (if (> ?dy 0) 1 -1)), forward: (> ?dy 0) })))
-      RASM_WHEEL -> ready when (<= (math/abs ?dy) @config.wheelMin)
-      RASM_KEY -> ready when (array/includes ["pageDown", "pageUp", "home", "end"] ?key)
-        (emit SLIDES_GO { to: (if (= ?key "pageDown") (+ @entity.index 1) (if (= ?key "pageUp") (- @entity.index 1) (if (= ?key "home") 0 (- (array/len @config.slides) 1)))), forward: (or (= ?key "pageDown") (= ?key "end")) })
-      RASM_KEY -> ready when (not (array/includes ["pageDown", "pageUp", "home", "end"] ?key))
+      RASM_WHEEL -> ready when (not (and @config.wheel (> (math/abs ?dy) @config.wheelMin)))
+      RASM_KEY -> ready when (and (array/includes @config.advanceKeys ?key) (< @entity.step (let ((blank : RasmSlide { paints: [] })) (let ((s (default (array/nth @config.slides @entity.index) @blank))) (default @s.steps 0)))))
+        (set @entity.step (+ @entity.step 1))
+        (emit RASM_SLIDE { id: @config.id, index: @entity.index, step: @entity.step })
+      RASM_KEY -> ready when (and (array/includes @config.advanceKeys ?key) (>= @entity.step (let ((blank : RasmSlide { paints: [] })) (let ((s (default (array/nth @config.slides @entity.index) @blank))) (default @s.steps 0)))))
+        (emit SLIDES_GO { to: (+ @entity.index 1), forward: true })
+      RASM_KEY -> ready when (and (not (array/includes @config.advanceKeys ?key)) (array/includes @config.backKeys ?key) (> @entity.step 0))
+        (set @entity.step (- @entity.step 1))
+        (emit RASM_SLIDE { id: @config.id, index: @entity.index, step: @entity.step })
+      RASM_KEY -> ready when (and (not (array/includes @config.advanceKeys ?key)) (array/includes @config.backKeys ?key) (<= @entity.step 0))
+        (emit SLIDES_GO { to: (- @entity.index 1), forward: false })
+      RASM_KEY -> ready when (and (not (array/includes @config.advanceKeys ?key)) (not (array/includes @config.backKeys ?key)) (array/includes ["home", "end"] ?key))
+        (emit SLIDES_GO { to: (if (= ?key "home") 0 (- (array/len @config.slides) 1)), forward: (= ?key "end") })
+      RASM_KEY -> ready when (not (or (array/includes @config.advanceKeys ?key) (array/includes @config.backKeys ?key) (array/includes ["home", "end"] ?key)))
+      RASM_SLIDE_TO -> ready when (and (= ?id @config.id) (= ?index @entity.index) (!= (default ?step 0) @entity.step))
+        (set @entity.step (default ?step 0))
+        (emit RASM_SLIDE { id: @config.id, index: @entity.index, step: @entity.step })
+      RASM_SLIDE_TO -> ready when (and (= ?id @config.id) (!= ?index @entity.index))
+        (emit SLIDES_GO { to: ?index, forward: (> ?index @entity.index), step: (default ?step 0) })
+      RASM_SLIDE_TO -> ready when (not (and (= ?id @config.id) (or (!= ?index @entity.index) (!= (default ?step 0) @entity.step))))
       RASM_POINTER -> ready when (= ?kind "down")
         (set @entity.downX ?x)
         (set @entity.downY ?y)
         (set @entity.armed true)
-      RASM_POINTER -> ready when (and (= ?kind "up") @entity.armed (>= (math/abs (- ?y @entity.downY)) @config.swipePx) (> (math/abs (- ?y @entity.downY)) (math/abs (- ?x @entity.downX))))
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.armed @config.swipe (>= (math/abs (- ?y @entity.downY)) @config.swipePx) (> (math/abs (- ?y @entity.downY)) (math/abs (- ?x @entity.downX))))
         (set @entity.armed false)
         (emit SLIDES_GO { to: (+ @entity.index (if (< ?y @entity.downY) 1 -1)), forward: (< ?y @entity.downY) })
-      RASM_POINTER -> ready when (and (= ?kind "up") @entity.armed (< (math/abs (- ?y @entity.downY)) @config.swipePx) (array/includes @config.dots ?id))
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.armed (not (and @config.swipe (>= (math/abs (- ?y @entity.downY)) @config.swipePx))) (array/includes @config.dots ?id))
         (set @entity.armed false)
         (emit SLIDES_GO { to: (array/indexOf @config.dots ?id), forward: (> (array/indexOf @config.dots ?id) @entity.index) })
-      RASM_POINTER -> ready when (and (= ?kind "up") (not (and @entity.armed (or (>= (math/abs (- ?y @entity.downY)) @config.swipePx) (array/includes @config.dots ?id)))))
+      RASM_POINTER -> ready when (and (= ?kind "up") (not (and @entity.armed (or (and @config.swipe (>= (math/abs (- ?y @entity.downY)) @config.swipePx) (> (math/abs (- ?y @entity.downY)) (math/abs (- ?x @entity.downX)))) (and (not (and @config.swipe (>= (math/abs (- ?y @entity.downY)) @config.swipePx))) (array/includes @config.dots ?id))))))
         (set @entity.armed false)
       RASM_POINTER -> ready when (or (= ?kind "enter") (= ?kind "leave") (= ?kind "move"))
       RASM_ACTIVATE -> ready when (array/includes @config.dots ?id)
@@ -82,22 +99,24 @@ orbital RasmSlidesOrbital {
             (set @entity.lockedMs (+ @t @config.lockMs))
             (set @entity.movedMs @t)))
         (set @entity.forward ?forward)
+        (set @entity.step (let ((blank : RasmSlide { paints: [] })) (let ((s (default (array/nth @config.slides ?to) @blank))) (math/min (default @s.steps 0) (default ?step (if ?forward 0 (default @s.steps 0)))))))
         (set @entity.index ?to)
-        (emit RASM_SLIDE { id: @config.id, index: ?to })
+        (emit RASM_SLIDE { id: @config.id, index: ?to, step: @entity.step })
         (set @entity.paints (+ @entity.paints 1))
         (emit SLIDES_PAINT { n: @entity.paints })
       SLIDES_GO -> ready when (not (and (>= ?to 0) (< ?to (array/len @config.slides)) (!= ?to @entity.index)))
       SLIDES_PAINT -> ready
         (let ((look (default (object/get @entity.looks @config.markLook null) {})) (dot (object/get @entity.rects (default (array/nth @config.dots @entity.index) "") null)) (a @entity.anchor))
-          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/concat (if (and (!= @a null) (not @entity.reduced) (> @entity.movedMs 0)) [{ type: draw-shape, id: (str/concat @config.id ":wipe"), shape: rect, anchor: "top-left", position: { x: @a.x, y: @a.y, z: @config.z }, width: @a.w, height: @a.h, fill: @look.fill, hit: false, animation: { durationMs: @config.wipeMs, startMs: @entity.movedMs, loop: false, keyframes: (if @entity.forward [{ at: 0, opacity: 1, offsetY: (- 0 @a.h) }, { at: 0.5, opacity: 1, offsetY: 0 }, { at: 1, opacity: 1, offsetY: @a.h }] [{ at: 0, opacity: 1, offsetY: @a.h }, { at: 0.5, opacity: 1, offsetY: 0 }, { at: 1, opacity: 1, offsetY: (- 0 @a.h) }]) } }] []) (if (= @dot null) [] [{ type: draw-shape, id: (str/concat @config.id ":mark"), shape: ellipse, anchor: "top-left", position: { x: (+ @dot.x (/ @dot.w 2)), y: (+ @dot.y (/ @dot.h 2)), z: (+ @config.z 1) }, radiusX: @config.markR, fill: "", stroke: @look.fill, strokeWidth: 2, hit: false }])) }))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/concat (if (and @config.wipe (!= @a null) (not @entity.reduced) (> @entity.movedMs 0)) [{ type: draw-shape, id: (str/concat @config.id ":wipe"), shape: rect, anchor: "top-left", position: { x: @a.x, y: @a.y, z: @config.z }, width: @a.w, height: @a.h, fill: @look.fill, hit: false, animation: { durationMs: @config.wipeMs, startMs: @entity.movedMs, loop: false, keyframes: (if @entity.forward [{ at: 0, opacity: 1, offsetY: (- 0 @a.h) }, { at: 0.5, opacity: 1, offsetY: 0 }, { at: 1, opacity: 1, offsetY: @a.h }] [{ at: 0, opacity: 1, offsetY: @a.h }, { at: 0.5, opacity: 1, offsetY: 0 }, { at: 1, opacity: 1, offsetY: (- 0 @a.h) }]) } }] []) (if (= @dot null) [] [{ type: draw-shape, id: (str/concat @config.id ":mark"), shape: ellipse, anchor: "top-left", position: { x: (+ @dot.x (/ @dot.w 2)), y: (+ @dot.y (/ @dot.h 2)), z: (+ @config.z 1) }, radiusX: @config.markR, fill: "", stroke: @look.fill, strokeWidth: 2, hit: false }])) }))
     }
 
     emits {
       SLIDES_GO -> internal {
         to : number!
         forward : boolean!
+        step : number
       }
-        @description "Move to this slide."
+        @description "Move to this slide, at this step when one is given."
         @tier "internal"
       SLIDES_PAINT -> internal {
         n : number!
@@ -115,8 +134,9 @@ orbital RasmSlidesOrbital {
       RASM_SLIDE -> external {
         id : string!
         index : number!
+        step : number
       }
-        @description "The deck moved to this slide."
+        @description "The deck moved to this slide, or to this step of it."
         @tier "domain"
       RASM_PAINT -> external {
         n : number!
@@ -139,7 +159,9 @@ orbital RasmSlidesOrbital {
       RASM_WHEEL { target : string!  x : number!  y : number!  dx : number!  dy : number! }
         @description "A wheel turn moves one slide toward its direction, unless the last move is still locked."
       RASM_KEY { key : string! }
-        @description "PageDown, PageUp, Home and End move the deck."
+        @description "An advance key reveals the slide's next step or moves on, a back key steps back or moves back, Home and End go to the first and last slide."
+      RASM_SLIDE_TO { id : string!  index : number!  step : number }
+        @description "Put the deck with this id on this slide and step: a remote, an overview or another window following the same talk."
       RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
         @description "A vertical swipe moves one slide; a release on a dot control goes to its slide."
       RASM_ACTIVATE { id : string! }
@@ -159,6 +181,26 @@ orbital RasmSlidesOrbital {
         @label "Dots"
         @description "The id of the dot control for each slide, in slide order: a press or activation on one goes to its slide, and the ring is drawn round the current one."
         @tier "domain"
+      advanceKeys : [string] = ["pageDown"]
+        @label "Advance keys"
+        @description "The RASM_KEY keys that reveal the next step or move to the next slide (pageDown, increase for the right and up arrows, activate for Space and Enter)."
+        @tier "presentation"
+      backKeys : [string] = ["pageUp"]
+        @label "Back keys"
+        @description "The RASM_KEY keys that step back or move to the previous slide (pageUp, decrease for the left and down arrows)."
+        @tier "presentation"
+      wheel : boolean = true
+        @label "Wheel"
+        @description "Off, a wheel turn does not move the deck."
+        @tier "presentation"
+      swipe : boolean = true
+        @label "Swipe"
+        @description "Off, a vertical drag does not move the deck."
+        @tier "presentation"
+      wipe : boolean = true
+        @label "Wipe"
+        @description "Off, no wipe panel is drawn when the deck moves; the slide's painters make their own entrance."
+        @tier "presentation"
       anchor : string = "page"
         @label "Anchor"
         @description "The id of the placed rect the wipe panel sweeps over."

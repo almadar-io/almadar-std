@@ -1,0 +1,96 @@
+app std-rasm-system-slides [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-rasm-system-slides — the Slides design system for a Rasm page shown on a projector, anchored on the dark stage of a conference keynote. Colour: #0D0E11 ground, #F1EEE7 ink, one accent #FFB000 that a deck keeps for the one thing its story follows. Type: Geist over Geist, Geist Mono for markers; sizes are set for a desktop projector and step up at wide and down at tablet and phone. Grid: one centred stage, wide margins, one idea per slide. Motion: a slow settle (cubic-bezier 0.22,1.00,0.36,1.00); entrance: content rises 16px and fades in, one part at a time. Interaction: quiet, a key or a clicker moves it. Imagery: line diagrams in ink on the ground, the accent filled. Voice: short declarative sentences. Components: plates are hairline-stroked panels with 10px corners. Data: one figure per slide. Looks beyond the base set: text/statement, text/note, archi/<part>/<state> for architecture views and slides/<part>/idle for the deck's own marks. A page extends RasmPage from this file and overrides any layer knob."
+]
+
+uses Shell from "std/behaviors/std-rasm-page"
+
+orbital RasmPage = Shell.orbitals.RasmPage {
+  config {
+    system: "slides"
+    palette: {background: "#0D0E11", foreground: "#F1EEE7", card: "#16181D", "card-foreground": "#F1EEE7", surface: "#1C1F26", muted: "#262A33", "muted-foreground": "#A4A9B3", border: "#474D5A", input: "#6B7280", primary: "#FFB000", "primary-hover": "#FFC233", "primary-foreground": "#0D0E11", secondary: "#1C1F26", "secondary-foreground": "#F1EEE7", "secondary-hover": "#262A33", accent: "#FFB000", "accent-foreground": "#0D0E11", ring: "#FFB000", "series-1": "#FFB000", "series-2": "#A4A9B3", "series-3": "#F1EEE7", "series-4": "#6B7280", "series-5": "#FFD98A"}
+    fonts: { display: { family: "Geist", file: "https://almadar-kflow-assets.web.app/fonts/geist/Geist%5Bwght%5D.ttf", generic: "sans-serif" }, body: { family: "Geist", file: "https://almadar-kflow-assets.web.app/fonts/geist/Geist%5Bwght%5D.ttf", generic: "sans-serif" }, mono: { family: "Geist Mono", file: "https://almadar-kflow-assets.web.app/fonts/geistmono/GeistMono%5Bwght%5D.ttf", generic: "monospace" } }
+    looks: {
+        "surface/ground/idle": { fill: "background" },
+        "section/band/idle": { fill: "background" },
+        "section/rule/idle": { stroke: "muted", strokeWidth: 1 },
+        "stack/card/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "stack/panel/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "stack/well/idle": { fill: "surface", corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "stack/hero/idle": { fill: "background" },
+        "stack/bar/idle": { fill: "background", stroke: "muted", strokeWidth: 1 },
+        "panel/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "panel/header/idle": { fill: "surface", corners: { radius: [10, 10, 0, 0], kind: "round" }, textColor: "foreground", font: "500 15px mono" },
+        "panel/divider/idle": { stroke: "muted", strokeWidth: 1 },
+        "card/surface/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "card/surface/hovered": { fill: "surface", stroke: "muted-foreground", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "card/surface/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "card/surface/pressed": { fill: "surface", stroke: "border", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" } },
+        "card/header/idle": { fill: "surface", corners: { radius: [10, 10, 0, 0], kind: "round" }, textColor: "foreground", font: "500 15px mono", on: "card/header/idle" },
+        "card/divider/idle": { stroke: "muted", strokeWidth: 1 },
+        "card/media/idle": { fill: "surface", corners: { radius: [10, 10, 0, 0], kind: "round" } },
+        "card/meta/idle": { textColor: "muted-foreground", font: "400 18px body", on: "card/surface/idle" },
+        "pulse/default/idle": { fill: "foreground", stroke: "background", strokeWidth: 2, textColor: "background", font: "600 14px mono" },
+        "pulse/hot/idle": { fill: "primary", stroke: "background", strokeWidth: 2, textColor: "primary-foreground", font: "600 14px mono" },
+        "pressable/primary/idle": { fill: "primary", textColor: "primary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body", spring: { stiffness: 170, damping: 26 } },
+        "pressable/primary/hovered": { fill: "primary-hover", textColor: "primary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body", spring: { stiffness: 170, damping: 26 } },
+        "pressable/primary/pressed": { fill: "primary-hover", textColor: "primary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body", spring: { stiffness: 240, damping: 28 } },
+        "pressable/primary/focused": { fill: "primary", textColor: "primary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body", stroke: "foreground", strokeWidth: 3 },
+        "pressable/secondary/idle": { fill: "surface", stroke: "border", strokeWidth: 1, textColor: "secondary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body", spring: { stiffness: 170, damping: 26 } },
+        "pressable/secondary/hovered": { fill: "secondary-hover", stroke: "muted-foreground", strokeWidth: 1, textColor: "secondary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body", spring: { stiffness: 170, damping: 26 } },
+        "pressable/secondary/pressed": { fill: "muted", stroke: "border", strokeWidth: 1, textColor: "secondary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body", spring: { stiffness: 240, damping: 28 } },
+        "pressable/secondary/focused": { fill: "surface", stroke: "ring", strokeWidth: 3, textColor: "secondary-foreground", corners: { radius: [10, 10, 10, 10], kind: "round" }, font: "600 18px body" },
+        "focus/ring/outer": { stroke: "background", strokeWidth: 5 },
+        "focus/ring/inner": { stroke: "ring", strokeWidth: 3 },
+        "textfield/default/idle": { fill: "card", stroke: "input", strokeWidth: 1, corners: { radius: [8, 8, 8, 8], kind: "round" }, textColor: "foreground", font: "400 20px body" },
+        "textfield/default/hovered": { fill: "card", stroke: "foreground", strokeWidth: 1, corners: { radius: [8, 8, 8, 8], kind: "round" }, textColor: "foreground", font: "400 20px body" },
+        "textfield/default/focused": { fill: "card", stroke: "ring", strokeWidth: 3, corners: { radius: [8, 8, 8, 8], kind: "round" }, textColor: "foreground", font: "400 20px body" },
+        "textfield/default/placeholder": { textColor: "muted-foreground", font: "400 20px body" },
+        "morph/default/idle": { fill: "primary" },
+        "ornament/signature/idle": { fill: "primary" },
+        "text/display/idle": { textColor: "foreground", font: "700 84px display" },
+        "text/title/idle": { textColor: "foreground", font: "600 48px display" },
+        "text/statement/idle": { textColor: "foreground", font: "500 60px display" },
+        "text/statement/accent": { textColor: "primary", font: "500 60px display" },
+        "text/body/idle": { textColor: "muted-foreground", font: "400 30px body" },
+        "text/body/strong": { textColor: "foreground", font: "500 30px body" },
+        "text/eyebrow/idle": { textColor: "primary", font: "500 18px mono" },
+        "text/caption/idle": { textColor: "muted-foreground", font: "400 20px body" },
+        "text/label/idle": { textColor: "foreground", font: "500 20px body" },
+        "text/card/idle": { textColor: "card-foreground", font: "600 28px display", on: "card/surface/idle" },
+        "text/inverse/idle": { textColor: "foreground", font: "600 32px display", on: "section/band/idle" },
+        "text/code/idle": { textColor: "muted-foreground", font: "400 20px mono" },
+        "text/code/active": { textColor: "primary", font: "500 20px mono" },
+        "text/note/idle": { textColor: "foreground", font: "400 24px body" },
+        "text/note/cue": { textColor: "primary", font: "600 24px body" },
+        "text/clock/idle": { textColor: "foreground", font: "600 56px mono" },
+        "text/clock/late": { textColor: "primary", font: "600 56px mono" },
+        "archi/layer/idle": { fill: "card", stroke: "muted", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "muted-foreground", font: "500 16px mono" },
+        "archi/element/idle": { fill: "surface", stroke: "muted-foreground", strokeWidth: 2, corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "foreground", font: "500 20px body" },
+        "archi/element/accent": { fill: "primary", stroke: "primary", strokeWidth: 2, corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "primary-foreground", font: "600 20px body" },
+        "archi/element/dim": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "input", font: "500 20px body" },
+        "archi/element/refused": { fill: "surface", stroke: "foreground", strokeWidth: 2, strokeDash: [6, 6], corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "foreground", font: "500 20px body" },
+        "archi/group/idle": { stroke: "muted-foreground", strokeWidth: 1, strokeDash: [8, 6], corners: { radius: [8, 8, 8, 8], kind: "round" }, textColor: "muted-foreground", font: "500 16px mono" },
+        "archi/group/accent": { stroke: "primary", strokeWidth: 2, strokeDash: [8, 6], corners: { radius: [8, 8, 8, 8], kind: "round" }, textColor: "primary", font: "500 16px mono" },
+        "archi/relation/idle": { stroke: "muted-foreground", strokeWidth: 2, fill: "muted-foreground", textColor: "muted-foreground", font: "400 15px mono" },
+        "archi/relation/accent": { stroke: "primary", strokeWidth: 3, fill: "primary", textColor: "primary", font: "500 15px mono" },
+        "archi/relation/dim": { stroke: "border", strokeWidth: 1, fill: "border", textColor: "input", font: "400 15px mono" },
+        "archi/legend/idle": { textColor: "muted-foreground", font: "400 15px mono" },
+        "slides/progress/idle": { fill: "primary" },
+        "slides/track/idle": { fill: "muted" },
+        "slides/pointer/idle": { fill: "primary", shadow: { color: "rgba(255,176,0,0.55)", blur: 24, offsetX: 0, offsetY: 0 } },
+        "slides/blank/idle": { fill: "#000000" },
+        "slides/tile/idle": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [6, 6, 6, 6], kind: "round" }, textColor: "muted-foreground", font: "500 14px mono" },
+        "slides/tile/current": { fill: "surface", stroke: "primary", strokeWidth: 3, corners: { radius: [6, 6, 6, 6], kind: "round" }, textColor: "primary", font: "600 14px mono" },
+        "slides/counter/idle": { textColor: "input", font: "500 16px mono" }
+      }
+    systemBreakpointLooks: {
+      wide: { "text/display/idle": { textColor: "foreground", font: "700 112px display" }, "text/title/idle": { textColor: "foreground", font: "600 64px display" }, "text/statement/idle": { textColor: "foreground", font: "500 80px display" }, "text/statement/accent": { textColor: "primary", font: "500 80px display" }, "text/body/idle": { textColor: "muted-foreground", font: "400 40px body" }, "text/body/strong": { textColor: "foreground", font: "500 40px body" }, "text/eyebrow/idle": { textColor: "primary", font: "500 24px mono" }, "text/caption/idle": { textColor: "muted-foreground", font: "400 26px body" }, "archi/element/idle": { fill: "surface", stroke: "muted-foreground", strokeWidth: 2, corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "foreground", font: "500 26px body" }, "archi/element/accent": { fill: "primary", stroke: "primary", strokeWidth: 2, corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "primary-foreground", font: "600 26px body" }, "archi/element/dim": { fill: "card", stroke: "border", strokeWidth: 1, corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "input", font: "500 26px body" }, "archi/element/refused": { fill: "surface", stroke: "foreground", strokeWidth: 2, strokeDash: [6, 6], corners: { radius: [4, 4, 4, 4], kind: "round" }, textColor: "foreground", font: "500 26px body" }, "archi/layer/idle": { fill: "card", stroke: "muted", strokeWidth: 1, corners: { radius: [10, 10, 10, 10], kind: "round" }, textColor: "muted-foreground", font: "500 20px mono" } },
+      tablet: { "text/display/idle": { textColor: "foreground", font: "700 56px display" }, "text/title/idle": { textColor: "foreground", font: "600 34px display" }, "text/statement/idle": { textColor: "foreground", font: "500 40px display" }, "text/statement/accent": { textColor: "primary", font: "500 40px display" }, "text/body/idle": { textColor: "muted-foreground", font: "400 22px body" }, "text/body/strong": { textColor: "foreground", font: "500 22px body" } },
+      phone: { "text/display/idle": { textColor: "foreground", font: "700 34px display" }, "text/title/idle": { textColor: "foreground", font: "600 24px display" }, "text/statement/idle": { textColor: "foreground", font: "500 26px display" }, "text/statement/accent": { textColor: "primary", font: "500 26px display" }, "text/body/idle": { textColor: "muted-foreground", font: "400 17px body" }, "text/body/strong": { textColor: "foreground", font: "500 17px body" }, "text/note/idle": { textColor: "foreground", font: "400 19px body" }, "text/note/cue": { textColor: "primary", font: "600 19px body" }, "text/clock/idle": { textColor: "foreground", font: "600 36px mono" }, "text/clock/late": { textColor: "primary", font: "600 36px mono" } }
+    }
+    layout: { hero: "centered", columns: 1, asymmetry: 0, ornament: "none", align: "start", imageTreatment: "none", sectionGap: 0, gutter: 32 }
+    motion: { signature: "settle", stiffness: 170, damping: 26, stagger: 90, enterMs: 520, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 16, scale: 1, rotate: 0 }, { at: 0.2, opacity: 0.48, offsetX: 0, offsetY: 7.6, scale: 1, rotate: 0 }, { at: 0.4, opacity: 0.8, offsetX: 0, offsetY: 3.1, scale: 1, rotate: 0 }, { at: 0.6, opacity: 0.94, offsetX: 0, offsetY: 1, scale: 1, rotate: 0 }, { at: 0.8, opacity: 0.99, offsetX: 0, offsetY: 0.2, scale: 1, rotate: 0 }, { at: 1, opacity: 1, offsetX: 0, offsetY: 0, scale: 1, rotate: 0 }] }
+  }
+}

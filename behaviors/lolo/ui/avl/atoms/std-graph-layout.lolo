@@ -107,9 +107,10 @@ orbital GraphLayoutOrbital {
                       (leftW (array/reduce (object/get @left "lanes") 0 (fn (sum L) (+ @sum @g (default (array/max (array/map @L (fn f @f.lw))) 0)))))
                       (rightW (array/reduce (object/get @right "lanes") 0 (fn (sum L) (+ @sum @g (default (array/max (array/map @L (fn f @f.lw))) 0)))))
                       (selfW (array/reduce (array/filter @info (fn f (= @f.kind "self"))) 0 (fn (m f) (math/max @m (+ @loop @config.edgeGap @f.lw))))))
-                  (let ((colLeft (+ @config.padding @leftW (if (> @leftW 0) @g 0))))
-                    (let ((cx (+ @colLeft (math/floor (/ @colW 2))))
-                          (colRight (+ @colLeft @colW))
+                  (let ((colLeft (+ @config.padding @leftW (if (> @leftW 0) @g 0)))
+                          (cw (math/max @colW (array/reduce (array/filter @info (fn f (= @f.kind "spine"))) 0 (fn (m f) (math/max @m (+ @f.lw @g)))))))
+                    (let ((cx (+ @colLeft (math/floor (/ @cw 2))))
+                          (colRight (+ @colLeft @cw))
                           (last (- (array/len ?nodes) 1)))
                       (let ((laneBase (+ @colRight @selfW)))
                         { width: (+ @laneBase @rightW (if (> @rightW 0) @g 0) @config.padding),
