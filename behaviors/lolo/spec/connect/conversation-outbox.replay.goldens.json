@@ -1,0 +1,928 @@
+{
+ "atom": "connect/atoms/std-conversation.lolo",
+ "trait": "MessageOutbox",
+ "cases": [
+  {
+   "id": "a-send-shows-the-message-as-sending-at-once",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 0,
+    "entries": [],
+    "sending": "",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_SEND",
+     "payload": {
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "OUTBOX_CHANGED",
+        "payload": {
+         "entries": [
+          {
+           "id": "mP-1",
+           "data": {
+            "content": "Hi",
+            "channel": "family",
+            "attachment": "",
+            "attachmentKind": "",
+            "mentions": [],
+            "linkKind": "",
+            "linkId": "",
+            "linkLabel": "",
+            "linkHref": ""
+           },
+           "status": "sending",
+           "error": ""
+          }
+         ]
+        }
+       },
+       {
+        "event": "OUTBOX_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "seq": 1,
+       "entries": [
+        {
+         "id": "mP-1",
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": ""
+         },
+         "status": "sending",
+         "error": ""
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-free-line-hands-the-oldest-waiting-message-over-with-its-id",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "OUTBOX_WRITE",
+        "payload": {
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": "",
+          "id": "mP-1",
+          "pendingId": "mP-1"
+         }
+        }
+       }
+      ],
+      "entity": {
+       "sending": "mP-1"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-busy-line-hands-nothing-over",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 2,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     },
+     {
+      "id": "mP-2",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-1",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_NEXT",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "OUTBOX_WRITE"
+      ],
+      "entity": {
+       "sending": "mP-1"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-saved-message-in-flight-is-sent-and-the-next-goes-out",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 2,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     },
+     {
+      "id": "mP-2",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-1",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "MESSAGE_SAVED",
+     "payload": {
+      "id": "mP-1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OUTBOX_CHANGED",
+        "payload": {
+         "entries": [
+          {
+           "id": "mP-1",
+           "data": {
+            "content": "Hi",
+            "channel": "family",
+            "attachment": "",
+            "attachmentKind": "",
+            "mentions": [],
+            "linkKind": "",
+            "linkId": "",
+            "linkLabel": "",
+            "linkHref": ""
+           },
+           "status": "sent",
+           "error": ""
+          },
+          {
+           "id": "mP-2",
+           "data": {
+            "content": "Hi",
+            "channel": "family",
+            "attachment": "",
+            "attachmentKind": "",
+            "mentions": [],
+            "linkKind": "",
+            "linkId": "",
+            "linkLabel": "",
+            "linkHref": ""
+           },
+           "status": "sending",
+           "error": ""
+          }
+         ]
+        }
+       },
+       {
+        "event": "OUTBOX_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "OUTBOX_WRITE",
+        "payload": {
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": "",
+          "id": "mP-2",
+          "pendingId": "mP-2"
+         }
+        }
+       }
+      ],
+      "entity": {
+       "sending": "mP-2"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-persons-saved-message-changes-nothing",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-1",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "MESSAGE_SAVED",
+     "payload": {
+      "id": "other-7"
+     },
+     "expect": {
+      "neverEmits": [
+       "OUTBOX_CHANGED"
+      ],
+      "entity": {
+       "sending": "mP-1",
+       "entries": [
+        {
+         "id": "mP-1",
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": ""
+         },
+         "status": "sending",
+         "error": ""
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failure-marks-the-message-in-flight-failed-and-frees-the-line",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-1",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "MESSAGE_SAVE_FAILED",
+     "payload": {
+      "error": "offline",
+      "code": "store"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OUTBOX_CHANGED",
+        "payload": {
+         "entries": [
+          {
+           "id": "mP-1",
+           "data": {
+            "content": "Hi",
+            "channel": "family",
+            "attachment": "",
+            "attachmentKind": "",
+            "mentions": [],
+            "linkKind": "",
+            "linkId": "",
+            "linkLabel": "",
+            "linkHref": ""
+           },
+           "status": "failed",
+           "error": "offline"
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "sending": ""
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-duplicate-id-failure-means-the-message-had-landed",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-1",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "MESSAGE_SAVE_FAILED",
+     "payload": {
+      "error": "exists",
+      "code": "duplicate-id"
+     },
+     "expect": {
+      "entity": {
+       "sending": "",
+       "entries": [
+        {
+         "id": "mP-1",
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": ""
+         },
+         "status": "sent",
+         "error": ""
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-failure-with-nothing-in-flight-changes-nothing",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "failed",
+      "error": "timeout"
+     }
+    ],
+    "sending": "",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "MESSAGE_SAVE_FAILED",
+     "payload": {
+      "error": "late",
+      "code": "store"
+     },
+     "expect": {
+      "neverEmits": [
+       "OUTBOX_CHANGED"
+      ],
+      "entity": {
+       "entries": [
+        {
+         "id": "mP-1",
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": ""
+         },
+         "status": "failed",
+         "error": "timeout"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-late-success-for-a-failed-message-marks-it-sent",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 2,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "failed",
+      "error": "timeout"
+     },
+     {
+      "id": "mP-2",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-2",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "MESSAGE_SAVED",
+     "payload": {
+      "id": "mP-1"
+     },
+     "expect": {
+      "entity": {
+       "sending": "mP-2",
+       "entries": [
+        {
+         "id": "mP-1",
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": ""
+         },
+         "status": "sent",
+         "error": ""
+        },
+        {
+         "id": "mP-2",
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": ""
+         },
+         "status": "sending",
+         "error": ""
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-retry-sends-a-failed-message-again-under-its-id",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "failed",
+      "error": "offline"
+     }
+    ],
+    "sending": "",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_RETRY",
+     "payload": {
+      "id": "mP-1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OUTBOX_CHANGED",
+        "payload": {
+         "entries": [
+          {
+           "id": "mP-1",
+           "data": {
+            "content": "Hi",
+            "channel": "family",
+            "attachment": "",
+            "attachmentKind": "",
+            "mentions": [],
+            "linkKind": "",
+            "linkId": "",
+            "linkLabel": "",
+            "linkHref": ""
+           },
+           "status": "sending",
+           "error": ""
+          }
+         ]
+        }
+       },
+       {
+        "event": "OUTBOX_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "OUTBOX_WRITE",
+        "payload": {
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": "",
+          "id": "mP-1",
+          "pendingId": "mP-1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-retry-of-a-message-that-did-not-fail-changes-nothing",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-1",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_RETRY",
+     "payload": {
+      "id": "mP-1"
+     },
+     "expect": {
+      "neverEmits": [
+       "OUTBOX_CHANGED",
+       "OUTBOX_WRITE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "settled-ids-drop-their-sent-entries",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 2,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sent",
+      "error": ""
+     },
+     {
+      "id": "mP-2",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "failed",
+      "error": "offline"
+     }
+    ],
+    "sending": "",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_SETTLE",
+     "payload": {
+      "ids": [
+       "mP-1",
+       "mP-2",
+       "r9"
+      ]
+     },
+     "expect": {
+      "entity": {
+       "entries": [
+        {
+         "id": "mP-2",
+         "data": {
+          "content": "Hi",
+          "channel": "family",
+          "attachment": "",
+          "attachmentKind": "",
+          "mentions": [],
+          "linkKind": "",
+          "linkId": "",
+          "linkLabel": "",
+          "linkHref": ""
+         },
+         "status": "failed",
+         "error": "offline"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-settling-ids-with-no-sent-entry-changes-nothing",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "Hi",
+       "channel": "family",
+       "attachment": "",
+       "attachmentKind": "",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      },
+      "status": "sending",
+      "error": ""
+     }
+    ],
+    "sending": "mP-1",
+    "startedMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_SETTLE",
+     "payload": {
+      "ids": [
+       "mP-1"
+      ]
+     },
+     "expect": {
+      "neverEmits": [
+       "OUTBOX_CHANGED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

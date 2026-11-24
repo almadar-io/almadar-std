@@ -2,7 +2,11 @@ app std-conversation [
   version: "0.1.0",
   description: "std-conversation — the generic data mechanism of a chat conversation: the persisted message row and the coordinator that writes it. MessagePersistor owns every write to a conversation's messages: DO_CREATE persists a message stamped with the viewer's id and name and announces MESSAGE_SAVED, then MEMBERS_MENTIONED when the message mentions people; DO_DELETE removes a message (MESSAGE_DELETED); DO_PIN persists the pinned flag (MESSAGE_PINNED); DO_REACT persists the reaction set and its display roll-up and announces MESSAGE_REACTED with the reactor's emoji. Each persist failure surfaces as an error notification and its own failure event. The atom renders nothing and never reads: a consumer rebinds MessagePersistor onto its own message entity (the field names here are the contract) and listens its composer, viewer and reactor events into the DO_* inputs. With `stampTime` on, a created message also carries the dispatch's time in `timestamp`, so a conversation can be ordered and timed by it. ReadMarker owns the read state: MARK_READ { channel, channelName?, isDirect? } upserts the signed-in viewer's own ConversationMember row (id `<channel>:<viewer>`) with `lastReadAt` now and `unreadCount` 0 (and, when given, the conversation's name and kind, so a first read creates a complete membership) and announces READ_MARKED, which reaches every open window as a persist; a message is unread for a member when it is newer than their `lastReadAt` and someone else sent it, and read by everyone once every other member's `lastReadAt` has passed it, so unread counts and read receipts are derived from one fact and no write fans out per message. An anonymous viewer marks nothing. DirectMessageOpener: OPEN_DM { id, name } opens the direct message with a person, a conversation whose id is derived from its two people (dm-<lower id>-<higher id>, the same from either side), by upserting both memberships (each named for the other person, isDirect) and announcing DM_OPENED { channel, name, peer } once both are written. MemberAdder: ADD_MEMBER { channel, channelName, id, name } upserts that person's membership (MEMBER_ADDED). TokenMessagePersistor posts for a person with no account who holds a token: POST_BY_TOKEN { token, content, channel, threadRootId, once } asks the composed std-opaque-token resolver for the token's holder (TOKEN_POST_RESOLVE out, TOKEN_POST_HOLDER or TOKEN_POST_NO_HOLDER back), and writes the message with that holder's id and name as its sender and announces TOKEN_POST_SAVED, so a caller can never name the sender; with once the row's id is the thread and the holder, so a holder posts at most one message under a thread (a vote), and a second is refused as repeat (TOKEN_POST_REFUSED). ThreadRollup: REPLY_SAVED { threadRootId } (wire MESSAGE_SAVED) recounts the thread's replies and writes replyCount and repliers (each name once) on its first message (THREAD_UPDATED); a channel message recounts nothing.",
 ]
-;; @capabilities "persist conversation messages, delete a message, pin a message, toggle an emoji reaction, announce mentioned people, mark a conversation read, read receipts, unread counts, open a direct message, add a member, thread reply counts, post as a token holder with no account, one vote per token holder"
+type ConversationOutboxData = { content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string }
+type ConversationOutboxWrite = { id : string!, pendingId : string!, content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string }
+type ConversationOutboxEntry = { id : string!, data : ConversationOutboxData!, status : "sending" | "sent" | "failed"!, error : string! }
+
+;; @capabilities "send messages in order with a status for each (sending, sent, failed) and resend, persist conversation messages, delete a message, pin a message, toggle an emoji reaction, announce mentioned people, mark a conversation read, read receipts, unread counts, open a direct message, add a member, thread reply counts, post as a token holder with no account, one vote per token holder"
 
 orbital ConversationOrbital {
 
@@ -89,8 +93,11 @@ orbital ConversationOrbital {
         (emit MESSAGE_REACTED { messageId: ?id, emoji: @entity.pendingReactionEmoji, userId: @user.id })
       MESSAGE_SAVED -> idle when (> (array/len (default ?mentions [])) 0)
         (emit MEMBERS_MENTIONED { messageId: ?id, channel: (default ?channel ""), mentions: ?mentions, senderName: (default ?senderName ""), content: (default ?content "") })
-      ChatMessageSaveFailed -> idle
+      ChatMessageSaveFailed -> idle when @config.announceFailure
         (notify error (if (validate/required ?error) (str/concat "Your message couldn't be sent — " ?error) "Your message couldn't be sent"))
+        (emit MESSAGE_SAVE_FAILED { error: (default ?error ""), code: (default ?code "") })
+      ChatMessageSaveFailed -> idle when (not @config.announceFailure)
+        (emit MESSAGE_SAVE_FAILED { error: (default ?error ""), code: (default ?code "") })
       ChatMessageDeleteFailed -> idle
         (notify error (if (validate/required ?error) (str/concat "Couldn't delete this message — " ?error) "Couldn't delete this message"))
       ChatMessagePinFailed -> idle
@@ -106,8 +113,20 @@ orbital ConversationOrbital {
         @description "Write the dispatch's time into a created message's `timestamp`, so a conversation can be ordered and timed by it; off writes the fields the composer sent and nothing more."
         @synonyms "message time, sent at, timestamp"
         @tier "domain"
+      announceFailure : boolean = true
+        @label "Announce a failed send"
+        @description "Show a notification when a message fails to persist; off when the composer shows the failure next to the message itself (MESSAGE_SAVE_FAILED is emitted either way)."
+        @synonyms "send error toast, failure notification"
+        @tier "presentation"
     }
     emits {
+      MESSAGE_SAVE_FAILED -> external {
+        error : string!
+        code : string!
+      }
+        @description "A message failed to persist: the store's message and code (duplicate-id when a message with that id already exists)."
+        @synonyms "send failed, not sent, not saved"
+        @tier "domain"
       MESSAGE_SAVED -> external {
         id : string
         channel : string
@@ -188,7 +207,7 @@ orbital ConversationOrbital {
 
     listens {
       DO_CREATE -> input {
-        data : { attachment : string, attachmentKind : string, content : string!, channel : string!, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string, threadRootId : string, isReply : boolean }!
+        data : { id : string, pendingId : string, attachment : string, attachmentKind : string, content : string!, channel : string!, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string, threadRootId : string, isReply : boolean }!
       }
       MESSAGE_SAVED {
         id : string
@@ -261,6 +280,131 @@ orbital ConversationOrbital {
     }
   }
 
+
+  entity ConversationOutbox [runtime] {
+    id : string!
+    prefix : string @description "A random prefix drawn when the outbox starts; each message id is the prefix and a count." = ""
+    seq : number @description "The last count used in a message id." = 0
+    entries : [ConversationOutboxEntry] @description "The viewer's messages still sending, sent but not yet read back, or failed, oldest first." = []
+    sending : string @description "The id of the one message in flight; empty when the line is free." = ""
+    startedMs : number @description "When the message in flight was handed over, in epoch ms." = 0
+  }
+
+  ;; One message in flight at a time, so a failure, which names no message, belongs to the one in flight.
+  trait MessageOutbox -> @rebindable ConversationOutbox [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.prefix (str/concat "m" (math/floor (* (math/random) 1000000000)) (math/floor (* (math/random) 1000000000)) (math/floor (* (math/random) 1000000000))))
+      OUTBOX_SEND -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (set @entity.entries (array/append @entity.entries { id: (str/concat @entity.prefix "-" @entity.seq), data: ?data, status: "sending", error: "" }))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_NEXT {})
+      OUTBOX_NEXT -> idle when (and (= @entity.sending "") (array/some @entity.entries (fn e (= @e.status "sending"))))
+        (let ((next (array/find @entity.entries (fn e (= @e.status "sending")))))
+          (do
+            (set @entity.sending @next.id)
+            (set @entity.startedMs (time/epoch-ms @now))
+            (emit OUTBOX_WRITE { data: (object/merge @next.data { id: @next.id, pendingId: @next.id }) })))
+      OUTBOX_NEXT -> idle when (not (and (= @entity.sending "") (array/some @entity.entries (fn e (= @e.status "sending")))))
+      MESSAGE_SAVED -> idle when (and (!= @entity.sending "") (= (default ?id "") @entity.sending))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id @entity.sending) (object/merge @e { status: "sent", error: "" }) @e))))
+        (set @entity.sending "")
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_NEXT {})
+      MESSAGE_SAVED -> idle when (and (!= (default ?id "") @entity.sending) (array/some @entity.entries (fn e (and (= @e.id (default ?id "")) (= @e.status "failed")))))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id (default ?id "")) (object/merge @e { status: "sent", error: "" }) @e))))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+      MESSAGE_SAVED -> idle when (and (not (and (!= @entity.sending "") (= (default ?id "") @entity.sending))) (not (and (!= (default ?id "") @entity.sending) (array/some @entity.entries (fn e (and (= @e.id (default ?id "")) (= @e.status "failed")))))))
+      MESSAGE_SAVE_FAILED -> idle when (!= @entity.sending "")
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id @entity.sending) (object/merge @e (if (= ?code "duplicate-id") { status: "sent", error: "" } { status: "failed", error: ?error })) @e))))
+        (set @entity.sending "")
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_NEXT {})
+      MESSAGE_SAVE_FAILED -> idle when (= @entity.sending "")
+      OUTBOX_RETRY -> idle when (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed"))))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id ?id) (object/merge @e { status: "sending", error: "" }) @e))))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_NEXT {})
+      OUTBOX_RETRY -> idle when (not (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed")))))
+      OUTBOX_SETTLE -> idle when (array/some @entity.entries (fn e (and (= @e.status "sent") (array/includes ?ids @e.id))))
+        (set @entity.entries (array/filter @entity.entries (fn e (not (and (= @e.status "sent") (array/includes ?ids @e.id))))))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+      OUTBOX_SETTLE -> idle when (not (array/some @entity.entries (fn e (and (= @e.status "sent") (array/includes ?ids @e.id)))))
+    }
+
+    ticks {
+      sendTimeout every 1000ms
+        when (and (!= @entity.sending "") (> (- (time/epoch-ms @now) @entity.startedMs) @config.sendTimeoutMs))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id @entity.sending) (object/merge @e { status: "failed", error: "timeout" }) @e))))
+        (set @entity.sending "")
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_NEXT {})
+    }
+
+    config {
+      sendTimeoutMs : number = 15000
+        @label "Send timeout"
+        @description "How long a message may wait for the store's answer before it is shown as failed and the next one goes out; a late success still marks it sent."
+        @synonyms "send deadline, no answer"
+        @tier "presentation"
+    }
+
+    emits {
+      OUTBOX_WRITE -> external {
+        data : ConversationOutboxWrite!
+      }
+        @description "Write this message, with the id the outbox gave it; wire it to MessagePersistor's DO_CREATE."
+        @synonyms "send, write, persist"
+        @tier "domain"
+      OUTBOX_CHANGED -> external {
+        entries : [ConversationOutboxEntry]!
+      }
+        @description "The viewer's unsettled messages and their status (sending, sent, failed), oldest first, for the conversation to show next to the rows it read."
+        @synonyms "outbox, pending messages, send status"
+        @tier "domain"
+      OUTBOX_NEXT {
+      }
+        @description "Internal: hand the oldest waiting message over when the line is free."
+        @tier "internal"
+    }
+
+    listens {
+      MessagePersistor.MESSAGE_SAVED -> MESSAGE_SAVED
+      MessagePersistor.MESSAGE_SAVE_FAILED -> MESSAGE_SAVE_FAILED
+      OUTBOX_SEND {
+        data : ConversationOutboxData!
+      }
+        @description "Send a message: it shows as sending at once and goes out after the ones before it."
+        @synonyms "send message, post, submit"
+        @tier "domain"
+      OUTBOX_RETRY {
+        id : string!
+      }
+        @description "Send a failed message again, under the same id, so a message that did land is not written twice."
+        @synonyms "resend, retry, try again"
+        @tier "domain"
+      OUTBOX_SETTLE {
+        ids : [string]!
+      }
+        @description "These message ids were read back from the store: their sent entries are dropped."
+        @synonyms "read back, settled"
+        @tier "domain"
+      MESSAGE_SAVED {
+        id : string
+      }
+        @description "A message was persisted; when it is the one in flight it is sent. Wire MessagePersistor's MESSAGE_SAVED here."
+        @tier "domain"
+      MESSAGE_SAVE_FAILED {
+        error : string!
+        code : string!
+      }
+        @description "The message in flight failed to persist; duplicate-id means it had landed already. Wire MessagePersistor's MESSAGE_SAVE_FAILED here."
+        @tier "domain"
+    }
+  }
 
   entity ConversationMember [persistent: conversationmembers, shared] {
     @read none "A substrate atom: the composing program decides who may read memberships, from its own conversation entity."
@@ -663,5 +807,5 @@ orbital ConversationOrbital {
     }
   }
 
-  page "/conversation-messages" as ConversationMessagesPage -> MessagePersistor, ReadMarker, DirectMessageOpener, MemberAdder, ThreadRollup, TokenMessagePersistor
+  page "/conversation-messages" as ConversationMessagesPage -> MessagePersistor, MessageOutbox, ReadMarker, DirectMessageOpener, MemberAdder, ThreadRollup, TokenMessagePersistor
 }

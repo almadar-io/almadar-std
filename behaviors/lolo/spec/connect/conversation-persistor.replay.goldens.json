@@ -1,107 +1,183 @@
 {
-  "atom": "connect/atoms/std-conversation.lolo",
-  "trait": "MessagePersistor",
-  "cases": [
+ "atom": "connect/atoms/std-conversation.lolo",
+ "trait": "MessagePersistor",
+ "cases": [
+  {
+   "id": "a-stamping-persistor-writes-the-time-into-a-new-message",
+   "config": {
+    "stampTime": true
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
     {
-      "id": "a-stamping-persistor-writes-the-time-into-a-new-message",
-      "config": {
-        "stampTime": true
-      },
-      "entity": {
-        "id": "x"
-      },
-      "steps": [
-        {
-          "from": "idle",
-          "event": "DO_CREATE",
-          "payload": {
-            "data": {
-              "attachment": "",
-              "content": "Hi",
-              "channel": "family",
-              "mentions": [],
-              "linkKind": "",
-              "linkId": "",
-              "linkLabel": "",
-              "linkHref": ""
-            }
-          },
-          "expect": {
-            "state": "idle",
-            "effects": [
-              {
-                "type": "persist",
-                "arg0": "create",
-                "arg1": "ConversationMessage",
-                "arg2": [
-                  "object/merge",
-                  "@payload.data",
-                  {
-                    "sender": "@user.id",
-                    "senderName": "@user.name",
-                    "timestamp": "@now"
-                  }
-                ]
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "name": "Mama",
-            "email": "m@x.si",
-            "role": "member"
-          }
-        }
+     "from": "idle",
+     "event": "DO_CREATE",
+     "payload": {
+      "data": {
+       "attachment": "",
+       "content": "Hi",
+       "channel": "family",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "create",
+        "arg1": "ConversationMessage",
+        "arg2": [
+         "object/merge",
+         "@payload.data",
+         {
+          "sender": "@user.id",
+          "senderName": "@user.name",
+          "timestamp": "@now"
+         }
+        ]
+       }
       ]
-    },
-    {
-      "id": "control-a-persistor-that-does-not-stamp-writes-only-the-sender",
-      "config": {},
-      "entity": {
-        "id": "x"
-      },
-      "steps": [
-        {
-          "from": "idle",
-          "event": "DO_CREATE",
-          "payload": {
-            "data": {
-              "attachment": "",
-              "content": "Hi",
-              "channel": "family",
-              "mentions": [],
-              "linkKind": "",
-              "linkId": "",
-              "linkLabel": "",
-              "linkHref": ""
-            }
-          },
-          "expect": {
-            "state": "idle",
-            "effects": [
-              {
-                "type": "persist",
-                "arg0": "create",
-                "arg1": "ConversationMessage",
-                "arg2": [
-                  "object/merge",
-                  "@payload.data",
-                  {
-                    "sender": "@user.id",
-                    "senderName": "@user.name"
-                  }
-                ]
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "name": "Mama",
-            "email": "m@x.si",
-            "role": "member"
-          }
-        }
-      ]
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "control-a-persistor-that-does-not-stamp-writes-only-the-sender",
+   "config": {},
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "DO_CREATE",
+     "payload": {
+      "data": {
+       "attachment": "",
+       "content": "Hi",
+       "channel": "family",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "create",
+        "arg1": "ConversationMessage",
+        "arg2": [
+         "object/merge",
+         "@payload.data",
+         {
+          "sender": "@user.id",
+          "senderName": "@user.name"
+         }
+        ]
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-save-failure-is-announced-and-emitted",
+   "config": {},
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "ChatMessageSaveFailed",
+     "payload": {
+      "error": "offline",
+      "code": "store"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MESSAGE_SAVE_FAILED",
+        "payload": {
+         "error": "offline",
+         "code": "store"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-quiet-save-failure-is-emitted-without-a-notification",
+   "config": {
+    "announceFailure": false
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "ChatMessageSaveFailed",
+     "payload": {
+      "error": "offline",
+      "code": "store"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MESSAGE_SAVE_FAILED",
+        "payload": {
+         "error": "offline",
+         "code": "store"
+        }
+       }
+      ],
+      "effects": []
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
+    }
+   ]
+  }
+ ]
 }
