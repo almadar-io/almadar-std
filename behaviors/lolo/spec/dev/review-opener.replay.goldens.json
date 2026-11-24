@@ -101,6 +101,181 @@
           }
         }
       ]
+    },
+    {
+      "id": "the second version of one name opens its own program file",
+      "config": {
+        "reviews": [
+          {
+            "name": "friday",
+            "version": "1.1.0",
+            "behavior": "pkg/friday-1",
+            "label": "Friday 1.1",
+            "route": "/projects",
+            "path": "/srv/orb/apps/friday-1/current/app.orb"
+          },
+          {
+            "name": "friday",
+            "version": "1.2.0",
+            "behavior": "pkg/friday-2",
+            "label": "Friday 1.2",
+            "route": "/my-week",
+            "path": "/srv/orb/apps/friday-2/current/app.orb"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "name": "friday",
+            "version": "1.2.0"
+          },
+          "entity": {
+            "id": "o",
+            "wanted": "",
+            "leaves": [],
+            "listed": false,
+            "openedBehavior": "",
+            "openedRoute": "",
+            "openedPath": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_START_ROUTE",
+                "payload": {
+                  "route": "/my-week"
+                }
+              },
+              {
+                "event": "REVIEW_OPEN",
+                "payload": {
+                  "subject": "friday/1.2.0",
+                  "route": "/my-week"
+                }
+              },
+              {
+                "event": "LOAD_PROGRAM_FILE",
+                "payload": {
+                  "path": "/srv/orb/apps/friday-2/current/app.orb"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the first version of the same name still opens the first file",
+      "config": {
+        "reviews": [
+          {
+            "name": "friday",
+            "version": "1.1.0",
+            "behavior": "pkg/friday-1",
+            "label": "Friday 1.1",
+            "route": "/projects",
+            "path": "/srv/orb/apps/friday-1/current/app.orb"
+          },
+          {
+            "name": "friday",
+            "version": "1.2.0",
+            "behavior": "pkg/friday-2",
+            "label": "Friday 1.2",
+            "route": "/my-week",
+            "path": "/srv/orb/apps/friday-2/current/app.orb"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "name": "friday",
+            "version": "1.1.0"
+          },
+          "entity": {
+            "id": "o",
+            "wanted": "",
+            "leaves": [],
+            "listed": false,
+            "openedBehavior": "",
+            "openedRoute": "",
+            "openedPath": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LOAD_PROGRAM_FILE",
+                "payload": {
+                  "path": "/srv/orb/apps/friday-1/current/app.orb"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "CONTROL an unknown version of a known name is refused",
+      "config": {
+        "reviews": [
+          {
+            "name": "friday",
+            "version": "1.1.0",
+            "behavior": "pkg/friday-1",
+            "label": "Friday 1.1",
+            "route": "/projects",
+            "path": "/srv/orb/apps/friday-1/current/app.orb"
+          },
+          {
+            "name": "friday",
+            "version": "1.2.0",
+            "behavior": "pkg/friday-2",
+            "label": "Friday 1.2",
+            "route": "/my-week",
+            "path": "/srv/orb/apps/friday-2/current/app.orb"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "name": "friday",
+            "version": "9.9.9"
+          },
+          "entity": {
+            "id": "o",
+            "wanted": "",
+            "leaves": [],
+            "listed": false,
+            "openedBehavior": "",
+            "openedRoute": "",
+            "openedPath": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "REVIEW_REFUSED"
+              }
+            ],
+            "neverEmits": [
+              "LOAD_PROGRAM_FILE"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

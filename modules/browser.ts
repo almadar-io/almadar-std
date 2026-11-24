@@ -24,6 +24,12 @@ const PAGE_FACTS_PRODUCES = shape({ available: BOOLEAN, hostname: STRING, referr
 
 const BEACON_PRODUCES = shape({ sent: BOOLEAN, via: union(lit('queue'), lit('fetch')), status: nullable(NUMBER), key: nullable(STRING) });
 
+const PUSH_SUBSCRIPTION: OperatorTypeRef = union(
+  shape({ kind: lit('webpush'), endpoint: STRING, p256dh: STRING, auth: STRING }),
+  shape({ kind: lit('fcm'), token: STRING }),
+  shape({ kind: lit('apns'), token: STRING }),
+);
+
 const PROMPT_PRODUCES = shape({ reply: STRING, key: nullable(STRING) });
 
 const EMBED_PRODUCES = shape({ embeddings: list(list(NUMBER)), key: nullable(STRING) });
@@ -148,21 +154,11 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 0,
     maxArity: 0,
     description:
-      'Subscribe this browser to Web Push notifications: registers the shared push service worker, fetches the VAPID public key from the host (/api/push/vapid-public-key — no key material in the schema), and calls PushManager.subscribe. Requires notification permission (user gesture). Resolves with the flat subscription credentials { endpoint, p256dh, auth } via the trailing { emit } envelope — persist them on an owner-scoped entity row and pass them back to the push.send service as subscription: { endpoint, keys: { p256dh, auth } }. Emits failure when the Push API is unavailable, permission is denied, or the host has no VAPID key configured.',
+      'Subscribe this device to push notifications through the platform push service. A browser registers the shared push service worker, fetches the VAPID public key from the host (/api/push/vapid-public-key, no key material in the schema) and calls PushManager.subscribe, answering { kind: webpush, endpoint, p256dh, auth }; an Android host answers its FCM registration token as { kind: fcm, token }; an iOS host answers its APNs device token as { kind: apns, token }. Requires notification permission (user gesture). The answer arrives flat on the success payload through the trailing { emit } envelope: persist it on an owner-scoped row and hand it to the matching sender (std-push for webpush). Emits failure when push is unavailable, permission is denied, or the host has no VAPID key configured.',
     hasSideEffects: true,
     runsOn: 'client',
-    returnType: shape({ endpoint: STRING, p256dh: STRING, auth: STRING }),
-    effect: {
-      kind: 'custom',
-      produces: {
-        kind: 'object',
-        fields: {
-          endpoint: 'string',
-          p256dh: 'string',
-          auth: 'string',
-        },
-      },
-    },
+    returnType: PUSH_SUBSCRIPTION,
+    effect: { kind: 'custom', produces: PUSH_SUBSCRIPTION },
     example: '["browser/push-subscribe", { "emit": { "success": "PUSH_SUBSCRIBED", "failure": "PUSH_SUBSCRIBE_FAILED" } }]',
   },
   'browser/geolocation-current': {

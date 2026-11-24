@@ -47,6 +47,7 @@ orbital NotificationPreferencesOrbital {
       INIT -> loading
         (set @entity.page 1)
         (fetch NotificationPreference {
+          filter: (or (not @config.ownOnly) (= (object/get @entity personId) @user.id))
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -82,28 +83,52 @@ orbital NotificationPreferencesOrbital {
             type: stack
           }, { type: divider }, {
             cols: 1
+            emptyDescription: @config.emptyDescription
+            emptyTitle: @config.emptyTitle
             entity: ?data
-            fields: [{
-              label: Person
-              name: personId
+            fields: (if @config.ownOnly [{
+              label: Event
+              labels: @config.eventLabels
+              name: eventKey
               variant: h4
             }, {
-              label: Event
-              name: eventKey
-              variant: caption
-            }, {
               label: Channel
+              labels: @config.channelLabels
               name: channel
               variant: badge
             }, {
               label: Mode
+              labels: @config.modeLabels
               name: mode
               variant: badge
             }, {
               label: "Quiet hours"
               name: quietHours
               variant: caption
-            }]
+            }] [{
+              label: Person
+              name: personId
+              variant: h4
+            }, {
+              label: Event
+              labels: @config.eventLabels
+              name: eventKey
+              variant: caption
+            }, {
+              label: Channel
+              labels: @config.channelLabels
+              name: channel
+              variant: badge
+            }, {
+              label: Mode
+              labels: @config.modeLabels
+              name: mode
+              variant: badge
+            }, {
+              label: "Quiet hours"
+              name: quietHours
+              variant: caption
+            }])
             gap: sm
             itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
@@ -145,6 +170,7 @@ orbital NotificationPreferencesOrbital {
       INIT -> loading
         (set @entity.page 1)
         (fetch NotificationPreference {
+          filter: (or (not @config.ownOnly) (= (object/get @entity personId) @user.id))
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -167,8 +193,20 @@ orbital NotificationPreferencesOrbital {
       ;; nested (object/get ?data id) is deliberately not that shape.
       ;; createdAt/updatedAt ride the payload when the edit prefill carries
       ;; them; the modal idiom cannot stamp @now at submit time.
+      DO_CREATE -> browsing when (and @config.ownOnly (not (array/includes @config.channels (object/get ?data channel))))
+        (notify warning "That delivery channel is not available")
+      DO_CREATE -> browsing when @config.ownOnly
+        (persist create NotificationPreference (object/merge ?data { personId: @user.id }) {
+          emit: { failure: PreferenceSaveFailed, success: PreferenceSaved }
+        })
       DO_CREATE -> browsing
         (persist create NotificationPreference ?data {
+          emit: { failure: PreferenceSaveFailed, success: PreferenceSaved }
+        })
+      DO_UPDATE -> browsing when (and @config.ownOnly (not (array/includes @config.channels (object/get ?data channel))))
+        (notify warning "That delivery channel is not available")
+      DO_UPDATE -> browsing when @config.ownOnly
+        (persist update NotificationPreference (object/merge ?data { personId: @user.id }) {
           emit: { failure: PreferenceSaveFailed, success: PreferenceSaved }
         })
       DO_UPDATE -> browsing
@@ -179,6 +217,7 @@ orbital NotificationPreferencesOrbital {
         (notify success "Notification preference saved")
         (set @entity.page 1)
         (fetch NotificationPreference {
+          filter: (or (not @config.ownOnly) (= (object/get @entity personId) @user.id))
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -187,6 +226,7 @@ orbital NotificationPreferencesOrbital {
         (notify info "Notification preference removed")
         (set @entity.page 1)
         (fetch NotificationPreference {
+          filter: (or (not @config.ownOnly) (= (object/get @entity personId) @user.id))
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -196,6 +236,7 @@ orbital NotificationPreferencesOrbital {
       REFETCH_PAGE -> loading
         (set @entity.page ?page)
         (fetch NotificationPreference {
+          filter: (or (not @config.ownOnly) (= (object/get @entity personId) @user.id))
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
@@ -230,6 +271,7 @@ orbital NotificationPreferencesOrbital {
       INIT -> loading
         (set @entity.page 1)
         (fetch NotificationPreference {
+          filter: (or (not @config.ownOnly) (= (object/get @entity personId) @user.id))
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -245,6 +287,7 @@ orbital NotificationPreferencesOrbital {
       RETRY -> loading
         (set @entity.page 1)
         (fetch NotificationPreference {
+          filter: (or (not @config.ownOnly) (= (object/get @entity personId) @user.id))
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -388,6 +431,14 @@ orbital NotificationPreferencesOrbital {
         @label "Section title"
         @description "Heading shown above the preference list"
         @tier "presentation"
+      emptyTitle : string = ""
+        @label "Empty list title"
+        @description "Title shown when no preference rows exist; blank keeps the table's built-in empty state."
+        @tier "presentation"
+      emptyDescription : string = ""
+        @label "Empty list description"
+        @description "Description shown under the empty title when no preference rows exist."
+        @tier "presentation"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the preference data table rendered by this atom."
@@ -409,6 +460,26 @@ orbital NotificationPreferencesOrbital {
       }]
         @label "Row actions"
         @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      ownOnly : boolean = false
+        @label "Only the viewer's own preferences"
+        @description "true lists only the signed-in viewer's rows, titles each row by its event label, and stamps the viewer's id on every saved row; leave personId out of the modal fields so the form does not ask for it."
+        @tier "policy"
+      channels : [string] = ["in_app", "email", "push", "slack", "sms", "webhook"]
+        @label "Allowed delivery channels"
+        @description "Channels a saved row may use while ownOnly is on; a save naming another channel is refused with a warning."
+        @tier "policy"
+      eventLabels : Map string string = {}
+        @label "Event labels"
+        @description "Display text per event key; a blank key labels the all-events row."
+        @tier "presentation"
+      channelLabels : Map string string = {}
+        @label "Channel labels"
+        @description "Display text per channel."
+        @tier "presentation"
+      modeLabels : Map string string = {}
+        @label "Mode labels"
+        @description "Display text per delivery mode."
         @tier "presentation"
       viewerRole : string = ""
         @label "Viewer's role"

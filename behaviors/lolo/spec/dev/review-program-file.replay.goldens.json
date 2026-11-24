@@ -1,19 +1,218 @@
 {
   "atom": "dev/atoms/std-review-pins.lolo",
   "trait": "ReviewProgramFile",
-  "note": "A review link's prebuilt program is handed to the stage with the reach its integrations knob states.",
+  "note": "A review link's prebuilt program is handed to the stage with the reach its integrations knob states and the env of the app.env beside it.",
   "cases": [
     {
       "id": "a read program is handed on with mock integrations by default",
       "steps": [
         {
           "event": "PROGRAM_FILE_READ",
-          "payload": { "result": { "program": { "name": "project-friday-m1-1", "orbitals": [] } } },
+          "payload": {
+            "result": {
+              "program": {
+                "name": "project-friday-m1-1",
+                "orbitals": []
+              }
+            }
+          },
           "expect": {
             "fired": true,
             "exactEmits": [
-              { "event": "REVIEW_PROGRAM", "payload": { "program": { "name": "project-friday-m1-1", "orbitals": [] }, "integrations": "mock" } }
+              {
+                "event": "REVIEW_PROGRAM",
+                "payload": {
+                  "program": {
+                    "name": "project-friday-m1-1",
+                    "orbitals": []
+                  },
+                  "integrations": "mock",
+                  "env": {}
+                }
+              }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a read program is handed on with the env its app.env declared",
+      "steps": [
+        {
+          "event": "PROGRAM_FILE_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "project-friday-m1-2",
+                "orbitals": []
+              }
+            }
+          },
+          "entity": {
+            "id": "f",
+            "programPath": "/srv/orb/apps/project-friday-m1-2/current/app.orb",
+            "programEnv": {
+              "FIRESTORE_AUTH": "emulator",
+              "LLM_HOST": "192.168.5.2"
+            }
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "REVIEW_PROGRAM",
+                "payload": {
+                  "program": {
+                    "name": "project-friday-m1-2",
+                    "orbitals": []
+                  },
+                  "integrations": "mock",
+                  "env": {
+                    "FIRESTORE_AUTH": "emulator",
+                    "LLM_HOST": "192.168.5.2"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a review link reads the app.env beside its program file first",
+      "steps": [
+        {
+          "event": "LOAD_PROGRAM_FILE",
+          "payload": {
+            "path": "/srv/orb/apps/project-friday-m1-2/current/app.orb"
+          },
+          "entity": {
+            "id": "f",
+            "programPath": "",
+            "programEnv": {}
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "CONTROL a program file outside the apps folder is refused before any read",
+      "steps": [
+        {
+          "event": "LOAD_PROGRAM_FILE",
+          "payload": {
+            "path": "/etc/elsewhere/app.orb"
+          },
+          "entity": {
+            "id": "f",
+            "programPath": "",
+            "programEnv": {}
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "REVIEW_REFUSED",
+                "payload": {
+                  "title": "This review could not be opened",
+                  "message": "/etc/elsewhere/app.orb is not under /srv/orb/apps"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app.env read parses its NAME=value lines and then reads the program",
+      "steps": [
+        {
+          "event": "PROGRAM_ENV_READ",
+          "payload": {
+            "data": "IyBsb2NhbApGSVJFU1RPUkVfQVVUSD1lbXVsYXRvcgoKTExNX0hPU1Q9MTkyLjE2OC41LjIKUVVFUlk9YT1iCg=="
+          },
+          "entity": {
+            "id": "f",
+            "programPath": "/srv/orb/apps/project-friday-m1-2/current/app.orb",
+            "programEnv": {}
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app.env that is not found reads the program with no env",
+      "steps": [
+        {
+          "event": "PROGRAM_ENV_UNREAD",
+          "payload": {
+            "error": "no such file",
+            "kind": "not-found"
+          },
+          "entity": {
+            "id": "f",
+            "programPath": "/srv/orb/apps/project-friday-m1-2/current/app.orb",
+            "programEnv": {}
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "CONTROL an app.env that fails for another reason refuses the review and reads no program",
+      "steps": [
+        {
+          "event": "PROGRAM_ENV_UNREAD",
+          "payload": {
+            "error": "permission denied",
+            "kind": "denied"
+          },
+          "entity": {
+            "id": "f",
+            "programPath": "/srv/orb/apps/project-friday-m1-2/current/app.orb",
+            "programEnv": {}
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "REVIEW_REFUSED",
+                "payload": {
+                  "title": "This review could not be opened",
+                  "message": "app.env could not be read: permission denied"
+                }
+              }
+            ],
+            "effects": []
           }
         }
       ]
@@ -23,11 +222,19 @@
       "steps": [
         {
           "event": "PROGRAM_FILE_FAILED",
-          "payload": { "error": "no such file" },
+          "payload": {
+            "error": "no such file"
+          },
           "expect": {
             "fired": true,
             "exactEmits": [
-              { "event": "REVIEW_REFUSED", "payload": { "title": "This review could not be opened", "message": "no such file" } }
+              {
+                "event": "REVIEW_REFUSED",
+                "payload": {
+                  "title": "This review could not be opened",
+                  "message": "no such file"
+                }
+              }
             ]
           }
         }

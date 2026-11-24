@@ -1,0 +1,200 @@
+{
+  "atom": "ui/core/atoms/std-chat-workspace.lolo",
+  "trait": "ThreadPanel",
+  "cases": [
+    {
+      "id": "a-thread-reply-is-sent-with-its-thread-root",
+      "entity": {
+        "id": "x",
+        "activeChannel": "design",
+        "threadRoot": "m1",
+        "threadDraft": "agreed"
+      },
+      "steps": [
+        {
+          "from": "thread",
+          "event": "REPLY_SEND",
+          "payload": {},
+          "expect": {
+            "state": "thread",
+            "entity": {
+              "threadDraft": ""
+            },
+            "emits": [
+              {
+                "event": "SEND_MESSAGE",
+                "payload": {
+                  "data": {
+                    "content": "agreed",
+                    "channel": "design",
+                    "threadRootId": "m1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-a-blank-reply-sends-nothing",
+      "entity": {
+        "id": "x",
+        "activeChannel": "design",
+        "threadRoot": "m1",
+        "threadDraft": ""
+      },
+      "steps": [
+        {
+          "from": "thread",
+          "event": "REPLY_SEND",
+          "payload": {},
+          "expect": {
+            "state": "thread",
+            "neverEmits": [
+              "SEND_MESSAGE"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "a-save-in-the-open-thread-reloads-it",
+      "entity": {
+        "id": "x",
+        "threadRoot": "m1"
+      },
+      "steps": [
+        {
+          "from": "thread",
+          "event": "REFRESH",
+          "payload": {
+            "channel": "design",
+            "threadRootId": "m1"
+          },
+          "expect": {
+            "state": "thread",
+            "effects": [
+              {
+                "type": "fetch",
+                "arg0": "WorkspaceMessage"
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-a-save-in-another-thread-reloads-nothing",
+      "entity": {
+        "id": "x",
+        "threadRoot": "m1"
+      },
+      "steps": [
+        {
+          "from": "thread",
+          "event": "REFRESH",
+          "payload": {
+            "channel": "design",
+            "threadRootId": "m9"
+          },
+          "expect": {
+            "state": "thread",
+            "effects": []
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "picking-a-person-to-add-names-the-open-conversation",
+      "entity": {
+        "id": "x",
+        "pickChannel": "design",
+        "pickName": "design"
+      },
+      "steps": [
+        {
+          "from": "open",
+          "event": "PERSON_ADD",
+          "payload": {
+            "id": "u3",
+            "row": {
+              "id": "u3",
+              "name": "Cene"
+            }
+          },
+          "expect": {
+            "state": "open",
+            "emits": [
+              {
+                "event": "MEMBER_PICKED",
+                "payload": {
+                  "channel": "design",
+                  "channelName": "design",
+                  "id": "u3",
+                  "name": "Cene"
+                }
+              }
+            ]
+          },
+          "trait": "PeoplePicker"
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    }
+  ]
+}

@@ -118,6 +118,7 @@ orbital GuestSessionOrbital {
     id : string!
     guestHandle : string = ""
     guestStartRoute : string @description "The route the next opened guest is sent to once it is open (GUEST_OPEN route); empty keeps the guest's own first page." = ""
+    guestAppEnv : Map string string @description "The env the opening program's deployment declares (app.env), carried by GUEST_OPEN and merged under AUTH_PROVIDER into a live open; empty when the opener names none." = {}
     guestPaints : [GuestPaint] = []
     guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
     guestLeg : string @description "The split guest's server leg being answered: the in-place answer of its program/dispatch names it back to the viewer." = ""
@@ -305,6 +306,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (set @entity.guestStartRoute (default ?route ""))
+        (set @entity.guestAppEnv (default ?env {}))
         (set @entity.guestProgram ?program)
         (set @entity.guestOpenKey (default (hash/sha 256 (json/stringify ?program) "hex") ""))
         (set @entity.guestHeader (as (object/omit ?program ["orbitals"]) GuestHeader))
@@ -402,6 +404,7 @@ orbital GuestSessionOrbital {
           (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native." ""))))
         (emit GUEST_CLEARED {})
         (set @entity.guestStartRoute (default ?route ""))
+        (set @entity.guestAppEnv (default ?env {}))
         (set @entity.guestProgram ?program)
         (set @entity.guestOpenKey (default (hash/sha 256 (json/stringify ?program) "hex") ""))
         (set @entity.guestHeader (as (object/omit ?program ["orbitals"]) GuestHeader))
@@ -455,12 +458,12 @@ orbital GuestSessionOrbital {
         (os/symlink @payload.path (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") "/node_modules") { key: "guest-live-link", emit: { success: GUEST_LIVE_LINKED, failure: GUEST_FAILED } })
       GUEST_LIVE_CHECKED -> opening when @payload.ok
         (set @entity.guestSeeded false)
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: (object/merge @entity.guestAppEnv { AUTH_PROVIDER: @config.liveAuthProvider }), cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
         (set @entity.guestKernelClient null)
       GUEST_LIVE_LINKED -> opening
         (set @entity.guestSeeded false)
-        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { split: @config.split, mount: (= @entity.guestKernel "native"), kernel: @entity.guestKernel, clientKernel: (if (= @entity.guestKernel "lolo") { trait: "ClientKernel", mount: ["ClientKernelMachine", "ClientKernel", "ClientKernelSelf"], program: @entity.guestKernelClient } null), program: @config.program, declared: true, integrations: "live", seed: (if (= @config.liveSeed "") null @config.liveSeed), env: (object/merge @entity.guestAppEnv { AUTH_PROVIDER: @config.liveAuthProvider }), cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
         (set @entity.guestKernelClient null)
       GUEST_PREPARE -> opening when (and (= @entity.guestKernelRefusal "") (or (= @entity.guestKernel "native") (!= @entity.guestKernelClient null)) (= @entity.guestIntegrations "mock") (= @entity.guestSeed null) (not (and (!= @entity.guestComposed null) (= @entity.guestComposedKey @entity.guestOpenKey))))
@@ -589,6 +592,7 @@ orbital GuestSessionOrbital {
           (if (not @config.split) "The .lolo kernel runs split guests only: open this program on native."
           (if (= @config.runs "client") "The .lolo kernel does not run a guest inside the viewer's browser yet: open this program on native." ""))))
         (set @entity.guestStartRoute (default ?route ""))
+        (set @entity.guestAppEnv (default ?env {}))
         (if @entity.guestLocal (emit GUEST_LOCAL_OP { kind: "close", guest: @entity.guestHandle }) (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } }))
         (set @entity.guestLocal false)
         (set @entity.guestHandle "")
@@ -1428,6 +1432,7 @@ orbital GuestSessionOrbital {
       GUEST_OPEN -> input {
         program : GuestProgram!
         route : string?
+        env : (Map string string)?
         kernel : "native" | "lolo"?
       }
         @description "Open a resolved program as the guest, closing the one already open."
@@ -1533,7 +1538,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestStartRoute ?route)
       STAGE_SHOW -> idle
         (when (!= ?integrations null) (emit GUEST_REACH { integrations: ?integrations }))
-        (emit GUEST_OPEN { program: ?program, route: @entity.guestStartRoute })
+        (emit GUEST_OPEN { program: ?program, route: @entity.guestStartRoute, env: (default ?env {}) })
       STAGE_CLOSE -> idle
         (emit GUEST_RESET {})
       STAGE_RESOLVED -> idle
@@ -1546,6 +1551,7 @@ orbital GuestSessionOrbital {
       GUEST_OPEN -> internal {
         program : GuestProgram!
         route : string?
+        env : (Map string string)?
       }
         @description "The program to open, for the guest session; internal, so the program stays on the server."
       GUEST_FAIL -> internal {
@@ -1573,6 +1579,7 @@ orbital GuestSessionOrbital {
       STAGE_SHOW {
         program : GuestProgram!
         integrations : GuestReach?
+        env : (Map string string)?
       }
         @description "Open an already resolved program on the stage."
       STAGE_CLOSE { }

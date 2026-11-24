@@ -1,6 +1,6 @@
 app std-notify-on-event [
   version: "2.0.0",
-  description: "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-person NotificationPreference rows (matched on `personId` = recipient and `eventKey` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours (a 'HH:MM-HH:MM' window, blank = none); the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email` and `sms` dispatch through std-email (EMAIL_SEND) and std-twilio (TWILIO_SEND_SMS), `webhook` through call-service (webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push through std-push (PUSH_SEND) (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
+  description: "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipients from `recipients` (every entry, notified one after another through the per-recipient checks; `audience: subscribers` instead notifies every user holding a PushSubscription row, and `excludeActor` leaves out the acting user), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-person NotificationPreference rows (matched on `personId` = recipient and `eventKey` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours (a 'HH:MM-HH:MM' window, blank = none); the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email` and `sms` dispatch through std-email (EMAIL_SEND) and std-twilio (TWILIO_SEND_SMS), `webhook` through call-service (webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push through std-push (PUSH_SEND) (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
   egress: ["https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
 ]
 type PrefRow = { personId : string, eventKey : string, mode : string, channel : string, quietHours : string }
@@ -8,7 +8,7 @@ type AuditRow = { recipient : string, channel : string, dispatched : boolean, re
 type NotifyWebhookPayload = { message : string, recipient : string, severity : string }
 type PushKeysTarget = { p256dh : string, auth : string }
 type PushTarget = { endpoint : string, keys : PushKeysTarget }
-type SubRow = { userId : string, endpoint : string, p256dh : string, auth : string }
+type SubRow = { userId : string, kind : string, endpoint : string, p256dh : string, auth : string }
 uses Email from "std/behaviors/std-email"
 uses Twilio from "std/behaviors/std-twilio"
 uses Push from "std/behaviors/std-push"
@@ -44,6 +44,7 @@ orbital NotifyOnEventOrbital {
     pushEndpoint : string @description "Scratch: push endpoint of the recipient's subscription for the current dispatch." @synonyms "subscription endpoint" = ""
     pushP256dh : string @description "Scratch: p256dh key of the recipient's push subscription." @synonyms "push key" = ""
     pushAuth : string @description "Scratch: auth secret of the recipient's push subscription." @synonyms "push auth" = ""
+    queue : [string] @description "Scratch: the recipients still waiting in the current dispatch, sent one after another." @synonyms "pending recipients" = []
   }
 
   entity NotificationPreference [persistent: notificationPreferences] {
@@ -66,6 +67,8 @@ orbital NotifyOnEventOrbital {
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     userId : string @description "Owner of this browser push subscription." @synonyms "user, owner, account" = ""
+    kind : "webpush" | "fcm" | "apns" @description "The push service this subscription belongs to: webpush (a browser), fcm (Android) or apns (iOS)." @synonyms "push service, platform" = webpush
+    token : string @description "The device's registration token for fcm or apns; blank for webpush." @synonyms "device token, registration token" = ""
     endpoint : string @description "Push service endpoint URL for this subscription." @synonyms "push url, subscription endpoint" = ""
     p256dh : string @description "Client public key (p256dh) of the subscription." @synonyms "public key" = ""
     auth : string @description "Auth secret of the subscription." @synonyms "auth secret" = ""
@@ -241,13 +244,23 @@ orbital NotifyOnEventOrbital {
 
     state idle {
       EventOccurred -> idle when (and (or (= @config.coalesce "none") (if (= @config.coalesce "perDispatch") (not (array/includes (array/map @prevEvents (fn e (object/get @e "event"))) @event.event)) (not (array/some @prevEvents (fn e (and (= (object/get @e "event") @event.event) (validate/required (object/get @e "payload")) (= (object/get (object/get @e "payload") @config.coalesceKey) (object/get @event.payload @config.coalesceKey)))))))) (if (= @config.guardOp "eq") (or (= @config.triggerStatus "") (= ?status @config.triggerStatus)) (if (= @config.guardOp "gt") (and (validate/required ?data) (> (object/get ?data @config.guardField 0) @config.guardValue)) (if (= @config.guardOp "lt") (and (validate/required ?data) (< (object/get ?data @config.guardField 0) @config.guardValue)) (if (= @config.guardOp "gte") (and (validate/required ?data) (>= (object/get ?data @config.guardField 0) @config.guardValue)) (and (validate/required ?data) (<= (object/get ?data @config.guardField 0) @config.guardValue)))))))
-        (set @entity.recipient (if (= (array/len @config.recipients) 0) (if (not (= @config.fallbackRecipient "")) @config.fallbackRecipient @user.id) (array/first @config.recipients)))
-        (set @entity.channel @config.notifyChannel)
-        (set @entity.message @config.template)
+        (set @entity.message (if (validate/required ?data) (str/template @config.template ?data) @config.template))
         (set @entity.severity @config.severity)
+        (set @entity.recipient "")
+        (set @entity.queue [])
+        (if (= @config.audience "subscribers") (fetch PushSubscription { limit: @config.maxSubscriptionRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_AUDIENCE_LOADED } }) (do (set @entity.queue (array/filter (if (= (array/len @config.recipients) 0) [(if (not (= @config.fallbackRecipient "")) @config.fallbackRecipient @user.id)] @config.recipients) (fn r (not (and @config.excludeActor (= @r @user.id)))))) (emit NOTIFY_NEXT {})))
+      NOTIFY_AUDIENCE_LOADED -> idle when (> ?totalCount (array/len ?data))
+        (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "PushSubscription has " ?totalCount " rows, over the maxSubscriptionRows cap of " @config.maxSubscriptionRows) })
+      NOTIFY_AUDIENCE_LOADED -> idle
+        (set @entity.queue (array/unique (array/filter (array/map ?data (fn s (default (object/get @s userId) ""))) (fn r (and (!= @r "") (not (and @config.excludeActor (= @r @user.id))))))))
+        (emit NOTIFY_NEXT {})
+      NOTIFY_NEXT -> idle when (> (array/len @entity.queue) 0)
+        (set @entity.recipient (array/first @entity.queue))
+        (set @entity.queue (array/slice @entity.queue 1))
+        (set @entity.channel @config.notifyChannel)
         (set @entity.dispatched false)
         (set @entity.recordedAt @now)
-        (when (not (array/includes @config.suppressionList @entity.recipient)) (if (and (not (= @config.quietStartHour @config.quietEndHour)) (if (< @config.quietStartHour @config.quietEndHour) (and (>= (time/hour @now) @config.quietStartHour) (< (time/hour @now) @config.quietEndHour)) (or (>= (time/hour @now) @config.quietStartHour) (< (time/hour @now) @config.quietEndHour)))) (persist create NotificationRecord {
+        (if (not (array/includes @config.suppressionList @entity.recipient)) (if (and (not (= @config.quietStartHour @config.quietEndHour)) (if (< @config.quietStartHour @config.quietEndHour) (and (>= (time/hour @now) @config.quietStartHour) (< (time/hour @now) @config.quietEndHour)) (or (>= (time/hour @now) @config.quietStartHour) (< (time/hour @now) @config.quietEndHour)))) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "quiet-hours"
@@ -255,13 +268,18 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (fetch NotificationPreference { limit: @config.maxPreferenceRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PREFS_LOADED } })))
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (fetch NotificationPreference { limit: @config.maxPreferenceRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PREFS_LOADED } })) (emit NOTIFY_SKIPPED {}))
         (emit NotificationDispatched {
           channel: @entity.channel
           message: @entity.message
           recipient: @entity.recipient
           severity: @entity.severity
         })
+      NOTIFY_NEXT -> idle when (= (array/len @entity.queue) 0)
+      NOTIFY_RECORDED -> idle
+        (emit NOTIFY_NEXT {})
+      NOTIFY_SKIPPED -> idle
+        (emit NOTIFY_NEXT {})
       NOTIFY_PREFS_LOADED -> idle when (> ?totalCount (array/len ?data))
         (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "NotificationPreference has " ?totalCount " rows, over the maxPreferenceRows cap of " @config.maxPreferenceRows) })
       NOTIFY_PREFS_LOADED -> idle
@@ -275,7 +293,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (= @entity.prefMode "digest") (persist create NotificationRecord {
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (if (= @entity.prefMode "digest") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "digest-deferred"
@@ -283,7 +301,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (and (str/includes @entity.prefQuietHours "-") (!= (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (if (< (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))))) (persist create NotificationRecord {
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (if (and (str/includes @entity.prefQuietHours "-") (!= (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (if (< (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))))) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "quiet-hours"
@@ -291,7 +309,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (or (= @entity.channel in-app) (= @entity.channel in_app)) (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (if (or (= @entity.channel in-app) (= @entity.channel in_app)) (do (set @entity.dispatched true) (notify @config.severity @config.template) (emit NOTIFY_NEXT {})) (fetch NotificationRecord {
           emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_CAP_LOADED }
           limit: @config.maxRecordRows
           filter: (> (object/get @entity recordedAt) (time/subtract @now 604800000 "ms"))
@@ -307,7 +325,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (= @entity.channel email) (emit EMAIL_SEND {
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (if (= @entity.channel email) (emit EMAIL_SEND {
           body: @entity.message
           subject: (if (= @config.emailSubject "") @entity.message @config.emailSubject)
           to: @entity.recipient
@@ -321,14 +339,14 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (emit WEBHOOK_SEND {
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (emit WEBHOOK_SEND {
           event: @entity.message
           payload: { message: @entity.message, recipient: @entity.recipient, severity: @entity.severity }
         }))))))
       NOTIFY_PUSH_SUBS -> idle when (> ?totalCount (array/len ?data))
         (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "PushSubscription has " ?totalCount " rows, over the maxSubscriptionRows cap of " @config.maxSubscriptionRows) })
       NOTIFY_PUSH_SUBS -> idle
-        (let ((m (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))))) (do (set @entity.pushEndpoint (if (= @m null) "" (object/get @m endpoint))) (set @entity.pushP256dh (if (= @m null) "" (object/get @m p256dh))) (set @entity.pushAuth (if (= @m null) "" (object/get @m auth)))))
+        (let ((m (array/first (array/filter ?data (fn s (and (= (object/get @s userId) @entity.recipient) (= (object/get @s kind) "webpush"))))))) (do (set @entity.pushEndpoint (if (= @m null) "" (object/get @m endpoint))) (set @entity.pushP256dh (if (= @m null) "" (object/get @m p256dh))) (set @entity.pushAuth (if (= @m null) "" (object/get @m auth)))))
         (if (= @entity.pushEndpoint "") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
@@ -337,7 +355,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (emit PUSH_SEND {
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (emit PUSH_SEND {
           subscription: { endpoint: @entity.pushEndpoint, keys: { auth: @entity.pushAuth, p256dh: @entity.pushP256dh } }
           title: (if (= @config.pushTitle "") @entity.message @config.pushTitle)
           body: @entity.message
@@ -353,7 +371,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
       NOTIFY_EMAIL_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -365,7 +383,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
         (notify error (str/concat "Couldn't send the email notification — " ?message))
       NOTIFY_SMS_SENT -> idle
         (set @entity.dispatched true)
@@ -376,7 +394,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
       NOTIFY_SMS_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -388,7 +406,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
         (notify error (str/concat "Couldn't send the text message — " ?message))
       NOTIFY_WEBHOOK_SENT -> idle
         (set @entity.dispatched true)
@@ -399,7 +417,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
       NOTIFY_WEBHOOK_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -411,7 +429,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
         (notify error (str/concat "Couldn't send the webhook notification — " ?message))
       NOTIFY_PUSH_SENT -> idle
         (set @entity.dispatched true)
@@ -422,7 +440,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
       NOTIFY_PUSH_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -434,7 +452,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
         (notify error (str/concat "Couldn't send the push notification — " ?message))
       NOTIFY_LOOKUP_FAILED -> idle
         (set @entity.dispatched false)
@@ -447,10 +465,11 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        } { emit: { failure: NOTIFY_WRITE_FAILED } })
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } })
         (notify error (if (validate/required ?error) (str/concat "Couldn't look up notification preferences — " ?error) "Couldn't look up notification preferences"))
       NOTIFY_WRITE_FAILED -> idle
         (notify error (str/concat "Couldn't record the notification — " (default ?error "")))
+        (emit NOTIFY_NEXT {})
     }
 
     emits {
@@ -478,6 +497,23 @@ orbital NotifyOnEventOrbital {
       }
         @description "PushSubscription rows loaded; the arm picks the recipient's subscription and dispatches push.send"
         @tier "secondary"
+      NOTIFY_AUDIENCE_LOADED {
+        data : [SubRow]!
+        totalCount : number!
+      }
+        @description "PushSubscription rows loaded for the subscribers audience; their owners become the recipient queue"
+        @tier "secondary"
+      NOTIFY_NEXT { }
+        @description "Internal: start the next recipient in the queue, or finish when it is empty"
+        @tier "internal"
+      NOTIFY_RECORDED {
+        id : string!
+      }
+        @description "Internal: a recipient's NotificationRecord was written, so the queue moves on"
+        @tier "internal"
+      NOTIFY_SKIPPED { }
+        @description "Internal: a recipient on the suppression list was skipped, so the queue moves on"
+        @tier "internal"
       EMAIL_SEND -> external {
         to : string!
         subject : string!
@@ -656,7 +692,7 @@ orbital NotifyOnEventOrbital {
         @tier "policy"
       template : string = "You have a new notification"
         @label "Message template"
-        @description "Text shown to the recipient; supports payload interpolation"
+        @description "Text shown to the recipient; each {{field}} is filled from the event's data row (a field the row lacks stays as written)."
         @synonyms "notification text, message body, alert text"
         @tier "presentation"
       severity : string = info
@@ -666,9 +702,17 @@ orbital NotifyOnEventOrbital {
         @tier "policy"
       recipients : [string] = []
         @label "Recipients"
-        @description "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to `fallbackRecipient` if set, otherwise the authenticated user."
+        @description "Recipient ids/addresses, each notified in turn through its own preference, quiet-hours and cap checks. When empty, falls back to `fallbackRecipient` if set, otherwise the authenticated user. Read when `audience` is listed."
         @synonyms "targets, addressees, notify to"
         @tier "policy"
+      audience : "listed" | "subscribers" = listed
+        @label "Audience"
+        @description "Who one event notifies: listed (the `recipients` knob) or subscribers (every user holding a PushSubscription row, read with maxSubscriptionRows)."
+        @synonyms "who to notify, everyone subscribed, broadcast"
+      excludeActor : boolean = false
+        @label "Skip the actor"
+        @description "Leave out the signed-in user whose action raised the event, so a person is not notified of their own message."
+        @synonyms "not me, skip sender, exclude self"
       fallbackRecipient : string = ""
         @label "Fallback recipient"
         @description "Recipient used when `recipients` is empty, instead of the acting user. The acting-user fallback (used when this is blank) is intended for personal notifications only — set this to an ops/team address (e.g. 'ops@example.com') for system alerts like low-stock or shipping notices, so the acting user isn't notified in place of the intended audience."

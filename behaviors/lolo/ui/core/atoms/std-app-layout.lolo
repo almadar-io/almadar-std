@@ -6,7 +6,7 @@ app std-app-layout [
 ;; @capabilities "settings page shell, preferences page, account settings layout, profile settings, admin console shell"
 type NavItem = { label : string!, href : string!, icon : string, badge : string, children : [NavItem], roles : [string] }
 type ItemAction = { label : string!, event : event, navigatesTo : string | SExpr, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
-type NotificationSpec = { id : string, message : string, variant : string }
+type NotificationSpec = { id : string, message : string, variant : string, createdAt : string, read : boolean }
 orbital AppLayoutOrbital {
     type AppLayoutStateLoaded = Event { data : [AppLayoutData]! }
 
@@ -14,6 +14,7 @@ orbital AppLayoutOrbital {
 
   entity AppLayoutData [runtime] {
     id : string!
+    unreadItems : [NotificationSpec] @intrinsic @description "The viewer's unread rows, shown in the bell and counted on the notifications menu item." = []
   }
 
   trait AppLayout -> @rebindable AppLayoutData   [optimistic]{
@@ -45,9 +46,9 @@ orbital AppLayoutOrbital {
             layoutMode: @config.layoutMode
             fullBleed: @config.fullBleed
             stickyHeader: @config.stickyHeader
-            navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
+            navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (let ((counted (if (and @config.countUnread (= @item.href @config.notificationsPath) (> (array/len @entity.unreadItems) 0)) (object/merge @item { badge: (array/len @entity.unreadItems) }) @item))) (if (object/has @counted children) (object/merge @counted { children: (array/filter (object/get @counted children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @counted))))
             notificationClickEvent: @config.notificationClickEvent
-            notifications: (if @config.showNotifications @config.notifications null)
+            notifications: (if @config.showNotifications (array/concat @config.notifications @entity.unreadItems) null)
             searchEvent: (if @config.showSearch @config.searchEvent null)
             showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
@@ -88,9 +89,9 @@ orbital AppLayoutOrbital {
             layoutMode: @config.layoutMode
             fullBleed: @config.fullBleed
             stickyHeader: @config.stickyHeader
-            navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
+            navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (let ((counted (if (and @config.countUnread (= @item.href @config.notificationsPath) (> (array/len @entity.unreadItems) 0)) (object/merge @item { badge: (array/len @entity.unreadItems) }) @item))) (if (object/has @counted children) (object/merge @counted { children: (array/filter (object/get @counted children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @counted))))
             notificationClickEvent: @config.notificationClickEvent
-            notifications: (if @config.showNotifications @config.notifications null)
+            notifications: (if @config.showNotifications (array/concat @config.notifications @entity.unreadItems) null)
             searchEvent: (if @config.showSearch @config.searchEvent null)
             showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
@@ -103,6 +104,42 @@ orbital AppLayoutOrbital {
           }]
         })
       AppLayoutStateLoaded -> composing
+      UNREAD_COUNTED -> composing when (or (= (array/len @config.allowedRoles) 0) (array/includes @config.allowedRoles @config.viewerRole))
+        (set @entity.unreadItems ?items)
+        (render-ui main {
+          data-theme: @config.theme
+          className: "min-h-screen w-full"
+          fullHeight: true
+          type: box
+          children: [{
+            appName: @config.appName
+            logo: (if (== @config.logoSrc "") null { type: image, src: @config.logoSrc, alt: "", fit: contain, className: "h-8 w-8" })
+            children: [{
+              children: [@config.contentTrait]
+              className: @config.contentClassName
+              direction: vertical
+              gap: lg
+              type: stack
+            }]
+            currentPath: @config.currentPath
+            layoutMode: @config.layoutMode
+            fullBleed: @config.fullBleed
+            stickyHeader: @config.stickyHeader
+            navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (let ((counted (if (and @config.countUnread (= @item.href @config.notificationsPath) (> (array/len @entity.unreadItems) 0)) (object/merge @item { badge: (array/len @entity.unreadItems) }) @item))) (if (object/has @counted children) (object/merge @counted { children: (array/filter (object/get @counted children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @counted))))
+            notificationClickEvent: @config.notificationClickEvent
+            notifications: (if @config.showNotifications (array/concat @config.notifications @entity.unreadItems) null)
+            searchEvent: (if @config.showSearch @config.searchEvent null)
+            showThemeToggle: @config.showThemeToggle
+            sidebarContent: @config.sidebarTrait
+            headerActions: @config.headerTrait
+            topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            onSignOut: "SIGN_OUT",
+            userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            type: @config.layoutPattern
+            user: (if (validate/required @config.viewerName) { avatar: @config.viewerAvatar, email: @config.viewerEmail, name: @config.viewerName } null)
+          }]
+        })
+      UNREAD_COUNTED -> composing when (not (or (= (array/len @config.allowedRoles) 0) (array/includes @config.allowedRoles @config.viewerRole)))
       AppLayoutStateLoadFailed -> composing
         (notify error (if (validate/required ?error) (str/concat "Couldn't load the layout — " ?error) "Couldn't load the layout"))
       SEARCH_PICKED -> composing when (or (= @config.searchPath "") (= (str/trim (default ?value "")) ""))
@@ -110,8 +147,11 @@ orbital AppLayoutOrbital {
       SEARCH_PICKED -> composing when (and (not (= @config.searchPath "")) (not (= (str/trim (default ?value "")) "")))
         (emit LAYOUT_SEARCH { value: (default ?value "") })
         (navigate (str/concat "/" (str/slice @config.searchPath 1) "/"(str/encode-uri-component (str/trim (default ?value "")))))
-      NOTIFY_PICKED -> composing
+      NOTIFY_PICKED -> composing when (= @config.notificationsPath "")
         (emit NOTIFY_CLICK { })
+      NOTIFY_PICKED -> composing when (!= @config.notificationsPath "")
+        (emit NOTIFY_CLICK { })
+        (navigate (str/concat "/" (str/slice @config.notificationsPath 1)))
       SIGN_OUT -> composing
         (emit SIGNED_OUT { })
         (auth/sign-out)
@@ -145,6 +185,13 @@ orbital AppLayoutOrbital {
     }
 
     listens {
+      UNREAD_COUNTED {
+        items : [NotificationSpec]!
+      }
+        @description "The viewer's unread rows, from an UnreadCounter on the page."
+        @synonyms "unread, notification count"
+        @tier "presentation"
+      UnreadCounter.UNREAD_COUNTED -> UNREAD_COUNTED
       SEARCH_PICKED {
         value : string
       }
@@ -247,6 +294,16 @@ orbital AppLayoutOrbital {
         @description "Items shown in the notifications dropdown."
         @synonyms "alerts, messages, notices, notification items, bell items"
         @tier "presentation"
+      countUnread : boolean = false
+        @label "Count the viewer's unread notifications?"
+        @description "When on, the layout shows the unread rows an UnreadCounter (this atom's sibling trait, rebound onto the app's notification entity and on the same page) hands it: listed in the bell, counted on the bell and on the nav item whose href is notificationsPath."
+        @synonyms "unread badge, notification count, bell count"
+        @tier "presentation"
+      notificationsPath : string = ""
+        @label "Where does the bell take you?"
+        @description "A page the bell opens, such as /notifications; blank keeps the bell's dropdown and NOTIFY_CLICK only."
+        @synonyms "notifications page, bell link, inbox path"
+        @tier "presentation"
       notificationClickEvent : event = NOTIFY_PICKED
         @label "Notification click event"
         @description "Internal event the bell fires on click; the layout answers by emitting NOTIFY_CLICK, which is what a notification panel or any consumer listens to"
@@ -305,5 +362,75 @@ orbital AppLayoutOrbital {
     }
   }
 
-  page "/app-layout" as AppLayoutPage -> AppLayout
+  entity AppLayoutUnread [runtime] {
+    id : string!
+    recipient : string @description "Who the row is for." @synonyms "recipient, user" = ""
+    message : string @description "The row's text, shown in the bell's list." @synonyms "text, body" = ""
+    read : boolean @description "Whether the row has been read." @synonyms "seen" = false
+    recordedAt : datetime @description "When the row was recorded." @synonyms "created at, time"
+  }
+
+  ;; The bell's count comes from its own trait, bound to the app's notification
+  ;; entity, because the layout itself is rebound onto whatever its page shows.
+  trait UnreadCounter -> @rebindable AppLayoutUnread {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch AppLayoutUnread {
+          limit: @config.maxUnread
+          emit: { failure: UnreadLoadFailed, success: UnreadRowsLoaded }
+          filter: (and (= (object/get @entity recipient) @user.id) (= (object/get @entity read) false))
+        })
+      RECOUNT -> idle
+        (fetch AppLayoutUnread {
+          limit: @config.maxUnread
+          emit: { failure: UnreadLoadFailed, success: UnreadRowsLoaded }
+          filter: (and (= (object/get @entity recipient) @user.id) (= (object/get @entity read) false))
+        })
+      UnreadRowsLoaded -> idle
+        (emit UNREAD_COUNTED { items: (array/map ?data (fn row { id: @row.id, message: (default @row.message ""), createdAt: (if (validate/required @row.recordedAt) (time/format @row.recordedAt "YYYY-MM-DDTHH:mm:ss") ""), read: false })) })
+      UnreadLoadFailed -> idle
+        (emit UNREAD_COUNT_FAILED { message: (if (validate/required ?error) (str/concat "Couldn't count the unread notifications — " ?error) "Couldn't count the unread notifications") })
+    }
+
+    emits {
+      UNREAD_COUNTED -> external {
+        items : [NotificationSpec]!
+      }
+        @description "The viewer's unread rows, for the layout's bell and notifications menu item."
+        @synonyms "unread, notification count"
+        @tier "presentation"
+      UNREAD_COUNT_FAILED -> external {
+        message : string!
+      }
+        @description "Counting the unread rows failed; the bell keeps its last count."
+        @tier "internal"
+      UnreadRowsLoaded -> internal {
+        data : [AppLayoutUnread]!
+      }
+        @tier "internal"
+      UnreadLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      RECOUNT {
+      }
+        @description "Count again, after a notification arrived or was read."
+        @synonyms "refresh unread, recount"
+        @tier "domain"
+    }
+
+    config {
+      maxUnread : number = 99
+        @label "Most unread rows counted"
+        @tier "policy"
+    }
+  }
+
+  page "/app-layout" as AppLayoutPage -> AppLayout, UnreadCounter
 }

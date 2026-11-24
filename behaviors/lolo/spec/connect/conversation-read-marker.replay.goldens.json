@@ -1,0 +1,74 @@
+{
+  "atom": "connect/atoms/std-conversation.lolo",
+  "trait": "ReadMarker",
+  "cases": [
+    {
+      "id": "a-member-reading-a-conversation-writes-their-own-membership-read-up-to-now",
+      "config": {},
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "MARK_READ",
+          "payload": {
+            "channel": "family"
+          },
+          "identity": {
+            "id": "u1",
+            "name": "Mama",
+            "email": "m@x.si",
+            "role": "member"
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "upsert",
+                "arg1": "ConversationMember",
+                "arg2": {
+                  "id": [
+                    "str/concat",
+                    "@payload.channel",
+                    ":",
+                    "@user.id"
+                  ],
+                  "channel": "@payload.channel",
+                  "member": "@user.id",
+                  "memberName": "@user.name",
+                  "unreadCount": 0,
+                  "lastReadAt": "@now"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-anonymous-viewer-marks-nothing-read",
+      "config": {},
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "MARK_READ",
+          "payload": {
+            "channel": "family"
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "READ_MARKED",
+              "READ_MARK_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

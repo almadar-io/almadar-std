@@ -1,0 +1,44 @@
+{
+  "atom": "flow/atoms/std-reminder-scheduler.lolo",
+  "trait": "ReminderScheduler",
+  "cases": [
+    {
+      "id": "a-matched-record-fires-once-and-is-stamped-in-the-rule-s-own-mark-field",
+      "config": { "enabled": true, "rule": "threshold", "guardField": "usedHours", "divisorField": "contractedHours", "guardOp": "gte", "guardValue": 90, "markField": "alerted90At", "severity": "warning", "template": "A retainer passed 90%" },
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "ScanRecordsLoaded",
+          "payload": { "data": [{ "id": "b1", "usedHours": 37, "contractedHours": 40 }] },
+          "expect": {
+            "state": "scanning",
+            "emits": [{ "event": "ReminderDue", "payload": { "entityId": "b1", "severity": "warning", "template": "A retainer passed 90%" } }],
+            "effects": [{ "type": "set" }, { "type": "emit" }, { "type": "persist", "arg0": "update" }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-disabled-scan-fires-nothing",
+      "config": { "enabled": false, "rule": "threshold", "guardField": "usedHours", "guardOp": "gte", "guardValue": 90, "markField": "alerted90At" },
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "ScanRecordsLoaded",
+          "payload": { "data": [{ "id": "b1", "usedHours": 37 }] },
+          "expect": { "state": "idle", "neverEmits": ["ReminderDue"] }
+        }
+      ]
+    },
+    {
+      "id": "control-an-empty-scan-fires-nothing",
+      "config": { "enabled": true, "rule": "threshold", "guardField": "usedHours", "guardOp": "gte", "guardValue": 90, "markField": "alerted90At" },
+      "entity": { "id": "x" },
+      "steps": [
+        { "from": "idle", "event": "ScanRecordsLoaded", "payload": { "data": [] }, "expect": { "state": "idle", "neverEmits": ["ReminderDue"] } }
+      ]
+    }
+  ]
+}

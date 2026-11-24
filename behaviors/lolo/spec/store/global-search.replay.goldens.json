@@ -3,6 +3,68 @@
  "trait": "GlobalSearch",
  "cases": [
   {
+   "id": "a-search-keeps-the-typed-scope-on-the-entity",
+   "steps": [
+    {
+     "trait": "GlobalSearch",
+     "event": "SEARCH",
+     "payload": {
+      "queryText": "ada",
+      "typeFilter": "contacts",
+      "scopeClientId": "c1",
+      "scopePersonId": "p1",
+      "scopeFrom": "2026-01-01",
+      "scopeTo": "2026-02-01"
+     },
+     "entity": {
+      "id": "q"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "searching",
+      "entity": {
+       "typeFilter": "contacts",
+       "scopeClientId": "c1",
+       "scopePersonId": "p1",
+       "scopeFrom": "2026-01-01",
+       "scopeTo": "2026-02-01"
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-search-without-scope-leaves-every-bound-blank",
+   "steps": [
+    {
+     "trait": "GlobalSearch",
+     "event": "SEARCH",
+     "payload": {
+      "queryText": "ada"
+     },
+     "entity": {
+      "id": "q",
+      "scopeClientId": "old",
+      "scopeFrom": "2025-01-01"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "searching",
+      "entity": {
+       "scopeClientId": "",
+       "scopePersonId": "",
+       "scopeFrom": "",
+       "scopeTo": ""
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
    "id": "a-modules-typed-hits-are-kept-under-its-key",
    "steps": [
     {

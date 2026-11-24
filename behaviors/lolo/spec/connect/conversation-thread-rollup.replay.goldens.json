@@ -1,0 +1,45 @@
+{
+  "atom": "connect/atoms/std-conversation.lolo",
+  "trait": "ThreadRollup",
+  "cases": [
+    {
+      "id": "a-saved-reply-recounts-its-thread",
+      "config": {},
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "REPLY_SAVED",
+          "payload": { "threadRootId": "m1" },
+          "expect": { "state": "idle", "effects": [{ "type": "fetch", "arg0": "ConversationMessage" }] }
+        }
+      ]
+    },
+    {
+      "id": "control-a-channel-message-recounts-nothing",
+      "config": {},
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "REPLY_SAVED",
+          "payload": { "threadRootId": "" },
+          "expect": { "state": "idle", "effects": [] }
+        }
+      ]
+    },
+    {
+      "id": "control-an-empty-recount-writes-nothing",
+      "config": {},
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "ThreadRepliesLoaded",
+          "payload": { "data": [] },
+          "expect": { "state": "idle", "effects": [] }
+        }
+      ]
+    }
+  ]
+}

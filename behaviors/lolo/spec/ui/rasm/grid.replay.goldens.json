@@ -5974,6 +5974,241 @@
           }
         }
       ]
+    },
+    {
+      "id": "control-a-change-with-no-layout-due-lays-the-grid-out-once-and-leaves-nothing-due",
+      "config": {
+        "id": "g",
+        "columns": [
+          {
+            "size": "fr",
+            "main": 1
+          }
+        ],
+        "rows": [
+          {
+            "size": "measure"
+          },
+          {
+            "size": "fixed",
+            "main": 50
+          }
+        ],
+        "rowGap": 10,
+        "padding": 0,
+        "children": [
+          {
+            "id": "a",
+            "col": 0,
+            "row": 0
+          },
+          {
+            "id": "b",
+            "col": 0,
+            "row": 1
+          }
+        ]
+      },
+      "entity": {
+        "id": "g"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "g",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_EXTENT",
+          "payload": {
+            "id": "a",
+            "w": 400,
+            "h": 120
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "GRID_LAYOUT": 1
+            },
+            "entity": {
+              "due": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-change-while-a-grid-layout-is-due-only-records-it-for-that-layout",
+      "config": {
+        "id": "g",
+        "columns": [
+          {
+            "size": "fr",
+            "main": 1
+          }
+        ],
+        "rows": [
+          {
+            "size": "measure"
+          },
+          {
+            "size": "fixed",
+            "main": 50
+          }
+        ],
+        "rowGap": 10,
+        "padding": 0,
+        "children": [
+          {
+            "id": "a",
+            "col": 0,
+            "row": 0
+          },
+          {
+            "id": "b",
+            "col": 0,
+            "row": 1
+          }
+        ]
+      },
+      "entity": {
+        "id": "g"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "g",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_EXTENT",
+          "payload": {
+            "id": "a",
+            "w": 400,
+            "h": 120
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "GRID_LAYOUT": 0
+            },
+            "entity": {
+              "due": true
+            }
+          },
+          "entity": {
+            "due": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-grid-layout-a-change-queued-is-no-longer-due",
+      "config": {
+        "id": "g",
+        "columns": [
+          {
+            "size": "fr",
+            "main": 1
+          }
+        ],
+        "rows": [
+          {
+            "size": "measure"
+          },
+          {
+            "size": "fixed",
+            "main": 50
+          }
+        ],
+        "rowGap": 10,
+        "padding": 0,
+        "children": [
+          {
+            "id": "a",
+            "col": 0,
+            "row": 0
+          },
+          {
+            "id": "b",
+            "col": 0,
+            "row": 1
+          }
+        ]
+      },
+      "entity": {
+        "id": "g"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "g",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 400,
+                  "h": 300
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "GRID_LAYOUT",
+          "payload": {
+            "n": 9
+          },
+          "entity": {
+            "due": true
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "due": false
+            }
+          }
+        }
+      ]
     }
   ]
 }

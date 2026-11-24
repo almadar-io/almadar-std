@@ -1,0 +1,514 @@
+app std-conversation [
+  version: "0.1.0",
+  description: "std-conversation — the generic data mechanism of a chat conversation: the persisted message row and the coordinator that writes it. MessagePersistor owns every write to a conversation's messages: DO_CREATE persists a message stamped with the viewer's id and name and announces MESSAGE_SAVED, then MEMBERS_MENTIONED when the message mentions people; DO_DELETE removes a message (MESSAGE_DELETED); DO_PIN persists the pinned flag (MESSAGE_PINNED); DO_REACT persists the reaction set and its display roll-up and announces MESSAGE_REACTED with the reactor's emoji. Each persist failure surfaces as an error notification and its own failure event. The atom renders nothing and never reads: a consumer rebinds MessagePersistor onto its own message entity (the field names here are the contract) and listens its composer, viewer and reactor events into the DO_* inputs. With `stampTime` on, a created message also carries the dispatch's time in `timestamp`, so a conversation can be ordered and timed by it. ReadMarker owns the read state: MARK_READ { channel } upserts the signed-in viewer's own ConversationMember row (id `<channel>:<viewer>`) with `lastReadAt` now and `unreadCount` 0 and announces READ_MARKED, which reaches every open window as a persist; a message is unread for a member when it is newer than their `lastReadAt` and someone else sent it, and read by everyone once every other member's `lastReadAt` has passed it, so unread counts and read receipts are derived from one fact and no write fans out per message. An anonymous viewer marks nothing. DirectMessageOpener: OPEN_DM { id, name } opens the direct message with a person, a conversation whose id is derived from its two people (dm-<lower id>-<higher id>, the same from either side), by upserting both memberships (each named for the other person, isDirect) and announcing DM_OPENED { channel, name, peer } once both are written. MemberAdder: ADD_MEMBER { channel, channelName, id, name } upserts that person's membership (MEMBER_ADDED). ThreadRollup: REPLY_SAVED { threadRootId } (wire MESSAGE_SAVED) recounts the thread's replies and writes replyCount and repliers (each name once) on its first message (THREAD_UPDATED); a channel message recounts nothing.",
+]
+;; @capabilities "persist conversation messages, delete a message, pin a message, toggle an emoji reaction, announce mentioned people, mark a conversation read, read receipts, unread counts, open a direct message, add a member, thread reply counts"
+
+orbital ConversationOrbital {
+
+    type ChatMessageSaveFailed = Event { error : string, code : string }
+
+  entity ConversationMessage [persistent: conversationmessages, shared] {
+    @read none "A substrate atom: the composing program decides who may read its messages, since that depends on membership in its own conversation entity."
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
+    @update none "A substrate atom: the composing program decides who may change these rows."
+    @delete none "A substrate atom: the composing program decides who may remove these rows."
+    id : string!
+    sender : string @description "The user who sent the message." @synonyms "author, originator, from"
+    senderName : string @description "Display name of the user who sent the message." @synonyms "sender name, author name, from name" = ""
+    content : string! @description "The text or media included in the message." @synonyms "body, text, message"
+    channel : string @description "The channel this message belongs to." @synonyms "channelId, room, group"
+    timestamp : datetime @description "The date and time when the message was created." @synonyms "date, time, created_at"
+    pendingId : string @description "Unique identifier for a message still being processed." @synonyms "correlationId, transactionId, pendingReference" = ""
+    attachment : string @description "URL of the file attached to this message." @synonyms "file, upload, media, attachment url" = ""
+    pinned : boolean @description "Whether this message is pinned to the top of the conversation." @synonyms "starred, highlighted, saved, important" = false
+    ;; One entry per reacting user per emoji, "emoji:userId" — entity fields
+    ;; can't hold a map, and [string] is the proven persistent-array shape.
+    reactions : [string] @description "Emoji reactions left on this message; each entry is an emoji:userId pair." @synonyms "emoji reactions, message reactions" = []
+    reactionSummary : string @description "Display roll-up of the reactions (e.g. 👍 2  ❤️ 1); rewritten on every toggle." @synonyms "reaction chips, reaction counts" = ""
+    ;; Conversation-pane state, shared across the traits bound to ConversationMessage.
+    activeChannel : string @intrinsic @description "The conversation currently open in the thread." @synonyms "selected channel, open conversation" = ""
+    draft : string @intrinsic @description "The message the viewer is currently typing." @synonyms "composer text, message draft" = ""
+    pendingAttachment : string @intrinsic @description "Uploaded attachment URL waiting for the next SEND." = ""
+    focusedMessageId : string @intrinsic @description "The message a deep link opened the conversation on; its row is marked in the thread." @synonyms "linked message, search hit, highlighted message" = ""
+    threadRoot : string @intrinsic @description "The message whose reply thread is open in the overlay." @synonyms "thread root, open thread, parent message" = ""
+    pendingReactionEmoji : string @intrinsic @description "The emoji of the in-flight reaction toggle, read by the post-persist MESSAGE_REACTED emit." = ""
+    pendingMentions : [string] @intrinsic @description "People picked with @ in the draft, sent with the next message." = []
+    mentions : [string] @description "People mentioned in this message; each is told." @synonyms "at-mentions, tagged people" = []
+    pendingLinkKind : string @intrinsic @description "Kind of the record picked for the next message." = ""
+    pendingLinkId : string @intrinsic @description "Id of the record picked for the next message." = ""
+    pendingLinkLabel : string @intrinsic @description "Title of the record picked for the next message." = ""
+    pendingLinkHref : string @intrinsic @description "Path of the record picked for the next message." = ""
+    linkKind : string @description "What kind of record this message links to, such as Task or Client." @synonyms "link type, linked record kind" = ""
+    linkId : string @description "Id of the record this message links to." @synonyms "linked record id, link target id" = ""
+    linkLabel : string @description "Title of the record this message links to." @synonyms "linked record title, link text" = ""
+    linkHref : string @description "Path the linked record opens at." @synonyms "link url, link path, record link" = ""
+    ;; Typed as the identity relation so the @create policy above can compare
+    ;; it to @user.id (std-thread's rebound reply write stamps it).
+    authorId : string @description "The member who wrote this reply, when the row is a thread reply." @synonyms "reply author, thread author"
+    ;; Thread-reply columns; a channel message leaves them blank.
+    authorName : string @description "Display name of the member who wrote this reply, when the row is a thread reply." @synonyms "reply author name" = ""
+    threadRootId : string @description "The message this row replies to in a thread; blank for a channel message." @synonyms "thread root id, parent message id" = ""
+    voteCount : number @description "The number of votes a thread reply has received." @synonyms "votes, rating, score" = 0
+    replyCount : number @description "How many replies this message's thread holds; written by ThreadRollup." @synonyms "replies, thread size, reply count" = 0
+    repliers : [string] @description "Names of the people who replied in this message's thread, each once; written by ThreadRollup." @synonyms "thread participants, who replied" = []
+  }
+
+  trait MessagePersistor -> @rebindable ConversationMessage {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle when (not @config.stampTime)
+        (persist create ConversationMessage (object/merge ?data { sender: @user.id, senderName: @user.name }) {
+          emit: { failure: ChatMessageSaveFailed, success: MESSAGE_SAVED }
+        })
+      DO_CREATE -> idle when @config.stampTime
+        (persist create ConversationMessage (object/merge ?data { sender: @user.id, senderName: @user.name, timestamp: @now }) {
+          emit: { failure: ChatMessageSaveFailed, success: MESSAGE_SAVED }
+        })
+      DO_DELETE -> idle
+        (persist delete ConversationMessage ?id {
+          emit: { failure: ChatMessageDeleteFailed, success: MESSAGE_DELETED }
+        })
+      DO_PIN -> idle
+        (persist update ConversationMessage { id: ?id, pinned: ?pinned } {
+          emit: { failure: ChatMessagePinFailed, success: MESSAGE_PINNED }
+        })
+      DO_REACT -> idle
+        (set @entity.pendingReactionEmoji ?emoji)
+        (persist update ConversationMessage { id: ?id, reactions: ?reactions, reactionSummary: ?reactionSummary } {
+          emit: { failure: ChatMessageReactFailed, success: ChatMessageReacted }
+        })
+      ;; persist success carries the submitted data, which has no emoji slot —
+      ;; the reactor's emoji rides the shared frame (set in DO_REACT) into the
+      ;; external announcement.
+      ChatMessageReacted -> idle
+        (emit MESSAGE_REACTED { messageId: ?id, emoji: @entity.pendingReactionEmoji, userId: @user.id })
+      MESSAGE_SAVED -> idle when (> (array/len (default ?mentions [])) 0)
+        (emit MEMBERS_MENTIONED { messageId: ?id, channel: (default ?channel ""), mentions: ?mentions, senderName: (default ?senderName ""), content: (default ?content "") })
+      ChatMessageSaveFailed -> idle
+        (notify error (if (validate/required ?error) (str/concat "Your message couldn't be sent — " ?error) "Your message couldn't be sent"))
+      ChatMessageDeleteFailed -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't delete this message — " ?error) "Couldn't delete this message"))
+      ChatMessagePinFailed -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't update the pin — " ?error) "Couldn't update the pin"))
+      ChatMessageReactFailed -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't save your reaction — " ?error) "Couldn't save your reaction"))
+    }
+
+
+    config {
+      stampTime : boolean = false
+        @label "Stamp each new message with the time"
+        @description "Write the dispatch's time into a created message's `timestamp`, so a conversation can be ordered and timed by it; off writes the fields the composer sent and nothing more."
+        @synonyms "message time, sent at, timestamp"
+        @tier "domain"
+    }
+    emits {
+      MESSAGE_SAVED -> external {
+        id : string
+        channel : string
+        mentions : [string]
+        sender : string
+        senderName : string
+        content : string
+        threadRootId : string
+      }
+        @description "Indicates a message has been successfully persisted."
+        @synonyms "stored, persisted, written"
+        @tier "domain"
+      MEMBERS_MENTIONED -> external {
+        messageId : string
+        channel : string
+        mentions : [string]!
+        senderName : string
+        content : string
+      }
+        @description "A sent message mentioned people; each should be told."
+        @synonyms "mentioned, at-mention, tagged"
+        @tier "domain"
+      MESSAGE_DELETED -> external {
+        id : string
+      }
+        @description "Indicates a message has been removed from the conversation."
+        @synonyms "deleted, removed, erased"
+        @tier "domain"
+      MESSAGE_PINNED -> external {
+        id : string
+      }
+        @description "Indicates a message's pinned state has been persisted."
+        @synonyms "pinned, unpinned, starred, highlighted"
+        @tier "domain"
+      MESSAGE_REACTED -> external {
+        messageId : string!
+        emoji : string
+        userId : string
+      }
+        @description "Indicates an emoji reaction on a message has been persisted."
+        @synonyms "reacted, reaction added, reaction removed, emoji reaction"
+        @tier "domain"
+      ChatMessageReacted {
+        id : string
+      }
+        @description "A message's reaction set finished persisting."
+        @synonyms "saved, persisted, written"
+        @tier "internal"
+      ChatMessageReactFailed -> external {
+        error : string
+        code : string
+      }
+        @description "A message's reaction failed to persist."
+        @synonyms "error, failure, reaction failed"
+        @tier "internal"
+      ChatMessageSaveFailed -> external {
+        error : string
+        code : string
+      }
+        @description "A message failed to persist."
+        @synonyms "error, failure, send failed"
+        @tier "internal"
+      ChatMessageDeleteFailed -> external {
+        error : string
+        code : string
+      }
+        @description "A message failed to delete."
+        @synonyms "error, failure, delete failed"
+        @tier "internal"
+      ChatMessagePinFailed -> external {
+        error : string
+        code : string
+      }
+        @description "A message's pinned state failed to persist."
+        @synonyms "error, failure, pin failed"
+        @tier "internal"
+    }
+
+    listens {
+      DO_CREATE -> input {
+        data : { attachment : string, content : string!, channel : string!, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string, threadRootId : string }!
+      }
+      MESSAGE_SAVED {
+        id : string
+        channel : string
+        mentions : [string]
+        senderName : string
+        content : string
+        threadRootId : string
+      }
+        @tier "internal"
+        @description "Initiates the creation of a new item."
+        @synonyms "new, add, generate, initiate"
+        @tier "domain"
+      DO_DELETE {
+        id : string!
+      }
+        @description "Initiates removal of a message from the conversation."
+        @synonyms "delete message, remove message, moderate"
+        @tier "domain"
+      DO_PIN {
+        id : string!
+        pinned : boolean!
+      }
+        @description "Initiates a change to a message's pinned state."
+        @synonyms "pin message, unpin message, toggle pin"
+        @tier "domain"
+      DO_REACT {
+        id : string!
+        emoji : string!
+        reactions : [string]
+        reactionSummary : string
+      }
+        @description "Initiates a change to a message's emoji reactions."
+        @synonyms "react, toggle reaction, emoji reaction"
+        @tier "domain"
+      ChatMessageSaveFailed {
+        error : string
+        code : string
+      }
+        @description "A message failed to persist."
+        @synonyms "error, failure, send failed"
+        @tier "internal"
+      ChatMessageDeleteFailed {
+        error : string
+        code : string
+      }
+        @description "A message failed to delete."
+        @synonyms "error, failure, delete failed"
+        @tier "internal"
+      ChatMessagePinFailed {
+        error : string
+        code : string
+      }
+        @description "A message's pinned state failed to persist."
+        @synonyms "error, failure, pin failed"
+        @tier "internal"
+      ChatMessageReacted {
+        id : string
+      }
+        @description "A message's reaction set finished persisting."
+        @synonyms "saved, persisted, written"
+        @tier "internal"
+      ChatMessageReactFailed {
+        error : string
+        code : string
+      }
+        @description "A message's reaction failed to persist."
+        @synonyms "error, failure, reaction failed"
+        @tier "internal"
+    }
+  }
+
+
+  entity ConversationMember [persistent: conversationmembers, shared] {
+    @read none "A substrate atom: the composing program decides who may read memberships, from its own conversation entity."
+    @create none "A substrate atom: the composing program states who may join a conversation."
+    @update none "A substrate atom: the composing program states who may change a membership."
+    @delete none "A substrate atom: the composing program states who may leave or remove a member."
+    id : string! @description "The conversation's id and the member's id joined by a colon."
+    channel : string! @description "The conversation this membership belongs to." @synonyms "conversation, room, thread"
+    member : string! @description "The member's id." @synonyms "person, participant, user"
+    memberName : string @description "The member's display name, copied onto the membership." @synonyms "name, participant name" = ""
+    unreadCount : number @description "Unread messages as last written; 0 once the member reads the conversation." @synonyms "unread, badge" = 0
+    lastReadAt : datetime @description "When the member last read the conversation: a message is unread for them when it is newer and someone else sent it, and read by everyone once every other member's lastReadAt has passed it." @synonyms "read at, seen at, read receipt"
+    channelName : string @description "The conversation's name as this member sees it, copied onto the membership so a list of conversations needs no join; in a direct message it is the other person's name." @synonyms "conversation name, room name" = ""
+    isDirect : boolean @description "True when the conversation is a one-to-one direct message." @synonyms "dm, direct, one to one" = false
+    dmTarget : string @intrinsic @description "The person a direct message is being opened with." = ""
+    dmTargetName : string @intrinsic @description "The display name of the person a direct message is being opened with." = ""
+    dmChannel : string @intrinsic @description "The id of the direct message being opened, derived from its two people." = ""
+    dmSelfReady : boolean @intrinsic @description "Whether the viewer's own membership of the direct message being opened is written." = false
+    dmPeerReady : boolean @intrinsic @description "Whether the other person's membership of the direct message being opened is written." = false
+  }
+
+  trait ReadMarker -> @rebindable ConversationMember {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      MARK_READ -> idle when (!= @user.role "anonymous")
+        (persist upsert ConversationMember { id: (str/concat ?channel ":" @user.id), channel: ?channel, member: @user.id, memberName: @user.name, unreadCount: 0, lastReadAt: @now } {
+          emit: { failure: READ_MARK_FAILED, success: READ_MARKED }
+        })
+      MARK_READ -> idle when (= @user.role "anonymous")
+      READ_MARK_FAILED -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't mark the conversation as read — " ?error) "Couldn't mark the conversation as read"))
+    }
+
+    emits {
+      READ_MARKED -> external {
+        id : string
+        channel : string
+        member : string
+        lastReadAt : datetime
+      }
+        @description "The viewer's membership now says they read the conversation up to now; every open window may recompute unread counts and read receipts from it."
+        @synonyms "read, seen, read receipt"
+        @tier "domain"
+      READ_MARK_FAILED -> external {
+        error : string
+        code : string
+      }
+        @description "Marking the conversation as read failed to persist."
+        @synonyms "error, failure, read failed"
+        @tier "internal"
+    }
+
+    listens {
+      MARK_READ -> input {
+        channel : string!
+      }
+        @description "The viewer has read this conversation up to now (it is open and its newest message is shown)."
+        @synonyms "mark read, seen, open conversation"
+        @tier "domain"
+      READ_MARK_FAILED {
+        error : string
+        code : string
+      }
+        @description "Marking the conversation as read failed to persist."
+        @synonyms "error, failure, read failed"
+        @tier "internal"
+    }
+  }
+
+
+  ;; A direct message is a conversation whose id is derived from its two people
+  ;; (the lower id first), so opening it again from either side lands on the same one.
+  trait DirectMessageOpener -> @rebindable ConversationMember {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      OPEN_DM -> opening when (and (validate/required ?id) (!= ?id @user.id) (!= @user.role "anonymous"))
+        (set @entity.dmTarget ?id)
+        (set @entity.dmTargetName ?name)
+        (set @entity.dmChannel (if (< @user.id ?id) (str/concat "dm-" @user.id "-" ?id) (str/concat "dm-" ?id "-" @user.id)))
+        (set @entity.dmSelfReady false)
+        (set @entity.dmPeerReady false)
+        (persist upsert ConversationMember { id: (str/concat @entity.dmChannel ":" @user.id), channel: @entity.dmChannel, channelName: ?name, isDirect: true, member: @user.id, memberName: @user.name } {
+          emit: { failure: DM_OPEN_FAILED, success: DM_SELF_JOINED }
+        })
+        (persist upsert ConversationMember { id: (str/concat @entity.dmChannel ":" ?id), channel: @entity.dmChannel, channelName: (default @user.name ""), isDirect: true, member: ?id, memberName: ?name } {
+          emit: { failure: DM_OPEN_FAILED, success: DM_PEER_JOINED }
+        })
+      OPEN_DM -> idle when (not (and (validate/required ?id) (!= ?id @user.id) (!= @user.role "anonymous")))
+    }
+
+    state opening {
+      INIT -> idle
+      ;; The two membership writes land in either order; the second one opens the conversation.
+      DM_SELF_JOINED -> idle when @entity.dmPeerReady
+        (emit DM_OPENED { channel: @entity.dmChannel, name: @entity.dmTargetName, peer: @entity.dmTarget })
+      DM_SELF_JOINED -> opening when (not @entity.dmPeerReady)
+        (set @entity.dmSelfReady true)
+      DM_PEER_JOINED -> idle when @entity.dmSelfReady
+        (emit DM_OPENED { channel: @entity.dmChannel, name: @entity.dmTargetName, peer: @entity.dmTarget })
+      DM_PEER_JOINED -> opening when (not @entity.dmSelfReady)
+        (set @entity.dmPeerReady true)
+      DM_OPEN_FAILED -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't open the conversation — " ?error) "Couldn't open the conversation"))
+    }
+
+    emits {
+      DM_OPENED -> external {
+        channel : string!
+        name : string
+        peer : string
+      }
+        @description "A direct message with the person is ready, both memberships written; open it."
+        @synonyms "dm opened, conversation ready, start dm"
+        @tier "domain"
+      DM_SELF_JOINED -> internal {
+        id : string
+      }
+        @tier "internal"
+      DM_PEER_JOINED -> internal {
+        id : string
+      }
+        @tier "internal"
+      DM_OPEN_FAILED -> external {
+        error : string
+        code : string
+      }
+        @description "Opening the direct message failed to persist."
+        @synonyms "error, failure, dm failed"
+        @tier "internal"
+    }
+
+    listens {
+      OPEN_DM -> input {
+        id : string!
+        name : string!
+      }
+        @description "Open (or start) the direct message with this person."
+        @synonyms "message person, start dm, open conversation"
+        @tier "domain"
+    }
+  }
+
+  trait MemberAdder -> @rebindable ConversationMember {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ADD_MEMBER -> idle when (and (validate/required ?channel) (validate/required ?id))
+        (persist upsert ConversationMember { id: (str/concat ?channel ":" ?id), channel: ?channel, channelName: (default ?channelName ""), isDirect: false, member: ?id, memberName: (default ?name "") } {
+          emit: { failure: MEMBER_ADD_FAILED, success: MEMBER_ADDED }
+        })
+      MEMBER_ADD_FAILED -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't add the person — " ?error) "Couldn't add the person"))
+    }
+
+    emits {
+      MEMBER_ADDED -> external {
+        id : string
+        channel : string
+        member : string
+        memberName : string
+      }
+        @description "A person now belongs to the conversation."
+        @synonyms "member added, joined, invited"
+        @tier "domain"
+      MEMBER_ADD_FAILED -> external {
+        error : string
+        code : string
+      }
+        @description "Adding the person failed to persist."
+        @synonyms "error, failure, add failed"
+        @tier "internal"
+    }
+
+    listens {
+      ADD_MEMBER -> input {
+        channel : string!
+        channelName : string
+        id : string!
+        name : string
+      }
+        @description "Add this person to the conversation."
+        @synonyms "add people, invite, add member"
+        @tier "domain"
+    }
+  }
+
+  ;; The thread's roll-up on its first message is recounted from the replies
+  ;; themselves, so two replies saved at once cannot lose a count.
+  trait ThreadRollup -> @rebindable ConversationMessage {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      REPLY_SAVED -> idle when (validate/required (default ?threadRootId ""))
+        (fetch ConversationMessage {
+          limit: @config.maxReplies
+          emit: { failure: THREAD_ROLLUP_FAILED, success: ThreadRepliesLoaded }
+          filter: (= @entity.threadRootId ?threadRootId)
+        })
+      REPLY_SAVED -> idle when (not (validate/required (default ?threadRootId "")))
+      ThreadRepliesLoaded -> idle when (> (array/len ?data) 0)
+        (persist update ConversationMessage { id: (object/get (array/first ?data) threadRootId), replyCount: (array/len ?data), repliers: (array/unique (array/map ?data (fn row (default @row.senderName "")))) } {
+          emit: { failure: THREAD_ROLLUP_FAILED, success: THREAD_UPDATED }
+        })
+      ThreadRepliesLoaded -> idle when (= (array/len ?data) 0)
+      THREAD_ROLLUP_FAILED -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't update the thread — " ?error) "Couldn't update the thread"))
+    }
+
+    emits {
+      THREAD_UPDATED -> external {
+        id : string
+      }
+        @description "A thread's reply count and repliers on its first message were rewritten."
+        @synonyms "thread updated, replies counted"
+        @tier "domain"
+      ThreadRepliesLoaded -> internal {
+        data : [ConversationMessage]!
+      }
+        @tier "internal"
+      THREAD_ROLLUP_FAILED -> external {
+        error : string
+        code : string
+      }
+        @description "Recounting a thread failed."
+        @synonyms "error, failure, thread failed"
+        @tier "internal"
+    }
+
+    listens {
+      REPLY_SAVED -> input {
+        threadRootId : string
+      }
+        @description "A message was saved; when it is a thread reply, recount its thread."
+        @synonyms "reply saved, thread reply"
+        @tier "domain"
+    }
+
+    config {
+      maxReplies : number = 1000
+        @label "Most replies a thread counts"
+        @description "Most reply rows one recount reads."
+        @tier "policy"
+    }
+  }
+
+  page "/conversation-messages" as ConversationMessagesPage -> MessagePersistor, ReadMarker, DirectMessageOpener, MemberAdder, ThreadRollup
+}

@@ -1,0 +1,378 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-sketch.lolo",
+  "trait": "RasmSketch",
+  "cases": [
+    {
+      "id": "a-press-on-the-pad-starts-a-stroke-at-the-pressed-fraction",
+      "config": {
+        "id": "pad"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "pad",
+            "x": 50,
+            "y": 25
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "SKETCH_PAINT": 1
+            },
+            "entity": {
+              "drawing": true,
+              "strokes": [
+                {
+                  "points": [
+                    {
+                      "x": 0.25,
+                      "y": 0.25
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-move-far-enough-adds-a-point-to-the-stroke",
+      "config": {
+        "id": "pad"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        },
+        "drawing": true,
+        "strokes": [
+          {
+            "points": [
+              {
+                "x": 0.25,
+                "y": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "pad",
+            "x": 100,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "strokes": [
+                {
+                  "points": [
+                    {
+                      "x": 0.25,
+                      "y": 0.25
+                    },
+                    {
+                      "x": 0.5,
+                      "y": 0.5
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-move-closer-than-the-step-keeps-no-point",
+      "config": {
+        "id": "pad",
+        "minStep": 5
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        },
+        "drawing": true,
+        "strokes": [
+          {
+            "points": [
+              {
+                "x": 0.25,
+                "y": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "move",
+            "id": "pad",
+            "x": 51,
+            "y": 25
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "SKETCH_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-release-announces-the-drawing",
+      "config": {
+        "id": "pad"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        },
+        "drawing": true,
+        "strokes": [
+          {
+            "points": [
+              {
+                "x": 0.25,
+                "y": 0.25
+              },
+              {
+                "x": 0.5,
+                "y": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "up",
+            "id": "pad",
+            "x": 100,
+            "y": 50
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "SKETCH_CHANGED": 1
+            },
+            "entity": {
+              "drawing": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-read-only-pad-ignores-a-press",
+      "config": {
+        "id": "pad",
+        "editable": false
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "pad",
+            "x": 50,
+            "y": 25
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "SKETCH_PAINT",
+              "SKETCH_CHANGED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-set-shows-a-saved-drawing",
+      "config": {
+        "id": "pad",
+        "editable": false
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_SKETCH_SET",
+          "payload": {
+            "id": "pad",
+            "strokes": [
+              {
+                "points": [
+                  {
+                    "x": 0.1,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 0.9,
+                    "y": 0.9
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "SKETCH_PAINT": 1
+            },
+            "entity": {
+              "strokes": [
+                {
+                  "points": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 0.9,
+                      "y": 0.9
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-press-on-another-region-draws-nothing",
+      "config": {
+        "id": "pad"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        }
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "payload": {
+            "kind": "down",
+            "id": "other",
+            "x": 50,
+            "y": 25
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "SKETCH_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-placed-pad-paints-one-paint",
+      "config": {
+        "id": "pad"
+      },
+      "entity": {
+        "id": "x",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 200,
+          "h": 100
+        },
+        "strokes": [
+          {
+            "points": [
+              {
+                "x": 0.1,
+                "y": 0.1
+              },
+              {
+                "x": 0.9,
+                "y": 0.9
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SKETCH_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "emitCounts": {
+              "RASM_PAINT": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

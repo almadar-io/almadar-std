@@ -1,6 +1,6 @@
 app std-reminder-scheduler [
   version: "1.2.0",
-  description: "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (an instant) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. `matches` restricts the scan to records whose named fields equal the given values. Marks each record `remindedAt` so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. A failed scan or dedup write answers ReminderScanFailed { message }. Compose alongside std-notify-on-event to deliver the reminder."
+  description: "std-reminder-scheduler — scheduled rules over a target entity: deadline reminders by default, or threshold rules (`rule: threshold`: a field, optionally as a percentage of another, at least or at most a value, or a list that is not empty) so data that arrived without an event (seeded, imported) still fires the same alerts once. Deadline reminders: A periodic tick scans the target for records whose `dateField` deadline (an instant) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. `matches` restricts the scan to records whose named fields equal the given values. Marks each record's `markField` (default `remindedAt`; one field per rule) so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. A failed scan or dedup write answers ReminderScanFailed { message }. Compose alongside std-notify-on-event to deliver the reminder."
 ]
 orbital ReminderSchedulerOrbital {
     type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity]! } "Internal: target records due for a reminder."
@@ -11,7 +11,7 @@ orbital ReminderSchedulerOrbital {
 
     type ReminderMatch = { field : string!, value : string! }
 
-    type ReminderDue = Event { entityId : string, severity : string, template : string } "Re-emitted per record whose deadline is approaching; wire to std-notify-on-event."
+    type ReminderDue = Event { entityId : string, severity : string, template : string, row : @entity @config.targetEntity } "Re-emitted per record that is due (its row rides along); wire to std-notify-on-event or the app's router."
 
   entity ReminderRunLog [persistent: reminder_runs] {
     @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
@@ -37,8 +37,9 @@ orbital ReminderSchedulerOrbital {
           entityId: @entity.headId
           severity: @config.severity
           template: @config.template
+          row: (array/first ?data)
         })
-        (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } {
+        (persist update @config.targetEntity (object/set { id: @entity.headId } @config.markField @now) {
           emit: { failure: ScanFailed, success: ReminderStepped }
         })
       ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
@@ -54,7 +55,7 @@ orbital ReminderSchedulerOrbital {
       ReminderStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (time/toInstant (object/get @entity @config.dateField)) @now) (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (== (object/get @entity @config.markField) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (if (= @config.rule "threshold") (or (and (= @config.guardOp "present") (> (array/len (default (object/get @entity @config.guardField) [])) 0)) (and (= @config.guardOp "gte") (>= (if (= @config.divisorField "") (default (object/get @entity @config.guardField) 0) (if (> (default (object/get @entity @config.divisorField) 0) 0) (* (/ (default (object/get @entity @config.guardField) 0) (object/get @entity @config.divisorField)) 100) 0)) @config.guardValue)) (and (= @config.guardOp "lte") (<= (if (= @config.divisorField "") (default (object/get @entity @config.guardField) 0) (if (> (default (object/get @entity @config.divisorField) 0) 0) (* (/ (default (object/get @entity @config.guardField) 0) (object/get @entity @config.divisorField)) 100) 0)) @config.guardValue))) (and (validate/required (object/get @entity @config.dateField)) (or (and (= @config.direction "future") (time/isAfter (time/toInstant (object/get @entity @config.dateField)) @now) (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/subtract @now @config.offsetHours "hour")))))))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -63,8 +64,9 @@ orbital ReminderSchedulerOrbital {
           entityId: @entity.headId
           severity: @config.severity
           template: @config.template
+          row: (array/first ?data)
         })
-        (persist update @config.targetEntity { id: @entity.headId, remindedAt: @now } {
+        (persist update @config.targetEntity (object/set { id: @entity.headId } @config.markField @now) {
           emit: { failure: ScanFailed, success: ReminderStepped }
         })
       ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
@@ -77,6 +79,7 @@ orbital ReminderSchedulerOrbital {
         entityId : string
         severity : string
         template : string
+        row : @entity @config.targetEntity
       }
       ReminderScanFailed -> external {
         message : string!
@@ -111,7 +114,7 @@ orbital ReminderSchedulerOrbital {
       scanCycle every "*/15 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (time/toInstant (object/get @entity @config.dateField)) @now) (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (== (object/get @entity @config.markField) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (if (= @config.rule "threshold") (or (and (= @config.guardOp "present") (> (array/len (default (object/get @entity @config.guardField) [])) 0)) (and (= @config.guardOp "gte") (>= (if (= @config.divisorField "") (default (object/get @entity @config.guardField) 0) (if (> (default (object/get @entity @config.divisorField) 0) 0) (* (/ (default (object/get @entity @config.guardField) 0) (object/get @entity @config.divisorField)) 100) 0)) @config.guardValue)) (and (= @config.guardOp "lte") (<= (if (= @config.divisorField "") (default (object/get @entity @config.guardField) 0) (if (> (default (object/get @entity @config.divisorField) 0) 0) (* (/ (default (object/get @entity @config.guardField) 0) (object/get @entity @config.divisorField)) 100) 0)) @config.guardValue))) (and (validate/required (object/get @entity @config.dateField)) (or (and (= @config.direction "future") (time/isAfter (time/toInstant (object/get @entity @config.dateField)) @now) (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/subtract @now @config.offsetHours "hour")))))))
           limit: 1
         })
       
@@ -148,6 +151,30 @@ orbital ReminderSchedulerOrbital {
         @description "Field/value pairs a record must equal to be scanned at all (empty = every record), e.g. channel = linkedin and status = published. A record that does not match is never reminded nor marked."
         @synonyms "only when, where, filter, restrict to, only records with"
         @tier "infra"
+      rule : "deadline" | "threshold" = deadline
+        @label "What makes a record due?"
+        @description "deadline (default): its dateField falls in the offsetHours window. threshold: its guardField passes guardOp against guardValue (as a percentage of divisorField when one is named), such as a budget past 90% of its hours; guardOp present matches a non-empty list, such as a message that mentions people."
+        @synonyms "rule, condition, trigger kind"
+      guardField : string = ""
+        @label "Which field is measured?"
+        @description "For a threshold rule: the field compared, such as usedHours, or the list checked by present."
+        @synonyms "measured field, value field"
+      divisorField : string = ""
+        @label "Measured as a percentage of which field?"
+        @description "For a threshold rule: when named, the measure is guardField divided by this field, times 100 (a record whose divisor is 0 or missing measures 0); blank compares guardField itself."
+        @synonyms "total field, limit field, out of"
+      guardOp : "gte" | "lte" | "present" = gte
+        @label "How is it compared?"
+        @description "gte: at least guardValue; lte: at most guardValue; present: the guardField list is not empty."
+        @synonyms "comparison, operator"
+      guardValue : number = 0
+        @label "Against what value?"
+        @description "The threshold the measure is compared with, such as 90 for 90%."
+        @synonyms "threshold, limit"
+      markField : string = remindedAt
+        @label "Which field marks a record as done?"
+        @description "The record field the scan stamps with the time once it fires, so a record fires once per rule; give each rule over one entity its own field (alerted90At, alerted100At) so every threshold fires once."
+        @synonyms "dedup field, fired at, reminded at"
       severity : string = info
         @label "How urgent are the reminders?"
         @description "Severity passed to the notifier: info / warning / error."

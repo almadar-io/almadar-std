@@ -1,0 +1,87 @@
+{
+  "atom": "ui/core/atoms/std-chat-workspace.lolo",
+  "trait": "WorkspaceShell",
+  "cases": [
+    {
+      "id": "opening-a-conversation-records-it-and-announces-it",
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "listing",
+          "event": "CONVERSATION_OPEN",
+          "payload": {
+            "channel": "design",
+            "name": "design",
+            "isDirect": false
+          },
+          "expect": {
+            "state": "open",
+            "entity": {
+              "activeChannel": "design",
+              "activeName": "design"
+            },
+            "emits": [
+              {
+                "event": "CONVERSATION_OPENED",
+                "payload": {
+                  "channel": "design",
+                  "name": "design",
+                  "isDirect": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "going-back-clears-the-open-conversation",
+      "entity": {
+        "id": "x",
+        "activeChannel": "design"
+      },
+      "steps": [
+        {
+          "from": "open",
+          "event": "CONVERSATION_CLOSE",
+          "payload": {},
+          "expect": {
+            "state": "listing",
+            "entity": {
+              "activeChannel": ""
+            },
+            "emits": [
+              {
+                "event": "CONVERSATION_CLOSED"
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    }
+  ]
+}

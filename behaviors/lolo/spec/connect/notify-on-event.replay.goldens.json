@@ -85,6 +85,253 @@
    "config": {
     "fallbackRecipient": "ops"
    }
+  },
+  {
+   "id": "fan-out-notifies-every-listed-recipient-in-turn",
+   "config": {
+    "recipients": [
+     "a",
+     "b"
+    ]
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "expect": {
+      "fired": true,
+      "emitCounts": {
+       "NotificationDispatched": 2
+      },
+      "entity": {
+       "queue": [],
+       "recipient": "b"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: one listed recipient is notified once",
+   "config": {
+    "recipients": [
+     "a"
+    ]
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "expect": {
+      "fired": true,
+      "emitCounts": {
+       "NotificationDispatched": 1
+      },
+      "entity": {
+       "queue": [],
+       "recipient": "a"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "excludeActor-leaves-out-the-signed-in-user",
+   "config": {
+    "recipients": [
+     "u1",
+     "b"
+    ],
+    "excludeActor": true
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "expect": {
+      "fired": true,
+      "emitCounts": {
+       "NotificationDispatched": 1
+      },
+      "entity": {
+       "queue": [],
+       "recipient": "b"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-suppressed-recipient-is-skipped-and-the-queue-moves-on",
+   "config": {
+    "recipients": [
+     "a",
+     "b"
+    ],
+    "suppressionList": [
+     "a"
+    ]
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "expect": {
+      "fired": true,
+      "emitCounts": {
+       "NotificationDispatched": 2
+      },
+      "entity": {
+       "queue": [],
+       "recipient": "b"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "subscribers-audience-queues-each-subscriber-once-without-the-actor",
+   "config": {
+    "audience": "subscribers",
+    "excludeActor": true
+   },
+   "steps": [
+    {
+     "event": "NOTIFY_AUDIENCE_LOADED",
+     "from": "idle",
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "payload": {
+      "totalCount": 4,
+      "data": [
+       {
+        "userId": "a",
+        "kind": "webpush",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       },
+       {
+        "userId": "a",
+        "kind": "webpush",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       },
+       {
+        "userId": "u1",
+        "kind": "webpush",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       },
+       {
+        "userId": "b",
+        "kind": "fcm",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       }
+      ]
+     },
+     "expect": {
+      "emitCounts": {
+       "NotificationDispatched": 2
+      },
+      "entity": {
+       "queue": [],
+       "recipient": "b"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-template-is-filled-from-the-event-data",
+   "config": {
+    "recipients": [
+     "a"
+    ],
+    "template": "New: {{message}} ({{nothere}})"
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok",
+      "data": {
+       "id": "r1",
+       "message": "hello",
+       "recordedAt": "2026-11-01T00:00:00.000Z"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "entity": {
+       "message": "New: hello ({{nothere}})"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: with no event data the template is shown as written",
+   "config": {
+    "recipients": [
+     "a"
+    ],
+    "template": "New: {{message}}"
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "expect": {
+      "fired": true,
+      "entity": {
+       "message": "New: {{message}}"
+      }
+     }
+    }
+   ]
   }
  ]
 }

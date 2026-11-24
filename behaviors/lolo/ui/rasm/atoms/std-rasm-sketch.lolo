@@ -1,0 +1,154 @@
+app std-rasm-sketch [
+  version: "0.1.0",
+  description: "std-rasm-sketch — a freehand drawing pad painted by one trait on the Rasm canvas. Once placed (RASM_PLACE for its id) it paints a pad in the sketch/pad/idle look and every stroke as a path in the sketch/stroke/idle look (its stroke colour and width). With `editable` on, a press on the pad starts a stroke, each move while pressed adds a point and the release ends it; every ended stroke announces the whole drawing as the configured `changed` event { id, strokes }, so a program saves it as rows. Points are kept as fractions of the pad (0 to 1 across and down), so a drawing replays at any size: RASM_SKETCH_SET { id, strokes } shows a saved drawing, and RASM_SKETCH_CLEAR { id } empties the pad. With `editable` off the pad only shows what it was set to. A move closer than `minStep` px to the stroke's last point is not kept, so a stroke stays small. Under rtl nothing mirrors: a drawing is a picture."
+]
+;; @capabilities "freehand drawing, sketch pad, draw with a finger, replay a drawing"
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+type RasmSketchPoint = { x : number!, y : number! }
+type RasmSketchStroke = { points : [RasmSketchPoint]! }
+
+orbital RasmSketchOrbital {
+  entity RasmSketchRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the pad, null until placed." = null
+    strokes : [RasmSketchStroke] @description "The drawing: each stroke's points as fractions of the pad." = []
+    drawing : boolean @description "True while a press on the pad is drawing a stroke." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmSketch -> RasmSketchRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SKETCH_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SKETCH_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_POINTER -> ready when (and @config.editable (= ?id @config.id) (= ?kind "down") (!= @entity.rect null))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 1, h: 1 })))
+          (do
+            (set @entity.drawing true)
+            (set @entity.strokes (array/concat @entity.strokes [{ points: [{ x: (/ (- ?x @r.x) (math/max 1 @r.w)), y: (/ (- ?y @r.y) (math/max 1 @r.h)) }] }]))
+            (set @entity.paints (+ @entity.paints 1))
+            (emit SKETCH_PAINT { n: @entity.paints })))
+      RASM_POINTER -> ready when (and @config.editable @entity.drawing (= ?id @config.id) (= ?kind "move") (!= @entity.rect null))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 1, h: 1 })) (last (default (array/last @entity.strokes) { points: [] })))
+          (let ((tip (default (array/last @last.points) { x: -1, y: -1 })))
+            (when (>= (math/hypot (* (- (/ (- ?x @r.x) (math/max 1 @r.w)) @tip.x) @r.w) (* (- (/ (- ?y @r.y) (math/max 1 @r.h)) @tip.y) @r.h)) @config.minStep)
+              (do
+                (set @entity.strokes (array/concat (array/take @entity.strokes (- (array/len @entity.strokes) 1)) [{ points: (array/concat @last.points [{ x: (math/min 1 (math/max 0 (/ (- ?x @r.x) (math/max 1 @r.w)))), y: (math/min 1 (math/max 0 (/ (- ?y @r.y) (math/max 1 @r.h)))) }]) }]))
+                (set @entity.paints (+ @entity.paints 1))
+                (emit SKETCH_PAINT { n: @entity.paints })))))
+      RASM_POINTER -> ready when (and @config.editable @entity.drawing (or (= ?kind "up") (= ?kind "leave")))
+        (set @entity.drawing false)
+        (emit @config.changed { id: @config.id, strokes: @entity.strokes })
+      RASM_POINTER -> ready when (not (and @config.editable (or (and (= ?id @config.id) (= ?kind "down") (!= @entity.rect null)) (and @entity.drawing (= ?id @config.id) (= ?kind "move") (!= @entity.rect null)) (and @entity.drawing (or (= ?kind "up") (= ?kind "leave"))))))
+      RASM_SKETCH_SET -> ready when (= ?id @config.id)
+        (set @entity.strokes ?strokes)
+        (set @entity.drawing false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SKETCH_PAINT { n: @entity.paints })
+      RASM_SKETCH_SET -> ready when (!= ?id @config.id)
+      RASM_SKETCH_CLEAR -> ready when (= ?id @config.id)
+        (set @entity.strokes [])
+        (set @entity.drawing false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SKETCH_PAINT { n: @entity.paints })
+      RASM_SKETCH_CLEAR -> ready when (!= ?id @config.id)
+      SKETCH_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (pad (default (object/get @entity.looks (str/concat @config.lookSet "/pad/idle") null) {})) (ink (default (object/get @entity.looks (str/concat @config.lookSet "/stroke/idle") null) {})))
+          (emit RASM_PAINT {
+            id: @config.id,
+            z: @config.z,
+            texts: [],
+            nodes: (array/concat
+              [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @pad.fill, stroke: @pad.stroke, strokeWidth: @pad.strokeWidth, corners: @pad.corners, hit: @config.editable, semantic: { role: "img", label: @config.label } }]
+              (array/map (array/range (array/len @entity.strokes)) (fn i (let ((st (default (array/nth @entity.strokes @i) { points: [] }))) { type: draw-shape, id: (str/concat @config.id ":stroke:" @i), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 1) }, d: (str/join (array/map (array/range (array/len @st.points)) (fn k (let ((pt (default (array/nth @st.points @k) { x: 0, y: 0 }))) (str/concat (if (= @k 0) "M " "L ") (+ @r.x (* @pt.x @r.w)) " " (+ @r.y (* @pt.y @r.h)))))) " "), fill: "", stroke: (default @ink.stroke "foreground"), strokeWidth: (default @ink.strokeWidth 4), opacity: 1, hit: false }))))
+          }))
+      SKETCH_PAINT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      SKETCH_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the pad and its strokes."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The pad and one path per stroke for the surface to collect."
+        @tier "primary"
+      SKETCH_CHANGED -> external {
+        id : string!
+        strokes : [RasmSketchStroke]!
+      }
+        @description "A stroke ended: the whole drawing so far, as fractions of the pad. The `changed` knob renames it."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the pad's rect when it is placed."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "Presses, moves and releases on the canvas: those on the pad draw while `editable` is on."
+      RASM_SKETCH_SET { id : string!  strokes : [RasmSketchStroke]! }
+        @description "Show a saved drawing on the pad `id` names."
+      RASM_SKETCH_CLEAR { id : string! }
+        @description "Empty the pad `id` names."
+    }
+
+    config {
+      id : string = "sketch"
+        @label "Id"
+        @description "The pad's RASM_PLACE key, paint id and pointer region."
+        @tier "presentation"
+      label : string = ""
+        @label "Description"
+        @description "What assistive technology announces for the pad."
+        @tier "presentation"
+      lookSet : string = "sketch"
+        @label "Look set"
+        @description "The prefix of the pad's looks (`<lookSet>/pad/idle`, `<lookSet>/stroke/idle`)."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; strokes paint above the pad."
+        @tier "presentation"
+      editable : boolean = true
+        @label "Drawable"
+        @description "Whether presses on the pad draw; off shows the drawing it was set to."
+        @tier "presentation"
+      minStep : number = 2
+        @label "Smallest step"
+        @description "A move closer than this many px to the stroke's last point is not kept."
+        @tier "presentation"
+      changed : event = SKETCH_CHANGED
+        @label "Changed event"
+        @description "The event a finished stroke announces the drawing with."
+        @tier "domain"
+    }
+  }
+
+  page boot as RasmSketchStart -> RasmSketch
+}

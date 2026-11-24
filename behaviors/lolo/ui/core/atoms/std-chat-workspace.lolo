@@ -1,0 +1,1240 @@
+app std-chat-workspace [
+  version: "0.1.0",
+  locales: [en],
+  description: "std-chat-workspace — a team-chat workspace laid out like Slack, for any conversation data; every trait reads only its own entity, so a consumer rebinds each one onto its own message, membership, person and channel entities (the field names here are the contract) and wires the emits to its persistor. WorkspaceShell lays out the columns: the rail (ChannelRail over PeopleRail), the open conversation (ConversationHeader, MessageFeed, MessageComposer) and the side panels (ThreadPanel, MembersPanel, PeoplePicker), which open beside the conversation and never cover it; on a phone the rail and the conversation take turns, with a back button in the header. ChannelRail lists the viewer's channel memberships under Channels with a New channel button (CHANNEL_PICKED opens one, NEW_CHANNEL_REQUESTED asks the consumer for a create form) and hands the direct messages' unread counts to PeopleRail, which lists everyone else under Direct messages; clicking a person emits PERSON_PICKED, for std-conversation's DirectMessageOpener, with no menu in between. ConversationHeader shows the name, topic, Private and Archived badges, the member count (opens the members) and Pinned. MessageFeed lists the conversation's messages (not thread replies) through the data-list feed variant: grouped per author, day dividers, hover actions (Reply in thread, Pin, plus the consumer's extraActions) and an N replies line that opens the thread. MessageComposer writes a message (Message #name) with an emoji picker and the consumer's tools as icon buttons and emits SEND_MESSAGE { data } for std-conversation's MessagePersistor. ThreadPanel shows the thread (first message, replies, a reply box that sends with threadRootId) or the pinned messages; MembersPanel the members with Add people; PeoplePicker the roster to add from (MEMBER_PICKED, for MemberAdder). REFRESH reloads after a write.",
+]
+;; @capabilities "slack-like chat, team chat workspace, channel rail, direct messages list, message feed, thread side panel, channel members, add people, pinned messages, message composer"
+
+type ChatTool = { icon : string!, label : string!, event : event! }
+type FeedAction = { label : string!, event : event!, icon : string, variant : primary | secondary | ghost | danger }
+type DirectUnread = { channel : string!, unread : number! }
+
+orbital ChatWorkspaceOrbital {
+  type FeedLoaded = Event { data : [WorkspaceMessage]! } "The open conversation's messages loaded"
+  type FeedLoadFailed = Event { error : string, code : string }
+  type RailMembershipsLoaded = Event { data : [WorkspaceMembership]! }
+  type RailPeopleLoaded = Event { data : [WorkspacePerson]! }
+  type RailLoadFailed = Event { error : string, code : string }
+  type HeaderChannelLoaded = Event { data : [WorkspaceChannel]! }
+  type HeaderLoadFailed = Event { error : string, code : string }
+  type ThreadRowsLoaded = Event { data : [WorkspaceMessage]! }
+  type PinnedRowsLoaded = Event { data : [WorkspaceMessage]! }
+  type PanelLoadFailed = Event { error : string, code : string }
+  type PanelMembersLoaded = Event { data : [WorkspaceMembership]! }
+  type MembersLoadFailed = Event { error : string, code : string }
+  type PickPeopleLoaded = Event { data : [WorkspacePerson]! }
+  type PickLoadFailed = Event { error : string, code : string }
+  type PeopleLoadFailed = Event { error : string, code : string }
+
+  entity WorkspaceMessage [runtime, shared] {
+    id : string!
+    channel : string @description "The conversation this message belongs to." @synonyms "channel, room"
+    sender : string @description "Who sent the message." @synonyms "author, from"
+    senderName : string @description "The sender's display name." @synonyms "author name" = ""
+    senderAvatar : string @description "The sender's photo URL; blank shows their initials." @synonyms "photo, avatar" = ""
+    content : string! @description "The message text." @synonyms "body, text"
+    timestamp : datetime @description "When the message was sent." @synonyms "sent at, time"
+    threadRootId : string @description "The message this row replies to in a thread; blank for a conversation message." @synonyms "thread root, parent message" = ""
+    replyCount : number @description "How many replies the message's thread holds." @synonyms "replies" = 0
+    repliers : [string] @description "Names of the people who replied in the thread." @synonyms "thread participants" = []
+    pinned : boolean @description "Whether the message is pinned to the conversation." @synonyms "pin" = false
+    reactionSummary : string @description "Roll-up of the message's reactions, such as 👍 2." @synonyms "reactions" = ""
+    linkLabel : string @description "Title of the record the message links to." @synonyms "linked record" = ""
+    activeChannel : string @intrinsic @description "The conversation open in the workspace." = ""
+    activeName : string @intrinsic @description "The open conversation's name as the viewer sees it." = ""
+    activeIsDirect : boolean @intrinsic @description "Whether the open conversation is a direct message." = false
+    draft : string @intrinsic @description "The message being typed in the conversation." = ""
+    threadRoot : string @intrinsic @description "The message whose thread is open in the side panel." = ""
+    threadDraft : string @intrinsic @description "The reply being typed in the thread." = ""
+  }
+
+  entity WorkspaceMembership [runtime, shared] {
+    id : string! @description "The conversation's id and the member's id joined by a colon."
+    channel : string @description "The conversation." @synonyms "channel, room"
+    channelName : string @description "The conversation's name as this member sees it." @synonyms "channel name" = ""
+    member : string @description "The member." @synonyms "person, user"
+    memberName : string @description "The member's display name." @synonyms "name" = ""
+    isDirect : boolean @description "Whether the conversation is a direct message." @synonyms "dm" = false
+    unreadCount : number @description "Messages the member has not read." @synonyms "unread" = 0
+    lastMessageAt : datetime @description "When the conversation last had a message." @synonyms "last activity"
+    openChannel : string @intrinsic @description "The conversation open in the workspace, so the rail marks it." = ""
+    channelRows : [WorkspaceMembership] @intrinsic @description "The viewer's channel memberships, kept while the people load." = []
+    panelChannel : string @intrinsic @description "The conversation whose members the panel shows." = ""
+    panelName : string @intrinsic @description "The name of the conversation whose members the panel shows." = ""
+  }
+
+  entity WorkspacePerson [runtime] {
+    id : string!
+    name : string! @description "The person's display name." @synonyms "full name"
+    avatar : string @description "The person's photo URL." @synonyms "photo" = ""
+    presence : "online" | "away" | "offline" @description "Whether the person is around." @synonyms "status, availability" = offline
+    roster : [WorkspacePerson] @intrinsic @description "Everyone but the viewer, kept for the direct-messages list." = []
+    directUnread : [DirectUnread] @intrinsic @description "Unread counts of the viewer's direct messages." = []
+    openPerson : string @intrinsic @description "The person whose direct message is open, so the list marks them." = ""
+    pickChannel : string @intrinsic @description "The conversation people are being added to." = ""
+    pickName : string @intrinsic @description "The name of the conversation people are being added to." = ""
+  }
+
+  entity WorkspaceChannel [runtime] {
+    id : string!
+    name : string! @description "The conversation's name." @synonyms "title"
+    description : string @description "The conversation's topic." @synonyms "topic, purpose" = ""
+    isPrivate : boolean @description "Whether only members can find the conversation." @synonyms "private" = false
+    archived : boolean @description "Whether the conversation is archived." @synonyms "closed" = false
+    memberCount : number @description "How many people belong to the conversation." @synonyms "members" = 0
+    shownChannel : string @intrinsic @description "The conversation the header shows." = ""
+    shownName : string @intrinsic @description "The open conversation's name." = ""
+    shownTitle : string @intrinsic @description "The header's title: # and the name for a channel, the person's name for a direct message." = ""
+  }
+
+  trait WorkspaceShell -> @rebindable WorkspaceMessage {
+    initial: listing
+
+    state listing {
+      INIT -> listing
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: none
+          className: "h-[calc(100dvh-9rem)] min-h-0 w-full overflow-hidden rounded-container border border-border bg-card"
+          children: [{
+            type: stack
+            direction: vertical
+            gap: none
+            className: "w-full md:w-64 shrink-0 min-h-0 overflow-y-auto border-e border-border bg-muted/40 py-2"
+            children: [@config.channelRailTrait, @config.peopleRailTrait]
+          }, {
+            type: stack
+            direction: vertical
+            gap: none
+            className: "hidden md:flex flex-1 min-w-0 min-h-0 items-center justify-center"
+            children: [{ type: empty-state, icon: message-square, title: @config.pickTitle, description: @config.pickDescription }]
+          }]
+        })
+      CONVERSATION_OPEN -> open
+        (set @entity.activeChannel ?channel)
+        (set @entity.activeName (default ?name ""))
+        (set @entity.activeIsDirect (default ?isDirect false))
+        (emit CONVERSATION_OPENED { channel: ?channel, name: (default ?name ""), isDirect: (default ?isDirect false) })
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: none
+          className: "h-[calc(100dvh-9rem)] min-h-0 w-full overflow-hidden rounded-container border border-border bg-card"
+          children: [{
+            type: stack
+            direction: vertical
+            gap: none
+            className: "hidden md:flex w-64 shrink-0 min-h-0 overflow-y-auto border-e border-border bg-muted/40 py-2"
+            children: [@config.channelRailTrait, @config.peopleRailTrait]
+          }, {
+            type: stack
+            direction: vertical
+            gap: none
+            className: "flex flex-1 min-w-0 min-h-0"
+            children: [@config.headerTrait, {
+              type: stack
+              direction: vertical
+              gap: none
+              className: "flex-1 min-h-0 overflow-y-auto"
+              children: [@config.feedTrait]
+            }, @config.composerTrait]
+          }, @config.threadPanelTrait, @config.membersPanelTrait, @config.peoplePickerTrait]
+        })
+    }
+
+    state open {
+      INIT -> open
+      CONVERSATION_OPEN -> open
+        (set @entity.activeChannel ?channel)
+        (set @entity.activeName (default ?name ""))
+        (set @entity.activeIsDirect (default ?isDirect false))
+        (emit CONVERSATION_OPENED { channel: ?channel, name: (default ?name ""), isDirect: (default ?isDirect false) })
+      CONVERSATION_CLOSE -> listing
+        (set @entity.activeChannel "")
+        (emit CONVERSATION_CLOSED { })
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: none
+          className: "h-[calc(100dvh-9rem)] min-h-0 w-full overflow-hidden rounded-container border border-border bg-card"
+          children: [{
+            type: stack
+            direction: vertical
+            gap: none
+            className: "w-full md:w-64 shrink-0 min-h-0 overflow-y-auto border-e border-border bg-muted/40 py-2"
+            children: [@config.channelRailTrait, @config.peopleRailTrait]
+          }, {
+            type: stack
+            direction: vertical
+            gap: none
+            className: "hidden md:flex flex-1 min-w-0 min-h-0 items-center justify-center"
+            children: [{ type: empty-state, icon: message-square, title: @config.pickTitle, description: @config.pickDescription }]
+          }]
+        })
+    }
+
+    emits {
+      CONVERSATION_OPENED -> external {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @description "A conversation is now open; the header, feed, composer and rails follow it, and the consumer marks it read."
+        @synonyms "conversation opened, channel opened"
+        @tier "domain"
+      CONVERSATION_CLOSED -> external { }
+        @description "The viewer went back to the list of conversations (on a phone)."
+        @synonyms "back, close conversation"
+        @tier "presentation"
+    }
+
+    listens {
+      CONVERSATION_OPEN -> input {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @description "Open this conversation."
+        @synonyms "open channel, open dm"
+        @tier "domain"
+      CONVERSATION_CLOSE {
+      }
+        @description "Go back to the list of conversations."
+        @synonyms "back"
+        @tier "presentation"
+      ChannelRail.CHANNEL_PICKED -> CONVERSATION_OPEN
+      ConversationHeader.HEADER_BACK -> CONVERSATION_CLOSE
+    }
+
+    config {
+      channelRailTrait : trait = @trait.ChannelRail
+        @label "Channels list"
+        @tier "presentation"
+      peopleRailTrait : trait = @trait.PeopleRail
+        @label "Direct messages list"
+        @tier "presentation"
+      headerTrait : trait = @trait.ConversationHeader
+        @label "Conversation header"
+        @tier "presentation"
+      feedTrait : trait = @trait.MessageFeed
+        @label "Message feed"
+        @tier "presentation"
+      composerTrait : trait = @trait.MessageComposer
+        @label "Composer"
+        @tier "presentation"
+      threadPanelTrait : trait = @trait.ThreadPanel
+        @label "Thread and pinned panel"
+        @tier "presentation"
+      membersPanelTrait : trait = @trait.MembersPanel
+        @label "Members panel"
+        @tier "presentation"
+      peoplePickerTrait : trait = @trait.PeoplePicker
+        @label "Add people panel"
+        @tier "presentation"
+      pickTitle : string = "Pick a conversation"
+        @label "Title shown before a conversation is open"
+        @tier "presentation"
+      pickDescription : string = "Choose a channel or a person on the left."
+        @label "Text shown before a conversation is open"
+        @tier "presentation"
+    }
+  }
+
+  trait ChannelRail -> @rebindable WorkspaceMembership {
+    initial: listing
+
+    state listing {
+      INIT -> listing
+        (fetch WorkspaceMembership {
+          limit: @config.maxRows
+          emit: { failure: RailLoadFailed, success: RailMembershipsLoaded }
+          filter: (= (object/get @entity member) @user.id)
+        })
+      RELOAD -> listing
+        (fetch WorkspaceMembership {
+          limit: @config.maxRows
+          emit: { failure: RailLoadFailed, success: RailMembershipsLoaded }
+          filter: (= (object/get @entity member) @user.id)
+        })
+      RailMembershipsLoaded -> listing
+        (set @entity.channelRows (array/filter ?data (fn row (not (default @row.isDirect false)))))
+        (emit DIRECT_UNREAD { rows: (array/map (array/filter ?data (fn row (default @row.isDirect false))) (fn row { channel: (default @row.channel ""), unread: (default @row.unreadCount 0) })) })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          children: [{
+            type: stack
+            direction: horizontal
+            gap: xs
+            align: center
+            justify: between
+            className: "px-3 pt-2 pb-1"
+            children: [{ type: typography, variant: caption, weight: semibold, color: muted, content: @config.channelsTitle }, { type: button, variant: ghost, size: sm, icon: plus, label: "", "aria-label": @config.newChannelLabel, action: NEW_CHANNEL }]
+          }, {
+            type: data-list
+            variant: compact
+            look: borderless
+            pageSize: 0
+            gap: none
+            entity: (array/map @entity.channelRows (fn row (object/merge @row { label: (str/concat "# " (default @row.channelName "")), unread: (if (> (default @row.unreadCount 0) 0) (str/concat "" (default @row.unreadCount 0)) "") })))
+            fields: [{ name: label, variant: small }, { name: unread, variant: badge }]
+            itemClickEvent: CHANNEL_ROW
+            selectedId: (str/concat @entity.openChannel ":" @user.id)
+            sortBy: channelName
+            emptyMessage: @config.noChannels
+          }]
+        })
+      RailLoadFailed -> listing
+        (render-ui main { type: alert, variant: error, title: "Couldn't load the channels", message: ?error })
+      CHANNEL_ROW -> listing
+        (emit CHANNEL_PICKED { channel: (default ?row.channel ""), name: (default ?row.channelName ""), isDirect: false })
+      NEW_CHANNEL -> listing
+        (emit NEW_CHANNEL_REQUESTED { })
+      MARK_OPEN -> listing
+        (set @entity.openChannel ?channel)
+    }
+
+    emits {
+      CHANNEL_PICKED -> external {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @description "A channel was picked in the rail; open it."
+        @synonyms "open channel"
+        @tier "presentation"
+      DIRECT_UNREAD -> external {
+        rows : [DirectUnread]!
+      }
+        @description "The viewer's direct messages and their unread counts, for the people list."
+        @tier "presentation"
+      NEW_CHANNEL_REQUESTED -> external { }
+        @description "The viewer asked to create a channel."
+        @synonyms "new channel, create channel"
+        @tier "presentation"
+      RailLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      CHANNEL_ROW {
+        id : string!
+        row : WorkspaceMembership!
+      }
+        @tier "presentation"
+      NEW_CHANNEL {
+      }
+        @tier "presentation"
+      MARK_OPEN {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @description "A conversation was opened; mark its row."
+        @tier "presentation"
+      RELOAD {
+      }
+        @description "Reload the viewer's channels after a membership changed."
+        @synonyms "refresh, membership changed"
+        @tier "domain"
+      WorkspaceShell.CONVERSATION_OPENED -> MARK_OPEN
+    }
+
+    config {
+      channelsTitle : string = "Channels"
+        @label "Title over the channels"
+        @tier "presentation"
+      newChannelLabel : string = "New channel"
+        @label "Label of the new-channel button"
+        @tier "presentation"
+      noChannels : string = "No channels yet"
+        @label "Shown when the viewer belongs to no channel"
+        @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @tier "policy"
+    }
+  }
+
+  trait PeopleRail -> @rebindable WorkspacePerson {
+    initial: listing
+
+    state listing {
+      INIT -> listing
+        (fetch WorkspacePerson {
+          limit: @config.maxRows
+          emit: { failure: PeopleLoadFailed, success: RailPeopleLoaded }
+        })
+      RailPeopleLoaded -> listing
+        (set @entity.roster (array/filter ?data (fn person (!= @person.id @user.id))))
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          children: [{ type: typography, variant: caption, weight: semibold, color: muted, content: @config.directTitle, className: "px-3 pt-4 pb-1" }, {
+            type: data-list
+            variant: compact
+            look: borderless
+            pageSize: 0
+            gap: none
+            entity: (array/map @entity.roster (fn person (object/merge @person { unread: (let [hit (array/find @entity.directUnread (fn u (= (object/get @u channel) (if (< @user.id @person.id) (str/concat "dm-" @user.id "-" @person.id) (str/concat "dm-" @person.id "-" @user.id)))))] (if (and hit (> (default (object/get hit unread) 0) 0)) (str/concat "" (object/get hit unread)) "")) })))
+            fields: [{ name: name, variant: avatar }, { name: name, variant: small }, { name: unread, variant: badge }]
+            itemClickEvent: PERSON_ROW
+            selectedId: @entity.openPerson
+            sortBy: name
+            emptyMessage: @config.noPeople
+          }]
+        })
+      UNREAD -> listing
+        (set @entity.directUnread ?rows)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          children: [{ type: typography, variant: caption, weight: semibold, color: muted, content: @config.directTitle, className: "px-3 pt-4 pb-1" }, {
+            type: data-list
+            variant: compact
+            look: borderless
+            pageSize: 0
+            gap: none
+            entity: (array/map @entity.roster (fn person (object/merge @person { unread: (let [hit (array/find ?rows (fn u (= (object/get @u channel) (if (< @user.id @person.id) (str/concat "dm-" @user.id "-" @person.id) (str/concat "dm-" @person.id "-" @user.id)))))] (if (and hit (> (default (object/get hit unread) 0) 0)) (str/concat "" (object/get hit unread)) "")) })))
+            fields: [{ name: name, variant: avatar }, { name: name, variant: small }, { name: unread, variant: badge }]
+            itemClickEvent: PERSON_ROW
+            selectedId: @entity.openPerson
+            sortBy: name
+            emptyMessage: @config.noPeople
+          }]
+        })
+      PeopleLoadFailed -> listing
+        (render-ui main { type: alert, variant: error, title: "Couldn't load the people", message: ?error })
+      PERSON_ROW -> listing
+        (set @entity.openPerson ?row.id)
+        (emit PERSON_PICKED { id: ?row.id, name: ?row.name })
+      OPENED -> listing when (not (default ?isDirect false))
+        (set @entity.openPerson "")
+      OPENED -> listing when (default ?isDirect false)
+    }
+
+    emits {
+      PERSON_PICKED -> external {
+        id : string!
+        name : string!
+      }
+        @description "A person was picked; open the direct message with them, no menu in between."
+        @synonyms "message person, open dm"
+        @tier "presentation"
+      PeopleLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      PERSON_ROW {
+        id : string!
+        row : WorkspacePerson!
+      }
+        @tier "presentation"
+      UNREAD {
+        rows : [DirectUnread]!
+      }
+        @tier "presentation"
+      OPENED {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @tier "presentation"
+      ChannelRail.DIRECT_UNREAD -> UNREAD
+      WorkspaceShell.CONVERSATION_OPENED -> OPENED
+    }
+
+    config {
+      directTitle : string = "Direct messages"
+        @label "Title over the people"
+        @tier "presentation"
+      noPeople : string = "No one else here yet"
+        @label "Shown when nobody else is in the roster"
+        @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @tier "policy"
+    }
+  }
+
+  trait ConversationHeader -> @rebindable WorkspaceChannel {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CONVERSATION_SHOWN -> idle
+        (set @entity.shownChannel ?channel)
+        (set @entity.shownName (default ?name ""))
+        (set @entity.shownTitle (if (default ?isDirect false) (default ?name "") (str/concat "# " (default ?name ""))))
+        (fetch WorkspaceChannel {
+          limit: 1
+          emit: { failure: HeaderLoadFailed, success: HeaderChannelLoaded }
+          filter: (= (object/get @entity id) ?channel)
+        })
+      HeaderChannelLoaded -> idle
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: sm
+          align: center
+          justify: between
+          className: "px-4 py-2 border-b border-border min-h-14"
+          children: [{
+            type: stack
+            direction: horizontal
+            gap: sm
+            align: center
+            className: "min-w-0"
+            children: [{ type: button, variant: ghost, size: sm, icon: arrow-left, label: "", "aria-label": @config.backLabel, action: HEADER_BACK, className: "md:hidden" }, {
+              type: stack
+              direction: vertical
+              gap: none
+              className: "min-w-0"
+              children: [{
+                type: stack
+                direction: horizontal
+                gap: xs
+                align: center
+                children: (array/concat [{ type: typography, variant: h4, weight: semibold, truncate: true, content: @entity.shownTitle }] (if (and (> (array/len ?data) 0) (default (object/get (default (array/first ?data) {}) isPrivate) false)) [{ type: badge, variant: default, size: sm, icon: lock, label: @config.privateLabel }] []) (if (and (> (array/len ?data) 0) (default (object/get (default (array/first ?data) {}) archived) false)) [{ type: badge, variant: warning, size: sm, label: @config.archivedLabel }] []))
+              }, { type: typography, variant: caption, color: muted, truncate: true, content: (if (> (array/len ?data) 0) (default (object/get (default (array/first ?data) {}) description) "") "") }]
+            }]
+          }, {
+            type: stack
+            direction: horizontal
+            gap: xs
+            align: center
+            children: [{ type: button, variant: ghost, size: sm, icon: users, label: (if (> (array/len ?data) 0) (str/concat "" (default (object/get (default (array/first ?data) {}) memberCount) 0)) ""), "aria-label": @config.membersLabel, action: MEMBERS_OPEN, actionPayload: { channel: @entity.shownChannel, name: @entity.shownName } }, { type: button, variant: ghost, size: sm, icon: pin, label: "", "aria-label": @config.pinnedLabel, action: PINNED_OPEN, actionPayload: { channel: @entity.shownChannel } }]
+          }]
+        })
+      HeaderLoadFailed -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the conversation — " ?error) "Couldn't load the conversation"))
+    }
+
+    emits {
+      HEADER_BACK -> external { }
+        @description "Back to the list of conversations."
+        @tier "presentation"
+      MEMBERS_OPEN -> external {
+        channel : string!
+        name : string
+      }
+        @description "Show the conversation's members."
+        @synonyms "members, people in channel"
+        @tier "presentation"
+      PINNED_OPEN -> external {
+        channel : string!
+      }
+        @description "Show the conversation's pinned messages."
+        @synonyms "pinned, pins"
+        @tier "presentation"
+      HeaderLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      CONVERSATION_SHOWN {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @tier "presentation"
+      WorkspaceShell.CONVERSATION_OPENED -> CONVERSATION_SHOWN
+    }
+
+    config {
+      privateLabel : string = "Private"
+        @tier "presentation"
+      archivedLabel : string = "Archived"
+        @tier "presentation"
+      backLabel : string = "Back to conversations"
+        @tier "presentation"
+      membersLabel : string = "Members"
+        @tier "presentation"
+      pinnedLabel : string = "Pinned messages"
+        @tier "presentation"
+    }
+  }
+
+  trait MessageFeed -> @rebindable WorkspaceMessage {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SHOW -> idle
+        (fetch WorkspaceMessage {
+          limit: @config.maxMessages
+          orderBy: "timestamp:desc"
+          emit: { failure: FeedLoadFailed, success: FeedLoaded }
+          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity threadRootId) ""))
+        })
+      REFRESH -> idle when (and (validate/required @entity.activeChannel) (= (default ?channel "") @entity.activeChannel))
+        (fetch WorkspaceMessage {
+          limit: @config.maxMessages
+          orderBy: "timestamp:desc"
+          emit: { failure: FeedLoadFailed, success: FeedLoaded }
+          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity threadRootId) ""))
+        })
+      REFRESH -> idle when (not (and (validate/required @entity.activeChannel) (= (default ?channel "") @entity.activeChannel)))
+      FeedLoaded -> idle
+        (render-ui main {
+          type: data-list
+          variant: feed
+          entity: ?data
+          pageSize: 0
+          sortBy: timestamp
+          sortDirection: asc
+          groupBy: timestamp
+          groupFormat: date
+          senderField: sender
+          senderLabelField: senderName
+          senderAvatarField: senderAvatar
+          replyCountField: replyCount
+          repliersField: repliers
+          replyEvent: THREAD_OPEN
+          fields: [{ name: content, variant: body }, { name: timestamp, format: datetime }, { name: reactionSummary, variant: caption }, { name: linkLabel, variant: badge }]
+          itemActions: (array/concat [{ label: @config.replyLabel, event: THREAD_OPEN, icon: message-square }, { label: @config.pinLabel, event: PIN_TOGGLE, icon: pin }] @config.extraActions)
+          emptyIcon: hash
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+        })
+      FeedLoadFailed -> idle
+        (render-ui main { type: alert, variant: error, title: "Couldn't load the messages", message: ?error })
+    }
+
+    emits {
+      THREAD_OPEN -> external {
+        id : string!
+        row : WorkspaceMessage!
+      }
+        @description "Open this message's thread in the side panel."
+        @synonyms "reply in thread, open thread, replies"
+        @tier "presentation"
+      PIN_TOGGLE -> external {
+        id : string!
+        row : WorkspaceMessage!
+      }
+        @description "Pin or unpin this message."
+        @synonyms "pin, unpin"
+        @tier "presentation"
+      FeedLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      SHOW {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @tier "presentation"
+      REFRESH {
+        channel : string
+        threadRootId : string
+      }
+        @description "Reload the open conversation after a write."
+        @synonyms "reload, message saved"
+        @tier "domain"
+      WorkspaceShell.CONVERSATION_OPENED -> SHOW
+    }
+
+    config {
+      extraActions : [FeedAction] = []
+        @label "More actions on each message"
+        @description "Actions the consumer adds after Reply in thread and Pin (react, delete, open the linked record)."
+        @tier "presentation"
+      replyLabel : string = "Reply in thread"
+        @tier "presentation"
+      pinLabel : string = "Pin"
+        @tier "presentation"
+      emptyTitle : string = "This is the very beginning of the conversation"
+        @tier "presentation"
+      emptyDescription : string = "Send the first message below."
+        @tier "presentation"
+      maxMessages : number = 200
+        @label "Most messages shown"
+        @tier "policy"
+    }
+  }
+
+  trait MessageComposer -> @rebindable WorkspaceMessage [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.draft "")
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: xs
+          className: "mx-4 mb-4 mt-1 rounded-container border border-border bg-background p-2 focus-within:border-primary"
+          children: [{ type: input-group, inputType: textarea, rows: 1, placeholder: @config.placeholder, value: @entity.draft, onChange: DRAFT_CHANGED, action: SEND }, {
+            type: stack
+            direction: horizontal
+            gap: xs
+            align: center
+            justify: between
+            children: [{
+              type: stack
+              direction: horizontal
+              gap: none
+              align: center
+              children: (array/concat [{ type: emoji-picker, pickEvent: EMOJI_PICKED, position: top, triggerLabel: @config.emojiLabel }] (array/map @config.tools (fn tool { type: button, variant: ghost, size: sm, icon: @tool.icon, label: "", "aria-label": @tool.label, action: @tool.event })))
+            }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: SEND }]
+          }]
+        })
+      OPENED -> ready
+        (set @entity.draft "")
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: xs
+          className: "mx-4 mb-4 mt-1 rounded-container border border-border bg-background p-2 focus-within:border-primary"
+          children: [{ type: input-group, inputType: textarea, rows: 1, placeholder: (str/concat @config.placeholder " " (if (default ?isDirect false) (default ?name "") (str/concat "#" (default ?name "")))), value: @entity.draft, onChange: DRAFT_CHANGED, action: SEND }, {
+            type: stack
+            direction: horizontal
+            gap: xs
+            align: center
+            justify: between
+            children: [{
+              type: stack
+              direction: horizontal
+              gap: none
+              align: center
+              children: (array/concat [{ type: emoji-picker, pickEvent: EMOJI_PICKED, position: top, triggerLabel: @config.emojiLabel }] (array/map @config.tools (fn tool { type: button, variant: ghost, size: sm, icon: @tool.icon, label: "", "aria-label": @tool.label, action: @tool.event })))
+            }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: SEND }]
+          }]
+        })
+      DRAFT_CHANGED -> ready
+        (set @entity.draft ?value)
+      EMOJI_PICKED -> ready
+        (set @entity.draft (str/concat (default @entity.draft "") ?emoji))
+      APPEND -> ready
+        (set @entity.draft (str/concat (default @entity.draft "") ?text))
+      SEND -> ready when (and (validate/required @entity.activeChannel) (!= (str/trim (default @entity.draft "")) ""))
+        (emit SEND_MESSAGE { data: { content: @entity.draft, channel: @entity.activeChannel, threadRootId: "" } })
+        (set @entity.draft "")
+      SEND -> ready when (not (and (validate/required @entity.activeChannel) (!= (str/trim (default @entity.draft "")) "")))
+    }
+
+    emits {
+      SEND_MESSAGE -> external {
+        data : { content : string!, channel : string!, threadRootId : string }!
+      }
+        @description "A message is ready to save in the open conversation."
+        @synonyms "send, post"
+        @tier "domain"
+    }
+
+    listens {
+      DRAFT_CHANGED {
+        value : string
+      }
+        @tier "presentation"
+      EMOJI_PICKED {
+        emoji : string!
+      }
+        @tier "presentation"
+      APPEND {
+        text : string!
+      }
+        @description "Append text to the draft, such as a picked mention."
+        @synonyms "insert, mention"
+        @tier "presentation"
+      OPENED {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @tier "presentation"
+      WorkspaceShell.CONVERSATION_OPENED -> OPENED
+      SEND {
+        value : string
+      }
+        @tier "presentation"
+    }
+
+    config {
+      placeholder : string = "Message"
+        @label "Composer placeholder"
+        @description "Shown in the empty composer; forward the open conversation's name, as Slack's Message #name."
+        @tier "presentation"
+      tools : [ChatTool] = []
+        @label "Composer tools"
+        @description "Icon buttons beside the emoji picker (mention, link a record, attach); each fires its event."
+        @tier "presentation"
+      emojiLabel : string = "Add emoji"
+        @tier "presentation"
+      sendLabel : string = "Send"
+        @tier "presentation"
+    }
+  }
+
+
+  trait ThreadPanel -> @rebindable WorkspaceMessage {
+    initial: closed
+
+    state closed {
+      INIT -> closed
+        (render-ui main null)
+      THREAD_SHOW -> thread
+        (set @entity.threadRoot ?id)
+        (set @entity.threadDraft "")
+        (fetch WorkspaceMessage {
+          limit: @config.maxRows
+          emit: { failure: PanelLoadFailed, success: ThreadRowsLoaded }
+          filter: (or (= (object/get @entity id) ?id) (= (object/get @entity threadRootId) ?id))
+        })
+      PINNED_SHOW -> pinned
+        (fetch WorkspaceMessage {
+          limit: @config.maxRows
+          emit: { failure: PanelLoadFailed, success: PinnedRowsLoaded }
+          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity pinned) true))
+        })
+      PANEL_CLOSE -> closed
+    }
+
+    state thread {
+      INIT -> thread
+      ThreadRowsLoaded -> thread
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-96 shrink-0 min-h-0 border-s border-border"
+          children: [{
+            type: stack
+            direction: horizontal
+            align: center
+            justify: between
+            className: "px-4 py-2 border-b border-border min-h-14"
+            children: [{ type: typography, variant: h4, weight: semibold, content: @config.threadTitle }, { type: button, variant: ghost, size: sm, icon: x, label: "", "aria-label": @config.closeLabel, action: PANEL_CLOSE }]
+          }, {
+            type: stack
+            direction: vertical
+            gap: none
+            className: "flex-1 min-h-0 overflow-y-auto"
+            children: [{
+              type: data-list
+              variant: feed
+              entity: ?data
+              pageSize: 0
+              sortBy: timestamp
+              sortDirection: asc
+              senderField: sender
+              senderLabelField: senderName
+              senderAvatarField: senderAvatar
+              fields: [{ name: content, variant: body }, { name: timestamp, format: datetime }, { name: reactionSummary, variant: caption }]
+            }]
+          }, {
+            type: stack
+            direction: horizontal
+            gap: xs
+            align: end
+            className: "m-3 rounded-container border border-border bg-background p-2 focus-within:border-primary"
+            children: [{ type: input-group, inputType: textarea, rows: 1, placeholder: @config.replyPlaceholder, value: @entity.threadDraft, onChange: REPLY_DRAFT, action: REPLY_SEND }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: REPLY_SEND }]
+          }]
+        })
+      REPLY_DRAFT -> thread
+        (set @entity.threadDraft ?value)
+      REPLY_SEND -> thread when (and (validate/required @entity.threadRoot) (!= (str/trim (default @entity.threadDraft "")) ""))
+        (emit SEND_MESSAGE { data: { content: @entity.threadDraft, channel: @entity.activeChannel, threadRootId: @entity.threadRoot } })
+        (set @entity.threadDraft "")
+      REPLY_SEND -> thread when (not (and (validate/required @entity.threadRoot) (!= (str/trim (default @entity.threadDraft "")) "")))
+      REFRESH -> thread when (and (validate/required (default ?threadRootId "")) (= ?threadRootId @entity.threadRoot))
+        (fetch WorkspaceMessage {
+          limit: @config.maxRows
+          emit: { failure: PanelLoadFailed, success: ThreadRowsLoaded }
+          filter: (or (= (object/get @entity id) ?threadRootId) (= (object/get @entity threadRootId) ?threadRootId))
+        })
+      REFRESH -> thread when (not (and (validate/required (default ?threadRootId "")) (= ?threadRootId @entity.threadRoot)))
+      THREAD_SHOW -> thread
+        (set @entity.threadRoot ?id)
+        (set @entity.threadDraft "")
+        (fetch WorkspaceMessage {
+          limit: @config.maxRows
+          emit: { failure: PanelLoadFailed, success: ThreadRowsLoaded }
+          filter: (or (= (object/get @entity id) ?id) (= (object/get @entity threadRootId) ?id))
+        })
+      PINNED_SHOW -> pinned
+        (fetch WorkspaceMessage {
+          limit: @config.maxRows
+          emit: { failure: PanelLoadFailed, success: PinnedRowsLoaded }
+          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity pinned) true))
+        })
+      PANEL_CLOSE -> closed
+        (set @entity.threadRoot "")
+        (render-ui main null)
+      PanelLoadFailed -> thread
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the thread — " ?error) "Couldn't load the thread"))
+    }
+
+    state pinned {
+      INIT -> pinned
+      PinnedRowsLoaded -> pinned
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-96 shrink-0 min-h-0 border-s border-border"
+          children: [{
+            type: stack
+            direction: horizontal
+            align: center
+            justify: between
+            className: "px-4 py-2 border-b border-border min-h-14"
+            children: [{ type: typography, variant: h4, weight: semibold, content: @config.pinnedTitle }, { type: button, variant: ghost, size: sm, icon: x, label: "", "aria-label": @config.closeLabel, action: PANEL_CLOSE }]
+          }, {
+            type: stack
+            direction: vertical
+            gap: none
+            className: "flex-1 min-h-0 overflow-y-auto"
+            children: [{
+              type: data-list
+              variant: feed
+              entity: ?data
+              pageSize: 0
+              sortBy: timestamp
+              sortDirection: asc
+              senderField: sender
+              senderLabelField: senderName
+              senderAvatarField: senderAvatar
+              fields: [{ name: content, variant: body }, { name: timestamp, format: datetime }]
+              emptyIcon: pin
+              emptyTitle: @config.noPinned
+            }]
+          }]
+        })
+      THREAD_SHOW -> thread
+        (set @entity.threadRoot ?id)
+        (set @entity.threadDraft "")
+        (fetch WorkspaceMessage {
+          limit: @config.maxRows
+          emit: { failure: PanelLoadFailed, success: ThreadRowsLoaded }
+          filter: (or (= (object/get @entity id) ?id) (= (object/get @entity threadRootId) ?id))
+        })
+      PINNED_SHOW -> pinned
+        (fetch WorkspaceMessage {
+          limit: @config.maxRows
+          emit: { failure: PanelLoadFailed, success: PinnedRowsLoaded }
+          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity pinned) true))
+        })
+      PANEL_CLOSE -> closed
+        (render-ui main null)
+      PanelLoadFailed -> pinned
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the pinned messages — " ?error) "Couldn't load the pinned messages"))
+    }
+
+    emits {
+      SEND_MESSAGE -> external {
+        data : { content : string!, channel : string!, threadRootId : string }!
+      }
+        @description "A thread reply is ready to save."
+        @synonyms "reply, send reply"
+        @tier "domain"
+      PANEL_CLOSE -> external { }
+        @description "The side panel was closed."
+        @tier "presentation"
+      PanelLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      THREAD_SHOW {
+        id : string!
+        row : WorkspaceMessage
+      }
+        @tier "presentation"
+      PINNED_SHOW {
+        channel : string!
+      }
+        @tier "presentation"
+      REPLY_DRAFT {
+        value : string
+      }
+        @tier "presentation"
+      REPLY_SEND {
+        value : string
+      }
+        @tier "presentation"
+      REFRESH {
+        channel : string
+        threadRootId : string
+      }
+        @description "Reload the open thread after a write."
+        @tier "domain"
+      MessageFeed.THREAD_OPEN -> THREAD_SHOW
+      ConversationHeader.PINNED_OPEN -> PINNED_SHOW
+      ConversationHeader.MEMBERS_OPEN -> PANEL_CLOSE
+      WorkspaceShell.CONVERSATION_OPENED -> PANEL_CLOSE
+    }
+
+    config {
+      threadTitle : string = "Thread"
+        @tier "presentation"
+      pinnedTitle : string = "Pinned messages"
+        @tier "presentation"
+      noPinned : string = "Nothing is pinned yet"
+        @tier "presentation"
+      replyPlaceholder : string = "Reply…"
+        @tier "presentation"
+      closeLabel : string = "Close"
+        @tier "presentation"
+      sendLabel : string = "Send"
+        @tier "presentation"
+      maxRows : number = 500
+        @tier "policy"
+    }
+  }
+
+  trait MembersPanel -> @rebindable WorkspaceMembership {
+    initial: closed
+
+    state closed {
+      INIT -> closed
+        (render-ui main null)
+      MEMBERS_SHOW -> open
+        (set @entity.panelChannel ?channel)
+        (set @entity.panelName (default ?name ""))
+        (fetch WorkspaceMembership {
+          limit: @config.maxRows
+          emit: { failure: MembersLoadFailed, success: PanelMembersLoaded }
+          filter: (= (object/get @entity channel) ?channel)
+        })
+      HIDE -> closed
+    }
+
+    state open {
+      INIT -> open
+      PanelMembersLoaded -> open
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-80 shrink-0 min-h-0 border-s border-border"
+          children: [{
+            type: stack
+            direction: horizontal
+            align: center
+            justify: between
+            className: "px-4 py-2 border-b border-border min-h-14"
+            children: [{ type: typography, variant: h4, weight: semibold, content: @config.membersTitle }, { type: button, variant: ghost, size: sm, icon: x, label: "", "aria-label": @config.closeLabel, action: HIDE }]
+          }, {
+            type: stack
+            direction: vertical
+            gap: sm
+            className: "flex-1 min-h-0 overflow-y-auto p-2"
+            children: [{ type: button, variant: secondary, size: sm, icon: user-plus, label: @config.addPeopleLabel, action: ADD_PEOPLE, actionPayload: { channel: @entity.panelChannel, name: @entity.panelName } }, {
+              type: data-list
+              variant: compact
+              look: borderless
+              pageSize: 0
+              entity: ?data
+              sortBy: memberName
+              fields: [{ name: memberName, variant: avatar }, { name: memberName, variant: small }]
+              itemClickEvent: MEMBER_ROW
+            }]
+          }]
+        })
+      MEMBER_ROW -> open
+        (emit MEMBER_OPENED { id: (default ?row.member ""), name: (default ?row.memberName "") })
+      REFRESH -> open when (= (default ?channel "") @entity.panelChannel)
+        (fetch WorkspaceMembership {
+          limit: @config.maxRows
+          emit: { failure: MembersLoadFailed, success: PanelMembersLoaded }
+          filter: (= (object/get @entity channel) ?channel)
+        })
+      REFRESH -> open when (!= (default ?channel "") @entity.panelChannel)
+      MEMBERS_SHOW -> open
+        (set @entity.panelChannel ?channel)
+        (set @entity.panelName (default ?name ""))
+        (fetch WorkspaceMembership {
+          limit: @config.maxRows
+          emit: { failure: MembersLoadFailed, success: PanelMembersLoaded }
+          filter: (= (object/get @entity channel) ?channel)
+        })
+      HIDE -> closed
+        (render-ui main null)
+      MembersLoadFailed -> open
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the members — " ?error) "Couldn't load the members"))
+    }
+
+    emits {
+      ADD_PEOPLE -> external {
+        channel : string!
+        name : string
+      }
+        @description "The viewer asked to add people to the open conversation."
+        @synonyms "add people, invite"
+        @tier "presentation"
+      MEMBER_OPENED -> external {
+        id : string!
+        name : string
+      }
+        @description "A member was clicked; open the direct message with them."
+        @synonyms "message member"
+        @tier "presentation"
+      MembersLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      MEMBERS_SHOW {
+        channel : string!
+        name : string
+      }
+        @tier "presentation"
+      HIDE {
+      }
+        @tier "presentation"
+      MEMBER_ROW {
+        id : string!
+        row : WorkspaceMembership!
+      }
+        @tier "presentation"
+      REFRESH {
+        channel : string
+      }
+        @description "Reload the members after one was added."
+        @tier "domain"
+      ConversationHeader.MEMBERS_OPEN -> MEMBERS_SHOW
+      ConversationHeader.PINNED_OPEN -> HIDE
+      MessageFeed.THREAD_OPEN -> HIDE
+      MembersPanel.ADD_PEOPLE -> HIDE
+      WorkspaceShell.CONVERSATION_OPENED -> HIDE
+    }
+
+    config {
+      membersTitle : string = "Members"
+        @tier "presentation"
+      addPeopleLabel : string = "Add people"
+        @tier "presentation"
+      closeLabel : string = "Close"
+        @tier "presentation"
+      maxRows : number = 500
+        @tier "policy"
+    }
+  }
+
+  trait PeoplePicker -> @rebindable WorkspacePerson {
+    initial: closed
+
+    state closed {
+      INIT -> closed
+        (render-ui main null)
+      PICK -> open
+        (set @entity.pickChannel ?channel)
+        (set @entity.pickName (default ?name ""))
+        (fetch WorkspacePerson {
+          limit: @config.maxRows
+          emit: { failure: PickLoadFailed, success: PickPeopleLoaded }
+        })
+      HIDE -> closed
+    }
+
+    state open {
+      INIT -> open
+      PickPeopleLoaded -> open
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-80 shrink-0 min-h-0 border-s border-border"
+          children: [{
+            type: stack
+            direction: horizontal
+            align: center
+            justify: between
+            className: "px-4 py-2 border-b border-border min-h-14"
+            children: [{ type: typography, variant: h4, weight: semibold, content: @config.title }, { type: button, variant: ghost, size: sm, icon: x, label: "", "aria-label": @config.closeLabel, action: HIDE }]
+          }, {
+            type: data-list
+            variant: compact
+            look: borderless
+            pageSize: 0
+            entity: (array/filter ?data (fn person (!= @person.id @user.id)))
+            sortBy: name
+            fields: [{ name: name, variant: avatar }, { name: name, variant: small }]
+            itemClickEvent: PERSON_ADD
+          }]
+        })
+      PERSON_ADD -> open
+        (emit MEMBER_PICKED { channel: @entity.pickChannel, channelName: @entity.pickName, id: ?row.id, name: ?row.name })
+      HIDE -> closed
+        (render-ui main null)
+      PickLoadFailed -> open
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the people — " ?error) "Couldn't load the people"))
+    }
+
+    emits {
+      MEMBER_PICKED -> external {
+        channel : string!
+        channelName : string
+        id : string!
+        name : string
+      }
+        @description "A person was picked to add to the open conversation."
+        @synonyms "add people, add member"
+        @tier "domain"
+      PickLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      PICK {
+        channel : string!
+        name : string
+      }
+        @tier "presentation"
+      HIDE {
+      }
+        @tier "presentation"
+      PERSON_ADD {
+        id : string!
+        row : WorkspacePerson!
+      }
+        @tier "presentation"
+      MembersPanel.ADD_PEOPLE -> PICK
+      ConversationHeader.MEMBERS_OPEN -> HIDE
+      ConversationHeader.PINNED_OPEN -> HIDE
+      MessageFeed.THREAD_OPEN -> HIDE
+      WorkspaceShell.CONVERSATION_OPENED -> HIDE
+    }
+
+    config {
+      title : string = "Add people"
+        @tier "presentation"
+      closeLabel : string = "Close"
+        @tier "presentation"
+      maxRows : number = 500
+        @tier "policy"
+    }
+  }
+
+  page "/chat-workspace" as ChatWorkspacePage -> WorkspaceShell, ChannelRail, PeopleRail, ConversationHeader, MessageFeed, MessageComposer, ThreadPanel, MembersPanel, PeoplePicker
+}

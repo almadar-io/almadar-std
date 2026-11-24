@@ -1,0 +1,89 @@
+{
+  "atom": "connect/atoms/std-conversation.lolo",
+  "trait": "DirectMessageOpener",
+  "cases": [
+    {
+      "id": "opening-a-direct-message-derives-one-id-from-both-people-lower-first",
+      "config": {},
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "OPEN_DM",
+          "payload": { "id": "u2", "name": "Bor" },
+          "identity": { "id": "u1", "name": "Ana", "email": "a@x.si", "role": "member" },
+          "expect": { "state": "opening", "entity": { "dmChannel": "dm-u1-u2", "dmTarget": "u2", "dmTargetName": "Bor" } }
+        }
+      ]
+    },
+    {
+      "id": "the-other-side-derives-the-same-id",
+      "config": {},
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "OPEN_DM",
+          "payload": { "id": "u1", "name": "Ana" },
+          "identity": { "id": "u2", "name": "Bor", "email": "b@x.si", "role": "member" },
+          "expect": { "state": "opening", "entity": { "dmChannel": "dm-u1-u2" } }
+        }
+      ]
+    },
+    {
+      "id": "control-messaging-yourself-opens-nothing",
+      "config": {},
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "OPEN_DM",
+          "payload": { "id": "u1", "name": "Ana" },
+          "identity": { "id": "u1", "name": "Ana", "email": "a@x.si", "role": "member" },
+          "expect": { "state": "idle", "neverEmits": ["DM_OPENED", "DM_OPEN_FAILED"] }
+        }
+      ]
+    },
+    {
+      "id": "control-an-anonymous-viewer-opens-nothing",
+      "config": {},
+      "entity": { "id": "x" },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "OPEN_DM",
+          "payload": { "id": "u2", "name": "Bor" },
+          "expect": { "state": "idle", "neverEmits": ["DM_OPENED", "DM_OPEN_FAILED"] }
+        }
+      ]
+    },
+    {
+      "id": "the-second-membership-write-opens-the-conversation-whichever-lands-first",
+      "config": {},
+      "entity": { "id": "x", "dmChannel": "dm-u1-u2", "dmTarget": "u2", "dmTargetName": "Bor", "dmSelfReady": false, "dmPeerReady": true },
+      "steps": [
+        {
+          "from": "opening",
+          "event": "DM_SELF_JOINED",
+          "payload": { "id": "dm-u1-u2:u1" },
+          "identity": { "id": "u1", "name": "Ana", "email": "a@x.si", "role": "member" },
+          "expect": { "state": "idle", "emits": [{ "event": "DM_OPENED", "payload": { "channel": "dm-u1-u2", "name": "Bor", "peer": "u2" } }] }
+        }
+      ]
+    },
+    {
+      "id": "control-the-first-membership-write-only-records-itself",
+      "config": {},
+      "entity": { "id": "x", "dmChannel": "dm-u1-u2", "dmTarget": "u2", "dmTargetName": "Bor", "dmSelfReady": false, "dmPeerReady": false },
+      "steps": [
+        {
+          "from": "opening",
+          "event": "DM_PEER_JOINED",
+          "payload": { "id": "dm-u1-u2:u2" },
+          "identity": { "id": "u1", "name": "Ana", "email": "a@x.si", "role": "member" },
+          "expect": { "state": "opening", "neverEmits": ["DM_OPENED"], "entity": { "dmPeerReady": true } }
+        }
+      ]
+    }
+  ]
+}

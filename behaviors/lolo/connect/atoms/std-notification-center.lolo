@@ -9,7 +9,7 @@ orbital NotificationCenterOrbital {
     uses Button from "std/behaviors/ui-button"
     uses Email from "std/behaviors/std-email"
 
-    type PUSH_SUBSCRIBED = Event { endpoint : string, p256dh : string, auth : string } "browser/push-subscribe resolved — the credentials arrive FLAT on the payload (?endpoint, ?p256dh, ?auth), not wrapped in a `result` field."
+    type PUSH_SUBSCRIBED = Event { kind : "webpush" | "fcm" | "apns"!, endpoint : string, p256dh : string, auth : string, token : string } "browser/push-subscribe resolved — the subscription arrives FLAT on the payload: ?kind names the push service (webpush with ?endpoint, ?p256dh, ?auth; fcm or apns with ?token), not wrapped in a `result` field."
 
   entity NotificationPreference [persistent: notificationPreferences] {
 
@@ -31,6 +31,8 @@ orbital NotificationCenterOrbital {
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     userId : string @description "Owner of this browser push subscription. Owner-scoped access predicates belong to the binding organism's [identity] roster, as with NotificationPreference." @synonyms "user, owner, account" = ""
+    kind : "webpush" | "fcm" | "apns" @description "The push service this subscription belongs to: webpush (a browser), fcm (Android) or apns (iOS)." @synonyms "push service, platform" = webpush
+    token : string @description "The device's registration token for fcm or apns; blank for webpush." @synonyms "device token, registration token" = ""
     endpoint : string @description "Push service endpoint URL for this subscription." @synonyms "push url, subscription endpoint" = ""
     p256dh : string @description "Client public key (p256dh) of the subscription." @synonyms "public key" = ""
     auth : string @description "Auth secret of the subscription." @synonyms "auth secret" = ""
@@ -76,10 +78,12 @@ orbital NotificationCenterOrbital {
       PUSH_SUBSCRIBED -> idle
         (set @entity.lastError "")
         (persist create PushSubscription {
-          auth: ?auth
+          auth: (default ?auth "")
           createdAt: @now
-          endpoint: ?endpoint
-          p256dh: ?p256dh
+          endpoint: (default ?endpoint "")
+          kind: ?kind
+          p256dh: (default ?p256dh "")
+          token: (default ?token "")
           userId: @user.id
         } { emit: { failure: PUSH_SAVE_FAILED, success: PUSH_SAVED } })
       PUSH_SAVED -> idle
@@ -94,11 +98,13 @@ orbital NotificationCenterOrbital {
 
     emits {
       PUSH_SUBSCRIBED {
+        kind : "webpush" | "fcm" | "apns"!
         endpoint : string
         p256dh : string
         auth : string
+        token : string
       }
-        @description "browser/push-subscribe resolved; the subscription credentials arrive flat on the payload"
+        @description "browser/push-subscribe resolved; the subscription arrives flat on the payload, webpush credentials or an fcm or apns token"
         @tier "secondary"
       PUSH_SUBSCRIBE_FAILED {
         error : string!

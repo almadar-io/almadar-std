@@ -1,5 +1,6 @@
 app std-rasm-grid [
   version: "0.2.0",
+  kernel: { "queue": [reorder] },
   description: "std-rasm-grid — the Rasm kit's two-axis layout node. On RASM_PLACE for its own id it stores its rect and places its children in the cells of a declared grid: columns and rows are fixed px, an equal share (fill) or a weighted share (fr, weight in main, default 1) of what is left, a child names its column, row and optional spans, and RASM_PLACE carries each child's rect. A child may carry rotate (radians, forwarded in its placed entry), and offsetX and offsetY (px nudges applied after the cell is computed). Children may name overlapping cells: a collage, a headline running over a picture; each leaf's own z decides which paints on top. With direction rtl the columns run from the right edge. The knob rules paints a hairline in every gutter between tracks (look grid/rule/idle) and border paints a frame on the grid's rect (look grid/border/idle); with no such look nothing is painted. A child whose cell lies outside the declared tracks is not placed. A measure row is as tall as its tallest single-row child that reports RASM_EXTENT or is a measured text; a fill or fr row may name a min and is never shorter than it or than that child, and a row held at that floor is taken out of the room the other rows share. After each layout the grid reports RASM_EXTENT with its content height (fixed rows at main, measure rows at their child, fill and fr rows at their floor), so a measure parent sizes it. A child declared in another breakpoint shape but not in the active one is placed at zero size, so it paints nothing there. A placement at the rect it already holds changes nothing."
 ]
 
@@ -30,6 +31,7 @@ orbital RasmGridOrbital {
     rowAt : [number] @description "Each row's offset from the content edge in px, at the last layout." = []
     variant : string @description "The key of `variants` the announced breakpoint chose, empty for the configured shape." = ""
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    due : boolean @description "True while a layout is queued at the back of the worklist: later changes in the dispatch only record what they change, so the grid lays out once for all of them." = false
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
     painted : boolean @description "True while this grid has rules or a border on the surface, so a variant that drops them clears what it painted." = false
     space : Map string number @description "The spacing scale the theme last announced (tight, stack, group, gutter, section, measure), empty before it did." = {}
@@ -48,21 +50,17 @@ orbital RasmGridOrbital {
       RASM_DIRECTION -> ready
         (set @entity.dir ?direction)
         (set @entity.announced true)
-        (set @entity.layouts (+ @entity.layouts 1))
-        (emit GRID_LAYOUT { n: @entity.layouts })
+        (when (not @entity.due) (do (set @entity.due true) (set @entity.layouts (+ @entity.layouts 1)) (emit GRID_LAYOUT { n: @entity.layouts }) (kernel/queue-back "GRID_LAYOUT")))
       RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
         (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
-        (set @entity.layouts (+ @entity.layouts 1))
-        (emit GRID_LAYOUT { n: @entity.layouts })
+        (when (not @entity.due) (do (set @entity.due true) (set @entity.layouts (+ @entity.layouts 1)) (emit GRID_LAYOUT { n: @entity.layouts }) (kernel/queue-back "GRID_LAYOUT")))
       RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
       RASM_SPACE -> ready
         (set @entity.space ?space)
-        (set @entity.layouts (+ @entity.layouts 1))
-        (emit GRID_LAYOUT { n: @entity.layouts })
+        (when (not @entity.due) (do (set @entity.due true) (set @entity.layouts (+ @entity.layouts 1)) (emit GRID_LAYOUT { n: @entity.layouts }) (kernel/queue-back "GRID_LAYOUT")))
       RASM_RESIZE -> ready when (and (> @config.fold 0) (!= ?height @entity.viewH))
         (set @entity.viewH ?height)
-        (set @entity.layouts (+ @entity.layouts 1))
-        (emit GRID_LAYOUT { n: @entity.layouts })
+        (when (not @entity.due) (do (set @entity.due true) (set @entity.layouts (+ @entity.layouts 1)) (emit GRID_LAYOUT { n: @entity.layouts }) (kernel/queue-back "GRID_LAYOUT")))
       RASM_RESIZE -> ready when (not (and (> @config.fold 0) (!= ?height @entity.viewH)))
       RASM_THEME -> ready
         (set @entity.looks ?looks)
@@ -71,20 +69,18 @@ orbital RasmGridOrbital {
       RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))
       RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
-        (set @entity.layouts (+ @entity.layouts 1))
-        (emit GRID_LAYOUT { n: @entity.layouts })
+        (when (not @entity.due) (do (set @entity.due true) (set @entity.layouts (+ @entity.layouts 1)) (emit GRID_LAYOUT { n: @entity.layouts }) (kernel/queue-back "GRID_LAYOUT")))
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
       RASM_EXTENT -> ready when (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))) (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h))))
         (set @entity.measured (object/set @entity.measured ?id { id: ?id, width: ?w, height: ?h, lines: 0 }))
-        (set @entity.layouts (+ @entity.layouts 1))
-        (emit GRID_LAYOUT { n: @entity.layouts })
+        (when (not @entity.due) (do (set @entity.due true) (set @entity.layouts (+ @entity.layouts 1)) (emit GRID_LAYOUT { n: @entity.layouts }) (kernel/queue-back "GRID_LAYOUT")))
       RASM_EXTENT -> ready when (not (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))) (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h)))))
-      RASM_MEASURED -> ready when (array/some ?items (fn it (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))) (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height))))))
-        (set @entity.measured (array/reduce ?items @entity.measured (fn acc it (if (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))) (fn c (= @c.id @it.id))) (object/set @acc @it.id @it) @acc))))
-        (set @entity.layouts (+ @entity.layouts 1))
-        (emit GRID_LAYOUT { n: @entity.layouts })
-      RASM_MEASURED -> ready when (not (array/some ?items (fn it (and (array/some (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))) (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height)))))))
+      RASM_MEASURED -> ready when (let ((kids (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))))) (array/some ?items (fn it (and (array/some @kids (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height)))))))
+        (set @entity.measured (let ((kids (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))))) (array/reduce ?items @entity.measured (fn acc it (if (array/some @kids (fn c (= @c.id @it.id))) (object/set @acc @it.id @it) @acc)))))
+        (when (not @entity.due) (do (set @entity.due true) (set @entity.layouts (+ @entity.layouts 1)) (emit GRID_LAYOUT { n: @entity.layouts }) (kernel/queue-back "GRID_LAYOUT")))
+      RASM_MEASURED -> ready when (let ((kids (array/concat @config.children (array/flatten (array/map (object/values @config.variants) (fn sh (default @sh.children []))))))) (not (array/some ?items (fn it (and (array/some @kids (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height))))))))
       GRID_LAYOUT -> ready when (!= @entity.rect null)
+        (set @entity.due false)
         (set @entity.gapNow (object/get @entity.space @config.gapBy (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap)))
         (set @entity.rowGapNow (object/get @entity.space @config.rowGapBy (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rowGap)) @config.rowGap)))
         (set @entity.padY (object/get @entity.space @config.paddingBy (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding)))
@@ -100,6 +96,7 @@ orbital RasmGridOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit GRID_PAINT { n: @entity.paints })
       GRID_LAYOUT -> ready when (= @entity.rect null)
+        (set @entity.due false)
       GRID_PAINT -> ready when (and (!= @entity.rect null) (or (!= @config.look "") (!= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.rules)) @config.rules) "none") (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.border)) @config.border)))
         (set @entity.painted true)
         (let ((r @entity.rect) (pad @entity.padX) (padV @entity.padY) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (rule (object/get @entity.looks "grid/rule/idle" null)) (frame (object/get @entity.looks "grid/border/idle" null)))

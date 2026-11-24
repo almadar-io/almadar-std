@@ -37,6 +37,136 @@
           }
         }
       ]
+    },
+    {
+      "id": "the-bell-opens-the-notifications-page-when-one-is-named",
+      "config": {
+        "notificationsPath": "/notifications"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "composing",
+          "event": "NOTIFY_PICKED",
+          "payload": {},
+          "expect": {
+            "state": "composing",
+            "emits": [
+              {
+                "event": "NOTIFY_CLICK"
+              }
+            ],
+            "effects": [
+              {
+                "type": "emit"
+              },
+              {
+                "type": "navigate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-without-a-notifications-page-the-bell-only-announces",
+      "config": {},
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "composing",
+          "event": "NOTIFY_PICKED",
+          "payload": {},
+          "expect": {
+            "state": "composing",
+            "emits": [
+              {
+                "event": "NOTIFY_CLICK"
+              }
+            ],
+            "effects": [
+              {
+                "type": "emit"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "counting-unread-lists-the-viewer-s-rows-in-the-bell",
+      "config": {
+        "countUnread": true,
+        "notificationsPath": "/notifications"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "composing",
+          "event": "AppLayoutStateLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "n1",
+                "recipient": "u1",
+                "message": "Aria Hotels retainer passed 90%",
+                "read": false
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "name": "Ana",
+            "email": "a@x.si",
+            "role": "owner"
+          },
+          "expect": {
+            "state": "composing",
+            "entity": {
+              "unreadItems": [
+                {
+                  "id": "n1",
+                  "message": "Aria Hotels retainer passed 90%",
+                  "createdAt": "",
+                  "read": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-without-countUnread-the-load-changes-nothing",
+      "config": {},
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "composing",
+          "event": "AppLayoutStateLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "n1",
+                "message": "x",
+                "read": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "composing",
+            "effects": []
+          }
+        }
+      ]
     }
   ]
 }

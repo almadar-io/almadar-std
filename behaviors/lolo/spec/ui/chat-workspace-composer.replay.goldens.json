@@ -1,0 +1,150 @@
+{
+  "atom": "ui/core/atoms/std-chat-workspace.lolo",
+  "trait": "MessageComposer",
+  "cases": [
+    {
+      "id": "sending-in-an-open-conversation-emits-the-message-and-clears-the-draft",
+      "entity": {
+        "id": "x",
+        "activeChannel": "design",
+        "draft": "hello"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SEND",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "draft": ""
+            },
+            "emits": [
+              {
+                "event": "SEND_MESSAGE",
+                "payload": {
+                  "data": {
+                    "content": "hello",
+                    "channel": "design",
+                    "threadRootId": ""
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-a-blank-draft-sends-nothing",
+      "entity": {
+        "id": "x",
+        "activeChannel": "design",
+        "draft": "   "
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SEND",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "SEND_MESSAGE"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-with-no-conversation-open-sends-nothing-and-keeps-the-draft",
+      "entity": {
+        "id": "x",
+        "activeChannel": "",
+        "draft": "hello"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SEND",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "draft": "hello"
+            },
+            "neverEmits": [
+              "SEND_MESSAGE"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "an-emoji-is-appended-to-the-draft",
+      "entity": {
+        "id": "x",
+        "draft": "nice "
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "EMOJI_PICKED",
+          "payload": {
+            "emoji": "🎉"
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "draft": "nice 🎉"
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    }
+  ]
+}

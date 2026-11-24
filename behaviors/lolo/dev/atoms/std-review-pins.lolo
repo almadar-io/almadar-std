@@ -1,6 +1,7 @@
 app std-review-pins [
   version: "1.0.0",
   locales: [en, ar, sl],
+  fs: { "/srv/orb/apps/**": [read] },
   description: "std-review-pins — reviewers leave feedback and questions pinned on a live view. ReviewPinsBoard wraps the trait its contentTrait knob names in the annotated-media pattern's content mode, so the view stays usable, and puts a Feedback tab on the right edge, collapsed to its icon until hovered, with the subject's total comment count. The tab opens a side drawer that lists every comment of the subject on every route (resolved ones only when shown), each naming its route. Add comment closes the drawer and waits for one click on the view: the click drops a pin there (x and y as percentages of the view) on the route the view shows and opens the drawer on its text; Cancel on the tab ends the wait. Pins are not drawn on the view until one is opened: opening a comment draws only its pin, and when the comment is on another route the board emits GUEST_NAVIGATE { guest, route } so the guest that shows the view goes there (ROUTE_SEEN { route, guest } names the view's route and guest). An open comment shows its replies, takes a reply, and resolves or reopens it. A pin is one ReviewPin row: the subject it belongs to (REVIEW_OPEN { subject } names it, for example a review name and its version), the route, x, y, its kind (feedback or question), the text, its author (the signed-in viewer) and whether it is open or resolved; a reply is a row whose parentId names its pin. The atom states no access policy of its own: the composing program declares who may read and write ReviewPin rows."
 ]
 ;; @capabilities "pin feedback on a live app, review comments on a prototype, client questions on a page, design review pins, annotate a running screen"
@@ -385,18 +386,18 @@ orbital ReviewPinsOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (or (= (default ?version "") "") (not (array/some @config.reviews (fn r (= @r.name (default ?name ""))))))
+      INIT -> idle when (or (= (default ?version "") "") (not (array/some @config.reviews (fn r (and (= @r.name (default ?name "")) (= @r.version (default ?version "")))))))
         (emit REVIEW_REFUSED { title: @config.unknownTitle, message: (str/concat (default ?name "") " " (default ?version "")) })
-      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (and (= @r.name (default ?name "")) (!= (default @r.path "") "")))))
-        (let ((link (array/find @config.reviews (fn r (= @r.name ?name)))))
+      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (and (= @r.name (default ?name "")) (= @r.version (default ?version "")) (!= (default @r.path "") "")))))
+        (let ((link (array/find @config.reviews (fn r (and (= @r.name ?name) (= @r.version ?version))))))
           (do
             (set @entity.openedPath (default @link.path ""))
             (set @entity.openedRoute @link.route)
             (emit GUEST_START_ROUTE { route: @link.route })
             (emit REVIEW_OPEN { subject: (str/concat @link.name "/" ?version), route: @link.route })
             (emit LOAD_PROGRAM_FILE { path: (default @link.path "") })))
-      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (and (= @r.name (default ?name "")) (= (default @r.path "") "")))))
-        (let ((link (array/find @config.reviews (fn r (= @r.name ?name)))))
+      INIT -> idle when (and (!= (default ?version "") "") (array/some @config.reviews (fn r (and (= @r.name (default ?name "")) (= @r.version (default ?version "")) (= (default @r.path "") "")))))
+        (let ((link (array/find @config.reviews (fn r (and (= @r.name ?name) (= @r.version ?version))))))
           (do
             (set @entity.openedBehavior @link.behavior)
             (set @entity.openedRoute @link.route)
@@ -492,11 +493,17 @@ orbital ReviewPinsOrbital {
 
   entity ReviewProgramFileView [runtime] {
     id : string!
+    programPath : string @description "The program file being read." = ""
+    programEnv : Map string string @description "The NAME=value lines of the app.env beside the program file; empty when it has none." = {}
   }
 
   ;; Reads a review link's prebuilt program file (program/read resolve on its path) so the stage opens it without listing the catalog.
   trait ReviewProgramFile -> ReviewProgramFileView [server] {
     config {
+      appsDir : string = "/srv/orb/apps"
+        @label "Apps folder"
+        @description "The folder every review program file lives under; the app.env beside a program file is read from its folder (a composer that moves it grants fs read on its own folder)."
+        @tier "policy"
       integrations : "mock" | "live" = "mock"
         @label "Integrations"
         @description "How the review's program reaches real services when it opens: mock keeps its rows in its own store, live uses its declared store drivers."
@@ -506,10 +513,22 @@ orbital ReviewPinsOrbital {
     initial: idle
 
     state idle {
-      LOAD_PROGRAM_FILE -> idle
-        (program/read "" { resolve: true, text: false, path: ?path } { emit: { success: PROGRAM_FILE_READ, failure: PROGRAM_FILE_FAILED } })
+      LOAD_PROGRAM_FILE -> idle when (not (str/startsWith ?path (str/concat @config.appsDir "/")))
+        (emit REVIEW_REFUSED { title: "This review could not be opened", message: (str/concat ?path " is not under " @config.appsDir) })
+      LOAD_PROGRAM_FILE -> idle when (str/startsWith ?path (str/concat @config.appsDir "/"))
+        (set @entity.programPath ?path)
+        (set @entity.programEnv {})
+        (os/read-file (str/concat @config.appsDir "/" (str/replace (str/join (array/dropLast (str/split ?path "/") 1) "/") (str/concat @config.appsDir "/") "") "/app.env") { emit: { success: PROGRAM_ENV_READ, failure: PROGRAM_ENV_UNREAD } })
+      PROGRAM_ENV_READ -> idle
+        (let ((lines (str/split (default (bytes/to-string ?data) "") "\n")))
+          (set @entity.programEnv (object/fromEntries (array/map (array/filter (array/map @lines (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#")) (str/includes @l "=")))) (fn l (let ((parts (str/split @l "="))) [(str/trim (default (array/first @parts) "")) (str/join (array/drop @parts 1) "=")]))))))
+        (program/read "" { resolve: true, text: false, path: @entity.programPath } { emit: { success: PROGRAM_FILE_READ, failure: PROGRAM_FILE_FAILED } })
+      PROGRAM_ENV_UNREAD -> idle when (= (default ?kind "") "not-found")
+        (program/read "" { resolve: true, text: false, path: @entity.programPath } { emit: { success: PROGRAM_FILE_READ, failure: PROGRAM_FILE_FAILED } })
+      PROGRAM_ENV_UNREAD -> idle when (!= (default ?kind "") "not-found")
+        (emit REVIEW_REFUSED { title: "This review could not be opened", message: (str/concat "app.env could not be read: " (default ?error "")) })
       PROGRAM_FILE_READ -> idle
-        (emit REVIEW_PROGRAM { program: ?result.program, integrations: @config.integrations })
+        (emit REVIEW_PROGRAM { program: ?result.program, integrations: @config.integrations, env: @entity.programEnv })
       PROGRAM_FILE_FAILED -> idle
         (emit REVIEW_REFUSED { title: "This review could not be opened", message: (default ?error "") })
     }
@@ -518,8 +537,9 @@ orbital ReviewPinsOrbital {
       REVIEW_PROGRAM -> external {
         program : ReviewProgram!
         integrations : "mock" | "live"!
+        env : Map string string!
       }
-        @description "The review link's prebuilt program, read and ready to open on the stage."
+        @description "The review link's prebuilt program, read and ready to open on the stage, with the env its app.env beside it declares (empty when it has none)."
       REVIEW_REFUSED -> external {
         title : string!
         message : string!
@@ -532,6 +552,15 @@ orbital ReviewPinsOrbital {
         path : string!
       }
         @description "Read this prebuilt program file."
+      PROGRAM_ENV_READ {
+        data : bytes!
+      }
+        @tier "internal"
+      PROGRAM_ENV_UNREAD {
+        error : string
+        kind : string
+      }
+        @tier "internal"
       PROGRAM_FILE_READ {
         result : ReviewProgramRead!
       }

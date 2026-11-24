@@ -1,0 +1,368 @@
+{
+ "atom": "connect/atoms/std-notification-preferences.lolo",
+ "trait": "PreferencesManage",
+ "note": "ownOnly stamps the viewer on saved rows and refuses unlisted channels; each ownOnly arm is paired with the default control that keeps today's behaviour",
+ "cases": [
+  {
+   "id": "ownOnly create stamps the viewer's id over the form's personId",
+   "config": {
+    "ownOnly": true,
+    "channels": [
+     "in_app",
+     "email",
+     "push"
+    ]
+   },
+   "entity": {
+    "id": "p",
+    "page": 1
+   },
+   "steps": [
+    {
+     "from": "browsing",
+     "identity": {
+      "id": "u1"
+     },
+     "event": "DO_CREATE",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "personId": "someone-else",
+       "eventKey": "task.due",
+       "channel": "email",
+       "mode": "instant",
+       "quietHours": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "create",
+        "arg1": "NotificationPreference",
+        "arg2": [
+         "object/merge",
+         "@payload.data",
+         {
+          "personId": "@user.id"
+         }
+        ]
+       }
+      ],
+      "neverEmits": [
+       "PreferenceSaveFailed"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without ownOnly create persists the form row as it came",
+   "config": {},
+   "entity": {
+    "id": "p",
+    "page": 1
+   },
+   "steps": [
+    {
+     "from": "browsing",
+     "identity": {
+      "id": "u1"
+     },
+     "event": "DO_CREATE",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "personId": "someone-else",
+       "eventKey": "task.due",
+       "channel": "sms",
+       "mode": "instant",
+       "quietHours": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "create",
+        "arg1": "NotificationPreference",
+        "arg2": "@payload.data"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ownOnly create with a channel outside the list persists nothing",
+   "config": {
+    "ownOnly": true,
+    "channels": [
+     "in_app",
+     "email",
+     "push"
+    ]
+   },
+   "entity": {
+    "id": "p",
+    "page": 1
+   },
+   "steps": [
+    {
+     "from": "browsing",
+     "identity": {
+      "id": "u1"
+     },
+     "event": "DO_CREATE",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "personId": "u1",
+       "eventKey": "",
+       "channel": "sms",
+       "mode": "instant",
+       "quietHours": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ],
+      "neverEmits": [
+       "PreferenceSaved"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ownOnly update stamps the viewer's id",
+   "config": {
+    "ownOnly": true,
+    "channels": [
+     "in_app",
+     "email",
+     "push"
+    ]
+   },
+   "entity": {
+    "id": "p",
+    "page": 1
+   },
+   "steps": [
+    {
+     "from": "browsing",
+     "identity": {
+      "id": "u1"
+     },
+     "event": "DO_UPDATE",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "personId": "someone-else",
+       "eventKey": "task.due",
+       "channel": "push",
+       "mode": "digest",
+       "quietHours": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "update",
+        "arg1": "NotificationPreference",
+        "arg2": [
+         "object/merge",
+         "@payload.data",
+         {
+          "personId": "@user.id"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ownOnly update with a channel outside the list persists nothing",
+   "config": {
+    "ownOnly": true,
+    "channels": [
+     "in_app",
+     "email",
+     "push"
+    ]
+   },
+   "entity": {
+    "id": "p",
+    "page": 1
+   },
+   "steps": [
+    {
+     "from": "browsing",
+     "identity": {
+      "id": "u1"
+     },
+     "event": "DO_UPDATE",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "personId": "u1",
+       "eventKey": "",
+       "channel": "slack",
+       "mode": "instant",
+       "quietHours": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ownOnly page load filters the fetch to the viewer's own rows",
+   "config": {
+    "ownOnly": true
+   },
+   "entity": {
+    "id": "p",
+    "page": 1
+   },
+   "steps": [
+    {
+     "from": "browsing",
+     "identity": {
+      "id": "u1"
+     },
+     "event": "REFETCH_PAGE",
+     "payload": {
+      "page": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "fetch",
+        "arg0": "NotificationPreference",
+        "arg1": {
+         "filter": [
+          "or",
+          [
+           "not",
+           true
+          ],
+          [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "personId"
+           ],
+           "@user.id"
+          ]
+         ],
+         "emit": {
+          "failure": "PreferencesLoadFailed",
+          "success": "PreferencesLoaded"
+         },
+         "limit": 50,
+         "offset": [
+          "*",
+          [
+           "-",
+           "@payload.page",
+           1
+          ],
+          50
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without ownOnly the page load filter passes every row",
+   "config": {},
+   "entity": {
+    "id": "p",
+    "page": 1
+   },
+   "steps": [
+    {
+     "from": "browsing",
+     "identity": {
+      "id": "u1"
+     },
+     "event": "REFETCH_PAGE",
+     "payload": {
+      "page": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "fetch",
+        "arg0": "NotificationPreference",
+        "arg1": {
+         "filter": [
+          "or",
+          [
+           "not",
+           false
+          ],
+          [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "personId"
+           ],
+           "@user.id"
+          ]
+         ],
+         "emit": {
+          "failure": "PreferencesLoadFailed",
+          "success": "PreferencesLoaded"
+         },
+         "limit": 50,
+         "offset": [
+          "*",
+          [
+           "-",
+           "@payload.page",
+           1
+          ],
+          50
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
