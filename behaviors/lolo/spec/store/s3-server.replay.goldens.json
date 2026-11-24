@@ -1,0 +1,549 @@
+{
+ "atom": "store/atoms/std-s3-server.lolo",
+ "trait": "S3Route",
+ "note": "Signatures computed with a test-only secret and key id (not real credentials).",
+ "cases": [
+  {
+   "id": "a-signed-put-is-stored-and-answers-its-etag",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 1,
+      "method": "PUT",
+      "path": "/s3/photos/a/b.jpg",
+      "query": "",
+      "headers": {
+       "host": "orb.test",
+       "content-type": "text/plain",
+       "x-amz-content-sha256": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4",
+       "x-amz-date": "20231114T221320Z",
+       "authorization": "AWS4-HMAC-SHA256 Credential=TESTKEYID/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=fe6372341c0c0ca6e32e08a9d948f4dffbe99b1f1c601899b36dc68fb60da558"
+      },
+      "body": "aGk=",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 1,
+      "responseHeaders": []
+     },
+     "answers": [
+      {
+       "operator": "os/mkdir",
+       "ok": {}
+      },
+      {
+       "operator": "os/mkdir",
+       "ok": {}
+      },
+      {
+       "operator": "os/write-file",
+       "ok": {
+        "bytes": 2
+       }
+      },
+      {
+       "operator": "os/write-file",
+       "ok": {
+        "bytes": 10
+       }
+      }
+     ],
+     "expect": {
+      "emits": [
+       {
+        "event": "S3_SIGV4",
+        "payload": {
+         "tag": "1",
+         "method": "PUT",
+         "path": "/s3/photos/a/b.jpg"
+        }
+       },
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 200,
+         "headers": [
+          {
+           "name": "etag",
+           "value": "\"8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4\""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a tampered signature is refused",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 2,
+      "method": "PUT",
+      "path": "/s3/photos/a/b.jpg",
+      "query": "",
+      "headers": {
+       "host": "orb.test",
+       "content-type": "text/plain",
+       "x-amz-content-sha256": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4",
+       "x-amz-date": "20231114T221320Z",
+       "authorization": "AWS4-HMAC-SHA256 Credential=TESTKEYID/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=fe6372341c0c0ca6e32e08a9d948f4dffbe99b1f1c601899b36dc68fb60d0000"
+      },
+      "body": "aGk=",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 2,
+      "responseHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 2,
+         "status": 403
+        }
+       }
+      ],
+      "neverEmits": [
+       "S3_OBJECT_WRITTEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unsigned put is refused",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 3,
+      "method": "PUT",
+      "path": "/s3/photos/a/b.jpg",
+      "query": "",
+      "headers": {
+       "host": "orb.test",
+       "content-type": "text/plain",
+       "x-amz-content-sha256": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4",
+       "x-amz-date": "20231114T221320Z"
+      },
+      "body": "aGk=",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 3,
+      "responseHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 3,
+         "status": 403
+        }
+       }
+      ],
+      "neverEmits": [
+       "S3_SIGV4"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: another access key id is refused",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 4,
+      "method": "PUT",
+      "path": "/s3/photos/a/b.jpg",
+      "query": "",
+      "headers": {
+       "host": "orb.test",
+       "content-type": "text/plain",
+       "x-amz-content-sha256": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4",
+       "x-amz-date": "20231114T221320Z",
+       "authorization": "AWS4-HMAC-SHA256 Credential=OTHERKEY/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=fe6372341c0c0ca6e32e08a9d948f4dffbe99b1f1c601899b36dc68fb60da558"
+      },
+      "body": "aGk=",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 4,
+      "responseHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 4,
+         "status": 403
+        }
+       }
+      ],
+      "neverEmits": [
+       "S3_SIGV4"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-public-bucket-is-read-with-no-signature",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "config": {
+    "publicBuckets": [
+     "public"
+    ]
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 5,
+      "method": "GET",
+      "path": "/s3/public/x.txt",
+      "query": "",
+      "headers": {
+       "host": "orb.test"
+      },
+      "body": "",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 5,
+      "responseHeaders": []
+     },
+     "answers": [
+      {
+       "operator": "os/read-file",
+       "ok": {
+        "data": "dGV4dC9wbGFpbg=="
+       }
+      },
+      {
+       "operator": "os/read-file",
+       "ok": {
+        "data": "aGVsbG8="
+       }
+      }
+     ],
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 200,
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          }
+         ],
+         "body": "aGVsbG8="
+        }
+       }
+      ],
+      "neverEmits": [
+       "S3_SIGV4"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-missing-object-answers-no-such-key",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "config": {
+    "publicBuckets": [
+     "public"
+    ]
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 6,
+      "method": "GET",
+      "path": "/s3/public/none.txt",
+      "query": "",
+      "headers": {
+       "host": "orb.test"
+      },
+      "body": "",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 6,
+      "responseHeaders": []
+     },
+     "answers": [
+      {
+       "operator": "os/read-file",
+       "error": {
+        "kind": "not-found",
+        "message": "no such file"
+       }
+      }
+     ],
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 6,
+         "status": 404
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a key with a dot-dot segment is refused",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "config": {
+    "publicBuckets": [
+     "public"
+    ]
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/s3/public/../etc/passwd",
+      "query": "",
+      "headers": {
+       "host": "orb.test"
+      },
+      "body": "",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 7,
+      "responseHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 400
+        }
+       }
+      ],
+      "neverEmits": [
+       "S3_META_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-presigned-get-inside-its-lifetime-is-answered",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "now": 1700000400000,
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 8,
+      "method": "GET",
+      "path": "/s3/photos/a/b.jpg",
+      "query": "X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=TESTKEYID%2F20231114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=f95c7320a3705a5ebd82bf365d21761c29087cfb72b5f56f728657c9910d7aac",
+      "headers": {
+       "host": "orb.test"
+      },
+      "body": "",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 8,
+      "responseHeaders": []
+     },
+     "answers": [
+      {
+       "operator": "os/read-file",
+       "ok": {
+        "data": "aW1hZ2UvanBlZw=="
+       }
+      },
+      {
+       "operator": "os/read-file",
+       "ok": {
+        "data": "anBn"
+       }
+      }
+     ],
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 8,
+         "status": 200,
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "image/jpeg"
+          }
+         ],
+         "body": "anBn"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a presigned get past its lifetime is refused",
+   "entity": {
+    "id": "s3",
+    "keyId": "TESTKEYID",
+    "pending": []
+   },
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "test-secret-key-for-goldens"
+   },
+   "now": 1700004000000,
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 9,
+      "method": "GET",
+      "path": "/s3/photos/a/b.jpg",
+      "query": "X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=TESTKEYID%2F20231114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=f95c7320a3705a5ebd82bf365d21761c29087cfb72b5f56f728657c9910d7aac",
+      "headers": {
+       "host": "orb.test"
+      },
+      "body": "",
+      "peer": "127.0.0.1"
+     }
+    },
+    {
+     "event": "ROUTE_EXTERNAL",
+     "payload": {
+      "requestId": 9,
+      "responseHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 9,
+         "status": 403
+        }
+       }
+      ],
+      "neverEmits": [
+       "S3_SIGV4"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

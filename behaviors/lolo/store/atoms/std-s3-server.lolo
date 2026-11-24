@@ -1,0 +1,304 @@
+app std-s3-server [
+  version: "1.0.0",
+  env: ["STORAGE_ACCESS_KEY_ID", "S3_DATA_DIR"],
+  fs: { env S3_DATA_DIR: "**": [read, write, create, remove] },
+  description: "std-s3-server — an S3-compatible object store served by the program itself over std-http-server, so a host keeps its own files and std-storage talks to it as to any S3 service. A request std-http-router handed off (its externalPrefixes name the prefix knob, /s3/ by default) is path-style: <prefix><bucket>/<key>. PUT stores the body, GET answers it with its content type, HEAD answers the content type with no body, DELETE removes it (204, also when it was absent). Every request but a GET or HEAD on a bucket the publicBuckets knob lists is checked with AWS Signature Version 4 through the composed std-sigv4 signer, either in the authorization header or as a presigned url (X-Amz-Algorithm, X-Amz-Credential, X-Amz-Date, X-Amz-Expires, X-Amz-SignedHeaders, X-Amz-Signature; refused once its expiry has passed): the access key id must be the one STORAGE_ACCESS_KEY_ID holds, the signature must be the one the secret access key credential gives for the request as received, and a PUT's x-amz-content-sha256 must be the SHA-256 of its body unless it is UNSIGNED-PAYLOAD. Objects live under the directory S3_DATA_DIR names, o/<bucket>/<key>, with their content type in m/<bucket>/<key>; a key with a .. segment or a leading slash is refused (400). A refusal answers the S3 XML error body (Error, Code, Message): 403 AccessDenied or SignatureDoesNotMatch, 404 NoSuchKey, 405 MethodNotAllowed, 400 InvalidRequest, 500 InternalError for a file the store could not write.",
+]
+uses SigV4 from "std/behaviors/std-sigv4"
+
+type S3Header = { name : string!, value : string! }
+type S3Pair = { name : string!, value : string! }
+type S3Pending = { requestId : number!, method : string!, path : string!, query : string!, headers : Map string string!, body : bytes!, responseHeaders : [S3Header]!, bucket : string!, objKey : string!, contentType : string! }
+
+orbital S3ServerOrbital {
+  entity S3ServerRun [runtime] {
+    id : string!
+    keyId : string @description "The access key id STORAGE_ACCESS_KEY_ID held at boot; empty refuses every signed request." = ""
+    pending : [S3Pending] @description "Requests under the prefix received and not yet answered." = []
+  }
+
+  trait S3Signer = SigV4.traits.SigV4Signer {
+    listens {
+      S3Route.S3_SIGV4 -> SIGV4_SIGN
+    }
+  }
+
+  trait S3Route -> S3ServerRun [optimistic] {
+    initial: serving
+
+    config {
+      prefix : string = "/s3/"
+        @label "Path prefix"
+        @description "A request whose path starts with this is an S3 request; the router's externalPrefixes names the same prefix. What follows is <bucket>/<key>."
+        @tier "infra"
+      publicBuckets : [string] = []
+        @label "Public buckets"
+        @description "Buckets whose objects any GET or HEAD may read with no signature; writes and deletes are always signed."
+        @synonyms "public read, open buckets"
+        @tier "policy"
+    }
+
+    state serving {
+      INIT -> serving
+        (os/getenv "STORAGE_ACCESS_KEY_ID" { key: "keyid" emit: { success: S3_KEY_ID, failure: S3_KEY_ID_UNREAD } })
+      S3_KEY_ID -> serving
+        (set @entity.keyId (str/trim (default @payload.value "")))
+      S3_KEY_ID_UNREAD -> serving
+        (set @entity.keyId "")
+
+      REQUEST_RECEIVED -> serving when (str/startsWith @payload.path @config.prefix)
+        (let ((parts (str/split (str/slice @payload.path (str/len @config.prefix)) "/")))
+          (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: (str/upper @payload.method), path: @payload.path, query: (default @payload.query ""), headers: (default @payload.headers {}), body: (default @payload.body (bytes/from-string "")), responseHeaders: [], bucket: (default (array/first @parts) ""), objKey: (default (str/decode-uri-component (str/join (array/slice @parts 1) "/")) ""), contentType: "" })))
+
+      ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (= @p.requestId @payload.requestId)))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
+        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId)))))
+          (when (!= @p null)
+            (let ((auth (default (object/get @p.headers "authorization") ""))
+                  (params (array/map (array/filter (str/split @p.query "&") (fn kv (!= @kv ""))) (fn kv { name: (default (str/decode-uri-component (default (array/first (str/split @kv "=")) "")) ""), value: (default (str/decode-uri-component (str/join (array/slice (str/split @kv "=") 1) "=")) "") }))))
+              (let ((presigned (array/some @params (fn q (= @q.name "X-Amz-Signature")))))
+                (if (or (= @p.bucket "") (= @p.objKey "") (str/startsWith @p.objKey "/") (array/includes (str/split @p.objKey "/") ".."))
+                  (emit S3_REFUSE { requestId: @p.requestId, status: 400, code: "InvalidRequest", message: "The request names no bucket and key, or the key is not a plain path" })
+                  (if (not (array/includes ["GET", "HEAD", "PUT", "DELETE"] @p.method))
+                    (emit S3_REFUSE { requestId: @p.requestId, status: 405, code: "MethodNotAllowed", message: (str/concat @p.method " is not served") })
+                    (if (and (array/includes ["GET", "HEAD"] @p.method) (array/includes @config.publicBuckets @p.bucket))
+                      (os/read-file { anchor: { env: "S3_DATA_DIR" }, path: (str/concat "m/" @p.bucket "/" @p.objKey) } { key: (str/concat "" @p.requestId) emit: { success: S3_META_READ, failure: S3_MISSING } })
+                      (if (str/startsWith @auth "AWS4-HMAC-SHA256 ")
+                        (let ((fields (str/split (str/slice @auth 17) ",")))
+                          (let ((cred (str/split (str/trim (str/replace (default (array/find @fields (fn f (str/startsWith (str/trim @f) "Credential="))) "") "Credential=" "")) "/"))
+                                (names (str/split (str/trim (str/replace (default (array/find @fields (fn f (str/startsWith (str/trim @f) "SignedHeaders="))) "") "SignedHeaders=" "")) ";"))
+                                (given (str/trim (str/replace (default (array/find @fields (fn f (str/startsWith (str/trim @f) "Signature="))) "") "Signature=" ""))))
+                            (if (or (= @entity.keyId "") (!= (default (array/first @cred) "") @entity.keyId) (!= (array/len @cred) 5))
+                              (emit S3_REFUSE { requestId: @p.requestId, status: 403, code: "AccessDenied", message: "The access key id is not this store's" })
+                              (emit S3_SIGV4 { tag: (str/concat "" @p.requestId), method: @p.method, path: @p.path, query: @params, headers: (array/map @names (fn n { name: @n, value: (default (object/get @p.headers @n) "") })), payloadHash: (default (object/get @p.headers "x-amz-content-sha256") ""), stamp: (default (object/get @p.headers "x-amz-date") ""), region: (default (array/nth @cred 2) ""), service: (default (array/nth @cred 3) ""), echo: [{ name: "signature", value: @given }] }))))
+                        (if (and @presigned (array/includes ["GET", "HEAD"] @p.method))
+                          (emit S3_PRESIGNED { requestId: @p.requestId, params: @params })
+                          (emit S3_REFUSE { requestId: @p.requestId, status: 403, code: "AccessDenied", message: "The request is not signed" }))))))))))
+
+      S3_PRESIGNED -> serving
+        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))
+              (cred (str/split (default (array/first (array/map (array/filter @payload.params (fn q (= @q.name "X-Amz-Credential"))) (fn q @q.value))) "") "/"))
+              (stamp (default (array/first (array/map (array/filter @payload.params (fn q (= @q.name "X-Amz-Date"))) (fn q @q.value))) ""))
+              (expires (default (array/first (array/map (array/filter @payload.params (fn q (= @q.name "X-Amz-Expires"))) (fn q @q.value))) "0"))
+              (given (default (array/first (array/map (array/filter @payload.params (fn q (= @q.name "X-Amz-Signature"))) (fn q @q.value))) "")))
+          (when (!= @p null)
+            (let ((issued (time/parse (str/concat (str/slice @stamp 0 4) "-" (str/slice @stamp 4 6) "-" (str/slice @stamp 6 8) "T" (str/slice @stamp 9 11) ":" (str/slice @stamp 11 13) ":" (str/slice @stamp 13 15) "Z"))))
+              (if (or (= @entity.keyId "") (!= (default (array/first @cred) "") @entity.keyId) (!= (array/len @cred) 5))
+                (emit S3_REFUSE { requestId: @p.requestId, status: 403, code: "AccessDenied", message: "The access key id is not this store's" })
+                (if (or (= @issued null) (> (time/epoch-ms @now) (+ (time/epoch-ms @issued) (* (default (str/to-number @expires) 0) 1000))))
+                  (emit S3_REFUSE { requestId: @p.requestId, status: 403, code: "AccessDenied", message: "Request has expired" })
+                  (emit S3_SIGV4 { tag: (str/concat "" @p.requestId), method: @p.method, path: @p.path, query: (array/filter @payload.params (fn q (!= @q.name "X-Amz-Signature"))), headers: [{ name: "host", value: (default (object/get @p.headers "host") "") }], payloadHash: "UNSIGNED-PAYLOAD", stamp: @stamp, region: (default (array/nth @cred 2) ""), service: (default (array/nth @cred 3) ""), echo: [{ name: "signature", value: @given }] }))))))
+
+      SIGNED -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.tag))))
+              (given (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "signature"))) (fn e @e.value))) "")))
+          (when (!= @p null)
+              (do
+              (if (!= @given @payload.signature)
+                (emit S3_REFUSE { requestId: @p.requestId, status: 403, code: "SignatureDoesNotMatch", message: "The request signature does not match the one calculated for it" })
+                (if (= @p.method "PUT")
+                  (let ((hash (default (object/get @p.headers "x-amz-content-sha256") "")))
+                    (if (and (!= @hash "UNSIGNED-PAYLOAD") (!= @hash (default (hash/sha 256 (bytes/to-base64 @p.body) "hex" "bytes") "")))
+                      (emit S3_REFUSE { requestId: @p.requestId, status: 400, code: "XAmzContentSHA256Mismatch", message: "The body does not match its x-amz-content-sha256" })
+                      (os/mkdir { anchor: { env: "S3_DATA_DIR" }, path: (str/join (array/dropLast (str/split (str/concat "o/" @p.bucket "/" @p.objKey) "/") 1) "/") } true { key: (str/concat "" @p.requestId) emit: { success: S3_OBJECT_DIR_MADE, failure: S3_WRITE_FAILED } })))
+                  (if (= @p.method "DELETE")
+                    (os/remove { anchor: { env: "S3_DATA_DIR" }, path: (str/concat "o/" @p.bucket "/" @p.objKey) } { key: (str/concat "" @p.requestId) emit: { success: S3_OBJECT_REMOVED, failure: S3_OBJECT_REMOVED } })
+                    (os/read-file { anchor: { env: "S3_DATA_DIR" }, path: (str/concat "m/" @p.bucket "/" @p.objKey) } { key: (str/concat "" @p.requestId) emit: { success: S3_META_READ, failure: S3_MISSING } })))))))
+      SIGN_FAILED -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.tag)))))
+          (when (!= @p null) (emit S3_REFUSE { requestId: @p.requestId, status: 403, code: "AccessDenied", message: @payload.message })))
+
+      S3_OBJECT_DIR_MADE -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null) (os/mkdir { anchor: { env: "S3_DATA_DIR" }, path: (str/join (array/dropLast (str/split (str/concat "m/" @p.bucket "/" @p.objKey) "/") 1) "/") } true { key: @payload.key emit: { success: S3_META_DIR_MADE, failure: S3_WRITE_FAILED } })))
+      S3_META_DIR_MADE -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null) (os/write-file { anchor: { env: "S3_DATA_DIR" }, path: (str/concat "o/" @p.bucket "/" @p.objKey) } @p.body { key: @payload.key emit: { success: S3_OBJECT_WRITTEN, failure: S3_WRITE_FAILED } })))
+      S3_OBJECT_WRITTEN -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null) (os/write-file { anchor: { env: "S3_DATA_DIR" }, path: (str/concat "m/" @p.bucket "/" @p.objKey) } (bytes/from-string (default (object/get @p.headers "content-type") "application/octet-stream")) { key: @payload.key emit: { success: S3_META_WRITTEN, failure: S3_WRITE_FAILED } })))
+      S3_META_WRITTEN -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null)
+            (do
+              (emit RESPOND { requestId: @p.requestId, status: 200, headers: (array/append @p.responseHeaders { name: "etag", value: (str/concat "\"" (default (hash/sha 256 (bytes/to-base64 @p.body) "hex" "bytes") "") "\"") }), body: (bytes/from-string "") })
+              (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @p.requestId)))))))
+      S3_WRITE_FAILED -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null) (emit S3_REFUSE { requestId: @p.requestId, status: 500, code: "InternalError", message: (str/concat "The object could not be stored: " (default @payload.error "")) })))
+
+      S3_META_READ -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null)
+              (do
+              (set @entity.pending (array/map @entity.pending (fn q (if (= @q.requestId @p.requestId) (object/merge @q { contentType: (default (bytes/to-string @payload.data) "application/octet-stream") }) @q))))
+              (if (= @p.method "HEAD")
+                (do
+                  (emit RESPOND { requestId: @p.requestId, status: 200, headers: (array/append @p.responseHeaders { name: "content-type", value: (default (bytes/to-string @payload.data) "application/octet-stream") }), body: (bytes/from-string "") })
+                  (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @p.requestId)))))
+                (os/read-file { anchor: { env: "S3_DATA_DIR" }, path: (str/concat "o/" @p.bucket "/" @p.objKey) } { key: @payload.key emit: { success: S3_OBJECT_READ, failure: S3_MISSING } })))))
+      S3_OBJECT_READ -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null)
+            (do
+              (emit RESPOND { requestId: @p.requestId, status: 200, headers: (array/append @p.responseHeaders { name: "content-type", value: @p.contentType }), body: @payload.data })
+              (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @p.requestId)))))))
+      S3_MISSING -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null) (emit S3_REFUSE { requestId: @p.requestId, status: 404, code: "NoSuchKey", message: "The specified key does not exist." })))
+
+      S3_OBJECT_REMOVED -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null) (os/remove { anchor: { env: "S3_DATA_DIR" }, path: (str/concat "m/" @p.bucket "/" @p.objKey) } { key: @payload.key emit: { success: S3_META_REMOVED, failure: S3_META_REMOVED } })))
+      S3_META_REMOVED -> serving
+        (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
+          (when (!= @p null)
+            (do
+              (emit RESPOND { requestId: @p.requestId, status: 204, headers: @p.responseHeaders, body: (bytes/from-string "") })
+              (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @p.requestId)))))))
+
+      S3_REFUSE -> serving
+        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId)))))
+          (when (!= @p null)
+            (do
+              (emit RESPOND { requestId: @p.requestId, status: @payload.status, headers: (array/append @p.responseHeaders { name: "content-type", value: "application/xml" }), body: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>" @payload.code "</Code><Message>" @payload.message "</Message></Error>")) })
+              (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @p.requestId)))))))
+
+      REQUEST_ANSWERED -> serving when (array/some @entity.pending (fn p (= @p.requestId @payload.requestId)))
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+      STREAM_CLOSED -> serving when (array/some @entity.pending (fn p (= @p.requestId @payload.requestId)))
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
+    }
+
+    emits {
+      RESPOND -> external {
+        requestId : number!
+        status : number!
+        headers : [S3Header]!
+        body : bytes!
+      }
+        @description "The answer to a request under the prefix."
+      S3_SIGV4 -> external {
+        tag : string!
+        method : string!
+        path : string!
+        query : [S3Pair]!
+        headers : [S3Pair]!
+        payloadHash : string!
+        stamp : string!
+        region : string!
+        service : string!
+        echo : [S3Pair]!
+      }
+        @description "The request as received, for the composed std-sigv4 signer to sign again; echo carries the signature the request gave."
+      S3_REFUSE {
+        requestId : number!
+        status : number!
+        code : string!
+        message : string!
+      }
+        @description "Internal: answer the request with the S3 XML error."
+        @tier "internal"
+      S3_PRESIGNED {
+        requestId : number!
+        params : [S3Pair]!
+      }
+        @description "Internal: a presigned GET or HEAD, with its decoded query parameters."
+        @tier "internal"
+    }
+
+    listens {
+      S3Signer.SIGV4_SIGNED -> SIGNED
+      S3_KEY_ID {
+        value : string
+      }
+      S3_KEY_ID_UNREAD {
+        error : string
+      }
+      S3_OBJECT_DIR_MADE {
+        key : string!
+      }
+      S3_META_DIR_MADE {
+        key : string!
+      }
+      S3_OBJECT_WRITTEN {
+        key : string!
+        bytes : number
+      }
+      S3_META_WRITTEN {
+        key : string!
+        bytes : number
+      }
+      S3_WRITE_FAILED {
+        key : string!
+        error : string
+      }
+      S3_META_READ {
+        key : string!
+        data : bytes!
+      }
+      S3_OBJECT_READ {
+        key : string!
+        data : bytes!
+      }
+      S3_MISSING {
+        key : string!
+        error : string
+      }
+      S3_OBJECT_REMOVED {
+        key : string!
+        error : string
+      }
+      S3_META_REMOVED {
+        key : string!
+        error : string
+      }
+      S3Signer.SIGV4_FAILED -> SIGN_FAILED
+      REQUEST_RECEIVED {
+        requestId : number!
+        method : string!
+        path : string!
+        query : string
+        headers : Map string string
+        body : bytes
+        peer : string
+      }
+        @description "A request received by std-http1; only paths under prefix are kept."
+      ROUTE_EXTERNAL {
+        requestId : number!
+        responseHeaders : [S3Header]!
+      }
+        @description "std-http-router handed the request off, with the headers its answer carries."
+      REQUEST_ANSWERED {
+        requestId : number!
+        status : number!
+        headers : [S3Header]
+        body : string!
+      }
+        @description "The router or the static server answered the request itself; it is dropped."
+      STREAM_CLOSED {
+        requestId : number!
+        reason : string!
+      }
+        @description "The client left before its answer."
+      SIGNED {
+        tag : string!
+        signature : string!
+        signedHeaders : string!
+        canonicalQuery : string!
+        scope : string!
+        headers : [S3Pair]!
+        echo : [S3Pair]!
+      }
+        @description "The signature the store calculates for the request, beside the one it gave."
+      SIGN_FAILED {
+        tag : string!
+        message : string!
+        echo : [S3Pair]!
+      }
+        @description "The store could not calculate the signature: its secret is not held."
+    }
+  }
+
+  page boot as S3ServerPage -> S3Route, S3Signer
+}

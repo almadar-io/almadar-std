@@ -1,0 +1,274 @@
+{
+ "atom": "store/atoms/std-sigv4.lolo",
+ "trait": "SigV4Signer",
+ "note": "AWS SigV4 documentation examples (Authorization header, single chunk), signed with the documentation's example secret.",
+ "cases": [
+  {
+   "id": "aws-example-iam-list-users",
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
+   },
+   "steps": [
+    {
+     "event": "SIGV4_SIGN",
+     "payload": {
+      "tag": "t",
+      "method": "GET",
+      "path": "/",
+      "query": [
+       {
+        "name": "Action",
+        "value": "ListUsers"
+       },
+       {
+        "name": "Version",
+        "value": "2010-05-08"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "application/x-www-form-urlencoded; charset=utf-8"
+       },
+       {
+        "name": "host",
+        "value": "iam.amazonaws.com"
+       },
+       {
+        "name": "x-amz-date",
+        "value": "20150830T123600Z"
+       }
+      ],
+      "payloadHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stamp": "20150830T123600Z",
+      "region": "us-east-1",
+      "service": "iam",
+      "echo": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGV4_SIGNED",
+        "payload": {
+         "tag": "t",
+         "signature": "5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7",
+         "signedHeaders": "content-type;host;x-amz-date",
+         "scope": "20150830/us-east-1/iam/aws4_request"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "aws-example-get-object",
+   "steps": [
+    {
+     "event": "SIGV4_SIGN",
+     "payload": {
+      "tag": "t",
+      "method": "GET",
+      "path": "/test.txt",
+      "query": [],
+      "headers": [
+       {
+        "name": "host",
+        "value": "examplebucket.s3.amazonaws.com"
+       },
+       {
+        "name": "range",
+        "value": "bytes=0-9"
+       },
+       {
+        "name": "x-amz-content-sha256",
+        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+       },
+       {
+        "name": "x-amz-date",
+        "value": "20130524T000000Z"
+       }
+      ],
+      "payloadHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stamp": "20130524T000000Z",
+      "region": "us-east-1",
+      "service": "s3",
+      "echo": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGV4_SIGNED",
+        "payload": {
+         "tag": "t",
+         "signature": "f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41",
+         "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date",
+         "scope": "20130524/us-east-1/s3/aws4_request"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "aws-example-get-bucket-lifecycle",
+   "steps": [
+    {
+     "event": "SIGV4_SIGN",
+     "payload": {
+      "tag": "t",
+      "method": "GET",
+      "path": "/",
+      "query": [
+       {
+        "name": "lifecycle",
+        "value": ""
+       }
+      ],
+      "headers": [
+       {
+        "name": "host",
+        "value": "examplebucket.s3.amazonaws.com"
+       },
+       {
+        "name": "x-amz-content-sha256",
+        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+       },
+       {
+        "name": "x-amz-date",
+        "value": "20130524T000000Z"
+       }
+      ],
+      "payloadHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stamp": "20130524T000000Z",
+      "region": "us-east-1",
+      "service": "s3",
+      "echo": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGV4_SIGNED",
+        "payload": {
+         "tag": "t",
+         "signature": "fea454ca298b7da1c68078a5d1bdbfbbe0d65c699e0f91ac7a200a0136783543",
+         "signedHeaders": "host;x-amz-content-sha256;x-amz-date",
+         "scope": "20130524/us-east-1/s3/aws4_request"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "aws-example-list-objects",
+   "steps": [
+    {
+     "event": "SIGV4_SIGN",
+     "payload": {
+      "tag": "t",
+      "method": "GET",
+      "path": "/",
+      "query": [
+       {
+        "name": "max-keys",
+        "value": "2"
+       },
+       {
+        "name": "prefix",
+        "value": "J"
+       }
+      ],
+      "headers": [
+       {
+        "name": "host",
+        "value": "examplebucket.s3.amazonaws.com"
+       },
+       {
+        "name": "x-amz-content-sha256",
+        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+       },
+       {
+        "name": "x-amz-date",
+        "value": "20130524T000000Z"
+       }
+      ],
+      "payloadHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stamp": "20130524T000000Z",
+      "region": "us-east-1",
+      "service": "s3",
+      "echo": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGV4_SIGNED",
+        "payload": {
+         "tag": "t",
+         "signature": "34b48302e7b5fa45bde8084f4b7868a86f0a534bc59db6670ed5711ef69dc6f7",
+         "signedHeaders": "host;x-amz-content-sha256;x-amz-date",
+         "scope": "20130524/us-east-1/s3/aws4_request"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control: without the credential the request is refused",
+   "steps": [
+    {
+     "event": "SIGV4_SIGN",
+     "payload": {
+      "tag": "t",
+      "method": "GET",
+      "path": "/test.txt",
+      "query": [],
+      "headers": [
+       {
+        "name": "host",
+        "value": "examplebucket.s3.amazonaws.com"
+       },
+       {
+        "name": "x-amz-content-sha256",
+        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+       },
+       {
+        "name": "x-amz-date",
+        "value": "20130524T000000Z"
+       }
+      ],
+      "payloadHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stamp": "20130524T000000Z",
+      "region": "us-east-1",
+      "service": "s3",
+      "echo": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGV4_FAILED",
+        "payload": {
+         "tag": "t",
+         "message": "The secret access key credential is not held"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

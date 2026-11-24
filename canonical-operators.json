@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-24T02:14:09.536Z",
+  "generated": "2026-11-24T05:28:22.441Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -18504,6 +18504,93 @@
       ],
       "examples": [
         "(os/append-file \"/data/log.txt\" \"line\" {\"emit\":{\"success\":\"LINE_APPENDED\",\"failure\":\"FILE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/audio-in": {
+      "category": "std-os",
+      "minArity": 0,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Open the device microphone and stream what it hears as raw PCM: the first answer is { rate, channels } once the input is open (the rate the device actually runs at), and each frame arrives on the onMessage route as { data }, 16-bit signed little-endian samples, channels interleaved. Encoding (WAV or any codec) is the program's, in .lolo. The device asks the person for microphone permission; a refusal answers { error, kind: \"denied\" }, no input device answers unavailable. cancel-call on the key closes the input. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
+      "module": "os",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "rate": "number",
+            "channels": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "client",
+      "host": "os",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "sampleRate": "number",
+              "channels": "number"
+            }
+          },
+          "description": "Optional { sampleRate?, channels? }: the rate and channel count asked for (16000 and 1 when unset); the first answer names what the device gave",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/audio-in {\"sampleRate\":16000,\"channels\":1} {\"key\":\"mic\",\"emit\":{\"success\":\"MIC_OPEN\",\"failure\":\"MIC_FAILED\",\"onMessage\":\"MIC_FRAME\"}})"
       ],
       "docsSource": "generated"
     },

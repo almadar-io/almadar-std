@@ -1,0 +1,146 @@
+{
+ "atom": "codec/atoms/std-wav.lolo",
+ "trait": "WavEncoder",
+ "note": "Expected files built by Python's struct from the same samples.",
+ "cases": [
+  {
+   "id": "two-frames-become-one-wav-file-with-its-duration",
+   "steps": [
+    {
+     "event": "WAV_START",
+     "payload": {
+      "rate": 1000,
+      "channels": 1
+     },
+     "expect": {
+      "entity": {
+       "started": true
+      }
+     }
+    },
+    {
+     "event": "WAV_APPEND",
+     "payload": {
+      "data": "6AMY/A=="
+     }
+    },
+    {
+     "event": "WAV_APPEND",
+     "payload": {
+      "data": "/38AgA=="
+     }
+    },
+    {
+     "event": "WAV_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "WAV_ENCODED",
+        "payload": {
+         "data": "UklGRiwAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQgAAADoAxj8/38AgA==",
+         "durationMs": 4,
+         "bytes": 52
+        }
+       }
+      ],
+      "entity": {
+       "started": false,
+       "frames": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "stereo-writes-a-four-byte-block",
+   "steps": [
+    {
+     "event": "WAV_START",
+     "payload": {
+      "rate": 2000,
+      "channels": 2
+     }
+    },
+    {
+     "event": "WAV_APPEND",
+     "payload": {
+      "data": "AQACAAMABAA="
+     }
+    },
+    {
+     "event": "WAV_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "WAV_ENCODED",
+        "payload": {
+         "data": "UklGRiwAAABXQVZFZm10IBAAAAABAAIA0AcAAEAfAAAEABAAZGF0YQgAAAABAAIAAwAEAA==",
+         "durationMs": 1,
+         "bytes": 52
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a finish with nothing started fails",
+   "steps": [
+    {
+     "event": "WAV_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "WAV_FAILED",
+        "payload": {
+         "message": "wav: nothing was started"
+        }
+       }
+      ],
+      "neverEmits": [
+       "WAV_ENCODED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: frames before a start are dropped",
+   "steps": [
+    {
+     "event": "WAV_APPEND",
+     "payload": {
+      "data": "6AMY/A=="
+     }
+    },
+    {
+     "event": "WAV_START",
+     "payload": {
+      "rate": 1000,
+      "channels": 1
+     }
+    },
+    {
+     "event": "WAV_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "WAV_ENCODED",
+        "payload": {
+         "data": "UklGRiQAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQAAAAA=",
+         "durationMs": 0,
+         "bytes": 44
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -332,6 +332,282 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-fcm-subscription-is-sent-through-fcm",
+   "config": {
+    "notifyChannel": "push",
+    "pushTitle": "Tukaj Lej",
+    "pushDeepLink": "/"
+   },
+   "steps": [
+    {
+     "event": "NOTIFY_PUSH_SUBS",
+     "entity": {
+      "id": "n1",
+      "recipient": "a",
+      "channel": "push",
+      "message": "Mama: hi",
+      "severity": "info",
+      "queue": [],
+      "recordedAt": "2026-11-01T00:00:00.000Z"
+     },
+     "payload": {
+      "totalCount": 1,
+      "data": [
+       {
+        "userId": "a",
+        "kind": "fcm",
+        "token": "tok-a",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND",
+        "payload": {
+         "token": "tok-a",
+         "title": "Tukaj Lej",
+         "body": "Mama: hi",
+         "url": "/"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a webpush subscription is still sent as web push",
+   "config": {
+    "notifyChannel": "push",
+    "pushTitle": "Tukaj Lej",
+    "pushDeepLink": "/"
+   },
+   "steps": [
+    {
+     "event": "NOTIFY_PUSH_SUBS",
+     "entity": {
+      "id": "n1",
+      "recipient": "a",
+      "channel": "push",
+      "message": "Mama: hi",
+      "severity": "info",
+      "queue": [],
+      "recordedAt": "2026-11-01T00:00:00.000Z"
+     },
+     "payload": {
+      "totalCount": 1,
+      "data": [
+       {
+        "userId": "a",
+        "kind": "webpush",
+        "token": "",
+        "endpoint": "https://fcm.googleapis.com/fcm/send/x",
+        "p256dh": "k",
+        "auth": "s"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PUSH_SEND",
+        "payload": {
+         "title": "Tukaj Lej",
+         "body": "Mama: hi"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FCM_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-apns-subscription-is-recorded-as-not-supported-yet",
+   "config": {
+    "notifyChannel": "push",
+    "pushTitle": "Tukaj Lej",
+    "pushDeepLink": "/"
+   },
+   "steps": [
+    {
+     "event": "NOTIFY_PUSH_SUBS",
+     "entity": {
+      "id": "n1",
+      "recipient": "a",
+      "channel": "push",
+      "message": "Mama: hi",
+      "severity": "info",
+      "queue": [],
+      "recordedAt": "2026-11-01T00:00:00.000Z"
+     },
+     "payload": {
+      "totalCount": 1,
+      "data": [
+       {
+        "userId": "a",
+        "kind": "apns",
+        "token": "dev-a",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       }
+      ]
+     },
+     "expect": {
+      "neverEmits": [
+       "PUSH_SEND",
+       "FCM_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "onlyField-narrows-the-audience-to-the-people-it-names",
+   "config": {
+    "recipients": [
+     "a",
+     "b",
+     "c"
+    ],
+    "onlyField": "queue"
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "payload": {
+      "status": "ok",
+      "data": {
+       "id": "r1",
+       "recordedAt": "2026-11-01T00:00:00.000Z",
+       "queue": [
+        "b"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emitCounts": {
+       "NotificationDispatched": 1
+      },
+      "entity": {
+       "recipient": "b",
+       "queue": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an empty onlyField list keeps the whole audience",
+   "config": {
+    "recipients": [
+     "a",
+     "b",
+     "c"
+    ],
+    "onlyField": "queue"
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "payload": {
+      "status": "ok",
+      "data": {
+       "id": "r1",
+       "recordedAt": "2026-11-01T00:00:00.000Z",
+       "queue": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emitCounts": {
+       "NotificationDispatched": 3
+      },
+      "entity": {
+       "recipient": "c"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "onlyField-narrows-the-subscribers-too",
+   "config": {
+    "audience": "subscribers"
+   },
+   "steps": [
+    {
+     "event": "NOTIFY_AUDIENCE_LOADED",
+     "from": "idle",
+     "identity": {
+      "id": "u1",
+      "name": "Ana",
+      "email": "a@x.si",
+      "role": "member"
+     },
+     "entity": {
+      "id": "n1",
+      "onlyList": [
+       "b"
+      ],
+      "queue": []
+     },
+     "payload": {
+      "totalCount": 2,
+      "data": [
+       {
+        "userId": "a",
+        "kind": "webpush",
+        "token": "",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       },
+       {
+        "userId": "b",
+        "kind": "webpush",
+        "token": "",
+        "endpoint": "",
+        "p256dh": "",
+        "auth": ""
+       }
+      ]
+     },
+     "expect": {
+      "emitCounts": {
+       "NotificationDispatched": 1
+      },
+      "entity": {
+       "recipient": "b"
+      }
+     }
+    }
+   ]
   }
  ]
 }

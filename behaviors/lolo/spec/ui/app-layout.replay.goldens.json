@@ -100,7 +100,6 @@
     {
       "id": "counting-unread-lists-the-viewer-s-rows-in-the-bell",
       "config": {
-        "countUnread": true,
         "notificationsPath": "/notifications"
       },
       "entity": {
@@ -109,22 +108,16 @@
       "steps": [
         {
           "from": "composing",
-          "event": "AppLayoutStateLoaded",
+          "event": "UNREAD_COUNTED",
           "payload": {
-            "data": [
+            "items": [
               {
                 "id": "n1",
-                "recipient": "u1",
                 "message": "Aria Hotels retainer passed 90%",
+                "createdAt": "",
                 "read": false
               }
             ]
-          },
-          "identity": {
-            "id": "u1",
-            "name": "Ana",
-            "email": "a@x.si",
-            "role": "owner"
           },
           "expect": {
             "state": "composing",
@@ -166,6 +159,51 @@
             "effects": []
           }
         }
+      ]
+    },
+    {
+      "id": "the-counter-hands-the-viewer-s-unread-rows-to-the-layout",
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "trait": "UnreadCounter",
+          "from": "idle",
+          "event": "UnreadRowsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "n1",
+                "recipient": "u1",
+                "message": "Missing hours this week",
+                "read": false
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "UNREAD_COUNTED",
+                "payload": {
+                  "items": [
+                    {
+                      "id": "n1",
+                      "message": "Missing hours this week",
+                      "createdAt": "",
+                      "read": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AppLayout",
+        "UnreadCounter"
       ]
     }
   ]

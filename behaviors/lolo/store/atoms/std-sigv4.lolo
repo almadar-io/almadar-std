@@ -1,0 +1,96 @@
+app std-sigv4 [
+  version: "1.0.0",
+  description: "std-sigv4 — the AWS Signature Version 4 computation, one step and no state, shared by the side that signs (std-storage) and the side that checks (std-s3-server). SIGV4_SIGN { tag, method, path, query, headers, payloadHash, stamp, region, service, echo } takes the canonical path as it is sent (already percent-encoded), the query parameters and the headers to sign as raw name/value pairs, the payload hash (a hex SHA-256 or UNSIGNED-PAYLOAD), the x-amz-date stamp (YYYYMMDDTHHmmssZ), the region and the service. It encodes each query name and value with RFC 3986 unreserved characters only, sorts them, lower-cases and sorts the header names and trims their values, builds the canonical request and the string to sign, derives the signing key from the secret held in the credential the secretAccessKey knob names (the kernel resolves it inside hmac/sha, the program never holds it), and answers SIGV4_SIGNED { tag, signature, signedHeaders, canonicalQuery, scope, headers, echo } with the hex signature and the headers it signed, or SIGV4_FAILED { tag, message, echo }; echo is the asker's own name/value context, handed back unchanged so the asker keeps no state between the two when the credential is not held or a hash fails.",
+]
+
+type SigV4Pair = { name : string!, value : string! }
+
+orbital SigV4Orbital {
+  entity SigV4Run [runtime] {
+    id : string!
+  }
+
+  trait SigV4Signer -> SigV4Run {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SIGV4_SIGN -> idle
+        (let ((day (str/slice @payload.stamp 0 8)))
+          (let ((scope (str/concat @day "/" @payload.region "/" @payload.service "/aws4_request"))
+                (cq (str/join (array/map (array/sort (array/map @payload.query (fn q { name: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @q.name) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29"), value: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @q.value) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") })) "name") (fn q (str/concat @q.name "=" @q.value))) "&"))
+                (hdrs (array/sort (array/map @payload.headers (fn h { name: (str/lower @h.name), value: (str/trim @h.value) })) "name")))
+            (let ((signedNames (str/join (array/map @hdrs (fn h @h.name)) ";")))
+              (let ((ch (hash/sha 256 (str/join [@payload.method, @payload.path, @cq, (str/join (array/map @hdrs (fn h (str/concat @h.name ":" @h.value "\n"))) ""), @signedNames, @payload.payloadHash] "\n") "hex")))
+                (if (= @ch null)
+                  (emit SIGV4_FAILED { tag: @payload.tag, echo: @payload.echo, message: "The canonical request could not be hashed" })
+                  (let ((kd (hmac/sha 256 "credential" @config.secretAccessKey @day "base64" "text" "AWS4")))
+                    (if (= @kd null)
+                      (emit SIGV4_FAILED { tag: @payload.tag, echo: @payload.echo, message: "The secret access key credential is not held" })
+                      (let ((bd (bytes/from-base64 @kd)))
+                        (if (= @bd null)
+                          (emit SIGV4_FAILED { tag: @payload.tag, echo: @payload.echo, message: "The request could not be signed" })
+                          (let ((kr (hmac/sha 256 "bytes" @bd @payload.region "base64")))
+                            (let ((br (bytes/from-base64 (default @kr ""))))
+                              (if (= @br null)
+                                (emit SIGV4_FAILED { tag: @payload.tag, echo: @payload.echo, message: "The request could not be signed" })
+                                (let ((ks (hmac/sha 256 "bytes" @br @payload.service "base64")))
+                                  (let ((bs (bytes/from-base64 (default @ks ""))))
+                                    (if (= @bs null)
+                                      (emit SIGV4_FAILED { tag: @payload.tag, echo: @payload.echo, message: "The request could not be signed" })
+                                      (let ((kg (hmac/sha 256 "bytes" @bs "aws4_request" "base64")))
+                                        (let ((bg (bytes/from-base64 (default @kg ""))))
+                                          (if (= @bg null)
+                                            (emit SIGV4_FAILED { tag: @payload.tag, echo: @payload.echo, message: "The request could not be signed" })
+                                            (let ((sig (hmac/sha 256 "bytes" @bg (str/join ["AWS4-HMAC-SHA256", @payload.stamp, @scope, @ch] "\n") "hex")))
+                                              (if (= @sig null)
+                                                (emit SIGV4_FAILED { tag: @payload.tag, echo: @payload.echo, message: "The request could not be signed" })
+                                                (emit SIGV4_SIGNED { tag: @payload.tag, signature: @sig, signedHeaders: @signedNames, canonicalQuery: @cq, scope: @scope, headers: @payload.headers, echo: @payload.echo })))))))))))))))))))))
+    }
+
+    emits {
+      SIGV4_SIGNED -> external {
+        tag : string!
+        signature : string!
+        signedHeaders : string!
+        canonicalQuery : string!
+        scope : string!
+        headers : [SigV4Pair]!
+        echo : [SigV4Pair]!
+      }
+        @description "The hex signature of the request, the signed header list, the canonical query and the credential scope, under the asker's tag."
+      SIGV4_FAILED -> external {
+        tag : string!
+        message : string!
+        echo : [SigV4Pair]!
+      }
+        @description "The request could not be signed: the credential is not held or a hash failed."
+    }
+
+    listens {
+      SIGV4_SIGN {
+        tag : string!
+        method : string!
+        path : string!
+        query : [SigV4Pair]!
+        headers : [SigV4Pair]!
+        payloadHash : string!
+        stamp : string!
+        region : string!
+        service : string!
+        echo : [SigV4Pair]!
+      }
+        @description "Sign one request: the canonical path as sent, raw query and header pairs, the payload hash, the x-amz-date stamp, the region and the service."
+    }
+
+    config {
+      secretAccessKey : secret = "STORAGE_SECRET_ACCESS_KEY"
+        @label "Secret access key credential"
+        @description "Name of the credential holding the secret access key; resolved by the kernel inside hmac/sha, never held by the program."
+        @synonyms "aws secret, s3 secret"
+        @tier "infra"
+    }
+  }
+
+  page boot as SigV4Page -> SigV4Signer
+}

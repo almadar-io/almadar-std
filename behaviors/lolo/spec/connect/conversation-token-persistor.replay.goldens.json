@@ -1,0 +1,197 @@
+{
+  "atom": "connect/atoms/std-conversation.lolo",
+  "trait": "TokenMessagePersistor",
+  "cases": [
+    {
+      "id": "a-post-by-token-asks-for-the-token-to-be-resolved-and-writes-nothing-yet",
+      "config": {},
+      "entity": {
+        "id": "x",
+        "token": "",
+        "content": "",
+        "channel": "",
+        "threadRootId": "",
+        "once": false
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "POST_BY_TOKEN",
+          "payload": {
+            "token": "tok",
+            "content": "more house",
+            "channel": "set-1",
+            "threadRootId": "",
+            "once": false
+          },
+          "expect": {
+            "state": "resolving",
+            "emits": [
+              {
+                "event": "TOKEN_POST_RESOLVE",
+                "payload": {
+                  "key": "token-post",
+                  "token": "tok"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TOKEN_POST_SAVED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-resolved-holder-is-stamped-as-the-sender-never-the-viewer",
+      "config": {
+        "stampTime": false
+      },
+      "entity": {
+        "id": "x",
+        "token": "tok",
+        "content": "more house",
+        "channel": "set-1",
+        "threadRootId": "",
+        "once": false
+      },
+      "steps": [
+        {
+          "from": "resolving",
+          "event": "TOKEN_POST_HOLDER",
+          "payload": {
+            "key": "token-post",
+            "id": "h1",
+            "row": {
+              "id": "h1",
+              "name": "Ana"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "create"
+              }
+            ]
+          },
+          "identity": {
+            "id": "u9",
+            "name": "Someone Else",
+            "email": "s@x.si",
+            "role": "member"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-token-that-resolves-to-no-holder-writes-nothing-and-says-why",
+      "config": {},
+      "entity": {
+        "id": "x",
+        "token": "tok",
+        "content": "more house",
+        "channel": "set-1",
+        "threadRootId": "",
+        "once": false
+      },
+      "steps": [
+        {
+          "from": "resolving",
+          "event": "TOKEN_POST_NO_HOLDER",
+          "payload": {
+            "key": "token-post",
+            "code": "unknown",
+            "message": "no such token"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_POST_REFUSED",
+                "payload": {
+                  "code": "unknown",
+                  "message": "no such token"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TOKEN_POST_SAVED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-second-post-while-one-is-being-resolved-is-refused-busy",
+      "config": {},
+      "entity": {
+        "id": "x",
+        "token": "tok",
+        "content": "more house",
+        "channel": "set-1",
+        "threadRootId": "",
+        "once": false
+      },
+      "steps": [
+        {
+          "from": "resolving",
+          "event": "POST_BY_TOKEN",
+          "payload": {
+            "token": "t2",
+            "content": "x",
+            "channel": "set-1",
+            "threadRootId": "",
+            "once": false
+          },
+          "expect": {
+            "state": "resolving",
+            "emits": [
+              {
+                "event": "TOKEN_POST_REFUSED",
+                "payload": {
+                  "code": "busy",
+                  "message": "a post is already being resolved"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-answer-for-another-key-is-ignored",
+      "config": {},
+      "entity": {
+        "id": "x",
+        "token": "tok",
+        "content": "more house",
+        "channel": "set-1",
+        "threadRootId": "",
+        "once": false
+      },
+      "steps": [
+        {
+          "from": "resolving",
+          "event": "TOKEN_POST_HOLDER",
+          "payload": {
+            "key": "other",
+            "id": "h1",
+            "row": {
+              "id": "h1",
+              "name": "Ana"
+            }
+          },
+          "expect": {
+            "state": "resolving",
+            "neverEmits": [
+              "TOKEN_POST_SAVED",
+              "TOKEN_POST_REFUSED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

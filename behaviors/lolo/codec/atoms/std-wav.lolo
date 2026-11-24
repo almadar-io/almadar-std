@@ -1,0 +1,72 @@
+app std-wav [
+  version: "1.0.0",
+  description: "std-wav — packs raw PCM into a WAV file, in .lolo. WAV_START { rate, channels } begins a recording at that sample rate and channel count (16-bit samples), WAV_APPEND { data } adds the next frames of 16-bit signed little-endian PCM (what os/audio-in streams), and WAV_FINISH answers WAV_ENCODED { data, durationMs, bytes } with the 44-byte RIFF header (PCM format 1) in front of every frame appended since the start, in order. A finish with nothing started answers WAV_FAILED { message }; frames are kept as a list and joined once, at the finish.",
+]
+
+orbital WavOrbital {
+  entity WavRecording [runtime] {
+    id : string!
+    rate : number @description "The sample rate of the recording in progress." = 0
+    channels : number @description "The channel count of the recording in progress." = 0
+    frames : [bytes] @description "The PCM frames appended since the start, in order." = []
+    started : boolean @description "Whether a recording is in progress." = false
+  }
+
+  trait WavEncoder -> @rebindable WavRecording {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      WAV_START -> idle
+        (set @entity.rate ?rate)
+        (set @entity.channels ?channels)
+        (set @entity.frames [])
+        (set @entity.started true)
+      WAV_APPEND -> idle when @entity.started
+        (set @entity.frames (array/append @entity.frames ?data))
+      WAV_APPEND -> idle when (not @entity.started)
+      WAV_FINISH -> idle when (not @entity.started)
+        (emit WAV_FAILED { message: "wav: nothing was started" })
+      WAV_FINISH -> idle when @entity.started
+        (let ((pcm (bytes/concat @entity.frames)))
+          (let ((size (bytes/length @pcm)) (block (* @entity.channels 2)))
+            (do
+              (emit WAV_ENCODED {
+                data: (bytes/concat [(bytes/from-string "RIFF"), (default (bytes/write-uint (+ 36 @size) 4 "le") (bytes/from-string "")), (bytes/from-string "WAVEfmt "), (default (bytes/write-uint 16 4 "le") (bytes/from-string "")), (default (bytes/write-uint 1 2 "le") (bytes/from-string "")), (default (bytes/write-uint @entity.channels 2 "le") (bytes/from-string "")), (default (bytes/write-uint @entity.rate 4 "le") (bytes/from-string "")), (default (bytes/write-uint (* @entity.rate @block) 4 "le") (bytes/from-string "")), (default (bytes/write-uint @block 2 "le") (bytes/from-string "")), (default (bytes/write-uint 16 2 "le") (bytes/from-string "")), (bytes/from-string "data"), (default (bytes/write-uint @size 4 "le") (bytes/from-string "")), @pcm]),
+                durationMs: (if (= @entity.rate 0) 0 (math/round (default (/ (* (default (/ @size @block) 0) 1000) @entity.rate) 0))),
+                bytes: (+ 44 @size)
+              })
+              (set @entity.frames [])
+              (set @entity.started false))))
+    }
+
+    emits {
+      WAV_ENCODED -> external {
+        data : bytes!
+        durationMs : number!
+        bytes : number!
+      }
+        @description "The WAV file of the recording: header and samples, its length in milliseconds and its size in bytes."
+      WAV_FAILED -> external {
+        message : string!
+      }
+        @description "A finish came with no recording started."
+    }
+
+    listens {
+      WAV_START {
+        rate : number!
+        channels : number!
+      }
+        @description "Begin a recording at this sample rate and channel count."
+      WAV_APPEND {
+        data : bytes!
+      }
+        @description "The next frames of 16-bit signed little-endian PCM."
+      WAV_FINISH { }
+        @description "End the recording and answer its WAV file."
+    }
+  }
+
+  page boot as WavPage -> WavEncoder
+}

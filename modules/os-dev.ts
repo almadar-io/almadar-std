@@ -1,5 +1,5 @@
 import type { StdOperatorMeta } from '../types.js';
-import { NUMBER, shape } from '../signature.js';
+import { BYTES, NUMBER, shape } from '../signature.js';
 import { arg, osEffect } from './os-common.js';
 
 export const OS_DEV_OPERATORS: Record<string, StdOperatorMeta> = {
@@ -31,4 +31,16 @@ export const OS_DEV_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [arg('irq', NUMBER, 'Interrupt line')],
     example: '["os/irq-ack", 33, { "emit": { "failure": "DEVICE_FAILED" } }]',
   }),
+  'os/audio-in': {
+    ...osEffect({
+      answer: shape({ rate: NUMBER, channels: NUMBER }),
+      events: shape({ data: BYTES }),
+      grant: [],
+      stream: true,
+      description: 'Open the device microphone and stream what it hears as raw PCM: the first answer is { rate, channels } once the input is open (the rate the device actually runs at), and each frame arrives on the onMessage route as { data }, 16-bit signed little-endian samples, channels interleaved. Encoding (WAV or any codec) is the program\'s, in .lolo. The device asks the person for microphone permission; a refusal answers { error, kind: "denied" }, no input device answers unavailable. cancel-call on the key closes the input.',
+      params: [arg('options', shape({ sampleRate: NUMBER, channels: NUMBER }), 'Optional { sampleRate?, channels? }: the rate and channel count asked for (16000 and 1 when unset); the first answer names what the device gave', true)],
+      example: '["os/audio-in", { "sampleRate": 16000, "channels": 1 }, { "key": "mic", "emit": { "success": "MIC_OPEN", "failure": "MIC_FAILED", "onMessage": "MIC_FRAME" } }]',
+    }),
+    runsOn: 'client',
+  },
 };

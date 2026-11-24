@@ -17,6 +17,8 @@ orbital ChatWorkspaceOrbital {
   type RailLoadFailed = Event { error : string, code : string }
   type HeaderChannelLoaded = Event { data : [WorkspaceChannel]! }
   type HeaderLoadFailed = Event { error : string, code : string }
+  type BrowseChannelsLoaded = Event { data : [WorkspaceChannel]! }
+  type BrowseLoadFailed = Event { error : string, code : string }
   type ThreadRowsLoaded = Event { data : [WorkspaceMessage]! }
   type PinnedRowsLoaded = Event { data : [WorkspaceMessage]! }
   type PanelLoadFailed = Event { error : string, code : string }
@@ -83,6 +85,8 @@ orbital ChatWorkspaceOrbital {
     archived : boolean @description "Whether the conversation is archived." @synonyms "closed" = false
     memberCount : number @description "How many people belong to the conversation." @synonyms "members" = 0
     shownChannel : string @intrinsic @description "The conversation the header shows." = ""
+    publicRows : [WorkspaceChannel] @intrinsic @description "Public, unarchived channels, kept for the browse list." = []
+    joinedIds : [string] @intrinsic @description "The channels the viewer already belongs to." = []
     shownName : string @intrinsic @description "The open conversation's name." = ""
     shownTitle : string @intrinsic @description "The header's title: # and the name for a channel, the person's name for a direct message." = ""
   }
@@ -94,21 +98,18 @@ orbital ChatWorkspaceOrbital {
       INIT -> listing
         (render-ui main {
           type: stack
-          direction: horizontal
+          direction: vertical
           gap: none
-          className: "h-[calc(100dvh-9rem)] min-h-0 w-full overflow-hidden rounded-container border border-border bg-card"
+          style: { height: "calc(100dvh - 9rem)" }
+          className: "min-h-0 overflow-hidden rounded-container border border-border bg-card"
           children: [{
-            type: stack
-            direction: vertical
-            gap: none
-            className: "w-full md:w-64 shrink-0 min-h-0 overflow-y-auto border-e border-border bg-muted/40 py-2"
-            children: [@config.channelRailTrait, @config.peopleRailTrait]
-          }, {
-            type: stack
-            direction: vertical
-            gap: none
-            className: "hidden md:flex flex-1 min-w-0 min-h-0 items-center justify-center"
-            children: [{ type: empty-state, icon: message-square, title: @config.pickTitle, description: @config.pickDescription }]
+          type: master-detail-layout
+          className: "h-full min-h-0"
+          masterWidth: "16rem"
+          hasSelection: false
+          master: { type: stack, direction: vertical, gap: none, className: "h-full min-h-0 overflow-y-auto bg-muted/40 py-2", children: [@config.channelRailTrait, @config.channelBrowserTrait, @config.peopleRailTrait] }
+          detail: null
+          emptyDetail: { type: empty-state, icon: message-square, title: @config.pickTitle, description: @config.pickDescription }
           }]
         })
       CONVERSATION_OPEN -> open
@@ -118,28 +119,31 @@ orbital ChatWorkspaceOrbital {
         (emit CONVERSATION_OPENED { channel: ?channel, name: (default ?name ""), isDirect: (default ?isDirect false) })
         (render-ui main {
           type: stack
-          direction: horizontal
+          direction: vertical
           gap: none
-          className: "h-[calc(100dvh-9rem)] min-h-0 w-full overflow-hidden rounded-container border border-border bg-card"
+          style: { height: "calc(100dvh - 9rem)" }
+          className: "min-h-0 overflow-hidden rounded-container border border-border bg-card"
           children: [{
+          type: master-detail-layout
+          className: "h-full min-h-0"
+          masterWidth: "16rem"
+          hasSelection: true
+          master: { type: stack, direction: vertical, gap: none, className: "h-full min-h-0 overflow-y-auto bg-muted/40 py-2", children: [@config.channelRailTrait, @config.channelBrowserTrait, @config.peopleRailTrait] }
+          detail: {
             type: stack
-            direction: vertical
+            direction: horizontal
             gap: none
-            className: "hidden md:flex w-64 shrink-0 min-h-0 overflow-y-auto border-e border-border bg-muted/40 py-2"
-            children: [@config.channelRailTrait, @config.peopleRailTrait]
-          }, {
-            type: stack
-            direction: vertical
-            gap: none
-            className: "flex flex-1 min-w-0 min-h-0"
-            children: [@config.headerTrait, {
+            className: "h-full min-h-0"
+            children: [{
               type: stack
               direction: vertical
               gap: none
-              className: "flex-1 min-h-0 overflow-y-auto"
-              children: [@config.feedTrait]
-            }, @config.composerTrait]
-          }, @config.threadPanelTrait, @config.membersPanelTrait, @config.peoplePickerTrait]
+              className: "flex-1 min-w-0 min-h-0"
+              children: [@config.headerTrait, { type: stack, direction: vertical, gap: none, className: "flex-1 min-h-0 overflow-y-auto", children: [@config.feedTrait] }, @config.composerTrait]
+            }, @config.threadPanelTrait, @config.membersPanelTrait, @config.peoplePickerTrait]
+          }
+          emptyDetail: { type: empty-state, icon: message-square, title: @config.pickTitle, description: @config.pickDescription }
+          }]
         })
     }
 
@@ -155,21 +159,18 @@ orbital ChatWorkspaceOrbital {
         (emit CONVERSATION_CLOSED { })
         (render-ui main {
           type: stack
-          direction: horizontal
+          direction: vertical
           gap: none
-          className: "h-[calc(100dvh-9rem)] min-h-0 w-full overflow-hidden rounded-container border border-border bg-card"
+          style: { height: "calc(100dvh - 9rem)" }
+          className: "min-h-0 overflow-hidden rounded-container border border-border bg-card"
           children: [{
-            type: stack
-            direction: vertical
-            gap: none
-            className: "w-full md:w-64 shrink-0 min-h-0 overflow-y-auto border-e border-border bg-muted/40 py-2"
-            children: [@config.channelRailTrait, @config.peopleRailTrait]
-          }, {
-            type: stack
-            direction: vertical
-            gap: none
-            className: "hidden md:flex flex-1 min-w-0 min-h-0 items-center justify-center"
-            children: [{ type: empty-state, icon: message-square, title: @config.pickTitle, description: @config.pickDescription }]
+          type: master-detail-layout
+          className: "h-full min-h-0"
+          masterWidth: "16rem"
+          hasSelection: false
+          master: { type: stack, direction: vertical, gap: none, className: "h-full min-h-0 overflow-y-auto bg-muted/40 py-2", children: [@config.channelRailTrait, @config.channelBrowserTrait, @config.peopleRailTrait] }
+          detail: null
+          emptyDetail: { type: empty-state, icon: message-square, title: @config.pickTitle, description: @config.pickDescription }
           }]
         })
     }
@@ -204,12 +205,17 @@ orbital ChatWorkspaceOrbital {
         @synonyms "back"
         @tier "presentation"
       ChannelRail.CHANNEL_PICKED -> CONVERSATION_OPEN
+      ChannelBrowser.CHANNEL_JOIN -> CONVERSATION_OPEN
+        with { channel: ?channel, name: ?channelName, isDirect: false }
       ConversationHeader.HEADER_BACK -> CONVERSATION_CLOSE
     }
 
     config {
       channelRailTrait : trait = @trait.ChannelRail
         @label "Channels list"
+        @tier "presentation"
+      channelBrowserTrait : trait = @trait.ChannelBrowser
+        @label "Channels to join"
         @tier "presentation"
       peopleRailTrait : trait = @trait.PeopleRail
         @label "Direct messages list"
@@ -259,6 +265,7 @@ orbital ChatWorkspaceOrbital {
         })
       RailMembershipsLoaded -> listing
         (set @entity.channelRows (array/filter ?data (fn row (not (default @row.isDirect false)))))
+        (emit MY_CHANNELS { channels: (array/map ?data (fn row (default @row.channel ""))) })
         (emit DIRECT_UNREAD { rows: (array/map (array/filter ?data (fn row (default @row.isDirect false))) (fn row { channel: (default @row.channel ""), unread: (default @row.unreadCount 0) })) })
         (render-ui main {
           type: stack
@@ -272,19 +279,19 @@ orbital ChatWorkspaceOrbital {
             justify: between
             className: "px-3 pt-2 pb-1"
             children: [{ type: typography, variant: caption, weight: semibold, color: muted, content: @config.channelsTitle }, { type: button, variant: ghost, size: sm, icon: plus, label: "", "aria-label": @config.newChannelLabel, action: NEW_CHANNEL }]
-          }, {
+          }, (if (> (array/len @entity.channelRows) 0) {
             type: data-list
             variant: compact
             look: borderless
             pageSize: 0
             gap: none
             entity: (array/map @entity.channelRows (fn row (object/merge @row { label: (str/concat "# " (default @row.channelName "")), unread: (if (> (default @row.unreadCount 0) 0) (str/concat "" (default @row.unreadCount 0)) "") })))
-            fields: [{ name: label, variant: small }, { name: unread, variant: badge }]
+            fields: [{ name: label, variant: h4 }, { name: unread, variant: badge }]
             itemClickEvent: CHANNEL_ROW
             selectedId: (str/concat @entity.openChannel ":" @user.id)
             sortBy: channelName
-            emptyMessage: @config.noChannels
-          }]
+            surface: none
+          } { type: typography, variant: caption, color: muted, content: @config.noChannels, className: "px-3 py-1" })]
         })
       RailLoadFailed -> listing
         (render-ui main { type: alert, variant: error, title: "Couldn't load the channels", message: ?error })
@@ -307,6 +314,11 @@ orbital ChatWorkspaceOrbital {
         @tier "presentation"
       DIRECT_UNREAD -> external {
         rows : [DirectUnread]!
+      }
+        @description "The viewer's direct messages and their unread counts, for the people list."
+        @tier "presentation"
+      MY_CHANNELS -> external {
+        channels : [string]!
       }
         @description "The viewer's direct messages and their unread counts, for the people list."
         @tier "presentation"
@@ -352,11 +364,95 @@ orbital ChatWorkspaceOrbital {
       newChannelLabel : string = "New channel"
         @label "Label of the new-channel button"
         @tier "presentation"
-      noChannels : string = "No channels yet"
+      noChannels : string = "You are in no channel yet; join one below."
         @label "Shown when the viewer belongs to no channel"
         @tier "presentation"
       maxRows : number = 500
         @label "Most rows per load"
+        @tier "policy"
+    }
+  }
+
+  trait ChannelBrowser -> @rebindable WorkspaceChannel {
+    initial: listing
+
+    state listing {
+      INIT -> listing
+        (fetch WorkspaceChannel {
+          limit: @config.maxRows
+          emit: { failure: BrowseLoadFailed, success: BrowseChannelsLoaded }
+          filter: (and (= (object/get @entity isPrivate) false) (= (object/get @entity archived) false))
+        })
+      BrowseChannelsLoaded -> listing
+        (set @entity.publicRows ?data)
+        (render-ui main {
+          type: data-list
+          variant: compact
+          look: borderless
+          pageSize: 0
+          gap: none
+          entity: (array/map (array/filter ?data (fn c (not (array/includes @entity.joinedIds @c.id)))) (fn c (object/merge @c { label: (str/concat "# " @c.name) })))
+          fields: [{ name: label, variant: h4 }, { name: description, variant: caption }]
+          itemClickEvent: JOIN_ROW
+          sortBy: name
+          surface: none
+          emptyMessage: ""
+        })
+      JOINED -> listing
+        (set @entity.joinedIds ?channels)
+        (render-ui main {
+          type: data-list
+          variant: compact
+          look: borderless
+          pageSize: 0
+          gap: none
+          entity: (array/map (array/filter @entity.publicRows (fn c (not (array/includes ?channels @c.id)))) (fn c (object/merge @c { label: (str/concat "# " @c.name) })))
+          fields: [{ name: label, variant: h4 }, { name: description, variant: caption }]
+          itemClickEvent: JOIN_ROW
+          sortBy: name
+          surface: none
+          emptyMessage: ""
+        })
+      JOIN_ROW -> listing
+        (emit CHANNEL_JOIN { channel: ?row.id, channelName: ?row.name, id: @user.id, name: (default @user.name "") })
+      BrowseLoadFailed -> listing
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the channels to join — " ?error) "Couldn't load the channels to join"))
+    }
+
+    emits {
+      CHANNEL_JOIN -> external {
+        channel : string!
+        channelName : string
+        id : string!
+        name : string
+      }
+        @description "The viewer joins a public channel: add their membership (MemberAdder's ADD_MEMBER takes this shape) and open it."
+        @synonyms "join channel, browse channels"
+        @tier "domain"
+      BrowseLoadFailed -> internal {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      JOIN_ROW {
+        id : string!
+        row : WorkspaceChannel!
+      }
+        @tier "presentation"
+      JOINED {
+        channels : [string]!
+      }
+        @description "The channels the viewer belongs to, so the browse list leaves them out."
+        @tier "presentation"
+      ChannelRail.MY_CHANNELS -> JOINED
+    }
+
+    config {
+      maxRows : number = 200
+        @label "Most channels listed"
         @tier "policy"
     }
   }
@@ -366,6 +462,7 @@ orbital ChatWorkspaceOrbital {
 
     state listing {
       INIT -> listing
+        (render-ui main { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: caption, weight: semibold, color: muted, content: @config.directTitle, className: "px-3 pt-4 pb-1" }] })
         (fetch WorkspacePerson {
           limit: @config.maxRows
           emit: { failure: PeopleLoadFailed, success: RailPeopleLoaded }
@@ -382,10 +479,11 @@ orbital ChatWorkspaceOrbital {
             look: borderless
             pageSize: 0
             gap: none
-            entity: (array/map @entity.roster (fn person (object/merge @person { unread: (let [hit (array/find @entity.directUnread (fn u (= (object/get @u channel) (if (< @user.id @person.id) (str/concat "dm-" @user.id "-" @person.id) (str/concat "dm-" @person.id "-" @user.id)))))] (if (and hit (> (default (object/get hit unread) 0) 0)) (str/concat "" (object/get hit unread)) "")) })))
-            fields: [{ name: name, variant: avatar }, { name: name, variant: small }, { name: unread, variant: badge }]
+            entity: (array/map @entity.roster (fn person (object/merge @person { unread: (let ((n (array/sum (array/filter @entity.directUnread (fn u (= @u.channel (if (< @user.id @person.id) (str/concat "dm-" @user.id "-" @person.id) (str/concat "dm-" @person.id "-" @user.id))))) "unread"))) (if (> @n 0) (str/concat "" @n) "")) })))
+            fields: [{ name: name, variant: avatar }, { name: name, variant: h4 }, { name: unread, variant: badge }]
             itemClickEvent: PERSON_ROW
             selectedId: @entity.openPerson
+            surface: none
             sortBy: name
             emptyMessage: @config.noPeople
           }]
@@ -402,10 +500,11 @@ orbital ChatWorkspaceOrbital {
             look: borderless
             pageSize: 0
             gap: none
-            entity: (array/map @entity.roster (fn person (object/merge @person { unread: (let [hit (array/find ?rows (fn u (= (object/get @u channel) (if (< @user.id @person.id) (str/concat "dm-" @user.id "-" @person.id) (str/concat "dm-" @person.id "-" @user.id)))))] (if (and hit (> (default (object/get hit unread) 0) 0)) (str/concat "" (object/get hit unread)) "")) })))
-            fields: [{ name: name, variant: avatar }, { name: name, variant: small }, { name: unread, variant: badge }]
+            entity: (array/map @entity.roster (fn person (object/merge @person { unread: (let ((n (array/sum (array/filter ?rows (fn u (= @u.channel (if (< @user.id @person.id) (str/concat "dm-" @user.id "-" @person.id) (str/concat "dm-" @person.id "-" @user.id))))) "unread"))) (if (> @n 0) (str/concat "" @n) "")) })))
+            fields: [{ name: name, variant: avatar }, { name: name, variant: h4 }, { name: unread, variant: badge }]
             itemClickEvent: PERSON_ROW
             selectedId: @entity.openPerson
+            surface: none
             sortBy: name
             emptyMessage: @config.noPeople
           }]
@@ -496,7 +595,7 @@ orbital ChatWorkspaceOrbital {
             gap: sm
             align: center
             className: "min-w-0"
-            children: [{ type: button, variant: ghost, size: sm, icon: arrow-left, label: "", "aria-label": @config.backLabel, action: HEADER_BACK, className: "md:hidden" }, {
+            children: [{ type: button, variant: ghost, size: sm, icon: arrow-left, label: "", "aria-label": @config.backLabel, action: HEADER_BACK, className: (quote "@md:hidden") }, {
               type: stack
               direction: vertical
               gap: none
@@ -683,8 +782,8 @@ orbital ChatWorkspaceOrbital {
           type: stack
           direction: vertical
           gap: xs
-          className: "mx-4 mb-4 mt-1 rounded-container border border-border bg-background p-2 focus-within:border-primary"
-          children: [{ type: input-group, inputType: textarea, rows: 1, placeholder: @config.placeholder, value: @entity.draft, onChange: DRAFT_CHANGED, action: SEND }, {
+          className: "mx-4 mb-4 mt-1 rounded-container border border-border bg-background p-2"
+          children: [{ type: input-group, inputType: text, placeholder: @config.placeholder, value: @entity.draft, onChange: DRAFT_CHANGED, action: SEND }, {
             type: stack
             direction: horizontal
             gap: xs
@@ -705,8 +804,8 @@ orbital ChatWorkspaceOrbital {
           type: stack
           direction: vertical
           gap: xs
-          className: "mx-4 mb-4 mt-1 rounded-container border border-border bg-background p-2 focus-within:border-primary"
-          children: [{ type: input-group, inputType: textarea, rows: 1, placeholder: (str/concat @config.placeholder " " (if (default ?isDirect false) (default ?name "") (str/concat "#" (default ?name "")))), value: @entity.draft, onChange: DRAFT_CHANGED, action: SEND }, {
+          className: "mx-4 mb-4 mt-1 rounded-container border border-border bg-background p-2"
+          children: [{ type: input-group, inputType: text, placeholder: (str/concat @config.placeholder " " (if (default ?isDirect false) (default ?name "") (str/concat "#" (default ?name "")))), value: @entity.draft, onChange: DRAFT_CHANGED, action: SEND }, {
             type: stack
             direction: horizontal
             gap: xs
@@ -817,7 +916,7 @@ orbital ChatWorkspaceOrbital {
           type: stack
           direction: vertical
           gap: none
-          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-96 shrink-0 min-h-0 border-s border-border"
+          className: "w-full max-w-sm shrink-0 min-h-0 bg-card border-s border-border"
           children: [{
             type: stack
             direction: horizontal
@@ -847,8 +946,8 @@ orbital ChatWorkspaceOrbital {
             direction: horizontal
             gap: xs
             align: end
-            className: "m-3 rounded-container border border-border bg-background p-2 focus-within:border-primary"
-            children: [{ type: input-group, inputType: textarea, rows: 1, placeholder: @config.replyPlaceholder, value: @entity.threadDraft, onChange: REPLY_DRAFT, action: REPLY_SEND }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: REPLY_SEND }]
+            className: "m-3 rounded-container border border-border bg-background p-2"
+            children: [{ type: input-group, inputType: text, placeholder: @config.replyPlaceholder, value: @entity.threadDraft, onChange: REPLY_DRAFT, action: REPLY_SEND }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: REPLY_SEND }]
           }]
         })
       REPLY_DRAFT -> thread
@@ -892,7 +991,7 @@ orbital ChatWorkspaceOrbital {
           type: stack
           direction: vertical
           gap: none
-          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-96 shrink-0 min-h-0 border-s border-border"
+          className: "w-full max-w-sm shrink-0 min-h-0 bg-card border-s border-border"
           children: [{
             type: stack
             direction: horizontal
@@ -1030,7 +1129,7 @@ orbital ChatWorkspaceOrbital {
           type: stack
           direction: vertical
           gap: none
-          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-80 shrink-0 min-h-0 border-s border-border"
+          className: "w-full max-w-sm shrink-0 min-h-0 bg-card border-s border-border"
           children: [{
             type: stack
             direction: horizontal
@@ -1050,7 +1149,7 @@ orbital ChatWorkspaceOrbital {
               pageSize: 0
               entity: ?data
               sortBy: memberName
-              fields: [{ name: memberName, variant: avatar }, { name: memberName, variant: small }]
+              fields: [{ name: memberName, variant: avatar }, { name: memberName, variant: h4 }]
               itemClickEvent: MEMBER_ROW
             }]
           }]
@@ -1161,7 +1260,7 @@ orbital ChatWorkspaceOrbital {
           type: stack
           direction: vertical
           gap: none
-          className: "fixed inset-0 z-40 bg-card md:static md:z-auto w-full md:w-80 shrink-0 min-h-0 border-s border-border"
+          className: "w-full max-w-sm shrink-0 min-h-0 bg-card border-s border-border"
           children: [{
             type: stack
             direction: horizontal
@@ -1176,7 +1275,7 @@ orbital ChatWorkspaceOrbital {
             pageSize: 0
             entity: (array/filter ?data (fn person (!= @person.id @user.id)))
             sortBy: name
-            fields: [{ name: name, variant: avatar }, { name: name, variant: small }]
+            fields: [{ name: name, variant: avatar }, { name: name, variant: h4 }]
             itemClickEvent: PERSON_ADD
           }]
         })
@@ -1236,5 +1335,5 @@ orbital ChatWorkspaceOrbital {
     }
   }
 
-  page "/chat-workspace" as ChatWorkspacePage -> WorkspaceShell, ChannelRail, PeopleRail, ConversationHeader, MessageFeed, MessageComposer, ThreadPanel, MembersPanel, PeoplePicker
+  page "/chat-workspace" as ChatWorkspacePage -> WorkspaceShell, ChannelRail, ChannelBrowser, PeopleRail, ConversationHeader, MessageFeed, MessageComposer, ThreadPanel, MembersPanel, PeoplePicker
 }

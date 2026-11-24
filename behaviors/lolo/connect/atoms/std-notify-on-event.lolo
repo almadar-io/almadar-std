@@ -8,7 +8,8 @@ type AuditRow = { recipient : string, channel : string, dispatched : boolean, re
 type NotifyWebhookPayload = { message : string, recipient : string, severity : string }
 type PushKeysTarget = { p256dh : string, auth : string }
 type PushTarget = { endpoint : string, keys : PushKeysTarget }
-type SubRow = { userId : string, kind : string, endpoint : string, p256dh : string, auth : string }
+type NotifyPeople = [string]
+type SubRow = { userId : string, kind : string, token : string, endpoint : string, p256dh : string, auth : string }
 uses Email from "std/behaviors/std-email"
 uses Twilio from "std/behaviors/std-twilio"
 uses Push from "std/behaviors/std-push"
@@ -44,7 +45,10 @@ orbital NotifyOnEventOrbital {
     pushEndpoint : string @description "Scratch: push endpoint of the recipient's subscription for the current dispatch." @synonyms "subscription endpoint" = ""
     pushP256dh : string @description "Scratch: p256dh key of the recipient's push subscription." @synonyms "push key" = ""
     pushAuth : string @description "Scratch: auth secret of the recipient's push subscription." @synonyms "push auth" = ""
+    pushKind : string @description "Scratch: the push service of the recipient's subscription (webpush, fcm or apns); empty when none." = ""
+    pushToken : string @description "Scratch: the fcm or apns device token of the recipient's subscription." = ""
     queue : [string] @description "Scratch: the recipients still waiting in the current dispatch, sent one after another." @synonyms "pending recipients" = []
+    onlyList : [string] @description "Scratch: the people the current event narrows its audience to (the onlyField of its data); empty keeps the whole audience." = []
   }
 
   entity NotificationPreference [persistent: notificationPreferences] {
@@ -205,6 +209,29 @@ orbital NotifyOnEventOrbital {
     }
   }
 
+  trait NotifyFcmApi = Push.traits.FcmClient {
+    listens {
+      NotifyOnEventListener.FCM_SEND -> FCM_SEND
+      NotifyFcmHttp.HTTP_REPLIED -> FCM_REPLIED with { status: ?status, body: (default (bytes/to-string ?body) "") }
+      NotifyFcmHttp.HTTP_FAILED -> FCM_HTTP_FAILED with { error: ?error, kind: ?kind }
+    }
+  }
+
+  trait NotifyFcmHttp = Push.traits.FcmHttp {
+    listens {
+      NotifyFcmApi.FCM_HTTP_SEND -> HTTP_SEND
+      NotifyFcmHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      NotifyFcmHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      NotifyFcmHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait NotifyFcmHttpFrame = Push.traits.FcmHttpFrame {
+    listens {
+      NotifyFcmHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait NotifyWebhookApi :: p NotifyWebhookPayload = Webhook.traits.WebhookClient {
     listens {
       NotifyOnEventListener.WEBHOOK_SEND -> WEBHOOK_SEND
@@ -248,11 +275,12 @@ orbital NotifyOnEventOrbital {
         (set @entity.severity @config.severity)
         (set @entity.recipient "")
         (set @entity.queue [])
-        (if (= @config.audience "subscribers") (fetch PushSubscription { limit: @config.maxSubscriptionRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_AUDIENCE_LOADED } }) (do (set @entity.queue (array/filter (if (= (array/len @config.recipients) 0) [(if (not (= @config.fallbackRecipient "")) @config.fallbackRecipient @user.id)] @config.recipients) (fn r (not (and @config.excludeActor (= @r @user.id)))))) (emit NOTIFY_NEXT {})))
+        (set @entity.onlyList (if (= @config.onlyField "") [] (default (as (object/get (default ?data {}) @config.onlyField) NotifyPeople) [])))
+        (if (= @config.audience "subscribers") (fetch PushSubscription { limit: @config.maxSubscriptionRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_AUDIENCE_LOADED } }) (do (set @entity.queue (array/filter (if (= (array/len @config.recipients) 0) [(if (not (= @config.fallbackRecipient "")) @config.fallbackRecipient @user.id)] @config.recipients) (fn r (and (not (and @config.excludeActor (= @r @user.id))) (or (= (array/len @entity.onlyList) 0) (array/includes @entity.onlyList @r)))))) (emit NOTIFY_NEXT {})))
       NOTIFY_AUDIENCE_LOADED -> idle when (> ?totalCount (array/len ?data))
         (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "PushSubscription has " ?totalCount " rows, over the maxSubscriptionRows cap of " @config.maxSubscriptionRows) })
       NOTIFY_AUDIENCE_LOADED -> idle
-        (set @entity.queue (array/unique (array/filter (array/map ?data (fn s (default (object/get @s userId) ""))) (fn r (and (!= @r "") (not (and @config.excludeActor (= @r @user.id))))))))
+        (set @entity.queue (array/unique (array/filter (array/map ?data (fn s (default (object/get @s userId) ""))) (fn r (and (!= @r "") (not (and @config.excludeActor (= @r @user.id))) (or (= (array/len @entity.onlyList) 0) (array/includes @entity.onlyList @r)))))))
         (emit NOTIFY_NEXT {})
       NOTIFY_NEXT -> idle when (> (array/len @entity.queue) 0)
         (set @entity.recipient (array/first @entity.queue))
@@ -346,11 +374,24 @@ orbital NotifyOnEventOrbital {
       NOTIFY_PUSH_SUBS -> idle when (> ?totalCount (array/len ?data))
         (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "PushSubscription has " ?totalCount " rows, over the maxSubscriptionRows cap of " @config.maxSubscriptionRows) })
       NOTIFY_PUSH_SUBS -> idle
-        (let ((m (array/first (array/filter ?data (fn s (and (= (object/get @s userId) @entity.recipient) (= (object/get @s kind) "webpush"))))))) (do (set @entity.pushEndpoint (if (= @m null) "" (object/get @m endpoint))) (set @entity.pushP256dh (if (= @m null) "" (object/get @m p256dh))) (set @entity.pushAuth (if (= @m null) "" (object/get @m auth)))))
-        (if (= @entity.pushEndpoint "") (persist create NotificationRecord {
+        (let ((m (array/first (array/filter ?data (fn s (and (= (object/get @s userId) @entity.recipient) (array/includes ["webpush", "fcm", "apns"] (object/get @s kind)))))))) (do (set @entity.pushKind (if (= @m null) "" (object/get @m kind))) (set @entity.pushToken (if (= @m null) "" (default (object/get @m token) ""))) (set @entity.pushEndpoint (if (= @m null) "" (object/get @m endpoint))) (set @entity.pushP256dh (if (= @m null) "" (object/get @m p256dh))) (set @entity.pushAuth (if (= @m null) "" (object/get @m auth)))))
+        (if (= @entity.pushKind "") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "no-push-subscription"
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        } { emit: { failure: NOTIFY_WRITE_FAILED, success: NOTIFY_RECORDED } }) (if (= @entity.pushKind "fcm") (emit FCM_SEND {
+          token: @entity.pushToken
+          title: (if (= @config.pushTitle "") @entity.message @config.pushTitle)
+          body: @entity.message
+          url: @config.pushDeepLink
+        }) (if (= @entity.pushKind "apns") (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: "apns-not-supported"
           message: @entity.message
           recipient: @entity.recipient
           recordedAt: @now
@@ -361,7 +402,7 @@ orbital NotifyOnEventOrbital {
           body: @entity.message
           url: @config.pushDeepLink
           icon: @config.pushIcon
-        }))
+        }))))
       NOTIFY_EMAIL_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -542,6 +583,14 @@ orbital NotifyOnEventOrbital {
       }
         @description "Ask std-push to send the push-channel notification."
         @tier "secondary"
+      FCM_SEND -> external {
+        token : string!
+        title : string!
+        body : string!
+        url : string
+      }
+        @description "Ask std-push's FcmClient to send the push-channel notification to an Android device."
+        @tier "secondary"
       NOTIFY_LOOKUP_FAILED {
         error : string!
       }
@@ -563,6 +612,8 @@ orbital NotifyOnEventOrbital {
       NotifySmsApi.TWILIO_SMS_FAILED -> NOTIFY_SMS_FAILED
       NotifyPushApi.PUSH_SEND_RESULT -> NOTIFY_PUSH_SENT
       NotifyPushApi.PUSH_SEND_FAILED -> NOTIFY_PUSH_FAILED
+      NotifyFcmApi.FCM_SEND_RESULT -> NOTIFY_PUSH_SENT
+      NotifyFcmApi.FCM_SEND_FAILED -> NOTIFY_PUSH_FAILED
       NotifyWebhookApi.WEBHOOK_RESULT -> NOTIFY_WEBHOOK_SENT
       NotifyWebhookApi.WEBHOOK_FAILED -> NOTIFY_WEBHOOK_FAILED
       NOTIFY_WEBHOOK_SENT {
@@ -614,6 +665,10 @@ orbital NotifyOnEventOrbital {
         totalCount : number!
       }
       NOTIFY_PUSH_SUBS {
+        data : [SubRow]!
+        totalCount : number!
+      }
+      NOTIFY_AUDIENCE_LOADED {
         data : [SubRow]!
         totalCount : number!
       }
@@ -709,6 +764,10 @@ orbital NotifyOnEventOrbital {
         @label "Audience"
         @description "Who one event notifies: listed (the `recipients` knob) or subscribers (every user holding a PushSubscription row, read with maxSubscriptionRows)."
         @synonyms "who to notify, everyone subscribed, broadcast"
+      onlyField : string = ""
+        @label "Narrow by a data field"
+        @description "A field of the event's data row holding a list of person ids: when it is non-empty, only those people of the audience are notified (a direct message names its other person); an empty list or no field keeps the whole audience."
+        @synonyms "only notify, target people, direct recipients"
       excludeActor : boolean = false
         @label "Skip the actor"
         @description "Leave out the signed-in user whose action raised the event, so a person is not notified of their own message."
@@ -941,5 +1000,5 @@ orbital NotifyOnEventOrbital {
   }
 
   page boot as InboxDeliveryStart -> InboxDelivery
-  page "/notify-on-event" as NotifyOnEventPage -> InboxList, InboxActions, NotifyOnEventListener, NotifyEmailApi, NotifyEmailApiSendgridHttp, NotifyEmailApiResendHttp, NotifyEmailApiTimeout, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyPushFcmHttp, NotifyPushAndroidHttp, NotifyPushMozillaHttp, NotifyPushAppleHttp, NotifyPushWnsHttp, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
+  page "/notify-on-event" as NotifyOnEventPage -> InboxList, InboxActions, NotifyOnEventListener, NotifyFcmApi, NotifyFcmHttp, NotifyFcmHttpFrame, NotifyEmailApi, NotifyEmailApiSendgridHttp, NotifyEmailApiResendHttp, NotifyEmailApiTimeout, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyPushFcmHttp, NotifyPushAndroidHttp, NotifyPushMozillaHttp, NotifyPushAppleHttp, NotifyPushWnsHttp, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
 }

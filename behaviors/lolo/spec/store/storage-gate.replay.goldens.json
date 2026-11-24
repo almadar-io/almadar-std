@@ -854,6 +854,241 @@
    "credentials": {
     "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
    }
+  },
+  {
+   "id": "the-public-url-environment-rides-every-request",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "event": "STORAGE_ENV_REGION",
+     "payload": {
+      "value": "eu-west-1"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "event": "STORAGE_ENV_PUBLIC",
+     "payload": {
+      "value": " http://localhost:8088/s3/media "
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "event": "STORAGE_REQUEST",
+     "payload": {
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "o",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_READY",
+        "payload": {
+         "verb": "delete",
+         "method": "DELETE",
+         "bucket": "my-bucket",
+         "objKey": "o",
+         "query": [
+          {
+           "name": "x-id",
+           "value": "DeleteObject"
+          }
+         ],
+         "headers": [],
+         "b64": "",
+         "expires": 0,
+         "putMode": "",
+         "putSize": 0,
+         "putPublic": false,
+         "putFileName": "",
+         "putFileSize": 0,
+         "putFileKind": "",
+         "putEtag": "",
+         "key": "delete:1",
+         "hostText": "s3.us-east-1.amazonaws.com",
+         "keyId": "AKIAIOSFODNN7EXAMPLE",
+         "authority": "s3.us-east-1.amazonaws.com",
+         "origin": "https://s3.us-east-1.amazonaws.com",
+         "region": "eu-west-1",
+         "publicUrl": "http://localhost:8088/s3/media"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control: with no public url environment a request carries an empty one",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "event": "STORAGE_ENV_REGION",
+     "payload": {
+      "value": "eu-west-1"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "event": "STORAGE_REQUEST",
+     "payload": {
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "o",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_READY",
+        "payload": {
+         "verb": "delete",
+         "method": "DELETE",
+         "bucket": "my-bucket",
+         "objKey": "o",
+         "query": [
+          {
+           "name": "x-id",
+           "value": "DeleteObject"
+          }
+         ],
+         "headers": [],
+         "b64": "",
+         "expires": 0,
+         "putMode": "",
+         "putSize": 0,
+         "putPublic": false,
+         "putFileName": "",
+         "putFileSize": 0,
+         "putFileKind": "",
+         "putEtag": "",
+         "key": "delete:1",
+         "hostText": "s3.us-east-1.amazonaws.com",
+         "keyId": "AKIAIOSFODNN7EXAMPLE",
+         "authority": "s3.us-east-1.amazonaws.com",
+         "origin": "https://s3.us-east-1.amazonaws.com",
+         "region": "eu-west-1",
+         "publicUrl": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "an-unreadable-public-url-environment-variable-fails",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_PUBLIC_UNREAD",
+     "payload": {
+      "error": "denied",
+      "kind": "denied"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Storage public url could not be read: denied"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
   }
  ]
 }

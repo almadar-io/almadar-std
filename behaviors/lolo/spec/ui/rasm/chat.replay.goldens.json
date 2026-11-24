@@ -1,790 +1,1269 @@
 {
-  "atom": "../ui/rasm/atoms/std-rasm-chat.lolo",
-  "trait": "RasmChat",
-  "cases": [
+ "atom": "../ui/rasm/atoms/std-rasm-chat.lolo",
+ "trait": "RasmChat",
+ "cases": [
+  {
+   "id": "a-placed-panel-paints",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
     {
-      "id": "a-placed-panel-paints",
-      "config": {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
         "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ]
-      },
-      "entity": {
-        "id": "x"
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_PLACE",
-          "payload": {
-            "placed": [
-              {
-                "id": "ch",
-                "rect": {
-                  "x": 0,
-                  "y": 0,
-                  "w": 360,
-                  "h": 600
-                }
-              }
-            ]
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "CHAT_PAINT": 1
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-step-entry-shows-its-message-as-the-newest",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ]
-      },
-      "entity": {
-        "id": "x",
         "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "entered": [],
-        "newest": -1
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_ENTER",
-          "payload": {
-            "order": [
-              "s2"
-            ],
-            "staggerMs": 0
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "CHAT_PAINT": 1
-            },
-            "entity": {
-              "entered": [
-                "s2"
-              ],
-              "newest": 2
-            }
-          }
+         "x": 0,
+         "y": 0,
+         "w": 360,
+         "h": 600
         }
+       }
       ]
-    },
-    {
-      "id": "control-an-entered-message-is-not-entered-again",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ]
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "entered": [
-          "s1"
-        ],
-        "newest": 1
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_ENTER",
-          "payload": {
-            "order": [
-              "s1"
-            ],
-            "staggerMs": 0
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "CHAT_PAINT"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-measured-bubble-height-repaints",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ]
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "heights": {}
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_MEASURED",
-          "payload": {
-            "items": [
-              {
-                "id": "ch:msg:0",
-                "width": 200,
-                "height": 44,
-                "lines": 2
-              }
-            ]
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "CHAT_PAINT": 1
-            },
-            "entity": {
-              "heights": {
-                "ch:msg:0": 44
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-the-same-height-again-repaints-nothing",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ]
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "heights": {
-          "ch:msg:0": 44
-        }
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_MEASURED",
-          "payload": {
-            "items": [
-              {
-                "id": "ch:msg:0",
-                "width": 200,
-                "height": 44,
-                "lines": 2
-              }
-            ]
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "CHAT_PAINT"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-another-texts-measure-is-ignored",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ]
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "heights": {}
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_MEASURED",
-          "payload": {
-            "items": [
-              {
-                "id": "other:msg:0",
-                "width": 200,
-                "height": 44,
-                "lines": 2
-              }
-            ]
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "CHAT_PAINT"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-placed-panel-paint-emits-one-paint",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ]
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "entered": [],
-        "heights": {},
-        "newest": -1
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "CHAT_PAINT",
-          "payload": {
-            "n": 1
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "RASM_PAINT": 1
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-reset-entry-clears-the-applied-steps",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ],
-        "resetOn": "rs"
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 600,
-          "h": 300
-        },
-        "entered": [
-          "s1"
-        ],
-        "newest": 1,
-        "heights": {}
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_ENTER",
-          "payload": {
-            "order": [
-              "rs"
-            ],
-            "staggerMs": 0
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "CHAT_PAINT": 1
-            },
-            "entity": {
-              "entered": [],
-              "newest": -1
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-without-reset-on-the-entry-changes-nothing",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [
-          {
-            "on": "",
-            "side": "user",
-            "key": "m.ask"
-          },
-          {
-            "on": "s1",
-            "side": "agent",
-            "key": "m.one"
-          },
-          {
-            "on": "s2",
-            "side": "agent",
-            "key": "m.two"
-          }
-        ],
-        "resetOn": ""
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 600,
-          "h": 300
-        },
-        "entered": [
-          "s1"
-        ],
-        "newest": 1,
-        "heights": {}
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_ENTER",
-          "payload": {
-            "order": [
-              "rs"
-            ],
-            "staggerMs": 0
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "CHAT_PAINT"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "live-records-for-this-panel-make-it-live-and-fade-the-newest",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [],
-        "showSender": true
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        }
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_CHAT_MESSAGES",
-          "payload": {
-            "id": "ch",
-            "messages": [
-              {
-                "id": "m1",
-                "side": "agent",
-                "text": "Kdo pride v nedeljo?",
-                "sender": "Mama",
-                "at": "09:12",
-                "image": "",
-                "ticks": ""
-              },
-              {
-                "id": "m2",
-                "side": "user",
-                "text": "Jaz!",
-                "sender": "",
-                "at": "09:13",
-                "image": "",
-                "ticks": "✓✓"
-              }
-            ]
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "CHAT_PAINT": 1
-            },
-            "entity": {
-              "live": true,
-              "newest": 1,
-              "records": [
-                {
-                  "id": "m1",
-                  "side": "agent",
-                  "text": "Kdo pride v nedeljo?",
-                  "sender": "Mama",
-                  "at": "09:12",
-                  "image": "",
-                  "ticks": ""
-                },
-                {
-                  "id": "m2",
-                  "side": "user",
-                  "text": "Jaz!",
-                  "sender": "",
-                  "at": "09:13",
-                  "image": "",
-                  "ticks": "✓✓"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-live-records-for-another-panel-change-nothing",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [],
-        "showSender": true
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        }
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_CHAT_MESSAGES",
-          "payload": {
-            "id": "other",
-            "messages": [
-              {
-                "id": "m1",
-                "side": "agent",
-                "text": "Kdo pride v nedeljo?",
-                "sender": "Mama",
-                "at": "09:12",
-                "image": "",
-                "ticks": ""
-              },
-              {
-                "id": "m2",
-                "side": "user",
-                "text": "Jaz!",
-                "sender": "",
-                "at": "09:13",
-                "image": "",
-                "ticks": "✓✓"
-              }
-            ]
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "CHAT_PAINT"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-the-same-live-records-again-fade-no-bubble",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [],
-        "showSender": true
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "live": true,
-        "records": [
-          {
-            "id": "m1",
-            "side": "agent",
-            "text": "Kdo pride v nedeljo?",
-            "sender": "Mama",
-            "at": "09:12",
-            "image": "",
-            "ticks": ""
-          },
-          {
-            "id": "m2",
-            "side": "user",
-            "text": "Jaz!",
-            "sender": "",
-            "at": "09:13",
-            "image": "",
-            "ticks": "✓✓"
-          }
-        ]
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "RASM_CHAT_MESSAGES",
-          "payload": {
-            "id": "ch",
-            "messages": [
-              {
-                "id": "m1",
-                "side": "agent",
-                "text": "Kdo pride v nedeljo?",
-                "sender": "Mama",
-                "at": "09:12",
-                "image": "",
-                "ticks": ""
-              },
-              {
-                "id": "m2",
-                "side": "user",
-                "text": "Jaz!",
-                "sender": "",
-                "at": "09:13",
-                "image": "",
-                "ticks": "✓✓"
-              }
-            ]
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "CHAT_PAINT": 1
-            },
-            "entity": {
-              "newest": -1
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-live-placed-panel-paint-emits-one-paint",
-      "config": {
-        "id": "ch",
-        "title": "chat.title",
-        "placeholder": "chat.placeholder",
-        "messages": [],
-        "showSender": true
-      },
-      "entity": {
-        "id": "x",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 600
-        },
-        "live": true,
-        "records": [
-          {
-            "id": "m1",
-            "side": "agent",
-            "text": "Kdo pride v nedeljo?",
-            "sender": "Mama",
-            "at": "09:12",
-            "image": "",
-            "ticks": ""
-          },
-          {
-            "id": "m2",
-            "side": "user",
-            "text": "Jaz!",
-            "sender": "",
-            "at": "09:13",
-            "image": "",
-            "ticks": "✓✓"
-          }
-        ]
-      },
-      "steps": [
-        {
-          "from": "ready",
-          "event": "CHAT_PAINT",
-          "payload": {
-            "n": 1
-          },
-          "expect": {
-            "state": "ready",
-            "emitCounts": {
-              "RASM_PAINT": 1
-            }
-          }
-        }
-      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      }
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "a-step-entry-shows-its-message-as-the-newest",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "entered": [],
+    "newest": -1
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ENTER",
+     "payload": {
+      "order": [
+       "s2"
+      ],
+      "staggerMs": 0
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      },
+      "entity": {
+       "entered": [
+        "s2"
+       ],
+       "newest": 2
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-entered-message-is-not-entered-again",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "entered": [
+     "s1"
+    ],
+    "newest": 1
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ENTER",
+     "payload": {
+      "order": [
+       "s1"
+      ],
+      "staggerMs": 0
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "CHAT_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-measured-bubble-height-repaints",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "heights": {}
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_MEASURED",
+     "payload": {
+      "items": [
+       {
+        "id": "ch:msg:0",
+        "width": 200,
+        "height": 44,
+        "lines": 2
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      },
+      "entity": {
+       "heights": {
+        "ch:msg:0": 44
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-same-height-again-repaints-nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "heights": {
+     "ch:msg:0": 44
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_MEASURED",
+     "payload": {
+      "items": [
+       {
+        "id": "ch:msg:0",
+        "width": 200,
+        "height": 44,
+        "lines": 2
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "CHAT_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-texts-measure-is-ignored",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "heights": {}
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_MEASURED",
+     "payload": {
+      "items": [
+       {
+        "id": "other:msg:0",
+        "width": 200,
+        "height": 44,
+        "lines": 2
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "CHAT_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-placed-panel-paint-emits-one-paint",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "entered": [],
+    "heights": {},
+    "newest": -1
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "CHAT_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reset-entry-clears-the-applied-steps",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ],
+    "resetOn": "rs"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 600,
+     "h": 300
+    },
+    "entered": [
+     "s1"
+    ],
+    "newest": 1,
+    "heights": {}
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ENTER",
+     "payload": {
+      "order": [
+       "rs"
+      ],
+      "staggerMs": 0
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      },
+      "entity": {
+       "entered": [],
+       "newest": -1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-reset-on-the-entry-changes-nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [
+     {
+      "on": "",
+      "side": "user",
+      "key": "m.ask"
+     },
+     {
+      "on": "s1",
+      "side": "agent",
+      "key": "m.one"
+     },
+     {
+      "on": "s2",
+      "side": "agent",
+      "key": "m.two"
+     }
+    ],
+    "resetOn": ""
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 600,
+     "h": 300
+    },
+    "entered": [
+     "s1"
+    ],
+    "newest": 1,
+    "heights": {}
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ENTER",
+     "payload": {
+      "order": [
+       "rs"
+      ],
+      "staggerMs": 0
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "CHAT_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "live-records-for-this-panel-make-it-live-and-fade-the-newest",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_CHAT_MESSAGES",
+     "payload": {
+      "id": "ch",
+      "messages": [
+       {
+        "id": "m1",
+        "side": "agent",
+        "text": "Kdo pride v nedeljo?",
+        "sender": "Mama",
+        "at": "09:12",
+        "image": "",
+        "ticks": ""
+       },
+       {
+        "id": "m2",
+        "side": "user",
+        "text": "Jaz!",
+        "sender": "",
+        "at": "09:13",
+        "image": "",
+        "ticks": "✓✓"
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      },
+      "entity": {
+       "live": true,
+       "newest": 1,
+       "records": [
+        {
+         "id": "m1",
+         "side": "agent",
+         "text": "Kdo pride v nedeljo?",
+         "sender": "Mama",
+         "at": "09:12",
+         "image": "",
+         "ticks": ""
+        },
+        {
+         "id": "m2",
+         "side": "user",
+         "text": "Jaz!",
+         "sender": "",
+         "at": "09:13",
+         "image": "",
+         "ticks": "✓✓"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-live-records-for-another-panel-change-nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_CHAT_MESSAGES",
+     "payload": {
+      "id": "other",
+      "messages": [
+       {
+        "id": "m1",
+        "side": "agent",
+        "text": "Kdo pride v nedeljo?",
+        "sender": "Mama",
+        "at": "09:12",
+        "image": "",
+        "ticks": ""
+       },
+       {
+        "id": "m2",
+        "side": "user",
+        "text": "Jaz!",
+        "sender": "",
+        "at": "09:13",
+        "image": "",
+        "ticks": "✓✓"
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "CHAT_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-same-live-records-again-fade-no-bubble",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Kdo pride v nedeljo?",
+      "sender": "Mama",
+      "at": "09:12",
+      "image": "",
+      "ticks": ""
+     },
+     {
+      "id": "m2",
+      "side": "user",
+      "text": "Jaz!",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "✓✓"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_CHAT_MESSAGES",
+     "payload": {
+      "id": "ch",
+      "messages": [
+       {
+        "id": "m1",
+        "side": "agent",
+        "text": "Kdo pride v nedeljo?",
+        "sender": "Mama",
+        "at": "09:12",
+        "image": "",
+        "ticks": ""
+       },
+       {
+        "id": "m2",
+        "side": "user",
+        "text": "Jaz!",
+        "sender": "",
+        "at": "09:13",
+        "image": "",
+        "ticks": "✓✓"
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      },
+      "entity": {
+       "newest": -1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-live-placed-panel-paint-emits-one-paint",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Kdo pride v nedeljo?",
+      "sender": "Mama",
+      "at": "09:12",
+      "image": "",
+      "ticks": ""
+     },
+     {
+      "id": "m2",
+      "side": "user",
+      "text": "Jaz!",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "✓✓"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "CHAT_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-wheel-over-the-conversation-scrolls-it-back",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "ch:list",
+      "x": 10,
+      "y": 200,
+      "dx": 0,
+      "dy": -100
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "back": 100
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the wheel over another region scrolls nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "other",
+      "x": 10,
+      "y": 200,
+      "dx": 0,
+      "dy": -100
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "back": 0
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "scrolling-back-stops-at-the-oldest-message",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 250
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "ch:list",
+      "x": 10,
+      "y": 200,
+      "dx": 0,
+      "dy": -200
+     },
+     "expect": {
+      "entity": {
+       "back": 300
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "scrolling-forward-stops-at-the-newest-message",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 50
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "ch:list",
+      "x": 10,
+      "y": 200,
+      "dx": 0,
+      "dy": 200
+     },
+     "expect": {
+      "entity": {
+       "back": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-press-and-drag-moves-the-conversation-with-the-pointer",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "ch:list",
+      "x": 10,
+      "y": 400
+     },
+     "expect": {
+      "entity": {
+       "dragging": true,
+       "dragY": 400
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "ch:list",
+      "x": 10,
+      "y": 450
+     },
+     "expect": {
+      "entity": {
+       "back": 50
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:list",
+      "x": 10,
+      "y": 450
+     },
+     "expect": {
+      "entity": {
+       "dragging": false,
+       "back": 50
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a move without a press on the conversation scrolls nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "ch:list",
+      "x": 10,
+      "y": 450
+     },
+     "expect": {
+      "entity": {
+       "back": 0
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-tap-on-a-voice-bubble-asks-to-play-its-audio",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Hi",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": ""
+     },
+     {
+      "id": "m2",
+      "side": "agent",
+      "text": "▶ Voice note 0:04",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": "https://orb.test/s3/family-media/voice/a.wav"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:bubble:1",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHAT_AUDIO",
+        "payload": {
+         "id": "m2",
+         "url": "https://orb.test/s3/family-media/voice/a.wav"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a tap on a text bubble plays nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Hi",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": ""
+     },
+     {
+      "id": "m2",
+      "side": "agent",
+      "text": "▶ Voice note 0:04",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": "https://orb.test/s3/family-media/voice/a.wav"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:bubble:0",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {
+      "neverEmits": [
+       "CHAT_AUDIO"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a tap past the last bubble plays nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Hi",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": ""
+     },
+     {
+      "id": "m2",
+      "side": "agent",
+      "text": "▶ Voice note 0:04",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": "https://orb.test/s3/family-media/voice/a.wav"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:bubble:7",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {
+      "neverEmits": [
+       "CHAT_AUDIO"
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

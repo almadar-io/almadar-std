@@ -1,0 +1,487 @@
+{
+ "atom": "connect/atoms/std-push.lolo",
+ "trait": "FcmClient",
+ "note": "FCM HTTP v1 sending with a minted service-account token.",
+ "cases": [
+  {
+   "id": "a-send-posts-the-http-v1-message-and-a-2xx-answers-ok",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "defaults": [
+    "FcmHttp",
+    "FcmHttpFrame"
+   ],
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_RESULT",
+        "payload": {
+         "statusCode": 200,
+         "ok": true,
+         "expired": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-401-asks-the-credential-store-for-a-token-and-fails-with-its-reason-when-none-is-held",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "defaults": [
+    "FcmHttp",
+    "FcmHttpFrame"
+   ],
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 401,
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_FAILED",
+        "payload": {
+         "message": "The FCM access token could not be minted: this host holds no credential store that can connect"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FCM_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second 401 after minting fails",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "defaults": [
+    "FcmHttp",
+    "FcmHttpFrame"
+   ],
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 401,
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_FAILED"
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 401,
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_FAILED",
+        "payload": {
+         "message": "FCM refused the minted access token: 401"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FCM_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unregistered-token-answers-expired",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "defaults": [
+    "FcmHttp",
+    "FcmHttpFrame"
+   ],
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 404,
+      "body": "{\"error\":{\"status\":\"NOT_FOUND\",\"details\":[{\"errorCode\":\"UNREGISTERED\"}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_RESULT",
+        "payload": {
+         "statusCode": 404,
+         "ok": false,
+         "expired": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a 400 that is not unregistered is not expired",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "defaults": [
+    "FcmHttp",
+    "FcmHttpFrame"
+   ],
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 400,
+      "body": "{\"error\":{\"status\":\"INVALID_ARGUMENT\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_RESULT",
+        "payload": {
+         "statusCode": 400,
+         "ok": false,
+         "expired": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-5xx-fails",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "defaults": [
+    "FcmHttp",
+    "FcmHttpFrame"
+   ],
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 503,
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_FAILED",
+        "payload": {
+         "message": "FCM returned 503"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no token sends nothing",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "",
+      "title": "t",
+      "body": "b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "FCM_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no project sends nothing",
+   "config": {},
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_FAILED",
+        "payload": {
+         "message": "fcm.send: the fcmProject knob names no Firebase project"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FCM_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a token the credential store did not connect fails",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "steps": [
+    {
+     "event": "FCM_CONNECTED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_FAILED",
+        "payload": {
+         "message": "The credential store did not connect the FCM service account"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-connected-token-sends-the-held-message-again",
+   "config": {
+    "fcmProject": "family-test"
+   },
+   "defaults": [
+    "FcmHttp",
+    "FcmHttpFrame"
+   ],
+   "steps": [
+    {
+     "event": "FCM_SEND",
+     "payload": {
+      "token": "tok-1",
+      "title": "Mama",
+      "body": "Hi",
+      "url": "/"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_CONNECTED",
+     "payload": {
+      "connected": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_HTTP_SEND",
+        "payload": {
+         "key": "fcm",
+         "method": "POST",
+         "target": "/v1/projects/family-test/messages:send",
+         "body": "eyJtZXNzYWdlIjp7InRva2VuIjoidG9rLTEiLCJub3RpZmljYXRpb24iOnsidGl0bGUiOiJNYW1hIiwiYm9keSI6IkhpIn0sImRhdGEiOnsidXJsIjoiLyJ9fX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FCM_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FCM_SEND_RESULT",
+        "payload": {
+         "ok": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

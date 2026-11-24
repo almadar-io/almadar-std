@@ -2,7 +2,7 @@ app std-push [
   version: "2.0.0",
   description: "std-push — Web Push delivery to a browser PushSubscription, done in .lolo over std-http-client: PUSH_SEND checks the subscription, draws a 16-byte salt, runs an ephemeral ECDH P-256 with the subscription key, derives the content key with HKDF-SHA256 and encrypts the notification as aes128gcm records of 4096 bytes (RFC 8291, RFC 8188), signs a VAPID ES256 token (RFC 8292) with the stored private key, and posts it to the subscription endpoint. A push service reply answers PUSH_SEND_RESULT {statusCode, ok, expired} (expired when the subscription is gone, 404 or 410); a 5xx reply, a transport failure, an invalid subscription or VAPID setting, an endpoint host outside pushHosts answers PUSH_SEND_FAILED with the message. The endpoint host must be one of the push services composed below and in the app egress list.",
   env: ["VAPID_PUBLIC_KEY"],
-  egress: ["https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
+  egress: ["https://oauth2.googleapis.com", "https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
 ]
 uses Spec from "almadar-std/push"
 uses Http from "std/behaviors/std-http-client"
@@ -387,5 +387,155 @@ orbital PushOrbital {
     }
   }
 
-  page boot as PushPage -> PushClient, PushFcmHttp, PushFcmHttpFrame, PushAndroidHttp, PushAndroidHttpFrame, PushMozillaHttp, PushMozillaHttpFrame, PushAppleHttp, PushAppleHttpFrame, PushWnsHttp, PushWnsHttpFrame
+  entity FcmDelivery [runtime] {
+    id : string!
+    token : string @description "The device registration token of the send in flight." = ""
+    body : string @description "The FCM HTTP v1 message of the send in flight, as JSON text." = ""
+    minted : boolean @description "Whether this send already asked the credential store to mint the access token." = false
+  }
+
+  trait FcmHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      FcmHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait FcmHttp = Http.traits.HttpClient {
+    config {
+      host: "fcm.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "fcm.googleapis.com"
+      credential: "FCM_ACCESS_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      FcmClient.FCM_HTTP_SEND -> HTTP_SEND
+      FcmHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      FcmHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      FcmHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait FcmClient -> FcmDelivery {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      FCM_SEND -> idle when (or (= @payload.token "") (= @config.fcmProject ""))
+        (emit FCM_SEND_FAILED { message: (if (= @payload.token "") "fcm.send: a device registration token is required" "fcm.send: the fcmProject knob names no Firebase project") })
+      FCM_SEND -> idle when (and (!= @payload.token "") (!= @config.fcmProject ""))
+        (set @entity.token @payload.token)
+        (set @entity.minted false)
+        (set @entity.body (json/stringify { message: { token: @payload.token, notification: { title: @payload.title, body: @payload.body }, data: { url: (default @payload.url "") } } }))
+        (emit FCM_DISPATCH {})
+      FCM_DISPATCH -> idle
+        (emit FCM_HTTP_SEND { key: "fcm", method: "POST", target: (str/concat "/v1/projects/" @config.fcmProject "/messages:send"), headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string @entity.body), stream: "none" })
+      FCM_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit FCM_SEND_RESULT { statusCode: @payload.status, ok: true, expired: false })
+      FCM_REPLIED -> idle when (and (or (= @payload.status 401) (= @payload.status 403)) (not @entity.minted))
+        (set @entity.minted true)
+        (credential-connect { credential: @config.accessTokenCredential, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccountCredential, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.fcmScope " ") } { emit: { success: FCM_CONNECTED, failure: FCM_CONNECT_FAILED } })
+      FCM_REPLIED -> idle when (and (or (= @payload.status 401) (= @payload.status 403)) @entity.minted)
+        (emit FCM_SEND_FAILED { message: (str/concat "FCM refused the minted access token: " @payload.status) })
+      FCM_REPLIED -> idle when (>= @payload.status 500)
+        (emit FCM_SEND_FAILED { message: (str/concat "FCM returned " @payload.status) })
+      FCM_REPLIED -> idle when (and (>= @payload.status 300) (< @payload.status 500) (!= @payload.status 401) (!= @payload.status 403))
+        (emit FCM_SEND_RESULT { statusCode: @payload.status, ok: false, expired: (or (= @payload.status 404) (str/includes @payload.body "UNREGISTERED")) })
+      FCM_HTTP_FAILED -> idle
+        (emit FCM_SEND_FAILED { message: (str/concat "FCM request failed: " (default @payload.error "")) })
+      FCM_CONNECTED -> idle when (= @payload.connected true)
+        (emit FCM_DISPATCH {})
+      FCM_CONNECTED -> idle when (= @payload.connected false)
+        (emit FCM_SEND_FAILED { message: "The credential store did not connect the FCM service account" })
+      FCM_CONNECT_FAILED -> idle
+        (emit FCM_SEND_FAILED { message: (str/concat "The FCM access token could not be minted: " (default @payload.error "")) })
+    }
+
+    emits {
+      FCM_SEND_RESULT -> external {
+        statusCode : number!
+        ok : boolean!
+        expired : boolean!
+      }
+        @description "FCM answered below 500: ok is true for a 2xx, expired is true when the device token is no longer registered (404 or UNREGISTERED) and should be dropped."
+        @synonyms "fcm sent, android push delivered"
+      FCM_SEND_FAILED -> external {
+        message : string!
+      }
+        @description "The FCM message was not sent: no token or project, a refused or unmintable access token, a 5xx or a transport failure."
+      FCM_HTTP_SEND -> external {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the FCM HTTP v1 request, for FcmHttp."
+        @tier "internal"
+      FCM_DISPATCH { }
+        @description "Internal: send the held message."
+        @tier "internal"
+      FCM_CONNECTED {
+        connected : boolean!
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "internal"
+      FCM_CONNECT_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: the access token could not be minted."
+        @tier "internal"
+    }
+
+    listens {
+      FcmHttp.HTTP_REPLIED -> FCM_REPLIED with { status: ?status, body: (default (bytes/to-string ?body) "") }
+      FcmHttp.HTTP_FAILED -> FCM_HTTP_FAILED with { error: ?error, kind: ?kind }
+      FCM_SEND -> input {
+        token : string!
+        title : string!
+        body : string!
+        url : string?
+      }
+        @description "Send a notification to an Android device by its FCM registration token, through the FCM HTTP v1 API; url rides in the message data."
+        @synonyms "android push, fcm notification, firebase cloud messaging"
+      FCM_REPLIED {
+        status : number!
+        body : string!
+      }
+      FCM_HTTP_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+
+    config {
+      fcmProject : string = ""
+        @label "Firebase project"
+        @description "The Firebase project id the FCM HTTP v1 messages are sent through (projects/<id>/messages:send)."
+        @synonyms "fcm project, firebase project id"
+        @tier "infra"
+      accessTokenCredential : secret = "FCM_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "Name of the credential the minted FCM access token is kept in; FcmHttp sends it as the bearer."
+        @tier "infra"
+      fcmScope : string = "https://www.googleapis.com/auth/firebase.messaging"
+        @label "Token scope"
+        @description "The OAuth scopes the service-account token is minted for, separated by spaces."
+        @tier "infra"
+      serviceAccountCredential : secret = "FIREBASE_SERVICE_ACCOUNT"
+        @label "Service account credential"
+        @description "Name of the credential holding the service account JSON the credential store signs the token request with; the program never holds it."
+        @tier "infra"
+      tokenUrl : string = "https://oauth2.googleapis.com/token"
+        @label "Token endpoint"
+        @description "The Google OAuth token endpoint the credential store exchanges the signed service-account assertion at."
+        @tier "infra"
+    }
+  }
+
+  page boot as PushPage -> PushClient, FcmClient, FcmHttp, FcmHttpFrame, PushFcmHttp, PushFcmHttpFrame, PushAndroidHttp, PushAndroidHttpFrame, PushMozillaHttp, PushMozillaHttpFrame, PushAppleHttp, PushAppleHttpFrame, PushWnsHttp, PushWnsHttpFrame
 }

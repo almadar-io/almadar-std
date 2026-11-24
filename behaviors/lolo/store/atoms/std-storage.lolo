@@ -1,10 +1,11 @@
 app std-storage [
   version: "1.3.0",
   description: "std-storage — S3-compatible object storage over SigV4-signed HTTP, signed in .lolo and sent through the composed std-http-keyed under keyed std-retry and std-timeout, so every call (upload, batch item, download, list, delete, presigned url) runs on its own row under its own key and concurrent calls stay independent. The host comes from the STORAGE_S3_HOST environment variable (granted as an env-anchored net entry, read at boot) and the signing region from STORAGE_S3_REGION (the region knob when unset), so a virtual-hosted bucket host, a regional endpoint or an emulator is a deployment setting. STORAGE_UPLOAD stores one object (a file payload with a base64 data URL, or a key + content pair), STORAGE_UPLOAD_MANY stores a batch one after another, STORAGE_DOWNLOAD returns an object as base64, STORAGE_LIST lists keys, STORAGE_DELETE removes one, STORAGE_GET_SIGNED_URL presigns a get or put url. A request that reaches the store is retried on 429, 500, 502, 503, 504, a timeout or a transport failure: three attempts in all, 100 then 200 ms apart, each attempt signed again with a fresh date. Every action answers with its result event, or STORAGE_FAILED ({code, message}). One signing step (STORAGE_SIGN, STORAGE_SIGN_KEY, STORAGE_SIGN_KEYED) builds the canonical request, the string to sign and the signature for every request and every presigned url; the secret access key never enters program data, it is a credential slot of hmac/sha. The StorageClient tls and port knobs and the StorageHttp tls and port must agree, since the signed host header is the host the client sends.",
-  env: ["STORAGE_S3_HOST", "STORAGE_S3_REGION", "STORAGE_ACCESS_KEY_ID"],
+  env: ["STORAGE_S3_HOST", "STORAGE_S3_REGION", "STORAGE_ACCESS_KEY_ID", "STORAGE_PUBLIC_URL"],
   net: { env STORAGE_S3_HOST, 443: [tcp] }
 ]
 uses Keyed from "std/behaviors/std-http-keyed"
+uses SigV4 from "std/behaviors/std-sigv4"
 uses Timeout from "std/behaviors/std-timeout"
 uses Retry from "std/behaviors/std-retry"
 type HttpHeader = { name : string!, value : string! }
@@ -25,6 +26,7 @@ orbital StorageOrbital {
     authority : string @description "The host header value: the host, plus the port when it is not the scheme default." = ""
     origin : string @description "scheme://authority." = ""
     keyId : string @description "The S3 access key id STORAGE_ACCESS_KEY_ID held at boot; on a call row, the id it is signed with." = ""
+    publicUrl : string @description "The public url base STORAGE_PUBLIC_URL held at boot (empty answers origin urls); on a call row, the base its public upload answers." = ""
     regionName : string @description "On the client, the region STORAGE_S3_REGION held at boot (empty selects the region knob); on a call row, the region it is signed for." = ""
     verb : string @description "The call this row runs: put, download, list, delete or signed; empty when none." = ""
     lastStatus : number @description "The last retryable status answered; 0 when the last failure had no response." = 0
@@ -44,6 +46,12 @@ orbital StorageOrbital {
     putFileKind : string @description "The declared mime type of a put." = ""
     putEtag : string @description "The etag answered for a put." = ""
     batch : StorageBatch? @description "The batch a batch put belongs to." = null
+  }
+
+  trait StorageSigner = SigV4.traits.SigV4Signer {
+    listens {
+      StorageCall.STORAGE_SIGV4 -> SIGV4_SIGN
+    }
   }
 
   trait StorageKeyed = Keyed.traits.HttpKeyed {
@@ -409,6 +417,7 @@ orbital StorageOrbital {
         (os/getenv "STORAGE_S3_HOST" { key: "host" emit: { success: STORAGE_ENV_HOST, failure: STORAGE_ENV_HOST_UNREAD } })
         (os/getenv "STORAGE_S3_REGION" { key: "region" emit: { success: STORAGE_ENV_REGION, failure: STORAGE_ENV_REGION_UNREAD } })
         (os/getenv "STORAGE_ACCESS_KEY_ID" { key: "keyid" emit: { success: STORAGE_ENV_KEY_ID, failure: STORAGE_ENV_KEY_ID_UNREAD } })
+        (os/getenv "STORAGE_PUBLIC_URL" { key: "public" emit: { success: STORAGE_ENV_PUBLIC, failure: STORAGE_ENV_PUBLIC_UNREAD } })
       STORAGE_ENV_HOST -> idle
         (set @entity.hostText (str/trim (default @payload.value "")))
         (set @entity.authority (if (= (str/trim (default @payload.value "")) "") "" (str/concat (str/trim (default @payload.value "")) (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)))))
@@ -423,9 +432,13 @@ orbital StorageOrbital {
         (set @entity.keyId (str/trim (default @payload.value "")))
       STORAGE_ENV_KEY_ID_UNREAD -> idle
         (emit STORAGE_FAILED { message: (str/concat "Storage access key id could not be read: " (default @payload.error "")) })
+      STORAGE_ENV_PUBLIC -> idle
+        (set @entity.publicUrl (str/trim (default @payload.value "")))
+      STORAGE_ENV_PUBLIC_UNREAD -> idle
+        (emit STORAGE_FAILED { message: (str/concat "Storage public url could not be read: " (default @payload.error "")) })
       STORAGE_REQUEST -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (emit STORAGE_READY { key: (str/concat @payload.verb ":" @entity.seq), verb: @payload.verb, method: @payload.method, bucket: @payload.bucket, objKey: @payload.objKey, query: @payload.query, headers: @payload.headers, b64: @payload.b64, expires: @payload.expires, putMode: @payload.putMode, putSize: @payload.putSize, putPublic: @payload.putPublic, putFileName: @payload.putFileName, putFileSize: @payload.putFileSize, putFileKind: @payload.putFileKind, putEtag: @payload.putEtag, batch: @payload.batch, hostText: @entity.hostText, keyId: @entity.keyId, authority: @entity.authority, origin: @entity.origin, region: (if (= @entity.regionName "") @config.region @entity.regionName) })
+        (emit STORAGE_READY { key: (str/concat @payload.verb ":" @entity.seq), verb: @payload.verb, method: @payload.method, bucket: @payload.bucket, objKey: @payload.objKey, query: @payload.query, headers: @payload.headers, b64: @payload.b64, expires: @payload.expires, putMode: @payload.putMode, putSize: @payload.putSize, putPublic: @payload.putPublic, putFileName: @payload.putFileName, putFileSize: @payload.putFileSize, putFileKind: @payload.putFileKind, putEtag: @payload.putEtag, batch: @payload.batch, hostText: @entity.hostText, keyId: @entity.keyId, authority: @entity.authority, origin: @entity.origin, publicUrl: @entity.publicUrl, region: (if (= @entity.regionName "") @config.region @entity.regionName) })
     }
 
     emits {
@@ -457,6 +470,7 @@ orbital StorageOrbital {
         keyId : string!
         authority : string!
         origin : string!
+        publicUrl : string
         region : string!
       }
         @description "Internal: a numbered request with the environment, handed to the row of its key in StorageCall."
@@ -492,6 +506,14 @@ orbital StorageOrbital {
         value : string
       }
       STORAGE_ENV_KEY_ID_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_PUBLIC {
+        value : string
+      }
+      STORAGE_ENV_PUBLIC_UNREAD {
         error : string
         kind : string
         key : string
@@ -558,6 +580,7 @@ orbital StorageOrbital {
         (set @entity.authority @payload.authority)
         (set @entity.origin @payload.origin)
         (set @entity.regionName @payload.region)
+        (set @entity.publicUrl (default @payload.publicUrl ""))
         (if (= @payload.verb "signed")
           (emit STORAGE_SIGN { tag: @entity.id, mode: "signed", method: @payload.method, bucket: @payload.bucket, key: @payload.objKey, query: @payload.query, headers: [], b64: "", expires: @payload.expires })
           (emit STORAGE_RETRY_START { key: (as @payload.key CallKey) }))
@@ -575,7 +598,7 @@ orbital StorageOrbital {
         (set @entity.lastBody @payload.body)
         (emit STORAGE_RETRY_FAILED { key: (as @payload.key CallKey), error: (str/concat "status " @payload.status) })
       STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (or @entity.putPublic @config.bucketPublic))
-        (emit STORAGE_PUT_DONE { url: (if (!= @config.publicUrlBase "") (str/concat (if (str/endsWith @config.publicUrlBase "/") (str/slice @config.publicUrlBase 0 (- (str/len @config.publicUrlBase) 1)) @config.publicUrlBase) "/" @entity.reqKey) (str/concat @entity.origin @config.pathPrefix "/" (if @config.pathStyle (str/concat @entity.reqBucket "/") "") @entity.reqKey)) })
+        (emit STORAGE_PUT_DONE { url: (if (!= @entity.publicUrl "") (str/concat (if (str/endsWith @entity.publicUrl "/") (str/slice @entity.publicUrl 0 (- (str/len @entity.publicUrl) 1)) @entity.publicUrl) "/" @entity.reqKey) (str/concat @entity.origin @config.pathPrefix "/" (if @config.pathStyle (str/concat @entity.reqBucket "/") "") @entity.reqKey)) })
       STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (or @entity.putPublic @config.bucketPublic)))
         (emit STORAGE_SIGN { tag: @entity.id, mode: "put", method: "GET", bucket: @entity.reqBucket, key: @entity.reqKey, query: [{ name: "x-amz-checksum-mode", value: "ENABLED" }, { name: "x-id", value: "GetObject" }], headers: [], b64: "", expires: 3600 })
       STORAGE_PUT_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
@@ -692,74 +715,30 @@ orbital StorageOrbital {
         (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "Storage host not configured: set STORAGE_S3_HOST" })
       STORAGE_SIGN -> idle when (and (!= @entity.keyId "") (!= @entity.hostText ""))
         (let ((region @entity.regionName)
-              (day (time/format @now "YYYYMMDD"))
               (stamp (str/concat (time/format @now "YYYYMMDDTHHmmss") "Z"))
               (presign (!= @payload.mode "header"))
               (encs (array/map [@payload.bucket @payload.key] (fn s (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @s) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29")))))
-          (let ((scope (str/concat @day "/" @region "/s3/aws4_request"))
+          (let ((scope (str/concat (time/format @now "YYYYMMDD") "/" @region "/s3/aws4_request"))
                 (path (str/concat @config.pathPrefix "/" (if @config.pathStyle (str/concat (default (array/nth @encs 0) "") "/") "") (str/replaceAll (default (array/nth @encs 1) "") "%2F" "/"))))
-            (let ((params (if @presign (array/concat @payload.query [{ name: "X-Amz-Algorithm", value: "AWS4-HMAC-SHA256" }, { name: "X-Amz-Credential", value: (str/concat @entity.keyId "/" @scope) }, { name: "X-Amz-Date", value: @stamp }, { name: "X-Amz-Expires", value: (str/concat "" @payload.expires) }, { name: "X-Amz-SignedHeaders", value: "host" }]) @payload.query)))
-              (let ((cq (str/join (array/map (array/sort (array/map @params (fn q { name: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @q.name) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29"), value: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @q.value) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") })) "name") (fn q (str/concat @q.name "=" @q.value))) "&"))
-                    (ph (if @presign "UNSIGNED-PAYLOAD" (hash/sha 256 @payload.b64 "hex" "bytes"))))
-                (if (= @ph null)
-                  (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The upload content could not be hashed" })
-                  (let ((sent (array/concat @payload.headers [{ name: "x-amz-content-sha256", value: @ph }, { name: "x-amz-date", value: @stamp }])))
-                    (let ((hdrs (array/sort (if @presign [{ name: "host", value: @entity.authority }] (array/append @sent { name: "host", value: @entity.authority })) "name")))
-                      (let ((signedNames (str/join (array/map @hdrs (fn h @h.name)) ";")))
-                        (let ((creq (str/join [@payload.method, @path, @cq, (str/join (array/map @hdrs (fn h (str/concat @h.name ":" (str/trim @h.value) "\n"))) ""), @signedNames, @ph] "\n")))
-                          (let ((ch (hash/sha 256 @creq "hex")))
-                            (if (= @ch null)
-                              (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                              (emit STORAGE_SIGN_KEY {
-                                day: @day,
-                                region: @region,
-                                service: "s3",
-                                tag: @payload.tag,
-                                mode: @payload.mode,
-                                method: @payload.method,
-                                target: (str/concat @path (if (= @cq "") "" (str/concat "?" @cq))),
-                                origin: @entity.origin,
-                                headers: (if @presign [] @sent),
-                                b64: @payload.b64,
-                                sts: (str/join ["AWS4-HMAC-SHA256", @stamp, @scope, @ch] "\n"),
-                                signedNames: @signedNames,
-                                scope: @scope
-                              }))))))))))))
-      STORAGE_SIGN_KEY -> idle
-        (let ((kd (hmac/sha 256 "credential" @config.secretAccessKey @payload.day "base64" "text" "AWS4")))
-          (if (= @kd null)
-            (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "Storage credential not configured" })
-            (let ((bd (bytes/from-base64 @kd)))
-              (if (= @bd null)
-                (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                (let ((kr (hmac/sha 256 "bytes" @bd @payload.region "base64")))
-                  (if (= @kr null)
-                    (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                    (let ((br (bytes/from-base64 @kr)))
-                      (if (= @br null)
-                        (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                        (let ((ks (hmac/sha 256 "bytes" @br @payload.service "base64")))
-                          (if (= @ks null)
-                            (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                            (let ((bs (bytes/from-base64 @ks)))
-                              (if (= @bs null)
-                                (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                                (let ((kg (hmac/sha 256 "bytes" @bs "aws4_request" "base64")))
-                                  (if (= @kg null)
-                                    (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                                    (emit STORAGE_SIGN_KEYED { kDate: @kd, signing: @kg, tag: @payload.tag, mode: @payload.mode, method: @payload.method, target: @payload.target, origin: @payload.origin, headers: @payload.headers, b64: @payload.b64, sts: @payload.sts, signedNames: @payload.signedNames, scope: @payload.scope })))))))))))))))
-      STORAGE_SIGN_KEYED -> idle
-        (let ((kb (bytes/from-base64 @payload.signing)) (body (bytes/from-base64 @payload.b64)))
-          (if (or (= @kb null) (= @body null))
-            (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-            (let ((sig (hmac/sha 256 "bytes" @kb @payload.sts "hex")))
-              (if (= @sig null)
-                (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                (if (= @payload.mode "header")
-                  (emit STORAGE_HTTP_SEND { key: @payload.tag, method: @payload.method, target: @payload.target, headers: (array/append @payload.headers { name: "authorization", value: (str/concat "AWS4-HMAC-SHA256 Credential=" @entity.keyId "/" @payload.scope ", SignedHeaders=" @payload.signedNames ", Signature=" @sig) }), body: @body, stream: "none", host: @entity.hostText })
-                  (if (= @payload.mode "signed")
-                    (emit STORAGE_SIGNED_REPLIED { url: (str/concat @payload.origin @payload.target "&X-Amz-Signature=" @sig) })
-                    (emit STORAGE_PUT_PRESIGNED { url: (str/concat @payload.origin @payload.target "&X-Amz-Signature=" @sig) })))))))
+            (let ((params (if @presign (array/concat @payload.query [{ name: "X-Amz-Algorithm", value: "AWS4-HMAC-SHA256" }, { name: "X-Amz-Credential", value: (str/concat @entity.keyId "/" @scope) }, { name: "X-Amz-Date", value: @stamp }, { name: "X-Amz-Expires", value: (str/concat "" @payload.expires) }, { name: "X-Amz-SignedHeaders", value: "host" }]) @payload.query))
+                  (ph (if @presign "UNSIGNED-PAYLOAD" (hash/sha 256 @payload.b64 "hex" "bytes"))))
+              (if (= @ph null)
+                (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The upload content could not be hashed" })
+                (let ((sent (array/concat @payload.headers [{ name: "x-amz-content-sha256", value: @ph }, { name: "x-amz-date", value: @stamp }])))
+                  (emit STORAGE_SIGV4 { tag: @payload.tag, method: @payload.method, path: @path, query: @params, headers: (if @presign [{ name: "host", value: @entity.authority }] (array/append @sent { name: "host", value: @entity.authority })), payloadHash: @ph, stamp: @stamp, region: @region, service: "s3", echo: [{ name: "mode", value: @payload.mode }, { name: "method", value: @payload.method }, { name: "path", value: @path }, { name: "origin", value: @entity.origin }, { name: "keyId", value: @entity.keyId }, { name: "host", value: @entity.hostText }, { name: "b64", value: @payload.b64 }] }))))))
+      STORAGE_SIGNED -> idle
+        (let ((mode (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "mode"))) (fn e @e.value))) ""))
+              (target (str/concat (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "path"))) (fn e @e.value))) "") (if (= @payload.canonicalQuery "") "" (str/concat "?" @payload.canonicalQuery)))))
+          (if (= @mode "header")
+            (let ((body (bytes/from-base64 (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "b64"))) (fn e @e.value))) ""))))
+              (if (= @body null)
+                (emit STORAGE_SIGN_FAILED { mode: @mode, message: "The request could not be signed" })
+                (emit STORAGE_HTTP_SEND { key: @payload.tag, method: (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "method"))) (fn e @e.value))) ""), target: @target, headers: (array/append (array/filter @payload.headers (fn h (!= @h.name "host"))) { name: "authorization", value: (str/concat "AWS4-HMAC-SHA256 Credential=" (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "keyId"))) (fn e @e.value))) "") "/" @payload.scope ", SignedHeaders=" @payload.signedHeaders ", Signature=" @payload.signature) }), body: @body, stream: "none", host: (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "host"))) (fn e @e.value))) "") })))
+            (if (= @mode "signed")
+              (emit STORAGE_SIGNED_REPLIED { url: (str/concat (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "origin"))) (fn e @e.value))) "") @target "&X-Amz-Signature=" @payload.signature) })
+              (emit STORAGE_PUT_PRESIGNED { url: (str/concat (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "origin"))) (fn e @e.value))) "") @target "&X-Amz-Signature=" @payload.signature) }))))
+      STORAGE_SIGV4_FAILED -> idle
+        (emit STORAGE_SIGN_FAILED { mode: (default (array/first (array/map (array/filter @payload.echo (fn e (= @e.name "mode"))) (fn e @e.value))) ""), message: @payload.message })
     }
 
     emits {
@@ -855,38 +834,19 @@ orbital StorageOrbital {
       }
         @description "Internal: a request or presign to sign (mode header signs a request, signed and put presign a url); builds the canonical request and the string to sign."
         @tier "secondary"
-      STORAGE_SIGN_KEY -> internal {
-        day : string!
+      STORAGE_SIGV4 -> external {
+        tag : string!
+        method : string!
+        path : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        payloadHash : string!
+        stamp : string!
         region : string!
         service : string!
-        tag : string!
-        mode : string!
-        method : string!
-        target : string!
-        origin : string!
-        headers : [HttpHeader]!
-        b64 : string!
-        sts : string!
-        signedNames : string!
-        scope : string!
+        echo : [HttpHeader]!
       }
-        @description "Internal: a string to sign, ready for the signing key derived from the secret access key for that day, region and service."
-        @tier "secondary"
-      STORAGE_SIGN_KEYED -> internal {
-        kDate : string!
-        signing : string!
-        tag : string!
-        mode : string!
-        method : string!
-        target : string!
-        origin : string!
-        headers : [HttpHeader]!
-        b64 : string!
-        sts : string!
-        signedNames : string!
-        scope : string!
-      }
-        @description "Internal: the derived signing key (base64), with the string to sign; answers the signed request or the presigned url."
+        @description "Internal: the request description handed to the composed std-sigv4 signer, with the call's own context in echo."
         @tier "secondary"
       STORAGE_HTTP_SEND {
         key : string!
@@ -943,6 +903,7 @@ orbital StorageOrbital {
         keyId : string!
         authority : string!
         origin : string!
+        publicUrl : string
         region : string!
       }
       STORAGE_PUT_REPLIED {
@@ -1001,34 +962,21 @@ orbital StorageOrbital {
         b64 : string!
         expires : number!
       }
-      STORAGE_SIGN_KEY {
-        day : string!
-        region : string!
-        service : string!
+      StorageSigner.SIGV4_SIGNED -> STORAGE_SIGNED per @payload.tag
+      StorageSigner.SIGV4_FAILED -> STORAGE_SIGV4_FAILED per @payload.tag
+      STORAGE_SIGNED {
         tag : string!
-        mode : string!
-        method : string!
-        target : string!
-        origin : string!
-        headers : [HttpHeader]!
-        b64 : string!
-        sts : string!
-        signedNames : string!
+        signature : string!
+        signedHeaders : string!
+        canonicalQuery : string!
         scope : string!
+        headers : [HttpHeader]!
+        echo : [HttpHeader]!
       }
-      STORAGE_SIGN_KEYED {
-        kDate : string!
-        signing : string!
+      STORAGE_SIGV4_FAILED {
         tag : string!
-        mode : string!
-        method : string!
-        target : string!
-        origin : string!
-        headers : [HttpHeader]!
-        b64 : string!
-        sts : string!
-        signedNames : string!
-        scope : string!
+        message : string!
+        echo : [HttpHeader]!
       }
       STORAGE_ATTEMPT {
         key : string!
@@ -1059,18 +1007,8 @@ orbital StorageOrbital {
         @tier "infra"
       bucketPublic : boolean = false
         @label "Is the bucket itself publicly readable?"
-        @description "The bucket grants public reads by its own policy (for example a Cloud Storage bucket with uniform access and allUsers as object viewer), so every upload answers its public url (publicUrlBase, else the origin path) and needs no per-object acl, which such a bucket refuses."
+        @description "The bucket grants public reads by its own policy (for example a Cloud Storage bucket with uniform access and allUsers as object viewer), so every upload answers its public url (STORAGE_PUBLIC_URL, else the origin path) and needs no per-object acl, which such a bucket refuses."
         @synonyms "public bucket, bucket policy public, uniform access"
-        @tier "infra"
-      publicUrlBase : string = ""
-        @label "Public url base"
-        @description "When set, public uploads answer <base>/<key>; otherwise <origin><prefix>/<bucket>/<key> (or <origin><prefix>/<key> when the bucket is in the host)."
-        @synonyms "cdn url, public base"
-        @tier "infra"
-      secretAccessKey : secret = "STORAGE_SECRET_ACCESS_KEY"
-        @label "Secret access key credential"
-        @description "Name of the credential holding the S3 secret access key; resolved by the kernel inside hmac/sha on every signature, never held by the program."
-        @synonyms "s3 secret, aws secret"
         @tier "infra"
       pathStyle : boolean = true
         @label "Bucket in the path"
@@ -1080,5 +1018,5 @@ orbital StorageOrbital {
     }
   }
 
-  page boot as StoragePage -> StorageClient, StorageGate, StorageCall, StorageKeyed, StorageHttp, StorageTimeout, StorageRetry
+  page boot as StoragePage -> StorageClient, StorageGate, StorageCall, StorageSigner, StorageKeyed, StorageHttp, StorageTimeout, StorageRetry
 }

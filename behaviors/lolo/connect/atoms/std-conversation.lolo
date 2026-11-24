@@ -1,8 +1,8 @@
 app std-conversation [
   version: "0.1.0",
-  description: "std-conversation — the generic data mechanism of a chat conversation: the persisted message row and the coordinator that writes it. MessagePersistor owns every write to a conversation's messages: DO_CREATE persists a message stamped with the viewer's id and name and announces MESSAGE_SAVED, then MEMBERS_MENTIONED when the message mentions people; DO_DELETE removes a message (MESSAGE_DELETED); DO_PIN persists the pinned flag (MESSAGE_PINNED); DO_REACT persists the reaction set and its display roll-up and announces MESSAGE_REACTED with the reactor's emoji. Each persist failure surfaces as an error notification and its own failure event. The atom renders nothing and never reads: a consumer rebinds MessagePersistor onto its own message entity (the field names here are the contract) and listens its composer, viewer and reactor events into the DO_* inputs. With `stampTime` on, a created message also carries the dispatch's time in `timestamp`, so a conversation can be ordered and timed by it. ReadMarker owns the read state: MARK_READ { channel } upserts the signed-in viewer's own ConversationMember row (id `<channel>:<viewer>`) with `lastReadAt` now and `unreadCount` 0 and announces READ_MARKED, which reaches every open window as a persist; a message is unread for a member when it is newer than their `lastReadAt` and someone else sent it, and read by everyone once every other member's `lastReadAt` has passed it, so unread counts and read receipts are derived from one fact and no write fans out per message. An anonymous viewer marks nothing. DirectMessageOpener: OPEN_DM { id, name } opens the direct message with a person, a conversation whose id is derived from its two people (dm-<lower id>-<higher id>, the same from either side), by upserting both memberships (each named for the other person, isDirect) and announcing DM_OPENED { channel, name, peer } once both are written. MemberAdder: ADD_MEMBER { channel, channelName, id, name } upserts that person's membership (MEMBER_ADDED). ThreadRollup: REPLY_SAVED { threadRootId } (wire MESSAGE_SAVED) recounts the thread's replies and writes replyCount and repliers (each name once) on its first message (THREAD_UPDATED); a channel message recounts nothing.",
+  description: "std-conversation — the generic data mechanism of a chat conversation: the persisted message row and the coordinator that writes it. MessagePersistor owns every write to a conversation's messages: DO_CREATE persists a message stamped with the viewer's id and name and announces MESSAGE_SAVED, then MEMBERS_MENTIONED when the message mentions people; DO_DELETE removes a message (MESSAGE_DELETED); DO_PIN persists the pinned flag (MESSAGE_PINNED); DO_REACT persists the reaction set and its display roll-up and announces MESSAGE_REACTED with the reactor's emoji. Each persist failure surfaces as an error notification and its own failure event. The atom renders nothing and never reads: a consumer rebinds MessagePersistor onto its own message entity (the field names here are the contract) and listens its composer, viewer and reactor events into the DO_* inputs. With `stampTime` on, a created message also carries the dispatch's time in `timestamp`, so a conversation can be ordered and timed by it. ReadMarker owns the read state: MARK_READ { channel } upserts the signed-in viewer's own ConversationMember row (id `<channel>:<viewer>`) with `lastReadAt` now and `unreadCount` 0 and announces READ_MARKED, which reaches every open window as a persist; a message is unread for a member when it is newer than their `lastReadAt` and someone else sent it, and read by everyone once every other member's `lastReadAt` has passed it, so unread counts and read receipts are derived from one fact and no write fans out per message. An anonymous viewer marks nothing. DirectMessageOpener: OPEN_DM { id, name } opens the direct message with a person, a conversation whose id is derived from its two people (dm-<lower id>-<higher id>, the same from either side), by upserting both memberships (each named for the other person, isDirect) and announcing DM_OPENED { channel, name, peer } once both are written. MemberAdder: ADD_MEMBER { channel, channelName, id, name } upserts that person's membership (MEMBER_ADDED). TokenMessagePersistor posts for a person with no account who holds a token: POST_BY_TOKEN { token, content, channel, threadRootId, once } asks the composed std-opaque-token resolver for the token's holder (TOKEN_POST_RESOLVE out, TOKEN_POST_HOLDER or TOKEN_POST_NO_HOLDER back), and writes the message with that holder's id and name as its sender and announces TOKEN_POST_SAVED, so a caller can never name the sender; with once the row's id is the thread and the holder, so a holder posts at most one message under a thread (a vote), and a second is refused as repeat (TOKEN_POST_REFUSED). ThreadRollup: REPLY_SAVED { threadRootId } (wire MESSAGE_SAVED) recounts the thread's replies and writes replyCount and repliers (each name once) on its first message (THREAD_UPDATED); a channel message recounts nothing.",
 ]
-;; @capabilities "persist conversation messages, delete a message, pin a message, toggle an emoji reaction, announce mentioned people, mark a conversation read, read receipts, unread counts, open a direct message, add a member, thread reply counts"
+;; @capabilities "persist conversation messages, delete a message, pin a message, toggle an emoji reaction, announce mentioned people, mark a conversation read, read receipts, unread counts, open a direct message, add a member, thread reply counts, post as a token holder with no account, one vote per token holder"
 
 orbital ConversationOrbital {
 
@@ -21,6 +21,7 @@ orbital ConversationOrbital {
     timestamp : datetime @description "The date and time when the message was created." @synonyms "date, time, created_at"
     pendingId : string @description "Unique identifier for a message still being processed." @synonyms "correlationId, transactionId, pendingReference" = ""
     attachment : string @description "URL of the file attached to this message." @synonyms "file, upload, media, attachment url" = ""
+    attachmentKind : string @description "What the attachment is, as the sender declared it (for example image or audio); empty when there is none or it was not said." @synonyms "media type, attachment type" = ""
     pinned : boolean @description "Whether this message is pinned to the top of the conversation." @synonyms "starred, highlighted, saved, important" = false
     ;; One entry per reacting user per emoji, "emoji:userId" — entity fields
     ;; can't hold a map, and [string] is the proven persistent-array shape.
@@ -186,7 +187,7 @@ orbital ConversationOrbital {
 
     listens {
       DO_CREATE -> input {
-        data : { attachment : string, content : string!, channel : string!, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string, threadRootId : string }!
+        data : { attachment : string, attachmentKind : string, content : string!, channel : string!, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string, threadRootId : string }!
       }
       MESSAGE_SAVED {
         id : string
@@ -510,5 +511,154 @@ orbital ConversationOrbital {
     }
   }
 
-  page "/conversation-messages" as ConversationMessagesPage -> MessagePersistor, ReadMarker, DirectMessageOpener, MemberAdder, ThreadRollup
+  entity ConversationTokenHolder [persistent: conversationtokenholders] {
+    @create none "A substrate atom: the composing program names its own holder entity and states who may create its rows."
+    @read server "A holder row is found only by the hash of its token, on the server."
+    id : string! @description "SHA-256 (hex) of the holder's token."
+    name : string @description "The holder's display name." = ""
+  }
+
+  entity ConversationTokenPost [runtime] {
+    id : string!
+    token : string @description "The token of the post being resolved, held only until it is answered." = ""
+    content : string = ""
+    channel : string = ""
+    threadRootId : string = ""
+    once : boolean = false
+  }
+
+  ;; The sender of a post comes from the row its token resolves to, never from the viewer or the payload.
+  trait TokenMessagePersistor -> @rebindable ConversationTokenPost {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      POST_BY_TOKEN -> resolving
+        (set @entity.token ?token)
+        (set @entity.content ?content)
+        (set @entity.channel ?channel)
+        (set @entity.threadRootId ?threadRootId)
+        (set @entity.once ?once)
+        (emit TOKEN_POST_RESOLVE { key: "token-post", token: ?token })
+      ;; The write's own success is the announcement, so it reaches every open window as a persist.
+      TOKEN_POST_SAVED -> idle
+      TOKEN_POST_NOT_SAVED -> idle
+        (emit TOKEN_POST_REFUSED { code: (if (= (default ?code "") "duplicate-id") "repeat" "store"), message: (default ?error "") })
+    }
+
+    state resolving {
+      INIT -> idle
+      POST_BY_TOKEN -> resolving
+        (emit TOKEN_POST_REFUSED { code: "busy", message: "a post is already being resolved" })
+      TOKEN_POST_HOLDER -> idle when (and (= ?key "token-post") @entity.once)
+        (set @entity.token "")
+        (persist create @config.messageEntity (object/merge { id: (str/concat @entity.threadRootId ":" ?id), content: @entity.content, channel: @entity.channel, threadRootId: @entity.threadRootId, sender: ?id, senderName: (default (object/get ?row @config.holderNameField) "") } (if @config.stampTime { timestamp: @now } {})) {
+          emit: { failure: TOKEN_POST_NOT_SAVED, success: TOKEN_POST_SAVED }
+        })
+      TOKEN_POST_HOLDER -> idle when (and (= ?key "token-post") (not @entity.once))
+        (set @entity.token "")
+        (persist create @config.messageEntity (object/merge { content: @entity.content, channel: @entity.channel, threadRootId: @entity.threadRootId, sender: ?id, senderName: (default (object/get ?row @config.holderNameField) "") } (if @config.stampTime { timestamp: @now } {})) {
+          emit: { failure: TOKEN_POST_NOT_SAVED, success: TOKEN_POST_SAVED }
+        })
+      TOKEN_POST_HOLDER -> resolving when (!= ?key "token-post")
+      TOKEN_POST_NO_HOLDER -> idle when (= ?key "token-post")
+        (set @entity.token "")
+        (emit TOKEN_POST_REFUSED { code: (default ?code "unknown"), message: (default ?message "") })
+      TOKEN_POST_NO_HOLDER -> resolving when (!= ?key "token-post")
+    }
+
+    emits {
+      TOKEN_POST_SAVED -> external {
+        id : string
+        channel : string
+        sender : string
+        senderName : string
+        content : string
+        threadRootId : string
+      }
+        @description "A post was persisted with the holder its token resolved to as the sender."
+        @synonyms "stored, persisted, written"
+        @tier "domain"
+      TOKEN_POST_REFUSED -> external {
+        code : string!
+        message : string!
+      }
+        @description "Nothing was written: the token resolves to no holder (unknown), has expired, was spent (used), another post is still being resolved (busy), this holder already posted once in this thread (repeat), or the row could not be written (store)."
+        @synonyms "post refused, not posted"
+        @tier "domain"
+      TOKEN_POST_RESOLVE -> external {
+        key : string!
+        token : string!
+      }
+        @description "Ask the composed std-opaque-token resolver for the holder of this token; wire it to RESOLVE_TOKEN."
+        @tier "internal"
+      TOKEN_POST_NOT_SAVED {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      POST_BY_TOKEN -> input {
+        token : string!
+        content : string!
+        channel : string!
+        threadRootId : string!
+        once : boolean!
+      }
+        @description "Post a message for the holder of this token. The sender is read from the token's row on the server, so a caller cannot name it. threadRootId is empty for a message that starts a thread. With once true, the holder may post only one message under threadRootId (a vote, a show of hands): a second one is refused as repeat."
+        @synonyms "post as token holder, account-free post, vote by token"
+        @tier "domain"
+      TOKEN_POST_HOLDER {
+        key : string!
+        id : string!
+        row : (@entity @config.holderEntity)!
+      }
+        @description "The token resolved to this holder; wire std-opaque-token's TOKEN_RESOLVED here."
+        @tier "internal"
+      TOKEN_POST_NO_HOLDER {
+        key : string!
+        code : string
+        message : string
+      }
+        @description "The token resolved to no holder; wire std-opaque-token's TOKEN_REFUSED here."
+        @tier "internal"
+      TOKEN_POST_NOT_SAVED {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      TOKEN_POST_SAVED {
+        id : string
+        channel : string
+        sender : string
+        senderName : string
+        content : string
+        threadRootId : string
+      }
+        @tier "internal"
+    }
+
+    config {
+      messageEntity : entity = ConversationMessage
+        @label "Message rows"
+        @description "The entity a post is written to; its sender, senderName, content, channel, threadRootId and timestamp fields are the contract."
+        @tier "infra"
+      holderEntity : entity = ConversationTokenHolder
+        @label "Token holder rows"
+        @description "The entity the composed token resolver reads; a row's id is the SHA-256 of its token."
+        @tier "infra"
+      holderNameField : string = name
+        @label "Holder name field"
+        @description "The field of a holder row that holds its display name."
+        @tier "infra"
+      stampTime : boolean = false
+        @label "Stamp each post with the time"
+        @description "Write the dispatch's time into a post's `timestamp`."
+        @tier "domain"
+    }
+  }
+
+  page "/conversation-messages" as ConversationMessagesPage -> MessagePersistor, ReadMarker, DirectMessageOpener, MemberAdder, ThreadRollup, TokenMessagePersistor
 }

@@ -367,7 +367,8 @@ orbital AppLayoutOrbital {
     recipient : string @description "Who the row is for." @synonyms "recipient, user" = ""
     message : string @description "The row's text, shown in the bell's list." @synonyms "text, body" = ""
     read : boolean @description "Whether the row has been read." @synonyms "seen" = false
-    recordedAt : datetime @description "When the row was recorded." @synonyms "created at, time"
+    recordedAt : instant @description "When the row was recorded (ISO-8601 instant)." @synonyms "created at, time"
+    link : string @description "Where opening the row takes the viewer." @synonyms "url, path" = ""
   }
 
   ;; The bell's count comes from its own trait, bound to the app's notification
@@ -376,13 +377,15 @@ orbital AppLayoutOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (not @config.enabled)
+      INIT -> idle when @config.enabled
         (fetch AppLayoutUnread {
           limit: @config.maxUnread
           emit: { failure: UnreadLoadFailed, success: UnreadRowsLoaded }
           filter: (and (= (object/get @entity recipient) @user.id) (= (object/get @entity read) false))
         })
-      RECOUNT -> idle
+      RECOUNT -> idle when (not @config.enabled)
+      RECOUNT -> idle when @config.enabled
         (fetch AppLayoutUnread {
           limit: @config.maxUnread
           emit: { failure: UnreadLoadFailed, success: UnreadRowsLoaded }
@@ -426,6 +429,10 @@ orbital AppLayoutOrbital {
     }
 
     config {
+      enabled : boolean = true
+        @label "Count unread notifications?"
+        @description "Off: the counter reads nothing, for apps or pages that show no unread count."
+        @tier "presentation"
       maxUnread : number = 99
         @label "Most unread rows counted"
         @tier "policy"
