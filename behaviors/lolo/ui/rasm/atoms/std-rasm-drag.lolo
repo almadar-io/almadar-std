@@ -4,7 +4,8 @@ app std-rasm-drag [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
@@ -18,6 +19,8 @@ type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners 
 orbital RasmDragOrbital {
   entity RasmDragItem [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this drag heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     looks : Map string RasmLook = {}
     hasLooks : boolean = false
     rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
@@ -49,9 +52,17 @@ orbital RasmDragOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_PLACE -> idle
-        (set @entity.targetRects (array/concat (array/filter @entity.targetRects (fn t (not (array/some ?placed (fn p (= @p.id @t.id)))))) (array/filter ?placed (fn p (array/includes @config.targets @p.id)))))
-        (set @entity.hasRect (or @entity.hasRect (array/some ?placed (fn p (= @p.id @config.id)))))
-        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.targetRects (array/concat (array/filter @entity.targetRects (fn t (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @t.id)))))) (array/filter (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (array/includes @config.targets @p.id)))))
+        (set @entity.hasRect (or @entity.hasRect (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))))
+        (set @entity.rect (let ((mine (default (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PAGE_ORIGINS -> idle
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.targetRects (array/concat (array/filter @entity.targetRects (fn t (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @t.id)))))) (array/filter (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (array/includes @config.targets @p.id)))))
+        (set @entity.hasRect (or @entity.hasRect (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))))
+        (set @entity.rect (let ((mine (default (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       REPAINT -> idle when (and @entity.hasLooks @entity.hasRect)
@@ -61,7 +72,7 @@ orbital RasmDragOrbital {
             (x (+ @r.x @entity.dx))
             (y (+ @r.y @entity.dy))
           )
-          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.z, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (if (and (!= @look.textColor null) (!= @look.font null)) (str/concat @config.id ":label") null), order: @config.order, focused: false } }] }))
+          (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.z, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (if (and (!= @look.textColor null) (!= @look.font null)) (str/concat @config.id ":label") null), order: @config.order, focused: false } }] }))
       RASM_POINTER -> dragging when (and (= ?id @config.id) (= ?kind "down"))
         (set @entity.grabX ?x)
         (set @entity.grabY ?y)
@@ -87,9 +98,17 @@ orbital RasmDragOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_PLACE -> dragging
-        (set @entity.targetRects (array/concat (array/filter @entity.targetRects (fn t (not (array/some ?placed (fn p (= @p.id @t.id)))))) (array/filter ?placed (fn p (array/includes @config.targets @p.id)))))
-        (set @entity.hasRect (or @entity.hasRect (array/some ?placed (fn p (= @p.id @config.id)))))
-        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.targetRects (array/concat (array/filter @entity.targetRects (fn t (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @t.id)))))) (array/filter (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (array/includes @config.targets @p.id)))))
+        (set @entity.hasRect (or @entity.hasRect (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))))
+        (set @entity.rect (let ((mine (default (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PAGE_ORIGINS -> dragging
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.targetRects (array/concat (array/filter @entity.targetRects (fn t (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @t.id)))))) (array/filter (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (array/includes @config.targets @p.id)))))
+        (set @entity.hasRect (or @entity.hasRect (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))))
+        (set @entity.rect (let ((mine (default (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       REPAINT -> dragging when (and @entity.hasLooks @entity.hasRect)
@@ -99,7 +118,7 @@ orbital RasmDragOrbital {
             (x (+ @r.x @entity.dx))
             (y (+ @r.y @entity.dy))
           )
-          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.dragZ, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.dragZ, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.dragZ }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (if (and (!= @look.textColor null) (!= @look.font null)) (str/concat @config.id ":label") null), order: @config.order, focused: false } }] }))
+          (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.dragZ, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.dragZ, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.dragZ }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (if (and (!= @look.textColor null) (!= @look.font null)) (str/concat @config.id ":label") null), order: @config.order, focused: false } }] }))
       RASM_POINTER -> dragging when (and (and (= ?id @config.id) (= ?kind "move")) (!= (let ((hit (default (array/find @entity.targetRects (fn t (and (and (>= ?x @t.rect.x) (<= ?x (+ @t.rect.x @t.rect.w))) (and (>= ?y @t.rect.y) (<= ?y (+ @t.rect.y @t.rect.h)))))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @hit.id) @entity.over))
         (set @entity.dx (- ?x @entity.grabX))
         (set @entity.dy (- ?y @entity.grabY))
@@ -129,6 +148,8 @@ orbital RasmDragOrbital {
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this drag read are read again at the page."
       RASM_BOOT { }
         @description "The surface mounted: take the starting state."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
@@ -146,6 +167,7 @@ orbital RasmDragOrbital {
         z : number!
         nodes : [node]!
         texts : [RasmText]!
+        origin : string
       }
         @description "The item's whole paint, for the surface to collect."
         @tier "domain"

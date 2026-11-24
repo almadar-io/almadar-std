@@ -4,7 +4,8 @@ app std-rasm-camera [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
@@ -16,6 +17,8 @@ type RasmCameraStop = { x : number!, y : number!, zoom : number! }
 orbital RasmCameraOrbital {
   entity RasmCameraRun [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this camera heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     rect : RasmRect? @description "The rect RASM_PLACE gave this camera, null until placed." = null
     range : RasmRect? @description "The rect RASM_PLACE gave the anchor section, null until placed." = null
     viewH : number @description "The canvas height from RASM_RESIZE." = 0
@@ -42,12 +45,22 @@ orbital RasmCameraOrbital {
         (set @entity.offset ?offset)
         (set @entity.paints (+ @entity.paints 1))
         (emit CAMERA_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (= @p.id @config.anchor))))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
-        (set @entity.range (let ((it (array/find ?placed (fn p (= @p.id @config.anchor))))) (if (= @it null) @entity.range @it.rect)))
+      RASM_PLACE -> ready when (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (= @p.id @config.anchor))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.rect (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.range (let ((it (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor))))) (if (= @it null) @entity.range @it.rect)))
         (set @entity.paints (+ @entity.paints 1))
         (emit CAMERA_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (= @p.id @config.anchor)))))
+      RASM_PAGE_ORIGINS -> ready when (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (= @p.id @config.anchor))))
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.rect (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.range (let ((it (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor))))) (if (= @it null) @entity.range @it.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CAMERA_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (= @p.id @config.anchor)))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> ready when (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (= @p.id @config.anchor)))))
+        (set @entity.pageOrigins ?offsets)
       CAMERA_PAINT -> ready when (and (!= @entity.rect null) (!= @entity.range null) (> @entity.viewH 0) (> (array/len @config.stops) 0))
         (let (
             (r (default @entity.rect { x: 0, y: 0, w: 1, h: 1 }))
@@ -81,7 +94,7 @@ orbital RasmCameraOrbital {
               (do
                 (set @entity.stop @near)
                 (emit CAMERA_STOP { id: @config.id, index: @near })))
-            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-sprite, id: @config.id, texture: (str/concat "target:" @config.of ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: @config.z }, width: @iw, height: @ih, frame: { x: @vx, y: @vy, w: @vw, h: @vh } }] })))
+            (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-sprite, id: @config.id, texture: (str/concat "target:" @config.of ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: @config.z }, width: @iw, height: @ih, frame: { x: @vx, y: @vy, w: @vw, h: @vh } }] })))
       CAMERA_PAINT -> ready when (not (and (!= @entity.rect null) (!= @entity.range null) (> @entity.viewH 0) (> (array/len @config.stops) 0)))
     }
 
@@ -97,6 +110,7 @@ orbital RasmCameraOrbital {
         z : number!
         nodes : [node]!
         texts : [RasmText]!
+        origin : string
       }
         @description "The sprite that shows the camera's window of the drawing."
         @tier "primary"
@@ -109,6 +123,8 @@ orbital RasmCameraOrbital {
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this camera read are read again at the page."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this camera's rect and the anchor's rect when they are placed."
       RASM_RESIZE { width : number!  height : number! }

@@ -4,12 +4,15 @@ app std-rasm-aperture [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
 
 orbital RasmApertureOrbital {
   entity RasmApertureRun [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this aperture heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     rect : RasmRect? @description "The stage rect from RASM_PLACE, null until it is placed." = null
     scene : RasmRect? @description "The anchor section's rect from RASM_PLACE; the stage's own rect when no anchor is named." = null
     viewH : number @description "The canvas height from RASM_RESIZE." = 0
@@ -22,12 +25,22 @@ orbital RasmApertureOrbital {
 
     state ready {
       INIT -> ready
-      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)))))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
-        (set @entity.scene (let ((it (array/find ?placed (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @it null) @entity.scene @it.rect)))
+      RASM_PLACE -> ready when (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.rect (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.scene (let ((it (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @it null) @entity.scene @it.rect)))
         (set @entity.paints (+ @entity.paints 1))
         (emit APERTURE_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor))))))
+      RASM_PAGE_ORIGINS -> ready when (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)))))
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.rect (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.scene (let ((it (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @it null) @entity.scene @it.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit APERTURE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor))))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> ready when (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor))))))
+        (set @entity.pageOrigins ?offsets)
       RASM_RESIZE -> ready
         (set @entity.viewH ?height)
         (set @entity.paints (+ @entity.paints 1))
@@ -45,7 +58,7 @@ orbital RasmApertureOrbital {
                 (let ((range { clock: "scroll", from: (- @sc.y (* @entity.viewH @config.enter)), to: (- (+ @sc.y @sc.h) (* @entity.viewH @config.exit)) })
                       (photoA : node { type: draw-sprite, id: (str/concat @config.id ":masked"), asset: { url: @config.url }, fit: "cover", anchor: "top-left", position: { x: (/ (- @r.x @ox) @k), y: (/ (- @r.y @oy) @k), z: 0 }, width: (/ @r.w @k), height: (/ @r.h @k) })
                       (photoB : node { type: draw-sprite, id: (str/concat @config.id ":full"), asset: { url: @config.url }, fit: "cover", anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h }))
-                  (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":alt"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] []), nodes: (array/concat
+                  (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: (if (and (!= @given null) (not @config.decorative)) [{ id: (str/concat @config.id ":alt"), key: @given, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: "transparent", font: "400 1px body" }] []), nodes: (array/concat
                     [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: "transparent", hit: false, semantic: (if (and (!= @given null) (not @config.decorative)) { role: "img", labelledBy: (str/concat @config.id ":alt"), order: (+ @r.y (/ @r.x 10000)) } null) }]
                     (let ((restNodes : [node] [{ type: draw-group, id: (str/concat @config.id ":rest"), position: { x: @ox, y: @oy, z: @config.z }, scale: @k, items: [{ type: draw-group, id: (str/concat @config.id ":restclip"), position: { x: 0, y: 0 }, clip: @config.mask, items: [@photoA] }] }]) (liveNodes : [node] [{ type: draw-group, id: (str/concat @config.id ":fade"), position: { x: 0, y: 0, z: @config.z }, animation: (object/merge @range { keyframes: [{ at: 0, opacity: 0 }, { at: @config.fadeAt, opacity: 0 }, { at: @config.fullAt, opacity: 1 }, { at: @config.endAt, opacity: 1 }, { at: 1, opacity: 0 }] }), items: [@photoB] },
                        { type: draw-group, id: (str/concat @config.id ":zoom"), position: { x: @px, y: @py, z: @config.z }, animation: (object/merge @range { keyframes: (array/concat (array/map (array/range (+ @steps 1)) (fn i (let ((t (* (/ @config.fullAt @steps) @i))) { at: @t, scale: (math/pow @config.scaleTo (/ @t @config.fullAt)), opacity: (- 1 (math/clamp (/ (- @t @config.fadeAt) (math/max 0.001 (- @config.fullAt @config.fadeAt))) 0 1)) }))) [{ at: 1, scale: @config.scaleTo, opacity: 0 }]) }), items: [{ type: draw-shape, id: (str/concat @config.id ":pivot"), shape: rect, anchor: "top-left", position: { x: (- 0 (+ @r.w @r.h)), y: (- 0 (+ @r.w @r.h)) }, width: (* 2 (+ @r.w @r.h)), height: (* 2 (+ @r.w @r.h)), fill: "transparent", hit: false }, { type: draw-group, id: (str/concat @config.id ":window"), position: { x: (- @ox @px), y: (- @oy @py) }, scale: @k, items: [{ type: draw-group, id: (str/concat @config.id ":clip"), position: { x: 0, y: 0 }, clip: @config.mask, items: [@photoA] }] }] }])) (if @entity.reduced @restNodes @liveNodes))) }))))))
@@ -63,12 +76,15 @@ orbital RasmApertureOrbital {
         z : number!
         nodes : [node]!
         texts : [RasmText]!
+        origin : string
       }
         @description "The stage: the masked photograph in a scaling group, the plain photograph in a fading one, and the semantic image node."
         @tier "primary"
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this aperture read are read again at the page."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take the stage's rect when its id is placed, and the anchor section's rect."
       RASM_RESIZE { width : number!  height : number! }

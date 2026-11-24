@@ -4225,6 +4225,941 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-paint-of-a-control-placed-in-an-origin-is-drawn-in-that-origin-and-a-page-paint-is-not-wrapped",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "a",
+                "rect": {
+                  "x": 4,
+                  "y": 6,
+                  "w": 10,
+                  "h": 10
+                },
+                "origin": "card"
+              },
+              {
+                "id": "b",
+                "rect": {
+                  "x": 0,
+                  "y": 40,
+                  "w": 10,
+                  "h": 10
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "placedIn": {
+                "a": "card",
+                "b": ""
+              }
+            }
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_ORIGIN",
+          "payload": {
+            "id": "card",
+            "x": 100,
+            "y": 50
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "origins": {
+                "card": {
+                  "x": 100,
+                  "y": 50,
+                  "origin": ""
+                }
+              }
+            }
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "RASM_PAINT",
+          "payload": {
+            "id": "a",
+            "z": 1,
+            "nodes": [
+              {
+                "type": "draw-shape",
+                "shape": "rect",
+                "id": "a",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "width": 10,
+                "height": 10
+              }
+            ]
+          },
+          "expect": {
+            "state": "dirty"
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "RASM_PAINT",
+          "payload": {
+            "id": "b",
+            "z": 2,
+            "nodes": [
+              {
+                "type": "draw-shape",
+                "shape": "rect",
+                "id": "b",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "width": 10,
+                "height": 10
+              }
+            ]
+          },
+          "expect": {
+            "state": "dirty"
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "origins.card.x": 100,
+                  "drawables.0.type": "draw-group",
+                  "drawables.0.origin": "card",
+                  "drawables.0.items.0.id": "a",
+                  "drawables.1.id": "b",
+                  "drawables.1.origin": null
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "placedIn": {
+              "a": "card",
+              "b": ""
+            },
+            "origins": {
+              "card": {
+                "x": 100,
+                "y": 50,
+                "origin": ""
+              }
+            },
+            "paints": {
+              "a": {
+                "id": "a",
+                "z": 1,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "a",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              },
+              "b": {
+                "id": "b",
+                "z": 2,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "b",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-paint-that-names-its-own-origin-is-drawn-there-whatever-its-control-was-placed-in",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_PLACE",
+          "payload": {
+            "placed": [
+              {
+                "id": "st",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_ORIGIN",
+          "payload": {
+            "id": "st",
+            "x": 20,
+            "y": 30
+          },
+          "expect": {
+            "state": "dirty"
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "RASM_PAINT",
+          "payload": {
+            "id": "st:hover",
+            "z": 1,
+            "origin": "st",
+            "nodes": [
+              {
+                "type": "draw-shape",
+                "shape": "rect",
+                "id": "st:hover:x",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "width": 10,
+                "height": 10
+              }
+            ]
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "paintOrigins": {
+                "st:hover": "st"
+              }
+            }
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "drawables.0.origin": "st",
+                  "drawables.0.items.0.id": "st:hover:x"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          },
+          "entity": {
+            "id": "s",
+            "placedIn": {
+              "st": ""
+            },
+            "origins": {
+              "st": {
+                "x": 20,
+                "y": 30,
+                "origin": ""
+              }
+            },
+            "paintOrigins": {
+              "st:hover": "st"
+            },
+            "paints": {
+              "st:hover": {
+                "id": "st:hover",
+                "z": 1,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "st:hover:x",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-press-in-an-origin-reaches-the-controls-in-that-origins-space-and-a-page-press-is-unchanged",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "POINTER_DOWN",
+          "payload": {
+            "target": "a",
+            "x": 110,
+            "y": 56,
+            "originX": 100,
+            "originY": 50
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_POINTER",
+                "payload": {
+                  "kind": "down",
+                  "id": "a",
+                  "x": 10,
+                  "y": 6,
+                  "index": -1,
+                  "pageX": 110,
+                  "pageY": 56
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "POINTER_MOVE",
+          "payload": {
+            "target": "a",
+            "x": 112,
+            "y": 58,
+            "originX": 100,
+            "originY": 50
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_POINTER",
+                "payload": {
+                  "kind": "move",
+                  "id": "a",
+                  "x": 12,
+                  "y": 8
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "POINTER_DOWN",
+          "payload": {
+            "target": "b",
+            "x": 5,
+            "y": 45
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_POINTER",
+                "payload": {
+                  "kind": "down",
+                  "id": "b",
+                  "x": 5,
+                  "y": 45,
+                  "index": -1,
+                  "pageX": 5,
+                  "pageY": 45
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-canvas-origin-offsets-are-relayed-to-the-kit-as-page-origins",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SURFACE_ORIGINS",
+          "payload": {
+            "offsets": {
+              "card": {
+                "x": 100,
+                "y": 50
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAGE_ORIGINS",
+                "payload": {
+                  "offsets": {
+                    "card": {
+                      "x": 100,
+                      "y": 50
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "SURFACE_ORIGINS",
+          "payload": {
+            "offsets": {}
+          },
+          "expect": {
+            "state": "dirty",
+            "emits": [
+              {
+                "event": "RASM_PAGE_ORIGINS",
+                "payload": {
+                  "offsets": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-paint-in-an-origin-not-yet-announced-is-held-until-the-origin-arrives",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 1
+          },
+          "entity": {
+            "id": "s",
+            "placedIn": {
+              "a": "app",
+              "b": ""
+            },
+            "origins": {},
+            "paints": {
+              "a": {
+                "id": "a",
+                "z": 1,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "a",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              },
+              "b": {
+                "id": "b",
+                "z": 2,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "b",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "drawables.0.id": "b",
+                  "drawables.1": null
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "SURFACE_REPAINT",
+          "payload": {
+            "n": 2
+          },
+          "entity": {
+            "id": "s",
+            "placedIn": {
+              "a": "app",
+              "b": ""
+            },
+            "origins": {
+              "app": {
+                "x": 0,
+                "y": 40,
+                "origin": ""
+              }
+            },
+            "paints": {
+              "a": {
+                "id": "a",
+                "z": 1,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "a",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              },
+              "b": {
+                "id": "b",
+                "z": 2,
+                "nodes": [
+                  {
+                    "type": "draw-shape",
+                    "shape": "rect",
+                    "id": "b",
+                    "position": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "width": 10,
+                    "height": 10
+                  }
+                ],
+                "texts": []
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "drawables.0.origin": "app",
+                  "drawables.0.items.0.id": "a",
+                  "drawables.1.id": "b"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-origin-announced-before-its-parent-waits-and-joins-the-table-with-it",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ORIGIN",
+          "payload": {
+            "id": "bar",
+            "x": 0,
+            "y": 10,
+            "origin": "app"
+          },
+          "entity": {
+            "id": "s",
+            "origins": {
+              "page": {
+                "x": 0,
+                "y": 0,
+                "origin": ""
+              }
+            }
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "origins": {
+                "page": {
+                  "x": 0,
+                  "y": 0,
+                  "origin": ""
+                }
+              },
+              "pendingOrigins": {
+                "bar": {
+                  "x": 0,
+                  "y": 10,
+                  "origin": "app"
+                }
+              }
+            }
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "RASM_ORIGIN",
+          "payload": {
+            "id": "row",
+            "x": 4,
+            "y": 4,
+            "origin": "bar"
+          },
+          "entity": {
+            "id": "s",
+            "origins": {
+              "page": {
+                "x": 0,
+                "y": 0,
+                "origin": ""
+              }
+            },
+            "pendingOrigins": {
+              "bar": {
+                "x": 0,
+                "y": 10,
+                "origin": "app"
+              }
+            }
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "pendingOrigins": {
+                "bar": {
+                  "x": 0,
+                  "y": 10,
+                  "origin": "app"
+                },
+                "row": {
+                  "x": 4,
+                  "y": 4,
+                  "origin": "bar"
+                }
+              }
+            }
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "RASM_ORIGIN",
+          "payload": {
+            "id": "app",
+            "x": 0,
+            "y": 40,
+            "origin": "page"
+          },
+          "entity": {
+            "id": "s",
+            "origins": {
+              "page": {
+                "x": 0,
+                "y": 0,
+                "origin": ""
+              }
+            },
+            "pendingOrigins": {
+              "bar": {
+                "x": 0,
+                "y": 10,
+                "origin": "app"
+              },
+              "row": {
+                "x": 4,
+                "y": 4,
+                "origin": "bar"
+              }
+            }
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "origins": {
+                "page": {
+                  "x": 0,
+                  "y": 0,
+                  "origin": ""
+                },
+                "app": {
+                  "x": 0,
+                  "y": 40,
+                  "origin": "page"
+                },
+                "bar": {
+                  "x": 0,
+                  "y": 10,
+                  "origin": "app"
+                },
+                "row": {
+                  "x": 4,
+                  "y": 4,
+                  "origin": "bar"
+                }
+              },
+              "pendingOrigins": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-origin-moved-under-a-parent-not-yet-heard-takes-its-own-origins-out-of-the-table-until-the-parent-arrives",
+      "config": {},
+      "entity": {
+        "id": "s"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_ORIGIN",
+          "payload": {
+            "id": "card",
+            "x": 5,
+            "y": 5,
+            "origin": "drawer"
+          },
+          "entity": {
+            "id": "s",
+            "origins": {
+              "page": {
+                "x": 0,
+                "y": 0,
+                "origin": ""
+              },
+              "card": {
+                "x": 0,
+                "y": 0,
+                "origin": "page"
+              },
+              "row": {
+                "x": 1,
+                "y": 1,
+                "origin": "card"
+              },
+              "cell": {
+                "x": 2,
+                "y": 2,
+                "origin": "row"
+              },
+              "side": {
+                "x": 9,
+                "y": 9,
+                "origin": "page"
+              }
+            }
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "origins": {
+                "page": {
+                  "x": 0,
+                  "y": 0,
+                  "origin": ""
+                },
+                "side": {
+                  "x": 9,
+                  "y": 9,
+                  "origin": "page"
+                }
+              },
+              "pendingOrigins": {
+                "card": {
+                  "x": 5,
+                  "y": 5,
+                  "origin": "drawer"
+                },
+                "row": {
+                  "x": 1,
+                  "y": 1,
+                  "origin": "card"
+                },
+                "cell": {
+                  "x": 2,
+                  "y": 2,
+                  "origin": "row"
+                }
+              }
+            }
+          }
+        },
+        {
+          "from": "dirty",
+          "event": "RASM_ORIGIN",
+          "payload": {
+            "id": "drawer",
+            "x": 100,
+            "y": 0,
+            "origin": "page"
+          },
+          "entity": {
+            "id": "s",
+            "origins": {
+              "page": {
+                "x": 0,
+                "y": 0,
+                "origin": ""
+              },
+              "side": {
+                "x": 9,
+                "y": 9,
+                "origin": "page"
+              }
+            },
+            "pendingOrigins": {
+              "card": {
+                "x": 5,
+                "y": 5,
+                "origin": "drawer"
+              },
+              "row": {
+                "x": 1,
+                "y": 1,
+                "origin": "card"
+              },
+              "cell": {
+                "x": 2,
+                "y": 2,
+                "origin": "row"
+              }
+            }
+          },
+          "expect": {
+            "state": "dirty",
+            "entity": {
+              "origins": {
+                "page": {
+                  "x": 0,
+                  "y": 0,
+                  "origin": ""
+                },
+                "side": {
+                  "x": 9,
+                  "y": 9,
+                  "origin": "page"
+                },
+                "drawer": {
+                  "x": 100,
+                  "y": 0,
+                  "origin": "page"
+                },
+                "card": {
+                  "x": 5,
+                  "y": 5,
+                  "origin": "drawer"
+                },
+                "row": {
+                  "x": 1,
+                  "y": 1,
+                  "origin": "card"
+                },
+                "cell": {
+                  "x": 2,
+                  "y": 2,
+                  "origin": "row"
+                }
+              },
+              "pendingOrigins": {}
+            }
+          }
+        }
+      ]
     }
   ]
 }

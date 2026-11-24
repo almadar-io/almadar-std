@@ -1,7 +1,7 @@
 app std-rasm-system-pocket-synth [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-rasm-system-pocket-synth — the Pocket Synth design system for a Rasm page, anchored on Teenage Engineering OP-1 interface (https://teenage.engineering). Colour: #ECECEC ground, #141414 ink, #00B2FF accent. Type: Gabarito over Be Vietnam Pro. Grid: conversation column with a control strip. Motion: the synth-blip easing (cubic-bezier 0.20,1.20,0.40,1.00); entrance: messages bubble in with a tiny bounce. Interaction: key lights in its colour. Imagery: tiny pixel icons and colour keys. Voice: casual, quick replies, emoji ok. Components: buttons are colour-coded round keys; cards are chat bubbles. Data: waveform meters. Sound: synth blip on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
+  description: "std-rasm-system-pocket-synth — the Pocket Synth design system for a Rasm page, anchored on Teenage Engineering OP-1 interface (https://teenage.engineering). Colour: #ECECEC ground, #141414 ink, #00B2FF accent. Type: Gabarito over Be Vietnam Pro. Grid: conversation column with a control strip. Motion: the synth-blip easing (cubic-bezier 0.20,1.20,0.40,1.00); entrance: messages bubble in with a tiny bounce. Interaction: key lights in its colour. Imagery: tiny pixel icons and colour keys. Voice: casual, quick replies, emoji ok. Components: buttons are colour-coded round keys; cards are chat bubbles. Data: waveform meters. Modes: day (the light ground above) and night (#141414 ground, #ECECEC ink, the same accent), stepped by the page's mode toggle. Sound: synth blip on press, off until the viewer turns it on. A page extends RasmPage from this file and overrides any layer knob."
 ]
 
 uses Shell from "std/behaviors/std-rasm-page"
@@ -10,6 +10,17 @@ orbital RasmPage = Shell.orbitals.RasmPage {
   config {
     system: "pocket-synth"
     palette: {background: "#ECECEC", foreground: "#141414", card: "#F6F6F6", "card-foreground": "#141414", surface: "#E6E6E6", muted: "#DBDBDB", "muted-foreground": "#595959", border: "#8B8B8B", input: "#808080", primary: "#00B2FF", "primary-hover": "#4DCBFF", "primary-foreground": "#141414", secondary: "#F6F6F6", "secondary-foreground": "#141414", "secondary-hover": "#D2D2D2", accent: "#00B2FF", "accent-foreground": "#141414", ring: "#005C8A", "series-1": "#00B2FF", "series-2": "#D93C00", "series-3": "#0B7A4B", "series-4": "#1B1B1B", "series-5": "#4099BF"}
+    modes: {
+      day: { palette: {}, looks: { "surface/ground/idle": { fill: "background" } } }
+      night: { palette: { background: "#141414", foreground: "#ECECEC", card: "#1F1F1F", "card-foreground": "#ECECEC", surface: "#1A1A1A", muted: "#2A2A2A", "muted-foreground": "#A8A8A8", border: "#7A7A7A", input: "#8A8A8A", primary: "#00B2FF", "primary-hover": "#4DCBFF", "primary-foreground": "#141414", secondary: "#1F1F1F", "secondary-foreground": "#ECECEC", "secondary-hover": "#333333", accent: "#00B2FF", "accent-foreground": "#141414", ring: "#7FD8FF", "series-1": "#00B2FF", "series-2": "#FF6A33", "series-3": "#2DBE7E", "series-4": "#ECECEC", "series-5": "#4099BF" }, looks: {
+        "surface/ground/idle": { fill: "background" },
+        "card/surface/hovered": { fill: "#0E3A4D", stroke: "foreground", strokeWidth: 3, corners: { radius: [26, 26, 26, 6], kind: "round" }, shadow: { color: "rgba(0,178,255,0.55)", blur: 22, offsetY: 0 }, spring: { stiffness: 420, damping: 18 } },
+        "pressable/secondary/hovered": { fill: "secondary-hover", stroke: "foreground", strokeWidth: 2.5, corners: { radius: [999, 999, 999, 999], kind: "round" }, textColor: "foreground", font: "700 17px body", spring: { stiffness: 420, damping: 18 }, shadow: { color: "rgba(0,178,255,0.65)", blur: 24, offsetY: 0 } },
+        "textfield/default/hovered": { fill: "#0E3A4D", stroke: "foreground", strokeWidth: 3, corners: { radius: [26, 26, 26, 6], kind: "round" }, textColor: "foreground", font: "500 17px body" },
+        "text/numeral/idle": { textColor: "foreground", font: "800 220px display" }
+      } }
+    }
+    mode: "day"
     fonts: { display: { family: "Gabarito", file: "https://almadar-kflow-assets.web.app/fonts/gabarito/Gabarito%5Bwght%5D.ttf", generic: "sans-serif" }, body: { family: "Be Vietnam Pro", file: "https://almadar-kflow-assets.web.app/fonts/bevietnampro/BeVietnamPro-Regular.ttf", generic: "sans-serif" } }
     looks: {
         "surface/ground/idle": { fill: "background" },

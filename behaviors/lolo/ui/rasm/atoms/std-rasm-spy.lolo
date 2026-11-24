@@ -4,7 +4,8 @@ app std-rasm-spy [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmSpyItem = { id : string!, key : MessageKey!, row : number! }
 type RasmSpyTab = { id : string!, label : string!, shows : [string]! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
@@ -19,6 +20,8 @@ type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners 
 orbital RasmSpyOrbital {
   entity RasmSpyRun [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this spy heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
     rect : RasmRect? @description "The rect RASM_PLACE gave the table, null until placed." = null
     anchors : Map string RasmRect @description "The placed rect of every item's anchor seen so far." = {}
@@ -56,13 +59,24 @@ orbital RasmSpyOrbital {
         (set @entity.offset ?offset)
         (set @entity.paints (+ @entity.paints 1))
         (emit SPY_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id))))))
-        (set @entity.track (let ((mine (array/find ?placed (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @mine null) @entity.track @mine.rect)))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
-        (set @entity.anchors (array/reduce (array/filter ?placed (fn p (or (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))) @entity.anchors (fn acc p (object/set @acc @p.id @p.rect))))
+      RASM_PLACE -> ready when (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id))))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.track (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @mine null) @entity.track @mine.rect)))
+        (set @entity.rect (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.anchors (array/reduce (array/filter (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))) @entity.anchors (fn acc p (object/set @acc @p.id @p.rect))))
         (set @entity.paints (+ @entity.paints 1))
         (emit SPY_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))))
+      RASM_PAGE_ORIGINS -> ready when (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id))))))
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.track (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (and (!= @config.anchor "") (= @p.id @config.anchor)))))) (if (= @mine null) @entity.track @mine.rect)))
+        (set @entity.rect (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.anchors (array/reduce (array/filter (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))) @entity.anchors (fn acc p (object/set @acc @p.id @p.rect))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SPY_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> ready when (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (and (!= @config.anchor "") (= @p.id @config.anchor)) (array/some @config.items (fn i (= @i.id @p.id))) (array/some @config.tabs (fn i (= @i.id @p.id)))))))
+        (set @entity.pageOrigins ?offsets)
       RASM_BREAKPOINT -> ready
         (set @entity.on (or (= (array/len @config.activeOn) 0) (array/includes @config.activeOn ?name)))
         (set @entity.active -1)
@@ -91,7 +105,7 @@ orbital RasmSpyOrbital {
       SPY_PAINT -> ready when (and (= @config.mode "tabs") (not @entity.on) (!= @entity.active -2))
         (set @entity.active -2)
         (emit RASM_VISIBLE { owner: @config.id, shown: (array/flatten (array/map @config.tabs (fn it @it.shows))), hidden: [], forward: true })
-        (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [] })
+        (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [] })
       SPY_PAINT -> ready when (and (= @config.mode "tabs") (or (not @entity.on) (= @entity.track null) (<= @entity.viewH 0)))
       SPY_PAINT -> ready when (and (= @config.mode "tabs") @entity.on (!= @entity.track null) (> @entity.viewH 0))
         (let ((r (default @entity.track { x: 0, y: 0, w: 0, h: 0 })) (cnt (array/len @config.tabs)) (tl (default (object/get @entity.looks @config.trackLook null) {})) (fl (default (object/get @entity.looks @config.fillLook null) {})))
@@ -129,7 +143,7 @@ orbital RasmSpyOrbital {
               (do
                 (set @entity.active @cur)
                 (emit RASM_SPY_ACTIVE { id: @config.id, index: @cur })))
-            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: (str/concat @config.id ":rail"), shape: rect, anchor: "top-left", position: { x: @railX, y: @r.y, z: @config.z }, width: 2, height: (* @n @config.rowH), fill: @config.railFill, hit: false }, { type: draw-shape, id: (str/concat @config.id ":mark"), shape: rect, anchor: "top-left", position: { x: @railX, y: (+ @r.y (* @cur @config.rowH)), z: (+ @config.z 1) }, width: 2, height: @config.rowH, fill: @config.markFill, hit: false }], texts: (array/map @config.items (fn it (let ((look (if (= @it.row @cur) @act @idle))) { id: (str/concat @config.id ":row" @it.row), key: (let ((k (as @it RasmSpyItem))) @k.key), x: @textX, y: (+ (+ @r.y (* @it.row @config.rowH)) @config.rowPad), z: (+ @config.z 2), align: (if @rtl "right" "left"), baseline: "top", color: @look.textColor, font: @look.font, width: (- @r.w (+ @config.indent 2)), wrap: true }))) })))
+            (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: (str/concat @config.id ":rail"), shape: rect, anchor: "top-left", position: { x: @railX, y: @r.y, z: @config.z }, width: 2, height: (* @n @config.rowH), fill: @config.railFill, hit: false }, { type: draw-shape, id: (str/concat @config.id ":mark"), shape: rect, anchor: "top-left", position: { x: @railX, y: (+ @r.y (* @cur @config.rowH)), z: (+ @config.z 1) }, width: 2, height: @config.rowH, fill: @config.markFill, hit: false }], texts: (array/map @config.items (fn it (let ((look (if (= @it.row @cur) @act @idle))) { id: (str/concat @config.id ":row" @it.row), key: (let ((k (as @it RasmSpyItem))) @k.key), x: @textX, y: (+ (+ @r.y (* @it.row @config.rowH)) @config.rowPad), z: (+ @config.z 2), align: (if @rtl "right" "left"), baseline: "top", color: @look.textColor, font: @look.font, width: (- @r.w (+ @config.indent 2)), wrap: true }))) })))
       SPY_PAINT -> ready when (and (= @config.mode "toc") (= @entity.rect null))
     }
 
@@ -150,6 +164,7 @@ orbital RasmSpyOrbital {
         z : number!
         nodes : [node]!
         texts : [RasmText]!
+        origin : string
       }
         @description "The rail, the bar on the marked row and the rows' text."
         @tier "primary"
@@ -170,6 +185,8 @@ orbital RasmSpyOrbital {
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this spy read are read again at the page."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Take the looks the rows' text is set in."
       RASM_DIRECTION { direction : "ltr" | "rtl"! }

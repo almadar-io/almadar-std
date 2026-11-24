@@ -1,0 +1,86 @@
+app std-mp4 [
+  version: "1.0.0",
+  description: "std-mp4 — reads the video track of an MP4 (ISO base media) file, in .lolo, so a program can hand its samples to a video decoder (os/video-decode, os/video-feed). MP4_DEMUX { data } walks the boxes to moov, takes the first track whose handler is vide, and answers MP4_TRACK { codec, description, width, height, timescale, samples }: codec is the WebCodecs string (avc1.PPCCLL from the avcC record), description is the avcC record itself, width and height come from the avc1 sample entry, and each sample is { offset, size, timestamp, key } with its absolute byte offset in the file (stsc, stco or co64, stsz), its presentation time in microseconds (stts plus ctts) and whether it is a sync sample (stss; every sample when there is none). A file with no moov, no video track or a video track that is not H.264 (avc1) answers MP4_FAILED { message }. Box sizes of 1 (64-bit) and 0 (to the end) are read; at most 64 boxes are read at each level.",
+]
+
+type Mp4Box = { type : string!, start : number!, body : number!, end : number! }
+type Mp4Sample = { offset : number!, size : number!, timestamp : number!, key : boolean! }
+
+orbital Mp4Orbital {
+  entity Mp4Run [runtime] {
+    id : string!
+  }
+
+  trait Mp4Demuxer -> @rebindable Mp4Run {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      MP4_DEMUX -> idle
+        (let ((top (object/get (array/reduce (array/range 64) { pos: 0, out: [] } (fn acc i (if (> (+ @acc.pos 8) (bytes/length ?data)) @acc (let ((sz (default (bytes/read-uint ?data @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice ?data (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint ?data (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- (bytes/length ?data) @acc.pos) @sz)))) (if (< @size @hdr) { pos: (bytes/length ?data), out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out")))
+          (let ((moov (default (array/find @top (fn x (= @x.type "moov"))) { type: "", start: 0, body: 0, end: 0 })))
+            (if (= @moov.type "")
+              (emit MP4_FAILED { message: "mp4: no moov box" })
+              (let ((mv (bytes/slice ?data @moov.body @moov.end)) (mlen (- @moov.end @moov.body)))
+                (let ((vt (default (array/find (array/filter (object/get (array/reduce (array/range 64) { pos: 0, out: [] } (fn acc i (if (> (+ @acc.pos 8) @mlen) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- @mlen @acc.pos) @sz)))) (if (< @size @hdr) { pos: @mlen, out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out") (fn x (= @x.type "trak"))) (fn t (let ((md (default (array/find (object/get (array/reduce (array/range 64) { pos: @t.body, out: [] } (fn acc i (if (> (+ @acc.pos 8) @t.end) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- @t.end @acc.pos) @sz)))) (if (< @size @hdr) { pos: @t.end, out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out") (fn x (= @x.type "mdia"))) { type: "", start: 0, body: 0, end: 0 }))) (let ((hd (default (array/find (object/get (array/reduce (array/range 64) { pos: @md.body, out: [] } (fn acc i (if (> (+ @acc.pos 8) @md.end) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- @md.end @acc.pos) @sz)))) (if (< @size @hdr) { pos: @md.end, out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out") (fn x (= @x.type "hdlr"))) { type: "", start: 0, body: 0, end: 0 }))) (and (!= @hd.type "") (= (default (bytes/to-string (bytes/slice @mv (+ @hd.body 8) (+ @hd.body 12))) "") "vide")))))) { type: "", start: 0, body: 0, end: 0 })))
+                  (if (= @vt.type "")
+                    (emit MP4_FAILED { message: "mp4: no video track" })
+                    (let ((mdia (default (array/find (object/get (array/reduce (array/range 64) { pos: @vt.body, out: [] } (fn acc i (if (> (+ @acc.pos 8) @vt.end) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- @vt.end @acc.pos) @sz)))) (if (< @size @hdr) { pos: @vt.end, out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out") (fn x (= @x.type "mdia"))) { type: "", start: 0, body: 0, end: 0 })))
+                      (let ((mk (object/get (array/reduce (array/range 64) { pos: @mdia.body, out: [] } (fn acc i (if (> (+ @acc.pos 8) @mdia.end) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- @mdia.end @acc.pos) @sz)))) (if (< @size @hdr) { pos: @mdia.end, out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out")))
+                        (let ((mdhd (default (array/find @mk (fn x (= @x.type "mdhd"))) { type: "", start: 0, body: 0, end: 0 })) (minf (default (array/find @mk (fn x (= @x.type "minf"))) { type: "", start: 0, body: 0, end: 0 })))
+                          (let ((stbl (default (array/find (object/get (array/reduce (array/range 64) { pos: @minf.body, out: [] } (fn acc i (if (> (+ @acc.pos 8) @minf.end) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- @minf.end @acc.pos) @sz)))) (if (< @size @hdr) { pos: @minf.end, out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out") (fn x (= @x.type "stbl"))) { type: "", start: 0, body: 0, end: 0 })))
+                            (let ((sk (object/get (array/reduce (array/range 64) { pos: @stbl.body, out: [] } (fn acc i (if (> (+ @acc.pos 8) @stbl.end) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- @stbl.end @acc.pos) @sz)))) (if (< @size @hdr) { pos: @stbl.end, out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out")))
+                              (let ((ts (if (= (default (bytes/at @mv @mdhd.body) 0) 1) (default (bytes/read-uint @mv (+ @mdhd.body 20) 4 "be") 0) (default (bytes/read-uint @mv (+ @mdhd.body 12) 4 "be") 0)))
+                                    (stsd (default (array/find @sk (fn x (= @x.type "stsd"))) { type: "", start: 0, body: 0, end: 0 })) (stsz (default (array/find @sk (fn x (= @x.type "stsz"))) { type: "", start: 0, body: 0, end: 0 })) (stsc (default (array/find @sk (fn x (= @x.type "stsc"))) { type: "", start: 0, body: 0, end: 0 })) (stts (default (array/find @sk (fn x (= @x.type "stts"))) { type: "", start: 0, body: 0, end: 0 })) (ctts (default (array/find @sk (fn x (= @x.type "ctts"))) { type: "", start: 0, body: 0, end: 0 })) (stss (default (array/find @sk (fn x (= @x.type "stss"))) { type: "", start: 0, body: 0, end: 0 }))
+                                    (co (default (array/find @sk (fn x (or (= @x.type "stco") (= @x.type "co64")))) { type: "", start: 0, body: 0, end: 0 })))
+                                (let ((ent (+ @stsd.body 8)))
+                                  (let ((esz (default (bytes/read-uint @mv @ent 4 "be") 0)) (etype (default (bytes/to-string (bytes/slice @mv (+ @ent 4) (+ @ent 8))) "")))
+                                    (if (or (!= @etype "avc1") (= @ts 0) (= @co.type ""))
+                                      (emit MP4_FAILED { message: (str/concat "mp4: unsupported video sample entry " @etype) })
+                                      (let ((avcc (default (array/find (object/get (array/reduce (array/range 64) { pos: (+ @ent 86), out: [] } (fn acc i (if (> (+ @acc.pos 8) (+ @ent @esz)) @acc (let ((sz (default (bytes/read-uint @mv @acc.pos 4 "be") 0)) (ty (default (bytes/to-string (bytes/slice @mv (+ @acc.pos 4) (+ @acc.pos 8))) ""))) (let ((hdr (if (= @sz 1) 16 8)) (size (if (= @sz 1) (default (bytes/read-uint @mv (+ @acc.pos 8) 8 "be") 0) (if (= @sz 0) (- (+ @ent @esz) @acc.pos) @sz)))) (if (< @size @hdr) { pos: (+ @ent @esz), out: @acc.out } { pos: (+ @acc.pos @size), out: (array/append @acc.out { type: @ty, start: @acc.pos, body: (+ @acc.pos @hdr), end: (+ @acc.pos @size) }) })))))) "out") (fn x (= @x.type "avcC"))) { type: "", start: 0, body: 0, end: 0 }))
+                                            (fixed (default (bytes/read-uint @mv (+ @stsz.body 4) 4 "be") 0)) (count (default (bytes/read-uint @mv (+ @stsz.body 8) 4 "be") 0))
+                                            (chunks (default (bytes/read-uint @mv (+ @co.body 4) 4 "be") 0)) (wide (= @co.type "co64"))
+                                            (runs (array/map (array/range (default (bytes/read-uint @mv (+ @stsc.body 4) 4 "be") 0)) (fn r { first: (default (bytes/read-uint @mv (+ (+ @stsc.body 8) (* @r 12)) 4 "be") 0), per: (default (bytes/read-uint @mv (+ (+ @stsc.body 12) (* @r 12)) 4 "be") 0) }))))
+                                        (let ((sizes (if (> @fixed 0) (array/map (array/range @count) (fn i @fixed)) (array/map (array/range @count) (fn i (default (bytes/read-uint @mv (+ (+ @stsz.body 12) (* @i 4)) 4 "be") 0)))))
+                                              (deltas (array/flatten (array/map (array/range (default (bytes/read-uint @mv (+ @stts.body 4) 4 "be") 0)) (fn r (array/map (array/range (default (bytes/read-uint @mv (+ (+ @stts.body 8) (* @r 8)) 4 "be") 0)) (fn k (default (bytes/read-uint @mv (+ (+ @stts.body 12) (* @r 8)) 4 "be") 0)))))))
+                                              (shifts (if (= @ctts.type "") (array/map (array/range @count) (fn i 0)) (array/flatten (array/map (array/range (default (bytes/read-uint @mv (+ @ctts.body 4) 4 "be") 0)) (fn r (array/map (array/range (default (bytes/read-uint @mv (+ (+ @ctts.body 8) (* @r 8)) 4 "be") 0)) (fn k (if (= (default (bytes/at @mv @ctts.body) 0) 1) (default (bytes/read-int @mv (+ (+ @ctts.body 12) (* @r 8)) 4 "be") 0) (default (bytes/read-uint @mv (+ (+ @ctts.body 12) (* @r 8)) 4 "be") 0)))))))))
+                                              (keys (if (= @stss.type "") [] (array/map (array/range (default (bytes/read-uint @mv (+ @stss.body 4) 4 "be") 0)) (fn r (default (bytes/read-uint @mv (+ (+ @stss.body 8) (* @r 4)) 4 "be") 0))))))
+                                          (let ((offsets (object/get (array/reduce (array/range @chunks) { k: 0, out: [] } (fn acc c (let ((base (if @wide (default (bytes/read-uint @mv (+ (+ @co.body 8) (* @c 8)) 8 "be") 0) (default (bytes/read-uint @mv (+ (+ @co.body 8) (* @c 4)) 4 "be") 0))) (per (object/get (array/reduce @runs { per: 0 } (fn a r (if (<= @r.first (+ @c 1)) { per: @r.per } @a))) "per")))
+                                                  { k: (+ @acc.k @per), out: (array/concat @acc.out (array/map (array/range @per) (fn j (+ @base (array/reduce (array/slice @sizes @acc.k (+ @acc.k @j)) 0 (fn s z (+ @s @z))))))) }))) "out"))
+                                                (times (object/get (array/reduce @deltas { t: 0, out: [] } (fn acc d { t: (+ @acc.t @d), out: (array/append @acc.out @acc.t) })) "out")))
+                                            (emit MP4_TRACK {
+                                              codec: (str/concat "avc1." (str/concat (str/slice "0123456789ABCDEF" (math/floor (/ (default (bytes/at @mv (+ @avcc.body 1)) 0) 16)) (+ (math/floor (/ (default (bytes/at @mv (+ @avcc.body 1)) 0) 16)) 1)) (str/slice "0123456789ABCDEF" (math/mod (default (bytes/at @mv (+ @avcc.body 1)) 0) 16) (+ (math/mod (default (bytes/at @mv (+ @avcc.body 1)) 0) 16) 1))) (str/concat (str/slice "0123456789ABCDEF" (math/floor (/ (default (bytes/at @mv (+ @avcc.body 2)) 0) 16)) (+ (math/floor (/ (default (bytes/at @mv (+ @avcc.body 2)) 0) 16)) 1)) (str/slice "0123456789ABCDEF" (math/mod (default (bytes/at @mv (+ @avcc.body 2)) 0) 16) (+ (math/mod (default (bytes/at @mv (+ @avcc.body 2)) 0) 16) 1))) (str/concat (str/slice "0123456789ABCDEF" (math/floor (/ (default (bytes/at @mv (+ @avcc.body 3)) 0) 16)) (+ (math/floor (/ (default (bytes/at @mv (+ @avcc.body 3)) 0) 16)) 1)) (str/slice "0123456789ABCDEF" (math/mod (default (bytes/at @mv (+ @avcc.body 3)) 0) 16) (+ (math/mod (default (bytes/at @mv (+ @avcc.body 3)) 0) 16) 1)))),
+                                              description: (bytes/slice @mv @avcc.body @avcc.end),
+                                              width: (default (bytes/read-uint @mv (+ @ent 32) 2 "be") 0),
+                                              height: (default (bytes/read-uint @mv (+ @ent 34) 2 "be") 0),
+                                              timescale: @ts,
+                                              samples: (array/map (array/range @count) (fn i { offset: (default (array/nth @offsets @i) 0), size: (default (array/nth @sizes @i) 0), timestamp: (math/floor (/ (* (+ (default (array/nth @times @i) 0) (default (array/nth @shifts @i) 0)) 1000000) @ts)), key: (or (= (array/len @keys) 0) (array/includes @keys (+ @i 1))) }))
+                                            })))))))))))))))))))
+    }
+
+    emits {
+      MP4_TRACK -> external {
+        codec : string!
+        description : bytes!
+        width : number!
+        height : number!
+        timescale : number!
+        samples : [Mp4Sample]!
+      }
+        @description "The video track: what to configure a decoder with, and every sample's place, size, presentation time and sync flag."
+      MP4_FAILED -> external {
+        message : string!
+      }
+        @description "The file has no moov, no video track, or a video track this reader does not take."
+    }
+
+    listens {
+      MP4_DEMUX {
+        data : bytes!
+      }
+        @description "Read this MP4 file's video track."
+    }
+  }
+
+  page boot as Mp4Page -> Mp4Demuxer
+}

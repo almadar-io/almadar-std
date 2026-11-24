@@ -4,7 +4,7 @@ app std-rasm-plane [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
 type RasmPlaneItem = { id : string!, x : number!, y : number!, w : number!, h : number! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
@@ -17,6 +17,7 @@ orbital RasmPlaneOrbital {
   entity RasmPlaneRun [runtime] {
     id : string!
     rect : RasmRect @description "The rect RASM_PLACE gave this plane." = { x: 0, y: 0, w: 0, h: 0 }
+    origin : string @description "The origin this plane was placed in, empty for the page: it places its children in the same origin." = ""
     hasRect : boolean = false
     ox : number @description "How far the plane is shifted along x, in px." = 0
     oy : number @description "How far the plane is shifted along y, in px." = 0
@@ -44,6 +45,7 @@ orbital RasmPlaneOrbital {
       RASM_EXTENT -> idle
       RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.origin (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) "" (default @mine.origin ""))))
         (set @entity.hasRect true)
         (set @entity.layouts (+ @entity.layouts 1))
         (emit PLANE_LAYOUT { n: @entity.layouts })
@@ -71,7 +73,7 @@ orbital RasmPlaneOrbital {
           (do
             (set @entity.tw @tw)
             (set @entity.th @th)
-            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
+            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { origin: @entity.origin, id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
             (emit RASM_PLANE_MOVED { id: @config.id, x: @entity.ox, y: @entity.oy })))
       PLANE_LAYOUT -> idle when (not @entity.hasRect)
       RASM_KEYPRESS -> idle when (and (= ?target @config.id) (= ?key "ArrowLeft"))
@@ -124,6 +126,7 @@ orbital RasmPlaneOrbital {
       RASM_EXTENT -> dragging
       RASM_PLACE -> dragging when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.origin (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) "" (default @mine.origin ""))))
         (set @entity.hasRect true)
         (set @entity.layouts (+ @entity.layouts 1))
         (emit PLANE_LAYOUT { n: @entity.layouts })
@@ -151,7 +154,7 @@ orbital RasmPlaneOrbital {
           (do
             (set @entity.tw @tw)
             (set @entity.th @th)
-            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
+            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { origin: @entity.origin, id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
             (emit RASM_PLANE_MOVED { id: @config.id, x: @entity.ox, y: @entity.oy })))
       PLANE_LAYOUT -> dragging when (not @entity.hasRect)
       RASM_POINTER -> dragging when (and (= ?id @config.id) (= ?kind "move"))
@@ -174,6 +177,7 @@ orbital RasmPlaneOrbital {
       RASM_EXTENT -> moving
       RASM_PLACE -> moving when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.origin (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) "" (default @mine.origin ""))))
         (set @entity.hasRect true)
         (set @entity.layouts (+ @entity.layouts 1))
         (emit PLANE_LAYOUT { n: @entity.layouts })
@@ -201,7 +205,7 @@ orbital RasmPlaneOrbital {
           (do
             (set @entity.tw @tw)
             (set @entity.th @th)
-            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
+            (emit RASM_PLACE { n: ?n, placed: (array/map @config.items (fn it { origin: @entity.origin, id: @it.id, rect: { x: (+ @r.x (- (default (math/mod (+ (default (math/mod (+ (+ @it.x @entity.ox) @it.w) @tw) 0) @tw) @tw) 0) @it.w)), y: (+ @r.y (- (default (math/mod (+ (default (math/mod (+ (+ @it.y @entity.oy) @it.h) @th) 0) @th) @th) 0) @it.h)), w: @it.w, h: @it.h } })) })
             (emit RASM_PLANE_MOVED { id: @config.id, x: @entity.ox, y: @entity.oy })))
       PLANE_LAYOUT -> moving when (not @entity.hasRect)
       RASM_KEYPRESS -> moving when (and (= ?target @config.id) (= ?key "ArrowLeft"))

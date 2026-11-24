@@ -26,7 +26,8 @@
                   "data": {
                     "content": "hello",
                     "channel": "design",
-                    "threadRootId": ""
+                    "threadRootId": "",
+                    "isReply": false
                   }
                 }
               }
@@ -144,6 +145,76 @@
         "ThreadPanel",
         "MembersPanel",
         "PeoplePicker"
+      ]
+    },
+    {
+      "id": "opening-a-conversation-arms-the-composer-in-its-own-frame",
+      "entity": {
+        "id": "x",
+        "activeChannel": ""
+      },
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ],
+      "steps": [
+        {
+          "from": "ready",
+          "event": "OPENED",
+          "payload": {
+            "channel": "general",
+            "name": "general",
+            "isDirect": false
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "activeChannel": "general",
+              "draft": ""
+            }
+          }
+        },
+        {
+          "from": "ready",
+          "event": "DRAFT_CHANGED",
+          "payload": {
+            "value": "hi"
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "draft": "hi"
+            }
+          }
+        },
+        {
+          "from": "ready",
+          "event": "SEND",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SEND_MESSAGE",
+                "payload": {
+                  "data": {
+                    "content": "hi",
+                    "channel": "general",
+                    "threadRootId": "",
+                    "isReply": false
+                  }
+                }
+              }
+            ]
+          }
+        }
       ]
     }
   ]

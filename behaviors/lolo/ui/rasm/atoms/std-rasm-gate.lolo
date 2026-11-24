@@ -4,7 +4,8 @@ app std-rasm-gate [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
@@ -18,6 +19,8 @@ type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z :
 orbital RasmGateOrbital {
   entity RasmGateRun [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this gate heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
     rect : RasmRect? @description "The anchor's rect, null until placed." = null
     ready : boolean @description "The surface has reported the motion preference and it is not reduced." = false
@@ -36,11 +39,20 @@ orbital RasmGateOrbital {
         (set @entity.looks ?looks)
         (set @entity.paints (+ @entity.paints 1))
         (emit GATE_PAINT { n: @entity.paints })
-      RASM_PLACE -> holding when (array/some ?placed (fn p (= @p.id @config.anchor)))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.anchor))))) (if (= @mine null) @entity.rect @mine.rect)))
+      RASM_PLACE -> holding when (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor)))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.rect (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor))))) (if (= @mine null) @entity.rect @mine.rect)))
         (set @entity.paints (+ @entity.paints 1))
         (emit GATE_PAINT { n: @entity.paints })
-      RASM_PLACE -> holding when (not (array/some ?placed (fn p (= @p.id @config.anchor))))
+      RASM_PAGE_ORIGINS -> holding when (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor)))
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.rect (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit GATE_PAINT { n: @entity.paints })
+      RASM_PLACE -> holding when (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> holding when (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.anchor))))
+        (set @entity.pageOrigins ?offsets)
       RASM_MOTION -> holding when (not ?reduced)
         (set @entity.ready true)
         (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
@@ -48,7 +60,7 @@ orbital RasmGateOrbital {
         (emit GATE_PAINT { n: @entity.paints })
       RASM_MOTION -> gone when ?reduced
         (set @entity.paints (+ @entity.paints 1))
-        (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z, nodes: [], texts: [] })
+        (emit RASM_PAINT { origin: "", n: @entity.paints, id: @config.id, z: @config.z, nodes: [], texts: [] })
       RASM_GATE_LIFT -> lifting when @entity.ready
         (set @entity.liftedMs (time/epoch-ms @now))
         (set @entity.elapsed 0)
@@ -65,7 +77,7 @@ orbital RasmGateOrbital {
       RASM_KEYPRESS -> holding when (not (and (= ?key "Escape") @entity.ready))
       GATE_PAINT -> holding
         (let ((r @entity.rect) (look (default (object/get @entity.looks @config.look null) {})))
-          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (if (and @entity.ready (!= @r null)) [{ type: draw-shape, id: (str/concat @config.id ":curtain"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, hit: true }] []) }))
+          (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (if (and @entity.ready (!= @r null)) [{ type: draw-shape, id: (str/concat @config.id ":curtain"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, hit: true }] []) }))
     }
 
     state lifting {
@@ -73,23 +85,29 @@ orbital RasmGateOrbital {
       RASM_THEME -> lifting
         (set @entity.looks ?looks)
       RASM_PLACE -> lifting
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> lifting
+        (set @entity.pageOrigins ?offsets)
       RASM_MOTION -> lifting
       RASM_GATE_LIFT -> lifting
       RASM_KEYPRESS -> lifting
       GATE_PAINT -> lifting
         (let ((r @entity.rect) (look (default (object/get @entity.looks @config.look null) {})))
-          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (if (!= @r null) [{ type: draw-shape, id: (str/concat @config.id ":curtain"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, hit: true, animation: { durationMs: @config.liftMs, startMs: @entity.liftedMs, loop: false, keyframes: [{ at: 0, opacity: 1, offsetY: 0 }, { at: 0.4, opacity: 1, offsetY: (* -0.12 @r.h) }, { at: 0.7, opacity: 1, offsetY: (* -0.45 @r.h) }, { at: 1, opacity: 1, offsetY: (- 0 @r.h) }] } }] []) }))
+          (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (if (!= @r null) [{ type: draw-shape, id: (str/concat @config.id ":curtain"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, hit: true, animation: { durationMs: @config.liftMs, startMs: @entity.liftedMs, loop: false, keyframes: [{ at: 0, opacity: 1, offsetY: 0 }, { at: 0.4, opacity: 1, offsetY: (* -0.12 @r.h) }, { at: 0.7, opacity: 1, offsetY: (* -0.45 @r.h) }, { at: 1, opacity: 1, offsetY: (- 0 @r.h) }] } }] []) }))
       GATE_TICK -> lifting when (< (+ @entity.elapsed ?dtMs) @config.liftMs)
         (set @entity.elapsed (+ @entity.elapsed ?dtMs))
       GATE_TICK -> gone when (>= (+ @entity.elapsed ?dtMs) @config.liftMs)
         (set @entity.paints (+ @entity.paints 1))
-        (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z, nodes: [], texts: [] })
+        (emit RASM_PAINT { origin: "", n: @entity.paints, id: @config.id, z: @config.z, nodes: [], texts: [] })
     }
 
     state gone {
       INIT -> gone
       RASM_THEME -> gone
       RASM_PLACE -> gone
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> gone
+        (set @entity.pageOrigins ?offsets)
       RASM_MOTION -> gone
       RASM_GATE_LIFT -> gone
       RASM_KEYPRESS -> gone
@@ -125,12 +143,15 @@ orbital RasmGateOrbital {
         z : number!
         nodes : [node]!
         texts : [RasmText]!
+        origin : string
       }
         @description "The curtain, empty until the motion preference is known and again once the gate is gone."
         @tier "primary"
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this gate read are read again at the page."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks the curtain is drawn in."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }

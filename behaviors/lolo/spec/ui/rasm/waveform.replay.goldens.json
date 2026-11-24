@@ -1,0 +1,473 @@
+{
+  "atom": "../ui/rasm/atoms/std-rasm-waveform.lolo",
+  "trait": "RasmWaveform",
+  "cases": [
+    {
+      "id": "an envelope is one filled path mirrored about the middle, inside the inset",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_WAVE_SET",
+          "entity": {
+            "looks": {},
+            "rect": {
+              "x": 10,
+              "y": 20,
+              "w": 100,
+              "h": 40
+            },
+            "samples": [],
+            "marks": [],
+            "ticks": [],
+            "at": -1,
+            "paints": 0
+          },
+          "payload": {
+            "id": "waveform",
+            "samples": [
+              0,
+              1,
+              0.5
+            ],
+            "marks": [],
+            "ticks": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "WAVE_PAINT",
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "WAVE_PAINT",
+          "payload": {
+            "n": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "n": 1,
+                  "id": "waveform",
+                  "z": 2,
+                  "texts": [],
+                  "nodes": [
+                    {
+                      "type": "draw-shape",
+                      "id": "waveform",
+                      "shape": "rect",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 10,
+                        "y": 20,
+                        "z": 2
+                      },
+                      "width": 100,
+                      "height": 40,
+                      "fill": "card",
+                      "stroke": "foreground",
+                      "strokeWidth": 2,
+                      "hit": false,
+                      "semantic": {
+                        "role": "img",
+                        "label": ""
+                      }
+                    },
+                    {
+                      "type": "draw-shape",
+                      "id": "waveform:wave",
+                      "shape": "path",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 3
+                      },
+                      "d": "M 10 40 L 60 26 L 110 33 L 110 47 L 60 54 L 10 40 Z",
+                      "fill": "primary",
+                      "stroke": "",
+                      "strokeWidth": 0,
+                      "opacity": 1,
+                      "hit": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ticks, a mark and the playhead paint above the envelope, each at its fraction of the strip",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "WAVE_PAINT",
+          "entity": {
+            "looks": {},
+            "rect": {
+              "x": 10,
+              "y": 20,
+              "w": 100,
+              "h": 40
+            },
+            "samples": [],
+            "marks": [
+              {
+                "at": 0.1,
+                "tone": "in"
+              }
+            ],
+            "ticks": [
+              0.25,
+              0.5
+            ],
+            "at": 0.5,
+            "paints": 0
+          },
+          "payload": {
+            "n": 4
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "n": 4,
+                  "id": "waveform",
+                  "z": 2,
+                  "texts": [],
+                  "nodes": [
+                    {
+                      "type": "draw-shape",
+                      "id": "waveform",
+                      "shape": "rect",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 10,
+                        "y": 20,
+                        "z": 2
+                      },
+                      "width": 100,
+                      "height": 40,
+                      "fill": "card",
+                      "stroke": "foreground",
+                      "strokeWidth": 2,
+                      "hit": false,
+                      "semantic": {
+                        "role": "img",
+                        "label": ""
+                      }
+                    },
+                    {
+                      "type": "draw-shape",
+                      "id": "waveform:ticks",
+                      "shape": "path",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 4
+                      },
+                      "d": "M 35 26 L 35 54 M 60 26 L 60 54",
+                      "fill": "",
+                      "stroke": "muted-foreground",
+                      "strokeWidth": 1,
+                      "opacity": 0.6,
+                      "hit": false
+                    },
+                    {
+                      "type": "draw-shape",
+                      "id": "waveform:mark:0",
+                      "shape": "rect",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 18.5,
+                        "y": 20,
+                        "z": 5
+                      },
+                      "width": 3,
+                      "height": 40,
+                      "fill": "series-2",
+                      "stroke": "",
+                      "strokeWidth": 0,
+                      "hit": false
+                    },
+                    {
+                      "type": "draw-shape",
+                      "id": "waveform:head",
+                      "shape": "rect",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 59,
+                        "y": 20,
+                        "z": 6
+                      },
+                      "width": 2,
+                      "height": 40,
+                      "fill": "foreground",
+                      "stroke": "",
+                      "strokeWidth": 0,
+                      "hit": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a playhead outside the strip is not drawn, and an unplaced strip paints nothing",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "WAVE_PAINT",
+          "entity": {
+            "looks": {},
+            "rect": {
+              "x": 10,
+              "y": 20,
+              "w": 100,
+              "h": 40
+            },
+            "samples": [],
+            "marks": [],
+            "ticks": [],
+            "at": 1.5,
+            "paints": 0
+          },
+          "payload": {
+            "n": 2
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RASM_PAINT",
+                "payload": {
+                  "n": 2,
+                  "id": "waveform",
+                  "z": 2,
+                  "texts": [],
+                  "nodes": [
+                    {
+                      "type": "draw-shape",
+                      "id": "waveform",
+                      "shape": "rect",
+                      "anchor": "top-left",
+                      "position": {
+                        "x": 10,
+                        "y": 20,
+                        "z": 2
+                      },
+                      "width": 100,
+                      "height": 40,
+                      "fill": "card",
+                      "stroke": "foreground",
+                      "strokeWidth": 2,
+                      "hit": false,
+                      "semantic": {
+                        "role": "img",
+                        "label": ""
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "WAVE_PAINT",
+          "entity": {
+            "looks": {},
+            "rect": null,
+            "samples": [],
+            "marks": [],
+            "ticks": [],
+            "at": -1,
+            "paints": 0
+          },
+          "payload": {
+            "n": 3
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "neverEmits": [
+              "RASM_PAINT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a press on a pressable strip announces where across it the press landed",
+      "config": {
+        "pressable": true
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "entity": {
+            "looks": {},
+            "rect": {
+              "x": 10,
+              "y": 20,
+              "w": 100,
+              "h": 40
+            },
+            "samples": [],
+            "marks": [],
+            "ticks": [],
+            "at": -1,
+            "paints": 0
+          },
+          "payload": {
+            "kind": "down",
+            "id": "waveform",
+            "x": 35,
+            "y": 30
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "WAVE_PRESSED",
+                "payload": {
+                  "id": "waveform",
+                  "at": 0.25
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a strip that is not pressable, or a press on another control, announces nothing",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_POINTER",
+          "entity": {
+            "looks": {},
+            "rect": {
+              "x": 10,
+              "y": 20,
+              "w": 100,
+              "h": 40
+            },
+            "samples": [],
+            "marks": [],
+            "ticks": [],
+            "at": -1,
+            "paints": 0
+          },
+          "payload": {
+            "kind": "down",
+            "id": "waveform",
+            "x": 35,
+            "y": 30
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "neverEmits": [
+              "WAVE_PRESSED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a playhead that did not move repaints nothing, and another strip's playhead is ignored",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RASM_WAVE_AT",
+          "entity": {
+            "looks": {},
+            "rect": {
+              "x": 10,
+              "y": 20,
+              "w": 100,
+              "h": 40
+            },
+            "samples": [],
+            "marks": [],
+            "ticks": [],
+            "at": 0.3,
+            "paints": 0
+          },
+          "payload": {
+            "id": "waveform",
+            "at": 0.3
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "neverEmits": [
+              "WAVE_PAINT"
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_WAVE_AT",
+          "payload": {
+            "id": "other",
+            "at": 0.9
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "neverEmits": [
+              "WAVE_PAINT"
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "RASM_WAVE_AT",
+          "payload": {
+            "id": "waveform",
+            "at": 0.4
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "WAVE_PAINT",
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

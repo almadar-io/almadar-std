@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-24T05:28:22.441Z",
+  "generated": "2026-11-24T06:01:02.162Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -26035,6 +26035,174 @@
       ],
       "examples": [
         "(os/utimes \"/data/a.txt\" 1700000000 1700000000 {\"emit\":{\"success\":\"TIMES_SET\",\"failure\":\"DIR_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/video-decode": {
+      "category": "std-os",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Open the device video decoder for one encoded stream: config names the codec (for example avc1.42E01E), its decoder configuration record (the avcC box body for H.264) and the coded size. The first answer is { width, height } once the decoder is configured; each decoded frame then arrives on the onMessage route as { data, width, height, timestamp }, data being the frame as RGBA, 8 bits a channel, rows top to bottom. Samples are handed to it with os/video-feed under the same key; demuxing a container is the program's, in .lolo. A codec the device cannot decode answers unsupported. cancel-call on the key closes the decoder. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
+      "module": "os",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "width": "number",
+            "height": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "width": "number",
+            "height": "number",
+            "timestamp": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "client",
+      "host": "os",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "codec": "string",
+              "description": "bytes",
+              "codedWidth": "number",
+              "codedHeight": "number"
+            }
+          },
+          "description": "The stream: { codec, description, codedWidth, codedHeight }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/video-decode {\"codec\":\"avc1.42E01E\",\"description\":\"AU...\",\"codedWidth\":320,\"codedHeight\":240} {\"key\":\"clip\",\"emit\":{\"success\":\"DECODER_OPEN\",\"failure\":\"DECODER_FAILED\",\"onMessage\":\"VIDEO_FRAME\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/video-feed": {
+      "category": "std-os",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Hand one encoded sample to the video decoder os/video-decode opened under decoder: { data, timestamp, key }, timestamp in microseconds and key true for a sync (key) frame. Success payload: {} once queued; its decoded frame arrives on the decoder's onMessage route. A decoder key with no open decoder answers invalid.",
+      "module": "os",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "client",
+      "host": "os",
+      "params": [
+        {
+          "name": "decoder",
+          "type": "string",
+          "description": "The key os/video-decode was opened under"
+        },
+        {
+          "name": "sample",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "data": "bytes",
+              "timestamp": "number",
+              "key": "boolean"
+            }
+          },
+          "description": "The encoded sample: { data, timestamp, key }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/video-feed \"clip\" {\"data\":\"AAAA...\",\"timestamp\":0,\"key\":true} {\"emit\":{\"failure\":\"FEED_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

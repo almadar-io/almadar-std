@@ -28,7 +28,8 @@ uses ParticlesAtom from "std/behaviors/std-rasm-particles"
 uses MirrorAtom from "std/behaviors/std-rasm-mirror"
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
@@ -44,6 +45,8 @@ type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners 
 orbital RasmGallery {
   entity RasmGalleryView [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this gallery heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
     rect : RasmRect? @description "The rect the readout was placed in, null until placed." = null
     tweenValue : number @description "The tween's latest value." = 0
@@ -93,15 +96,24 @@ orbital RasmGallery {
         (set @entity.looks ?looks)
         (set @entity.paints (+ @entity.paints 1))
         (emit READOUT_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id "readout")))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id "readout"))))) (if (= @mine null) null @mine.rect)))
+      RASM_PLACE -> ready when (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id "readout")))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.rect (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id "readout"))))) (if (= @mine null) null @mine.rect)))
         (set @entity.paints (+ @entity.paints 1))
         (emit READOUT_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id "readout"))))
+      RASM_PAGE_ORIGINS -> ready when (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id "readout")))
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.rect (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id "readout"))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id "readout"))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> ready when (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id "readout"))))
+        (set @entity.pageOrigins ?offsets)
       READOUT_PAINT -> ready
         (let ((l (object/get @entity.looks "text/body/idle" null)) (r @entity.rect) (sk : MessageKey (if (= @entity.swipeDir "left") @config.directions.left (if (= @entity.swipeDir "right") @config.directions.right (if (= @entity.swipeDir "up") @config.directions.up (if (= @entity.swipeDir "down") @config.directions.down @config.directions.none))))) (fk : MessageKey (if (= @entity.flingDir "left") @config.directions.left (if (= @entity.flingDir "right") @config.directions.right (if (= @entity.flingDir "up") @config.directions.up (if (= @entity.flingDir "down") @config.directions.down @config.directions.none))))) (dk : MessageKey (if (= @entity.dropKind "on") @config.drops.on (if (= @entity.dropKind "outside") @config.drops.outside @config.drops.none))))
           (when (and (!= @l null) (!= @r null))
-            (emit RASM_PAINT { n: ?n, id: "readout", z: 2, texts: [
+            (emit RASM_PAINT { origin: "", n: ?n, id: "readout", z: 2, texts: [
               { id: "readout:tween:label", key: @config.tweenLabel, x: (+ @r.x 0), y: (+ @r.y 0), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
               { id: "readout:swipe:label", key: @config.swipeLabel, x: (+ @r.x 0), y: (+ @r.y 38), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
               { id: "readout:swipe:dir", key: @sk, x: (+ @r.x 0), y: (+ @r.y 56), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
@@ -159,7 +171,7 @@ orbital RasmGallery {
       READOUT_PAINT -> internal { n : number! }
         @description "Repaint the readout from the stored rect and look."
         @tier "internal"
-      RASM_PAINT -> external { n : number!  id : string!  z : number!  texts : [RasmText]!  nodes : [node]! }
+      RASM_PAINT -> external { n : number!  id : string!  z : number!  texts : [RasmText]!  nodes : [node]!  origin : string }
         @description "The readout's tween bar and its swipe, fling and drop lines."
         @tier "primary"
       RASM_TWEEN_START -> external { id : string!  from : number!  to : number!  durationMs : number! }
@@ -197,6 +209,8 @@ orbital RasmGallery {
         @description "Store the looks and repaint the readout."
         @tier "domain"
       TweenCol.RASM_PLACE -> RASM_PLACE
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this gallery read are read again at the page."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take the readout's rect when it is placed."
         @tier "domain"
@@ -214,6 +228,51 @@ orbital RasmGallery {
       align: "center"
     }
     listens {
+      Anchor.RASM_PLACE -> RASM_PLACE
+      Bins.RASM_PLACE -> RASM_PLACE
+      ContRow.RASM_PLACE -> RASM_PLACE
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Dialog.RASM_PLACE -> RASM_PLACE
+      DlgStack.RASM_PLACE -> RASM_PLACE
+      DragCol.RASM_PLACE -> RASM_PLACE
+      EndPanel.RASM_PLACE -> RASM_PLACE
+      HStackPanel.RASM_PLACE -> RASM_PLACE
+      LGrid.RASM_PLACE -> RASM_PLACE
+      LStack.RASM_PLACE -> RASM_PLACE
+      LayoutRow.RASM_PLACE -> RASM_PLACE
+      LifeRow.RASM_PLACE -> RASM_PLACE
+      LifeRow2.RASM_PLACE -> RASM_PLACE
+      List.RASM_PLACE -> RASM_PLACE
+      MotionRow.RASM_PLACE -> RASM_PLACE
+      OpenCol.RASM_PLACE -> RASM_PLACE
+      OverRow.RASM_PLACE -> RASM_PLACE
+      Popover.RASM_PLACE -> RASM_PLACE
+      RootStack.RASM_PLACE -> RASM_PLACE
+      StartPanel.RASM_PLACE -> RASM_PLACE
+      SwipeBox.RASM_PLACE -> RASM_PLACE
+      TweenCol.RASM_PLACE -> RASM_PLACE
+      VGrid.RASM_PLACE -> RASM_PLACE
+      VRow.RASM_PLACE -> RASM_PLACE
+      XList.RASM_PLACE -> RASM_PLACE
+      RootStack.RASM_ORIGIN -> RASM_ORIGIN
+      LayoutRow.RASM_ORIGIN -> RASM_ORIGIN
+      LStack.RASM_ORIGIN -> RASM_ORIGIN
+      ContRow.RASM_ORIGIN -> RASM_ORIGIN
+      OpenCol.RASM_ORIGIN -> RASM_ORIGIN
+      DlgStack.RASM_ORIGIN -> RASM_ORIGIN
+      MotionRow.RASM_ORIGIN -> RASM_ORIGIN
+      TweenCol.RASM_ORIGIN -> RASM_ORIGIN
+      SwipeBox.RASM_ORIGIN -> RASM_ORIGIN
+      DragCol.RASM_ORIGIN -> RASM_ORIGIN
+      Bins.RASM_ORIGIN -> RASM_ORIGIN
+      ControlsGrid.RASM_ORIGIN -> RASM_ORIGIN
+      LGrid.RASM_ORIGIN -> RASM_ORIGIN
+      LifeRow.RASM_ORIGIN -> RASM_ORIGIN
+      VGrid.RASM_ORIGIN -> RASM_ORIGIN
+      VRow.RASM_ORIGIN -> RASM_ORIGIN
+      HStackPanel.RASM_ORIGIN -> RASM_ORIGIN
+      OverRow.RASM_ORIGIN -> RASM_ORIGIN
+      LifeRow2.RASM_ORIGIN -> RASM_ORIGIN
       LayoutRow.RASM_EXTENT -> RASM_EXTENT
       LStack.RASM_EXTENT -> RASM_EXTENT
       ContRow.RASM_EXTENT -> RASM_EXTENT
@@ -385,6 +444,7 @@ orbital RasmGallery {
       children: [{ id: "title", size: "measure" }, { id: "theme", size: "fixed", main: 66 }, { id: "hcontrols", size: "measure" }, { id: "controls", size: "fixed", main: 226 }, { id: "hlayout", size: "measure" }, { id: "layoutrow", size: "fixed", main: 110 }, { id: "hcontainers", size: "measure" }, { id: "controw", size: "fixed", main: 170 }, { id: "hmotion", size: "measure" }, { id: "motionrow", size: "fixed", main: 250 }, { id: "hlife", size: "measure" }, { id: "liferow", size: "fixed", main: 150 }, { id: "hvariants", size: "measure" }, { id: "vgrid", size: "fixed", main: 226 }, { id: "vrow", size: "fixed", main: 130 }, { id: "hscrollx", size: "measure" }, { id: "xlist", size: "fixed", main: 56 }, { id: "hoverlays", size: "measure" }, { id: "overrow", size: "fixed", main: 46 }, { id: "hlife2", size: "measure" }, { id: "liferow2", size: "fixed", main: 150 }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       ControlsGrid.RASM_EXTENT -> RASM_EXTENT
       VGrid.RASM_EXTENT -> RASM_EXTENT
       Surface.RASM_BREAKPOINT -> RASM_BREAKPOINT
@@ -407,6 +467,7 @@ orbital RasmGallery {
       children: [{ id: "lstack", size: "fill" }, { id: "lgrid", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       LGrid.RASM_EXTENT -> RASM_EXTENT
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
@@ -427,6 +488,7 @@ orbital RasmGallery {
       children: [{ id: "s1", size: "measure" }, { id: "s2", size: "measure" }, { id: "s3", size: "measure" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       LayoutRow.RASM_PLACE -> RASM_PLACE
@@ -446,6 +508,7 @@ orbital RasmGallery {
       children: [{ id: "opencol", size: "fill" }, { id: "list", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -465,6 +528,7 @@ orbital RasmGallery {
       children: [{ id: "open", size: "fixed", main: 46 }, { id: "openhint", size: "measure" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       ContRow.RASM_PLACE -> RASM_PLACE
@@ -484,6 +548,7 @@ orbital RasmGallery {
       children: [{ id: "dlgtext", size: "measure" }, { id: "dlgclose", size: "fixed", main: 46 }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       Dialog.RASM_PLACE -> RASM_PLACE
@@ -503,6 +568,7 @@ orbital RasmGallery {
       children: [{ id: "tweencol", size: "fill" }, { id: "swipebox", size: "fill" }, { id: "dragcol", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -522,6 +588,7 @@ orbital RasmGallery {
       children: [{ id: "tweenbtn", size: "fixed", main: 46 }, { id: "readout", size: "fixed", main: 160 }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       MotionRow.RASM_PLACE -> RASM_PLACE
@@ -541,6 +608,7 @@ orbital RasmGallery {
       children: [{ id: "swipe", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       MotionRow.RASM_PLACE -> RASM_PLACE
@@ -560,6 +628,7 @@ orbital RasmGallery {
       children: [{ id: "chip", size: "fixed", main: 44 }, { id: "bins", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       MotionRow.RASM_PLACE -> RASM_PLACE
@@ -579,6 +648,7 @@ orbital RasmGallery {
       children: [{ id: "bina", size: "fill" }, { id: "binb", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       DragCol.RASM_PLACE -> RASM_PLACE
@@ -1326,6 +1396,7 @@ orbital RasmGallery {
       z: 2
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Surface.RASM_BOOT -> RASM_BOOT
       Theme.RASM_THEME -> RASM_THEME
       DragCol.RASM_PLACE -> RASM_PLACE
@@ -1339,6 +1410,7 @@ orbital RasmGallery {
       staggerMs: 40
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Surface.RASM_BOOT -> RASM_BOOT
       Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
@@ -1369,6 +1441,7 @@ orbital RasmGallery {
       height: 2240
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       RootStack.RASM_PLACE -> RASM_PLACE
       ControlsGrid.RASM_PLACE -> RASM_PLACE
       Surface.RASM_RESIZE -> RASM_RESIZE
@@ -1392,6 +1465,7 @@ orbital RasmGallery {
       children: [{ id: "lifebtn", size: "fixed", main: 180 }, { id: "sparks", size: "fill" }, { id: "reflection", size: "fixed", main: 220 }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -1777,6 +1851,7 @@ orbital RasmGallery {
       children: [{ id: "vmulti", size: "fill" }, { id: "hstack", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -1837,6 +1912,7 @@ orbital RasmGallery {
       children: [{ id: "hs1", size: "fill" }, { id: "hs2", size: "fill" }, { id: "hs3", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       VRow.RASM_PLACE -> RASM_PLACE
@@ -2061,6 +2137,7 @@ orbital RasmGallery {
       children: [{ id: "openend", size: "fill" }, { id: "openstart", size: "fill" }, { id: "openpop", size: "fill" }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -2251,6 +2328,7 @@ orbital RasmGallery {
       children: [{ id: "stream", size: "fill" }, { id: "plainmirror", size: "fixed", main: 220 }]
     }
     listens {
+      Surface.RASM_PAGE_ORIGINS -> RASM_PAGE_ORIGINS
       Trend.RASM_TREND -> RASM_TREND
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE

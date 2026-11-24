@@ -14155,6 +14155,109 @@
    "now": 1760531445678
   },
   {
+   "id": "split-the-opened-guest-shows-the-start-route-in-the-viewer",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPENED",
+     "payload": {
+      "result": {
+       "guest": "guest-2",
+       "page": [
+        "A.T"
+       ],
+       "rendered": [],
+       "outcomes": [],
+       "client": {
+        "name": "B",
+        "orbitals": []
+       },
+       "route": "/admin/people"
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestViewer": "tab-1",
+      "guestStartRoute": "/my-week"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_PAINTS",
+        "payload": {
+         "guest": "guest-2",
+         "route": "/my-week"
+        }
+       }
+      ],
+      "entity": {
+       "guestRoute": "/my-week"
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-an-unsplit-opened-guest-keeps-the-route-it-opened-on",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPENED",
+     "payload": {
+      "result": {
+       "guest": "guest-2",
+       "page": [
+        "A.T"
+       ],
+       "rendered": [],
+       "outcomes": [],
+       "client": {
+        "name": "B",
+        "orbitals": []
+       },
+       "route": "/admin/people"
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestViewer": "tab-1",
+      "guestStartRoute": "/my-week"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_PAINTS",
+        "payload": {
+         "guest": "guest-2",
+         "route": "/admin/people"
+        }
+       }
+      ],
+      "entity": {
+       "guestRoute": "/admin/people"
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
    "id": "split-a-settled-persona-hands-the-held-program-to-the-viewer-without-a-reset",
    "config": {
     "split": true
@@ -14452,6 +14555,136 @@
       "entity": {
        "guestSigningIn": false
       }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "split-a-bound-viewer-opens-the-page-it-was-refused",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_VIEWER_SETTLE",
+     "payload": {
+      "emitted": [
+       {
+        "event": "IDENTITY_BOUND",
+        "payload": {}
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSigningIn": true,
+      "guestReturnTo": "/my-week",
+      "guestPage": [
+       "PersonBrowse"
+      ],
+      "guestRoute": "/admin/people",
+      "guestPaintSeq": 3
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_PAINTS",
+        "payload": {
+         "guest": "guest-1",
+         "route": "/my-week",
+         "page": [
+          "PersonBrowse"
+         ],
+         "paints": [],
+         "seq": 4
+        }
+       },
+       {
+        "event": "GUEST_VIEWER",
+        "payload": {
+         "guest": "guest-1",
+         "signedIn": true
+        }
+       },
+       {
+        "event": "GUEST_VIEW_RESET",
+        "payload": {
+         "guest": "guest-1"
+        }
+       }
+      ],
+      "entity": {
+       "guestSigningIn": false,
+       "guestReturnTo": "",
+       "guestRoute": "/my-week"
+      },
+      "neverEmits": [
+       "GUEST_FOLLOWED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-split-a-bound-viewer-with-no-refused-page-stays-put",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_VIEWER_SETTLE",
+     "payload": {
+      "emitted": [
+       {
+        "event": "IDENTITY_BOUND",
+        "payload": {}
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSigningIn": true,
+      "guestReturnTo": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_VIEWER",
+        "payload": {
+         "guest": "guest-1",
+         "signedIn": true
+        }
+       },
+       {
+        "event": "GUEST_VIEW_RESET",
+        "payload": {
+         "guest": "guest-1"
+        }
+       }
+      ],
+      "entity": {
+       "guestSigningIn": false
+      },
+      "neverEmits": [
+       "GUEST_FOLLOWED",
+       "GUEST_PAINTS"
+      ]
      }
     }
    ],

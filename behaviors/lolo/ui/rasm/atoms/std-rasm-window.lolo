@@ -5,7 +5,8 @@ app std-rasm-window [
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
 type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
@@ -22,7 +23,10 @@ orbital RasmWindowOrbital {
   entity RasmWindowRun [runtime] {
     id : string!
     entry : RasmEntryItem? @description "This node's entry from the announced style's choreography, null for the built-in one." = null
-    rect : RasmRect? @description "The rect RASM_PLACE gave this node, null until placed." = null
+    rect : RasmRect? @description "This window's rect in its own space (x and y 0, the size RASM_PLACE gave it), null until placed: the window is an origin, so it lays out and paints there." = null
+    at : RasmRect? @description "The rect RASM_PLACE gave this window in the origin it was placed in, null until placed: where its origin sits." = null
+    origin : string @description "The origin this window was placed in, empty for the page." = ""
+    pageAt : RasmPoint? @description "This window's origin on the page, from the last RASM_PAGE_ORIGINS, null before it: a pointer reported in another control's origin is read in this window's space from its page position." = null
     rotate : number @description "The rotation in radians RASM_PLACE gave this node; the chrome and the slots it places turn about the rect centre." = 0
     looks : Map string RasmLook @description "The announced look table." = {}
     dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
@@ -57,10 +61,17 @@ orbital RasmWindowOrbital {
         (set @entity.looks ?looks)
         (set @entity.paints (+ @entity.paints 1))
         (emit WINDOW_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate))))
-      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate)))))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate) (= (default @mine.origin "") @entity.origin))))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate) (= (default @mine.origin "") @entity.origin)))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate))))
+        (set @entity.at (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.origin (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) "" (default @mine.origin ""))))
+        (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (when (!= @mine null) (emit RASM_ORIGIN { id: @config.id, x: @mine.rect.x, y: @mine.rect.y, origin: (default @mine.origin "") })))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate) (= (default @mine.origin "") @entity.origin)))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.rotate 0) @entity.rotate)))))
+        (set @entity.at (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.origin (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) "" (default @mine.origin ""))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null { x: 0, y: 0, w: @mine.rect.w, h: @mine.rect.h })))
         (set @entity.rotate (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) 0 (default @mine.rotate 0))))
+        (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (when (!= @mine null) (emit RASM_ORIGIN { id: @config.id, x: @mine.rect.x, y: @mine.rect.y, origin: (default @mine.origin "") })))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit WINDOW_LAYOUT { n: @entity.layouts })
         (set @entity.paints (+ @entity.paints 1))
@@ -86,7 +97,7 @@ orbital RasmWindowOrbital {
       WINDOW_LAYOUT -> ready when (= @entity.rect null)
       WINDOW_PAINT -> ready when (= @entity.rect null)
       WINDOW_LAYOUT -> ready when (!= @entity.rect null)
-        (emit RASM_PLACE { n: ?n, placed: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (bar (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.titleBar)) @config.titleBar)) (rtl (= @entity.dir "rtl")) (rot @entity.rotate) (fr (object/get @entity.looks "window/frame/idle" null))) (let ((n (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "none") 0 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controlCount)) @config.controlCount))) (leftSide (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "left") (not @rtl) @rtl)) (inset (+ (if (= @fr null) 0 (default @fr.strokeWidth 0)) 6)) (cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2)))) (let ((ctw (math/max 8 (if (<= @n 0) 0 (+ (* @n (+ (- @bar 8) 4)) 4)))) (co (math/cos @rot)) (si (math/sin @rot))) (let ((raw [{ id: (if (= @config.titleSlot "") (str/concat @config.id ":title") @config.titleSlot), x: (if @leftSide (+ @r.x @ctw) (+ @r.x 8)), y: @r.y, w: (math/max 0 (- @r.w (+ 8 @ctw))), h: @bar }, { id: (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot), x: (+ @r.x @inset), y: (+ (+ @r.y @bar) @inset), w: (math/max 0 (- @r.w (* 2 @inset))), h: (math/max 0 (- (- @r.h @bar) (* 2 @inset))) }])) (array/map @raw (fn s (let ((dx (- (+ @s.x (/ @s.w 2)) @cx)) (dy (- (+ @s.y (/ @s.h 2)) @cy))) { id: @s.id, rotate: @rot, rect: { x: (- (+ @cx (- (* @dx @co) (* @dy @si))) (/ @s.w 2)), y: (- (+ @cy (+ (* @dx @si) (* @dy @co))) (/ @s.h 2)), w: @s.w, h: @s.h } }))))))) })
+        (emit RASM_PLACE { n: ?n, placed: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (bar (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.titleBar)) @config.titleBar)) (rtl (= @entity.dir "rtl")) (rot @entity.rotate) (fr (object/get @entity.looks "window/frame/idle" null))) (let ((n (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "none") 0 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controlCount)) @config.controlCount))) (leftSide (if (= (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.controls)) @config.controls) "left") (not @rtl) @rtl)) (inset (+ (if (= @fr null) 0 (default @fr.strokeWidth 0)) 6)) (cx (+ @r.x (/ @r.w 2))) (cy (+ @r.y (/ @r.h 2)))) (let ((ctw (math/max 8 (if (<= @n 0) 0 (+ (* @n (+ (- @bar 8) 4)) 4)))) (co (math/cos @rot)) (si (math/sin @rot))) (let ((raw [{ id: (if (= @config.titleSlot "") (str/concat @config.id ":title") @config.titleSlot), x: (if @leftSide (+ @r.x @ctw) (+ @r.x 8)), y: @r.y, w: (math/max 0 (- @r.w (+ 8 @ctw))), h: @bar }, { id: (if (= @config.bodySlot "") (str/concat @config.id ":body") @config.bodySlot), x: (+ @r.x @inset), y: (+ (+ @r.y @bar) @inset), w: (math/max 0 (- @r.w (* 2 @inset))), h: (math/max 0 (- (- @r.h @bar) (* 2 @inset))) }])) (array/map @raw (fn s (let ((dx (- (+ @s.x (/ @s.w 2)) @cx)) (dy (- (+ @s.y (/ @s.h 2)) @cy))) { id: @s.id, origin: @config.id, rotate: @rot, rect: { x: (- (+ @cx (- (* @dx @co) (* @dy @si))) (/ @s.w 2)), y: (- (+ @cy (+ (* @dx @si) (* @dy @co))) (/ @s.h 2)), w: @s.w, h: @s.h } }))))))) })
         (when (>= @entity.bodyH 0) (emit RASM_EXTENT { n: ?n, id: @config.id, w: @entity.rect.w, h: (if (< @entity.bodyH 0) @entity.rect.h (+ (+ (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.titleBar)) @config.titleBar) (* 2 (+ (let ((fr (object/get @entity.looks "window/frame/idle" null))) (if (= @fr null) 0 (default @fr.strokeWidth 0))) 6))) @entity.bodyH)) }))
       WINDOW_PAINT -> ready when (!= @entity.rect null)
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (none : [node] []) (fr (object/get @entity.looks "window/frame/idle" null)) (tb (object/get @entity.looks "window/titlebar/idle" null)) (ct (object/get @entity.looks "window/control/idle" null)) (rtl (= @entity.dir "rtl")) (rot @entity.rotate) (idx @entity.enterIndex) (stag @entity.staggerMs) (bar (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.titleBar)) @config.titleBar)))
@@ -99,7 +110,7 @@ orbital RasmWindowOrbital {
                       (stripes (if (or (not (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.stripes)) @config.stripes)) (= @tb null) (<= @lines 0)) @none [{ type: draw-shape, shape: "path", id: (str/concat @config.id ":stripes"), position: { x: 0, y: 0 }, anchor: "top-left", d: (array/reduce (array/range @lines) "" (fn acc j (str/concat @acc "M" @tx " " (+ (+ @r.y 6) (* @j 4)) " L" (+ @tx @tw) " " (+ (+ @r.y 6) (* @j 4)) " "))), fill: "", stroke: @tb.stroke, strokeWidth: 1, spring: @tb.spring, animation: @anim, hit: false }]))
                       (controls (if (or (= @ct null) (<= @n 0)) @none (array/map (array/range @n) (fn i { type: draw-shape, shape: "rect", id: (str/concat @config.id ":control:" @i), position: { x: (if @leftSide (+ (+ @r.x 4) (* @i (+ @cs 4))) (- (- (+ @r.x @r.w) (+ 4 @cs)) (* @i (+ @cs 4)))), y: (+ @r.y 4) }, anchor: "top-left", width: @cs, height: @cs, fill: @ct.fill, backdrop: @ct.backdrop, stroke: @ct.stroke, strokeWidth: @ct.strokeWidth, corners: @ct.corners, shadow: @ct.shadow, material: @ct.material, spring: @ct.spring, animation: @anim, hit: false })))))
                   (let ((parts (array/concat (array/concat (array/concat @frame @titlebar) @stripes) @controls)))
-                    (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (if (= @rot 0) @parts [{ type: draw-group, id: (str/concat @config.id ":turn"), position: { x: @cx, y: @cy }, rotate: @rot, items: [{ type: draw-group, id: (str/concat @config.id ":turned"), position: { x: (- 0 @cx), y: (- 0 @cy) }, items: @parts }] }]) })))))))
+                    (emit RASM_PAINT { n: ?n, id: @config.id, origin: @config.id, z: @config.z, nodes: (if (= @rot 0) @parts [{ type: draw-group, id: (str/concat @config.id ":turn"), position: { x: @cx, y: @cy }, rotate: @rot, items: [{ type: draw-group, id: (str/concat @config.id ":turned"), position: { x: (- 0 @cx), y: (- 0 @cy) }, items: @parts }] }]) })))))))
     }
 
     emits {
@@ -113,6 +124,14 @@ orbital RasmWindowOrbital {
       }
         @description "Repaint the chrome from the stored rect, rotation, looks and direction."
         @tier "internal"
+      RASM_ORIGIN -> external {
+        id : string!
+        x : number!
+        y : number!
+        origin : string
+      }
+        @description "This window's origin: where its rect sits in the origin it was placed in. Its children and paints are in its space, so a move that keeps its size moves them all without placing or painting them again."
+        @tier "primary"
       RASM_PLACE -> external {
         n : number!
         placed : [RasmPlaced]!
@@ -124,6 +143,7 @@ orbital RasmWindowOrbital {
         id : string!
         z : number!
         nodes : [node]!
+        origin : string
       }
         @description "The chrome's nodes at its z; a non-zero rotation wraps them in a group turned about the rect centre."
         @tier "primary"

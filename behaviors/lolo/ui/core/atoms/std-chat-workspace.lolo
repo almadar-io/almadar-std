@@ -37,6 +37,7 @@ orbital ChatWorkspaceOrbital {
     content : string! @description "The message text." @synonyms "body, text"
     timestamp : datetime @description "When the message was sent." @synonyms "sent at, time"
     threadRootId : string @description "The message this row replies to in a thread; blank for a conversation message." @synonyms "thread root, parent message" = ""
+    isReply : boolean @description "True when the row is a thread reply; the conversation feed lists only rows that are not." @synonyms "thread reply" = false
     replyCount : number @description "How many replies the message's thread holds." @synonyms "replies" = 0
     repliers : [string] @description "Names of the people who replied in the thread." @synonyms "thread participants" = []
     pinned : boolean @description "Whether the message is pinned to the conversation." @synonyms "pin" = false
@@ -252,6 +253,7 @@ orbital ChatWorkspaceOrbital {
 
     state listing {
       INIT -> listing
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (fetch WorkspaceMembership {
           limit: @config.maxRows
           emit: { failure: RailLoadFailed, success: RailMembershipsLoaded }
@@ -378,6 +380,7 @@ orbital ChatWorkspaceOrbital {
 
     state listing {
       INIT -> listing
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (fetch WorkspaceChannel {
           limit: @config.maxRows
           emit: { failure: BrowseLoadFailed, success: BrowseChannelsLoaded }
@@ -674,18 +677,20 @@ orbital ChatWorkspaceOrbital {
     state idle {
       INIT -> idle
       SHOW -> idle
+        (set @entity.activeChannel ?channel)
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (fetch WorkspaceMessage {
           limit: @config.maxMessages
           orderBy: "timestamp:desc"
           emit: { failure: FeedLoadFailed, success: FeedLoaded }
-          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity threadRootId) ""))
+          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity isReply) false))
         })
       REFRESH -> idle when (and (validate/required @entity.activeChannel) (= (default ?channel "") @entity.activeChannel))
         (fetch WorkspaceMessage {
           limit: @config.maxMessages
           orderBy: "timestamp:desc"
           emit: { failure: FeedLoadFailed, success: FeedLoaded }
-          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity threadRootId) ""))
+          filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity isReply) false))
         })
       REFRESH -> idle when (not (and (validate/required @entity.activeChannel) (= (default ?channel "") @entity.activeChannel)))
       FeedLoaded -> idle
@@ -800,6 +805,9 @@ orbital ChatWorkspaceOrbital {
         })
       OPENED -> ready
         (set @entity.draft "")
+        (set @entity.activeChannel ?channel)
+        (set @entity.activeName (default ?name ""))
+        (set @entity.activeIsDirect (default ?isDirect false))
         (render-ui main {
           type: stack
           direction: vertical
@@ -827,14 +835,14 @@ orbital ChatWorkspaceOrbital {
       APPEND -> ready
         (set @entity.draft (str/concat (default @entity.draft "") ?text))
       SEND -> ready when (and (validate/required @entity.activeChannel) (!= (str/trim (default @entity.draft "")) ""))
-        (emit SEND_MESSAGE { data: { content: @entity.draft, channel: @entity.activeChannel, threadRootId: "" } })
+        (emit SEND_MESSAGE { data: { content: @entity.draft, channel: @entity.activeChannel, threadRootId: "", isReply: false } })
         (set @entity.draft "")
       SEND -> ready when (not (and (validate/required @entity.activeChannel) (!= (str/trim (default @entity.draft "")) "")))
     }
 
     emits {
       SEND_MESSAGE -> external {
-        data : { content : string!, channel : string!, threadRootId : string }!
+        data : { content : string!, channel : string!, threadRootId : string, isReply : boolean }!
       }
         @description "A message is ready to save in the open conversation."
         @synonyms "send, post"
@@ -892,7 +900,10 @@ orbital ChatWorkspaceOrbital {
     state closed {
       INIT -> closed
         (render-ui main null)
+      SWITCHED -> closed
+        (set @entity.activeChannel ?channel)
       THREAD_SHOW -> thread
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (set @entity.threadRoot ?id)
         (set @entity.threadDraft "")
         (fetch WorkspaceMessage {
@@ -901,6 +912,7 @@ orbital ChatWorkspaceOrbital {
           filter: (or (= (object/get @entity id) ?id) (= (object/get @entity threadRootId) ?id))
         })
       PINNED_SHOW -> pinned
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (fetch WorkspaceMessage {
           limit: @config.maxRows
           emit: { failure: PanelLoadFailed, success: PinnedRowsLoaded }
@@ -947,13 +959,13 @@ orbital ChatWorkspaceOrbital {
             gap: xs
             align: end
             className: "m-3 rounded-container border border-border bg-background p-2"
-            children: [{ type: input-group, inputType: text, placeholder: @config.replyPlaceholder, value: @entity.threadDraft, onChange: REPLY_DRAFT, action: REPLY_SEND }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: REPLY_SEND }]
+            children: [{ type: stack, direction: vertical, gap: none, className: "flex-1 min-w-0", children: [{ type: input-group, inputType: text, placeholder: @config.replyPlaceholder, value: @entity.threadDraft, onChange: REPLY_DRAFT, action: REPLY_SEND }] }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: REPLY_SEND }]
           }]
         })
       REPLY_DRAFT -> thread
         (set @entity.threadDraft ?value)
       REPLY_SEND -> thread when (and (validate/required @entity.threadRoot) (!= (str/trim (default @entity.threadDraft "")) ""))
-        (emit SEND_MESSAGE { data: { content: @entity.threadDraft, channel: @entity.activeChannel, threadRootId: @entity.threadRoot } })
+        (emit SEND_MESSAGE { data: { content: @entity.threadDraft, channel: @entity.activeChannel, threadRootId: @entity.threadRoot, isReply: true } })
         (set @entity.threadDraft "")
       REPLY_SEND -> thread when (not (and (validate/required @entity.threadRoot) (!= (str/trim (default @entity.threadDraft "")) "")))
       REFRESH -> thread when (and (validate/required (default ?threadRootId "")) (= ?threadRootId @entity.threadRoot))
@@ -964,6 +976,7 @@ orbital ChatWorkspaceOrbital {
         })
       REFRESH -> thread when (not (and (validate/required (default ?threadRootId "")) (= ?threadRootId @entity.threadRoot)))
       THREAD_SHOW -> thread
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (set @entity.threadRoot ?id)
         (set @entity.threadDraft "")
         (fetch WorkspaceMessage {
@@ -972,12 +985,17 @@ orbital ChatWorkspaceOrbital {
           filter: (or (= (object/get @entity id) ?id) (= (object/get @entity threadRootId) ?id))
         })
       PINNED_SHOW -> pinned
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (fetch WorkspaceMessage {
           limit: @config.maxRows
           emit: { failure: PanelLoadFailed, success: PinnedRowsLoaded }
           filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity pinned) true))
         })
       PANEL_CLOSE -> closed
+        (set @entity.threadRoot "")
+        (render-ui main null)
+      SWITCHED -> closed
+        (set @entity.activeChannel ?channel)
         (set @entity.threadRoot "")
         (render-ui main null)
       PanelLoadFailed -> thread
@@ -1021,6 +1039,7 @@ orbital ChatWorkspaceOrbital {
           }]
         })
       THREAD_SHOW -> thread
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (set @entity.threadRoot ?id)
         (set @entity.threadDraft "")
         (fetch WorkspaceMessage {
@@ -1029,11 +1048,15 @@ orbital ChatWorkspaceOrbital {
           filter: (or (= (object/get @entity id) ?id) (= (object/get @entity threadRootId) ?id))
         })
       PINNED_SHOW -> pinned
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (fetch WorkspaceMessage {
           limit: @config.maxRows
           emit: { failure: PanelLoadFailed, success: PinnedRowsLoaded }
           filter: (and (= (object/get @entity channel) ?channel) (= (object/get @entity pinned) true))
         })
+      SWITCHED -> closed
+        (set @entity.activeChannel ?channel)
+        (render-ui main null)
       PANEL_CLOSE -> closed
         (render-ui main null)
       PanelLoadFailed -> pinned
@@ -1042,7 +1065,7 @@ orbital ChatWorkspaceOrbital {
 
     emits {
       SEND_MESSAGE -> external {
-        data : { content : string!, channel : string!, threadRootId : string }!
+        data : { content : string!, channel : string!, threadRootId : string, isReply : boolean }!
       }
         @description "A thread reply is ready to save."
         @synonyms "reply, send reply"
@@ -1084,7 +1107,14 @@ orbital ChatWorkspaceOrbital {
       MessageFeed.THREAD_OPEN -> THREAD_SHOW
       ConversationHeader.PINNED_OPEN -> PINNED_SHOW
       ConversationHeader.MEMBERS_OPEN -> PANEL_CLOSE
-      WorkspaceShell.CONVERSATION_OPENED -> PANEL_CLOSE
+      SWITCHED {
+        channel : string!
+        name : string
+        isDirect : boolean
+      }
+        @description "Another conversation was opened: remember it for replies and close the panel."
+        @tier "presentation"
+      WorkspaceShell.CONVERSATION_OPENED -> SWITCHED
     }
 
     config {
@@ -1112,6 +1142,7 @@ orbital ChatWorkspaceOrbital {
       INIT -> closed
         (render-ui main null)
       MEMBERS_SHOW -> open
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (set @entity.panelChannel ?channel)
         (set @entity.panelName (default ?name ""))
         (fetch WorkspaceMembership {
@@ -1164,6 +1195,7 @@ orbital ChatWorkspaceOrbital {
         })
       REFRESH -> open when (!= (default ?channel "") @entity.panelChannel)
       MEMBERS_SHOW -> open
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (set @entity.panelChannel ?channel)
         (set @entity.panelName (default ?name ""))
         (fetch WorkspaceMembership {
@@ -1244,6 +1276,7 @@ orbital ChatWorkspaceOrbital {
       INIT -> closed
         (render-ui main null)
       PICK -> open
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
         (set @entity.pickChannel ?channel)
         (set @entity.pickName (default ?name ""))
         (fetch WorkspacePerson {

@@ -4,7 +4,8 @@ app std-rasm-masonry [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
 type RasmMasonryChild = { id : string!, size : "ratio" | "fixed" | "measure"!, main : number }
 type RasmMasonryShape = { columns : number, gap : number, padding : number }
@@ -12,7 +13,10 @@ type RasmMasonryShape = { columns : number, gap : number, padding : number }
 orbital RasmMasonryOrbital {
   entity RasmMasonryRun [runtime] {
     id : string!
-    rect : RasmRect? @description "The rect RASM_PLACE gave this layout, null until placed." = null
+    rect : RasmRect? @description "This masonry's rect in its own space (x and y 0, the size RASM_PLACE gave it), null until placed: the masonry is an origin, so it lays out and paints there." = null
+    at : RasmRect? @description "The rect RASM_PLACE gave this masonry in the origin it was placed in, null until placed: where its origin sits." = null
+    origin : string @description "The origin this masonry was placed in, empty for the page." = ""
+    pageAt : RasmPoint? @description "This masonry's origin on the page, from the last RASM_PAGE_ORIGINS, null before it: a pointer reported in another control's origin is read in this masonry's space from its page position." = null
     dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
     announced : boolean @description "True once the surface announced a direction, which then replaces the config knob." = false
     measured : Map string RasmMeasureItem @description "The latest measured height of each child, by id." = {}
@@ -31,6 +35,8 @@ orbital RasmMasonryOrbital {
 
     state ready {
       INIT -> ready
+      RASM_PAGE_ORIGINS -> ready
+        (set @entity.pageAt (object/get ?offsets @config.id null))
       RASM_DIRECTION -> ready
         (set @entity.dir ?direction)
         (set @entity.announced true)
@@ -41,10 +47,17 @@ orbital RasmMasonryOrbital {
         (set @entity.layouts (+ @entity.layouts 1))
         (emit MASONRY_LAYOUT { n: @entity.layouts })
       RASM_BREAKPOINT -> ready when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
-      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))
-      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.origin "") @entity.origin))))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.origin "") @entity.origin)))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))
+        (set @entity.at (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.origin (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) "" (default @mine.origin ""))))
+        (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (when (!= @mine null) (emit RASM_ORIGIN { id: @config.id, x: @mine.rect.x, y: @mine.rect.y, origin: (default @mine.origin "") })))
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h) (= (default @mine.origin "") @entity.origin)))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.at)) (and (!= @mine null) (!= @cur null) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.at (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.origin (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) "" (default @mine.origin ""))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null { x: 0, y: 0, w: @mine.rect.w, h: @mine.rect.h })))
         (set @entity.layouts (+ @entity.layouts 1))
+        (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (when (!= @mine null) (emit RASM_ORIGIN { id: @config.id, x: @mine.rect.x, y: @mine.rect.y, origin: (default @mine.origin "") })))
         (emit MASONRY_LAYOUT { n: @entity.layouts })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
       RASM_EXTENT -> ready when (and (array/some @config.children (fn c (= @c.id ?id))) (let ((m (object/get @entity.measured ?id null))) (or (= @m null) (!= @m.height ?h))))
@@ -57,21 +70,21 @@ orbital RasmMasonryOrbital {
         (set @entity.layouts (+ @entity.layouts 1))
         (emit MASONRY_LAYOUT { n: @entity.layouts })
       RASM_MEASURED -> ready when (not (array/some ?items (fn it (and (array/some @config.children (fn c (= @c.id @it.id))) (let ((m (object/get @entity.measured @it.id null))) (or (= @m null) (!= @m.height @it.height)))))))
-      RASM_POINTER -> ready when (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (array/find @entity.last (fn p (and (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot))
-        (set @entity.hot (let ((h (array/find @entity.last (fn p (and (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)))
+      RASM_POINTER -> ready when (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (let ((own (str/startsWith ?id (str/concat @config.id ":hover:"))) (pa @entity.pageAt)) (if (and (not @own) (or (= @pa null) (= ?pageX null))) null (let ((px (if @own ?x (- (default ?pageX 0) @pa.x))) (py (if @own ?y (- (default ?pageY 0) @pa.y)))) (array/find @entity.last (fn p (and (>= @px @p.rect.x) (< @px (+ @p.rect.x @p.rect.w)) (>= @py @p.rect.y) (< @py (+ @p.rect.y @p.rect.h)))))))))) (if (= @h null) "" @h.id)) @entity.hot))
+        (set @entity.hot (let ((h (let ((own (str/startsWith ?id (str/concat @config.id ":hover:"))) (pa @entity.pageAt)) (if (and (not @own) (or (= @pa null) (= ?pageX null))) null (let ((px (if @own ?x (- (default ?pageX 0) @pa.x))) (py (if @own ?y (- (default ?pageY 0) @pa.y)))) (array/find @entity.last (fn p (and (>= @px @p.rect.x) (< @px (+ @p.rect.x @p.rect.w)) (>= @py @p.rect.y) (< @py (+ @p.rect.y @p.rect.h)))))))))) (if (= @h null) "" @h.id)))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit MASONRY_LAYOUT { n: @entity.layouts })
-      RASM_POINTER -> ready when (not (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (array/find @entity.last (fn p (and (>= ?x @p.rect.x) (< ?x (+ @p.rect.x @p.rect.w)) (>= ?y @p.rect.y) (< ?y (+ @p.rect.y @p.rect.h))))))) (if (= @h null) "" @h.id)) @entity.hot)))
+      RASM_POINTER -> ready when (not (and (> @config.hoverGrow 0) (array/includes ["enter", "leave"] ?kind) (or (!= @entity.hot "") (str/startsWith ?id (str/concat @config.id ":hover:"))) (!= (let ((h (let ((own (str/startsWith ?id (str/concat @config.id ":hover:"))) (pa @entity.pageAt)) (if (and (not @own) (or (= @pa null) (= ?pageX null))) null (let ((px (if @own ?x (- (default ?pageX 0) @pa.x))) (py (if @own ?y (- (default ?pageY 0) @pa.y)))) (array/find @entity.last (fn p (and (>= @px @p.rect.x) (< @px (+ @p.rect.x @p.rect.w)) (>= @py @p.rect.y) (< @py (+ @p.rect.y @p.rect.h)))))))))) (if (= @h null) "" @h.id)) @entity.hot)))
       MASONRY_LAYOUT -> ready when (!= @entity.rect null)
         (set @entity.colsNow (math/max 1 (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.columns)) @config.columns)))
         (set @entity.gapNow (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.gap)) @config.gap))
         (set @entity.padNow (default (let ((sh (object/get @config.variants @entity.variant null))) (if (= @sh null) null @sh.padding)) @config.padding))
         (set @entity.colW (if (> @entity.colsNow 0) (math/max 0 (/ (- (- @entity.rect.w (* 2 @entity.padNow)) (* @entity.gapNow (- @entity.colsNow 1))) @entity.colsNow)) 0))
-        (set @entity.last (let ((r @entity.rect) (cols @entity.colsNow) (cw @entity.colW) (gap @entity.gapNow) (pad @entity.padNow) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl"))) (let ((laid (array/reduce @config.children { tops: (array/map (array/range @cols) (fn i 0)), placed: [] } (fn acc c (let ((hc (if (= @c.size "ratio") (* @cw (default @c.main 1)) (if (= @c.size "fixed") (default @c.main 0) (let ((m (object/get @entity.measured @c.id null))) (if (= @m null) 0 @m.height))))) (k (if (= @config.assign "cycle") (- (array/len @acc.placed) (* @cols (if (> @cols 0) (math/floor (/ (array/len @acc.placed) @cols)) 0))) (array/reduce (array/range @cols) 0 (fn best i (if (< (default (array/nth @acc.tops @i) 0) (default (array/nth @acc.tops @best) 0)) @i @best)))))) (let ((y0 (default (array/nth @acc.tops @k) 0)) (x0 (* @k (+ @cw @gap)))) { tops: (array/map (array/range @cols) (fn i (if (= @i @k) (+ (+ @y0 @hc) @gap) (default (array/nth @acc.tops @i) 0)))), placed: (array/append @acc.placed { id: @c.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @cw)) (+ (+ @r.x @pad) @x0)), y: (+ (+ @r.y @pad) @y0), w: @cw, h: @hc } }) })))))) @laid.placed)))
-        (emit RASM_PLACE { n: ?n, placed: (array/map @entity.last (fn p (if (and (> @config.hoverGrow 0) (= @p.id @entity.hot)) { id: @p.id, rect: { x: (- @p.rect.x @config.hoverGrow), y: (- @p.rect.y @config.hoverGrow), w: (+ @p.rect.w (* 2 @config.hoverGrow)), h: (+ @p.rect.h (* 2 @config.hoverGrow)) } } @p))) })
+        (set @entity.last (let ((r @entity.rect) (cols @entity.colsNow) (cw @entity.colW) (gap @entity.gapNow) (pad @entity.padNow) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl"))) (let ((laid (array/reduce @config.children { tops: (array/map (array/range @cols) (fn i 0)), placed: [] } (fn acc c (let ((hc (if (= @c.size "ratio") (* @cw (default @c.main 1)) (if (= @c.size "fixed") (default @c.main 0) (let ((m (object/get @entity.measured @c.id null))) (if (= @m null) 0 @m.height))))) (k (if (= @config.assign "cycle") (- (array/len @acc.placed) (* @cols (if (> @cols 0) (math/floor (/ (array/len @acc.placed) @cols)) 0))) (array/reduce (array/range @cols) 0 (fn best i (if (< (default (array/nth @acc.tops @i) 0) (default (array/nth @acc.tops @best) 0)) @i @best)))))) (let ((y0 (default (array/nth @acc.tops @k) 0)) (x0 (* @k (+ @cw @gap)))) { tops: (array/map (array/range @cols) (fn i (if (= @i @k) (+ (+ @y0 @hc) @gap) (default (array/nth @acc.tops @i) 0)))), placed: (array/append @acc.placed { id: @c.id, origin: @config.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @cw)) (+ (+ @r.x @pad) @x0)), y: (+ (+ @r.y @pad) @y0), w: @cw, h: @hc } }) })))))) @laid.placed)))
+        (emit RASM_PLACE { n: ?n, placed: (array/map @entity.last (fn p (if (and (> @config.hoverGrow 0) (= @p.id @entity.hot)) { id: @p.id, origin: @config.id, rect: { x: (- @p.rect.x @config.hoverGrow), y: (- @p.rect.y @config.hoverGrow), w: (+ @p.rect.w (* 2 @config.hoverGrow)), h: (+ @p.rect.h (* 2 @config.hoverGrow)) } } @p))) })
         (emit RASM_EXTENT { n: ?n, id: @config.id, w: @entity.rect.w, h: (+ (* 2 @entity.padNow) (math/max 0 (- (array/reduce @entity.last 0 (fn a p (math/max @a (- (+ @p.rect.y @p.rect.h) (+ @entity.rect.y @entity.padNow))))) 0))) })
         (when (> @config.hoverGrow 0)
-          (emit RASM_PAINT { n: ?n, id: (str/concat @config.id ":hover"), z: @config.z, nodes: (array/map @entity.last (fn p { type: draw-shape, shape: "rect", id: (str/concat @config.id ":hover:" @p.id), position: { x: @p.rect.x, y: @p.rect.y }, anchor: "top-left", width: @p.rect.w, height: @p.rect.h, fill: "rgba(0,0,0,0)", hit: true })) }))
+          (emit RASM_PAINT { n: ?n, id: (str/concat @config.id ":hover"), origin: @config.id, z: @config.z, nodes: (array/map @entity.last (fn p { type: draw-shape, shape: "rect", id: (str/concat @config.id ":hover:" @p.id), position: { x: @p.rect.x, y: @p.rect.y }, anchor: "top-left", width: @p.rect.w, height: @p.rect.h, fill: "rgba(0,0,0,0)", hit: true })) }))
       MASONRY_LAYOUT -> ready when (= @entity.rect null)
     }
 
@@ -81,6 +94,14 @@ orbital RasmMasonryOrbital {
       }
         @description "Pack the children from the stored rect."
         @tier "internal"
+      RASM_ORIGIN -> external {
+        id : string!
+        x : number!
+        y : number!
+        origin : string
+      }
+        @description "This masonry's origin: where its rect sits in the origin it was placed in. Its children and paints are in its space, so a move that keeps its size moves them all without placing or painting them again."
+        @tier "primary"
       RASM_PLACE -> external {
         n : number!
         placed : [RasmPlaced]!
@@ -92,6 +113,7 @@ orbital RasmMasonryOrbital {
         id : string!
         z : number!
         nodes : [node]!
+        origin : string
       }
         @description "With hoverGrow on, an invisible pointer region over every child so the pointer is seen anywhere on it."
         @tier "primary"
@@ -106,6 +128,8 @@ orbital RasmMasonryOrbital {
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: this masonry keeps its own, to read a pointer reported in another origin."
       RASM_DIRECTION { direction : "ltr" | "rtl"! }
         @description "The surface's reading direction; once announced it replaces the direction knob and the children are packed again."
       RASM_BREAKPOINT { name : "phone" | "tablet" | "desktop" | "wide"!  width : number!  chain : [string]! }
@@ -116,7 +140,7 @@ orbital RasmMasonryOrbital {
         @description "A child's content height: a measure child takes it, and the children are packed again when it changes."
       RASM_MEASURED { items : [RasmMeasureItem]! }
         @description "Canvas text measurements: a child that is a measured text takes its height like a child that reports RASM_EXTENT."
-      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  pageX : number  pageY : number }
         @description "With hoverGrow on, an enter or leave says where the pointer is: the child under it grows and the children are placed again."
     }
 

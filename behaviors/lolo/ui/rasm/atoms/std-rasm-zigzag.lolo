@@ -4,7 +4,8 @@ app std-rasm-zigzag [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
@@ -22,6 +23,8 @@ type ZigShape = { rowH : number, picH : number, gap : number, stacked : boolean 
 orbital RasmZigzagOrbital {
   entity RasmZigzagRun [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this zigzag heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
     rect : RasmRect? @description "The rows' rect from RASM_PLACE, null until placed." = null
     cards : [ZigCard] @description "The records the last RASM_CARDS sent." = []
@@ -57,10 +60,18 @@ orbital RasmZigzagOrbital {
       RASM_PAGE_SCROLLED -> ready
         (set @entity.offset ?offset)
         (emit ZIG_SEE { n: @entity.paints })
-      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+      RASM_PLACE -> ready when (and (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.rect (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
         (emit ZIG_SEE { n: @entity.paints })
-      RASM_PLACE -> ready when (not (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))))
+      RASM_PAGE_ORIGINS -> ready when (and (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h)))))
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.rect (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (emit ZIG_SEE { n: @entity.paints })
+      RASM_PLACE -> ready when (not (and (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> ready when (not (and (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))) (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id)))) (cur @entity.rect)) (not (and (!= @mine null) (!= @cur null) (= @mine.rect.x @cur.x) (= @mine.rect.y @cur.y) (= @mine.rect.w @cur.w) (= @mine.rect.h @cur.h))))))
+        (set @entity.pageOrigins ?offsets)
       RASM_BREAKPOINT -> ready when (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant))
         (set @entity.variant (default (array/find ?chain (fn n (object/has @config.variants @n))) ""))
         (emit ZIG_SEE { n: @entity.paints })
@@ -91,7 +102,7 @@ orbital RasmZigzagOrbital {
                         { i: @i, nodes: [{ type: draw-group, id: (str/concat @config.id ":row:" @i ":pic"), position: { x: 0, y: 0 }, animation: (if (and @shown (or @entity.reduced (> @st 0))) (if @entity.reduced @still @picAnim) @hidden), items: (array/concat [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":row:" @i ":slot"), anchor: "top-left", position: { x: @picX, y: @y, z: @config.z }, width: @picW, height: @pich, fill: @med.fill, corners: (if (= @med.corners null) @card.corners @med.corners), hit: false }] (if (= @url "") [] [{ type: draw-group, id: (str/concat @config.id ":row:" @i ":clip"), position: { x: 0, y: 0 }, clip: (str/concat "M " (+ @picX @mr) " " @y " L " (- (+ @picX @picW) @mr) " " @y " A " @mr " " @mr " 0 0 1 " (+ @picX @picW) " " (+ @y @mr) " L " (+ @picX @picW) " " (- (+ @y @pich) @mr) " A " @mr " " @mr " 0 0 1 " (- (+ @picX @picW) @mr) " " (+ @y @pich) " L " (+ @picX @mr) " " (+ @y @pich) " A " @mr " " @mr " 0 0 1 " @picX " " (- (+ @y @pich) @mr) " L " @picX " " (+ @y @mr) " A " @mr " " @mr " 0 0 1 " (+ @picX @mr) " " @y " Z"), items: [{ type: draw-sprite, id: (str/concat @config.id ":row:" @i ":image"), asset: { url: @url }, fit: "cover", anchor: "top-left", position: { x: @picX, y: @y, z: @config.z }, width: @picW, height: @pich }] }])) }, { type: draw-group, id: (str/concat @config.id ":row:" @i ":text"), position: { x: 0, y: 0 }, animation: (if @shown (if @entity.reduced @still @txtAnim) @hidden), items: (array/concat (if @config.numbered [{ type: draw-text, id: (str/concat @config.id ":row:" @i ":num"), text: @num, anchor: "top-left", position: { x: @tx, y: @numY, z: @config.z }, align: @al, baseline: "top", color: @numeral.textColor, font: @numeral.font, width: @textW, wrap: false, hit: false }] []) [{ type: draw-text, id: (str/concat @config.id ":row:" @i ":tag"), text: (default @c.badge ""), anchor: "top-left", position: { x: @tx, y: @badgeY, z: @config.z }, align: @al, baseline: "top", color: @badge.textColor, font: @badge.font, width: @textW, wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":row:" @i ":title"), text: @c.title, anchor: "top-left", position: { x: @tx, y: @titleY, z: @config.z }, align: @al, baseline: "top", color: @title.textColor, font: @title.font, width: @textW, height: (* @config.titleLines @config.titleLineH), fit: "shrink", minSize: @config.titleMinSize, wrap: true, hit: false }, { type: draw-text, id: (str/concat @config.id ":row:" @i ":body"), text: (default @c.body ""), anchor: "top-left", position: { x: @tx, y: @bodyY, z: @config.z }, align: @al, baseline: "top", color: @body.textColor, font: @body.font, width: @textW, height: @config.bodyH, fit: "shrink", minSize: @config.bodyMinSize, wrap: true, hit: false }]) }] })))))))))))
                   (do
                     (emit RASM_EXTENT { n: ?n, id: @config.id, w: @r.w, h: (- (+ (* @n (+ @total @gap)) 0) @gap) })
-                    (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/flatten (array/map @parts (fn q @q.nodes))) })))))))
+                    (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: [], nodes: (array/flatten (array/map @parts (fn q @q.nodes))) })))))))
       ZIG_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0)))
     }
 
@@ -112,6 +123,7 @@ orbital RasmZigzagOrbital {
         z : number!
         nodes : [node]!
         texts : [RasmText]!
+        origin : string
       }
         @description "The rows: for each, its picture group and its text group, each carrying its own arrival."
         @tier "primary"
@@ -126,6 +138,8 @@ orbital RasmZigzagOrbital {
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this zigzag read are read again at the page."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }

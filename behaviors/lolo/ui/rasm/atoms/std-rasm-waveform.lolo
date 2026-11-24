@@ -1,0 +1,179 @@
+app std-rasm-waveform [
+  version: "0.1.0",
+  description: "std-rasm-waveform — a strip that shows a signal's envelope on the Rasm canvas, painted by one trait. RASM_WAVE_SET { id, samples, marks, ticks } gives it the envelope (each sample 0 to 1, spread evenly across the strip), marks (a position 0 to 1 across the strip and a tone that picks its look) and ticks (positions 0 to 1 drawn as thin lines, bar lines for audio); RASM_WAVE_AT { id, at } moves the playhead (0 to 1 across the strip; below 0 or above 1 hides it). Once placed (RASM_PLACE for its id) it paints a pad (waveform/pad/idle), the envelope as one filled path mirrored about the strip's middle (waveform/wave/idle), the ticks as one path (waveform/tick/idle), each mark as a line the height of the strip (waveform/mark-<tone>/idle, falling back to waveform/mark/idle) and the playhead (waveform/head/idle); a look the theme does not declare falls back to the palette (card and foreground for the pad, primary for the envelope, muted-foreground for the ticks, series-2 for a mark, foreground for the playhead). With `pressable` on, a press on the strip announces where across it the press landed as the `pressed` event { id, at } (0 to 1), so a program can seek. It holds no audio and decides nothing: a program hands it numbers. Under rtl nothing mirrors: time runs left to right."
+]
+;; @capabilities "waveform, audio envelope strip, playhead over a signal, seek by pressing a waveform, signal meter"
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
+type RasmWaveMark = { at : number!, tone : string! }
+
+orbital RasmWaveformOrbital {
+  entity RasmWaveformRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the strip, null until placed." = null
+    samples : [number] @description "The envelope, each value 0 to 1, spread evenly across the strip." = []
+    marks : [RasmWaveMark] @description "The marks, each a position 0 to 1 across the strip and a tone." = []
+    ticks : [number] @description "The tick positions, 0 to 1 across the strip." = []
+    at : number @description "The playhead, 0 to 1 across the strip; outside that range it is not drawn." = -1
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmWaveform -> RasmWaveformRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit WAVE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit WAVE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_WAVE_SET -> ready when (= ?id @config.id)
+        (set @entity.samples ?samples)
+        (set @entity.marks ?marks)
+        (set @entity.ticks ?ticks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit WAVE_PAINT { n: @entity.paints })
+      RASM_WAVE_SET -> ready when (!= ?id @config.id)
+      RASM_WAVE_AT -> ready when (and (= ?id @config.id) (!= ?at @entity.at))
+        (set @entity.at ?at)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit WAVE_PAINT { n: @entity.paints })
+      RASM_WAVE_AT -> ready when (not (and (= ?id @config.id) (!= ?at @entity.at)))
+      RASM_POINTER -> ready when (and @config.pressable (= ?id @config.id) (= ?kind "down") (!= @entity.rect null))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 1, h: 1 })))
+          (emit @config.pressed { id: @config.id, at: (math/min 1 (math/max 0 (/ (- ?x @r.x) (math/max 1 @r.w)))) }))
+      RASM_POINTER -> ready when (not (and @config.pressable (= ?id @config.id) (= ?kind "down") (!= @entity.rect null)))
+      WAVE_PAINT -> ready when (and (!= @entity.rect null) (> (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) @r.w) 0))
+        (let (
+            (r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))
+            (pad (default (object/get @entity.looks (str/concat @config.lookSet "/pad/idle") null) {}))
+            (wave (default (object/get @entity.looks (str/concat @config.lookSet "/wave/idle") null) {}))
+            (tick (default (object/get @entity.looks (str/concat @config.lookSet "/tick/idle") null) {}))
+            (head (default (object/get @entity.looks (str/concat @config.lookSet "/head/idle") null) {}))
+            (n (array/len @entity.samples))
+            (mid (+ @r.y (/ @r.h 2)))
+            (half (math/max 1 (- (/ @r.h 2) @config.inset))))
+          (emit RASM_PAINT {
+            n: ?n,
+            id: @config.id,
+            z: @config.z,
+            texts: [],
+            nodes: (array/concat
+              [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: (default @pad.fill "card"), stroke: (default @pad.stroke "foreground"), strokeWidth: (default @pad.strokeWidth 2), corners: @pad.corners, hit: @config.pressable, semantic: { role: "img", label: @config.label } }]
+              (if (> @n 1)
+                [{ type: draw-shape, id: (str/concat @config.id ":wave"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 1) },
+                   d: (str/concat
+                     (str/join (array/map (array/range @n) (fn i (str/concat (if (= @i 0) "M " "L ") (+ @r.x (* (default (/ @i (- @n 1)) 0) @r.w)) " " (- @mid (* (math/min 1 (math/max 0 (default (array/nth @entity.samples @i) 0))) @half))))) " ")
+                     " "
+                     (str/join (array/map (array/range @n) (fn k (let ((i (- (- @n 1) @k))) (str/concat "L " (+ @r.x (* (default (/ @i (- @n 1)) 0) @r.w)) " " (+ @mid (* (math/min 1 (math/max 0 (default (array/nth @entity.samples @i) 0))) @half)))))) " ")
+                     " Z"),
+                   fill: (default @wave.fill "primary"), stroke: "", strokeWidth: 0, opacity: 1, hit: false }]
+                [])
+              (if (> (array/len @entity.ticks) 0)
+                [{ type: draw-shape, id: (str/concat @config.id ":ticks"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 2) },
+                   d: (str/join (array/map @entity.ticks (fn t (str/concat "M " (+ @r.x (* (math/min 1 (math/max 0 @t)) @r.w)) " " (+ @r.y @config.inset) " L " (+ @r.x (* (math/min 1 (math/max 0 @t)) @r.w)) " " (- (+ @r.y @r.h) @config.inset)))) " "),
+                   fill: "", stroke: (default @tick.stroke "muted-foreground"), strokeWidth: (default @tick.strokeWidth 1), opacity: 0.6, hit: false }]
+                [])
+              (array/map (array/range (array/len @entity.marks)) (fn i (let ((m (default (array/nth @entity.marks @i) { at: 0, tone: "" })) ) (let ((look (default (object/get @entity.looks (str/concat @config.lookSet "/mark-" @m.tone "/idle") null) (default (object/get @entity.looks (str/concat @config.lookSet "/mark/idle") null) {}))))
+                { type: draw-shape, id: (str/concat @config.id ":mark:" @i), shape: rect, anchor: "top-left", position: { x: (- (+ @r.x (* (math/min 1 (math/max 0 @m.at)) @r.w)) (/ @config.markWidth 2)), y: @r.y, z: (+ @config.z 3) }, width: @config.markWidth, height: @r.h, fill: (default @look.fill "series-2"), stroke: "", strokeWidth: 0, hit: false }))))
+              (if (and (>= @entity.at 0) (<= @entity.at 1))
+                [{ type: draw-shape, id: (str/concat @config.id ":head"), shape: rect, anchor: "top-left", position: { x: (- (+ @r.x (* @entity.at @r.w)) (/ @config.headWidth 2)), y: @r.y, z: (+ @config.z 4) }, width: @config.headWidth, height: @r.h, fill: (default @head.fill "foreground"), stroke: "", strokeWidth: 0, hit: false }]
+                []))
+          }))
+      WAVE_PAINT -> ready when (not (and (!= @entity.rect null) (> (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) @r.w) 0)))
+    }
+
+    emits {
+      WAVE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the strip."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The pad, the envelope, the ticks, the marks and the playhead for the surface to collect."
+        @tier "primary"
+      @config.pressed -> external {
+        id : string!
+        at : number!
+      }
+        @description "The strip was pressed: its id and where across it the press landed, 0 to 1."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the strip's rect when it is placed."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "A press on the strip announces where it landed while `pressable` is on."
+      RASM_WAVE_SET { id : string!  samples : [number]!  marks : [RasmWaveMark]!  ticks : [number]! }
+        @description "Show this envelope, these marks and these ticks on the strip `id` names."
+        @synonyms "show waveform, set envelope, load signal"
+      RASM_WAVE_AT { id : string!  at : number! }
+        @description "Move the playhead of the strip `id` names, 0 to 1 across it."
+        @synonyms "playhead, position, progress"
+      WAVE_PAINT { n : number! }
+    }
+
+    config {
+      id : string = "waveform"
+        @label "Id"
+        @description "The strip's RASM_PLACE key, paint id and pointer region."
+        @tier "presentation"
+      label : string = ""
+        @label "Description"
+        @description "What assistive technology announces for the strip."
+        @tier "presentation"
+      lookSet : string = "waveform"
+        @label "Look set"
+        @description "The prefix of the strip's looks (`<lookSet>/pad/idle`, `/wave/idle`, `/tick/idle`, `/head/idle`, `/mark/idle`, `/mark-<tone>/idle`)."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; the envelope, ticks, marks and playhead paint above the pad in that order."
+        @tier "presentation"
+      inset : number = 6
+        @label "Inset"
+        @description "How far the envelope and the ticks stay from the strip's top and bottom, in px."
+        @tier "presentation"
+      markWidth : number = 3
+        @label "Mark width"
+        @description "How wide a mark's line is, in px."
+        @tier "presentation"
+      headWidth : number = 2
+        @label "Playhead width"
+        @description "How wide the playhead's line is, in px."
+        @tier "presentation"
+      pressable : boolean = false
+        @label "Pressable"
+        @description "Whether a press on the strip announces where it landed."
+        @tier "presentation"
+      pressed : event = WAVE_PRESSED
+        @label "Pressed event"
+        @description "The event a press announces with { id, at }: the strip's id and where across it the press landed, 0 to 1."
+        @tier "domain"
+    }
+  }
+
+  page boot as RasmWaveformStart -> RasmWaveform
+}

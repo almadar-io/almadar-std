@@ -4,13 +4,16 @@ app std-rasm-reveal [
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
-type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number, origin : string }
+type RasmPoint = { x : number!, y : number! }
 type RasmRevealLift = { id : string!, region : string! }
 type RasmText = { id : string!, key : MessageKey?, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string? }
 
 orbital RasmRevealOrbital {
   entity RasmRevealRun [runtime] {
     id : string!
+    heard : Map string RasmPlaced @description "Every placement this reveal heard, by id, as placed (in its origin): read again at the page when an origin moves." = {}
+    pageOrigins : Map string RasmPoint @description "Every origin's page offset from the last RASM_PAGE_ORIGINS: a placed rect is on the page at its x and y plus its origin's offset." = {}
     rect : RasmRect? @description "The cover's rect from RASM_PLACE, null until it is placed." = null
     known : [RasmPlaced] @description "The placed rects of the regions in `lift`, kept for the keyboard hole." = []
     key : string @description "The region the last RASM_FOCUS opened, empty for none." = ""
@@ -23,12 +26,22 @@ orbital RasmRevealOrbital {
 
     state ready {
       INIT -> ready
-      RASM_PLACE -> ready when (array/some ?placed (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id))))))
-        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
-        (set @entity.known (array/concat (array/filter @entity.known (fn k (not (array/some ?placed (fn p (= @p.id @k.id)))))) (array/filter ?placed (fn p (array/some @config.lift (fn l (= @l.region @p.id)))))))
+      RASM_PLACE -> ready when (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id))))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+        (set @entity.rect (let ((mine (array/find (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.known (array/concat (array/filter @entity.known (fn k (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @k.id)))))) (array/filter (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (array/some @config.lift (fn l (= @l.region @p.id)))))))
         (set @entity.paints (+ @entity.paints 1))
         (emit REVEAL_PAINT { n: @entity.paints })
-      RASM_PLACE -> ready when (not (array/some ?placed (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id)))))))
+      RASM_PAGE_ORIGINS -> ready when (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id))))))
+        (set @entity.pageOrigins ?offsets)
+        (set @entity.rect (let ((mine (array/find (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.known (array/concat (array/filter @entity.known (fn k (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (= @p.id @k.id)))))) (array/filter (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (array/some @config.lift (fn l (= @l.region @p.id)))))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REVEAL_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some (array/map ?placed (fn p (let ((o (object/get @entity.pageOrigins (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id)))))))
+        (set @entity.heard (array/reduce ?placed @entity.heard (fn acc p (object/set @acc @p.id @p))))
+      RASM_PAGE_ORIGINS -> ready when (not (array/some (array/map (object/values @entity.heard) (fn p (let ((o (object/get ?offsets (default @p.origin "") { x: 0, y: 0 }))) { id: @p.id, rect: { x: (+ @p.rect.x @o.x), y: (+ @p.rect.y @o.y), w: @p.rect.w, h: @p.rect.h }, rotate: (default @p.rotate 0), origin: "" }))) (fn p (or (= @p.id @config.id) (array/some @config.lift (fn l (= @l.region @p.id)))))))
+        (set @entity.pageOrigins ?offsets)
       RASM_FOCUS -> ready
         (set @entity.key (let ((l (array/find @config.lift (fn l (= @l.id ?id))))) (if (= @l null) "" @l.region)))
         (set @entity.paints (+ @entity.paints 1))
@@ -40,7 +53,7 @@ orbital RasmRevealOrbital {
       REVEAL_PAINT -> ready when (= @entity.rect null)
       REVEAL_PAINT -> ready when (!= @entity.rect null)
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (kr (array/find @entity.known (fn k (= @k.id @entity.key)))))
-          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @config.fill, hit: false, material: { live: true, params: [@config.radius, @config.feather, (if @entity.all 1 0), (if (= @kr null) 0 1), (if (= @kr null) 0 (- (+ @kr.rect.x (/ @kr.rect.w 2)) @r.x)), (if (= @kr null) 0 (- (+ @kr.rect.y (/ @kr.rect.h 2)) @r.y)), (if (= @kr null) 0 (+ (/ @kr.rect.w 2) @config.margin)), (if (= @kr null) 0 (+ (/ @kr.rect.h 2) @config.margin))], wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n  let f = max(px.a.y, 1.0);\n  let near = 1.0 - smoothstep(px.a.x - f, px.a.x, length(px.local - px.pointer));\n  let dd = abs(px.local - px.b.xy) - px.b.zw;\n  let sd = length(max(dd, vec2<f32>(0.0, 0.0))) + min(max(dd.x, dd.y), 0.0);\n  let key = (1.0 - smoothstep(0.0, f, sd)) * px.a.w;\n  let hole = max(max(near, key), px.a.z);\n  let a = px.color.a * (1.0 - hole);\n  return vec4<f32>(px.color.rgb * a, a);\n}\n" } }] }))
+          (emit RASM_PAINT { origin: "", n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @config.fill, hit: false, material: { live: true, params: [@config.radius, @config.feather, (if @entity.all 1 0), (if (= @kr null) 0 1), (if (= @kr null) 0 (- (+ @kr.rect.x (/ @kr.rect.w 2)) @r.x)), (if (= @kr null) 0 (- (+ @kr.rect.y (/ @kr.rect.h 2)) @r.y)), (if (= @kr null) 0 (+ (/ @kr.rect.w 2) @config.margin)), (if (= @kr null) 0 (+ (/ @kr.rect.h 2) @config.margin))], wgsl: "fn shade(px: Pixel) -> vec4<f32> {\n  let f = max(px.a.y, 1.0);\n  let near = 1.0 - smoothstep(px.a.x - f, px.a.x, length(px.local - px.pointer));\n  let dd = abs(px.local - px.b.xy) - px.b.zw;\n  let sd = length(max(dd, vec2<f32>(0.0, 0.0))) + min(max(dd.x, dd.y), 0.0);\n  let key = (1.0 - smoothstep(0.0, f, sd)) * px.a.w;\n  let hole = max(max(near, key), px.a.z);\n  let a = px.color.a * (1.0 - hole);\n  return vec4<f32>(px.color.rgb * a, a);\n}\n" } }] }))
     }
 
     emits {
@@ -55,12 +68,15 @@ orbital RasmRevealOrbital {
         z : number!
         nodes : [node]!
         texts : [RasmText]!
+        origin : string
       }
         @description "The cover: one material rect whose shader cuts the pointer, keyboard and lifted-all holes."
         @tier "primary"
     }
 
     listens {
+      RASM_PAGE_ORIGINS { offsets : Map string RasmPoint! }
+        @description "Every origin's page offset: the placements this reveal read are read again at the page."
       RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take the cover's rect when its id is placed, and the rects of the regions in `lift`."
       RASM_FOCUS { id : string! }
