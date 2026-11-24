@@ -1264,6 +1264,348 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-tap-on-a-failed-messages-alert-asks-to-send-it-again",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "sent"
+     },
+     {
+      "id": "m2",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "failed"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:retry:1",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHAT_RETRY",
+        "payload": {
+         "id": "m2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a tap on the alert slot of a message that did not fail sends nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "sent"
+     },
+     {
+      "id": "m2",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "sending"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:retry:1",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {
+      "neverEmits": [
+       "CHAT_RETRY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-panel-with-sending-and-failed-messages-paints-once",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "sending"
+     },
+     {
+      "id": "m2",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "failed"
+     },
+     {
+      "id": "m3",
+      "side": "agent",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "sent"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "CHAT_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "loading-drops-the-records-and-repaints",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "sent"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_CHAT_LOADING",
+     "payload": {
+      "id": "ch"
+     },
+     "expect": {
+      "entity": {
+       "live": false,
+       "records": []
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: loading another panel changes nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "user",
+      "text": "Hi",
+      "sender": "",
+      "at": "09:13",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "status": "sent"
+     }
+    ],
+    "maxBack": 0,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_CHAT_LOADING",
+     "payload": {
+      "id": "other"
+     },
+     "expect": {
+      "entity": {
+       "live": true
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-skeleton-panel-paints-placeholders-before-records",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true,
+    "skeleton": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": false
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "CHAT_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
   }
  ]
 }
