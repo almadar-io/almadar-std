@@ -1,7 +1,7 @@
 app std-http-policy [
   version: "1.0.0",
   env: ["CORS_ORIGIN"],
-  description: "std-http-policy — the HTTP policy a served app answers with, as one pure decision. HTTP_DECIDE { requestId, method, path, headers, contentLength, responseSize, responseType } answers HTTP_DECIDED { requestId (echoed), verdict, status, responseHeaders, compress }. Any OPTIONS request is a preflight: status 200 at once, CORS grant plus allow-methods and the mirrored request headers, nothing else applied. Otherwise a body over bodyLimitBytes is refused 413 (payload-too-large); else ok 200. An origin on corsOrigins (the knob, replaced at runtime by CONFIGURE { corsOrigins }, or, with the originsFromEnv knob on (the default), read at INIT from the CORS_ORIGIN environment variable as a comma list, trimmed, blanks dropped, the knob when it is blank, answering CORS_CONFIGURED { corsOrigins } or CORS_FAILED { error, kind }) is echoed in access-control-allow-origin with allow-credentials true, an unlisted or absent one gets no grant. A path starting with apiPrefix also carries the securityHeaders set (the helmet 8 defaults); a page gets none. compress is br when accepted, else gzip, else none; none for a preflight, an event stream, or a response under minCompressBytes."
+  description: "std-http-policy — the HTTP policy a served app answers with, as one pure decision. HTTP_DECIDE { requestId, method, path, headers, contentLength, responseSize, responseType } answers HTTP_DECIDED { requestId (echoed), verdict, status, responseHeaders, compress }. Any OPTIONS request is a preflight: status 200 at once, CORS grant plus allow-methods and the mirrored request headers, nothing else applied. Otherwise a body over bodyLimitBytes is refused 413 (payload-too-large); else ok 200. An origin on corsOrigins (the knob, replaced at runtime by CONFIGURE { corsOrigins }, or, with the originsFromEnv knob on (the default), read at INIT from the CORS_ORIGIN environment variable as a comma list, trimmed, blanks dropped, the knob when it is blank, answering CORS_CONFIGURED { corsOrigins } or CORS_FAILED { error, kind }) is echoed in access-control-allow-origin with allow-credentials true (an entry with one * stands for exactly one DNS label: letters, digits, dash), an unlisted or absent one gets no grant. A path starting with apiPrefix also carries the securityHeaders set (the helmet 8 defaults); a page gets none. compress is br when accepted, else gzip, else none; none for a preflight, an event stream, or a response under minCompressBytes."
 ]
 uses Spec from "almadar-std/http-policy"
 type HttpHeader = { name : string!, value : string! }
@@ -47,7 +47,16 @@ orbital HttpPolicyOrbital {
               (asked (array/find @payload.headers (fn h (= (str/lower @h.name) "access-control-request-headers"))))
               (accept (array/find @payload.headers (fn h (= (str/lower @h.name) "accept-encoding"))))
               (preflight (= (str/upper @payload.method) "OPTIONS")))
-          (let ((granted (and (!= @origin null) (array/includes @entity.corsOrigins @origin.value)))
+          (let ((granted (and (!= @origin null)
+                  (array/some @entity.corsOrigins (fn allowed
+                    (let ((parts (str/split @allowed "*")))
+                      (if (= (array/len @parts) 2)
+                        (let ((head (default (array/nth @parts 0) "")) (tail (default (array/nth @parts 1) "")) (size (str/len @origin.value)))
+                          (and (str/startsWith @origin.value @head)
+                            (str/endsWith @origin.value @tail)
+                            (> @size (+ (str/len @head) (str/len @tail)))
+                            (> (array/len (str/find-pattern (str/slice @origin.value (str/len @head) (- @size (str/len @tail))) "^[A-Za-z0-9-]+$")) 0)))
+                        (= @allowed @origin.value)))))))
                 (acceptValue (if (= @accept null) "" (str/lower @accept.value))))
             (let ((cors (if @granted
                       [{ name: "access-control-allow-origin", value: @origin.value }, { name: "access-control-allow-credentials", value: "true" }, { name: "vary", value: "origin, access-control-request-method, access-control-request-headers" }]
@@ -127,7 +136,7 @@ orbital HttpPolicyOrbital {
     config {
       corsOrigins : [string] = ["http://localhost:5173"]
         @label "CORS origins"
-        @description "Origins granted CORS with credentials; each is echoed back exactly. An origin not listed gets no grant."
+        @description "Origins granted CORS with credentials, each echoed back exactly. An entry with one * (e.g. http://*.localhost:5065) grants any origin that has exactly one DNS label (letters, digits, dash) in place of the * and matches the rest exactly. An origin not listed gets no grant."
         @synonyms "allowed origins, cors origin"
         @tier "infra"
       originsFromEnv : boolean = true

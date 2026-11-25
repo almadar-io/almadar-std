@@ -1228,6 +1228,290 @@
      }
     }
    ]
+  },
+  {
+   "id": "pattern-grants-one-label-in-place-of-the-star",
+   "entity": {
+    "corsOrigins": [
+     "http://*.localhost:5065"
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "HTTP_DECIDE",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/page",
+      "headers": [
+       {
+        "name": "origin",
+        "value": "http://std-browse.localhost:5065"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "HTTP_DECIDED",
+        "payload": {
+         "requestId": 7,
+         "verdict": "ok",
+         "status": 200,
+         "responseHeaders": [
+          {
+           "name": "access-control-allow-origin",
+           "value": "http://std-browse.localhost:5065"
+          },
+          {
+           "name": "access-control-allow-credentials",
+           "value": "true"
+          },
+          {
+           "name": "vary",
+           "value": "origin, access-control-request-method, access-control-request-headers"
+          }
+         ],
+         "compress": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "An allow entry with one * stands for exactly one DNS label (letters, digits, dash)."
+  },
+  {
+   "id": "control-pattern-refuses-two-labels",
+   "entity": {
+    "corsOrigins": [
+     "http://*.localhost:5065"
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "HTTP_DECIDE",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/page",
+      "headers": [
+       {
+        "name": "origin",
+        "value": "http://a.b.localhost:5065"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "HTTP_DECIDED",
+        "payload": {
+         "requestId": 7,
+         "verdict": "ok",
+         "status": 200,
+         "responseHeaders": [
+          {
+           "name": "vary",
+           "value": "origin, access-control-request-method, access-control-request-headers"
+          }
+         ],
+         "compress": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The * never spans a dot."
+  },
+  {
+   "id": "control-pattern-refuses-an-empty-label",
+   "entity": {
+    "corsOrigins": [
+     "http://*.localhost:5065"
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "HTTP_DECIDE",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/page",
+      "headers": [
+       {
+        "name": "origin",
+        "value": "http://.localhost:5065"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "HTTP_DECIDED",
+        "payload": {
+         "requestId": 7,
+         "verdict": "ok",
+         "status": 200,
+         "responseHeaders": [
+          {
+           "name": "vary",
+           "value": "origin, access-control-request-method, access-control-request-headers"
+          }
+         ],
+         "compress": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The * is at least one character."
+  },
+  {
+   "id": "control-pattern-refuses-another-port",
+   "entity": {
+    "corsOrigins": [
+     "http://*.localhost:5065"
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "HTTP_DECIDE",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/page",
+      "headers": [
+       {
+        "name": "origin",
+        "value": "http://x.localhost:5066"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "HTTP_DECIDED",
+        "payload": {
+         "requestId": 7,
+         "verdict": "ok",
+         "status": 200,
+         "responseHeaders": [
+          {
+           "name": "vary",
+           "value": "origin, access-control-request-method, access-control-request-headers"
+          }
+         ],
+         "compress": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The rest of the entry matches exactly."
+  },
+  {
+   "id": "control-pattern-refuses-another-scheme",
+   "entity": {
+    "corsOrigins": [
+     "http://*.localhost:5065"
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "HTTP_DECIDE",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/page",
+      "headers": [
+       {
+        "name": "origin",
+        "value": "https://x.localhost:5065"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "HTTP_DECIDED",
+        "payload": {
+         "requestId": 7,
+         "verdict": "ok",
+         "status": 200,
+         "responseHeaders": [
+          {
+           "name": "vary",
+           "value": "origin, access-control-request-method, access-control-request-headers"
+          }
+         ],
+         "compress": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The scheme before the * matches exactly."
+  },
+  {
+   "id": "control-pattern-label-refuses-other-characters",
+   "entity": {
+    "corsOrigins": [
+     "http://*.localhost:5065"
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "HTTP_DECIDE",
+     "payload": {
+      "requestId": 7,
+      "method": "GET",
+      "path": "/page",
+      "headers": [
+       {
+        "name": "origin",
+        "value": "http://a_b.localhost:5065"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "HTTP_DECIDED",
+        "payload": {
+         "requestId": 7,
+         "verdict": "ok",
+         "status": 200,
+         "responseHeaders": [
+          {
+           "name": "vary",
+           "value": "origin, access-control-request-method, access-control-request-headers"
+          }
+         ],
+         "compress": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "A label is letters, digits and dash only."
   }
  ]
 }
