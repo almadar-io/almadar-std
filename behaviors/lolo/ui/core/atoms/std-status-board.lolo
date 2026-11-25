@@ -1,13 +1,14 @@
 app std-status-board [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-status-board — the generic operations board: a page header with the board's title, when it was read and a Refresh action, an optional strip of summary figures, a filter bar (search plus one chip per section with its count), then the rows grouped into sections, each row an accordion item whose header shows the status (icon, color and text), title, subtitle, meta and relative time, and whose body is the row's detail, asked for when the row first opens. The owning behavior reads the data and drives the board: BOARD_LOADING paints skeleton rows (or keeps the rows while a refresh runs), BOARD_SHOW answers the figures, sections and rows, BOARD_FAILED shows the error (a warning above the last rows when there are rows, an error with Retry when there are none), BOARD_DETAIL answers one row's detail (loading, ready with status items, a log or code block with its error lines, and a link, or failed). A composer that shows the board on demand sends BOARD_OPEN when it brings the board into view, which asks for the first read once. The board asks with BOARD_LOAD (BOARD_OPEN's first read, the empty state's Load, loadOnInit), BOARD_REFRESH (Refresh, Retry) and BOARD_ROW_OPENED (a row opened with no ready detail). Tones are neutral, success, warning, danger and info."
+  description: "std-status-board — the generic operations board: a page header with the board's title, when it was read and a Refresh action, an optional strip of summary figures, a filter bar (search plus one chip per section with its count), then the rows grouped into sections, each row an accordion item whose header shows the status (icon, color and text), title, subtitle, meta and relative time, and whose body is the row's detail, asked for when the row first opens. The owning behavior reads the data and drives the board: BOARD_LOADING paints skeleton rows (or keeps the rows while a refresh runs), BOARD_SHOW answers the figures, sections and rows, BOARD_FAILED shows the error (a warning above the last rows when there are rows, an error with Retry when there are none), BOARD_DETAIL answers one row's detail (loading, ready with status items, a log or code block with its error lines, a link and action buttons, or failed); a pressed action button asks BOARD_ROW_ACTION { rowId, action } of the owner. A composer that shows the board on demand sends BOARD_OPEN when it brings the board into view, which asks for the first read once. The board asks with BOARD_LOAD (BOARD_OPEN's first read, the empty state's Load, loadOnInit), BOARD_REFRESH (Refresh, Retry) and BOARD_ROW_OPENED (a row opened with no ready detail). Tones are neutral, success, warning, danger and info."
 ]
 type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
 type StatusBoardSection = { key : string!, label : string! }
 type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
 type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
-type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
+type StatusBoardAction = { action : string!, label : string!, icon : string!, danger : boolean! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string!, actions : [StatusBoardAction]? }
 orbital StatusBoardOrbital {
 
   entity StatusBoardView [runtime] {
@@ -89,6 +90,8 @@ orbital StatusBoardOrbital {
       SECTION_PICKED -> idle
         (set @entity.section (if (= @entity.section @payload.key) "" @payload.key))
         (render-ui @config.slot @config.bodyContent)
+      ROW_ACTION_CLICKED -> idle
+        (emit BOARD_ROW_ACTION { rowId: @payload.rowId, action: @payload.action })
     }
 
     emits {
@@ -106,6 +109,19 @@ orbital StatusBoardOrbital {
         @description "A row opened with no ready detail: the owner answers BOARD_DETAIL for it."
         @synonyms "row expanded, open details"
         @tier "primary"
+      BOARD_ROW_ACTION -> external {
+        rowId : string!
+        action : string!
+      }
+        @description "An action button of an open row's detail was pressed: the owner acts on the row and answers with BOARD_SHOW or BOARD_DETAIL."
+        @synonyms "row action, row button"
+        @tier "primary"
+      ROW_ACTION_CLICKED -> internal {
+        rowId : string!
+        action : string!
+      }
+        @description "Internal: a row action button was pressed."
+        @tier "internal"
       LOAD_CLICKED -> internal { }
         @description "Internal: the empty state's Load."
         @tier "internal"
@@ -378,11 +394,12 @@ orbital StatusBoardOrbital {
                     errorLines: (object/fromEntries (array/map @d.errorLines (fn n [(str/concat @n) "error"])))
                     highlightLines: (if (= (array/len @d.errorLines) 0) null { start: (array/nth @d.errorLines 0), end: (array/nth @d.errorLines 0) })
                     maxHeight: "60vh"
-                  }), (if (= @r.url "") null {
+                  }), (if (and (= @r.url "") (= (array/len (default @d.actions [])) 0)) null {
                     type: stack
                     direction: horizontal
                     justify: end
-                    children: [{ type: button, label: @config.linkLabel, href: @r.url, variant: ghost, size: sm, icon: "external-link" }]
+                    gap: sm
+                    children: (array/concat (array/map (default @d.actions []) (fn a { type: button, label: @a.label, icon: @a.icon, variant: (if @a.danger destructive secondary), size: sm, action: ROW_ACTION_CLICKED, actionPayload: { rowId: @r.id, action: @a.action } })) (if (= @r.url "") [] [{ type: button, label: @config.linkLabel, href: @r.url, variant: ghost, size: sm, icon: "external-link" }]))
                   })]
                 }))))
               }))

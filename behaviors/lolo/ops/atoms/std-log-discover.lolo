@@ -1,0 +1,504 @@
+app std-log-discover [
+  version: "1.0.0",
+  net: { "127.0.0.1:8088": [tcp], "127.0.0.1:4790": [tcp] },
+  description: "std-log-discover — Discover over the logs of several boxes, each answering std-log-search's log-search hook: the local box (127.0.0.1:8088), this Mac's launchpad (127.0.0.1:4790) and, when its host is set, the remote box, each read by its own std-http-client whose credential knob puts the box's fleet key in the x-fleet-key header (the program never holds it). A search is a lolo predicate over @line (time, level, namespace, message, app, release, box, data), a time window (a preset of the last 15 minutes, hour, day or week, or the range a histogram bar narrows it to) and the levels to read. Run starts a job on every box, one after another (the boxes' clients share one call frame), then polls them, waiting pollMs between rounds on the composed std-delay, until each is done or failed; the board then shows each box's status, the total, a histogram whose bars sum every box's counts over the window (a click on a bar narrows the window to it and runs again), the top values of level, namespace, app, release and box with their counts (a click adds `(= @line.<field> \"<value>\")` to the query with and, and runs), and the newest hitsShown kept lines of all boxes, newest first, each opening to its whole JSON; Load older runs the same search for the window up to the oldest line shown and appends what it finds. Live tail runs the search again tailMs after each run ends, over the preset window ending now, until it is turned off. Saves keep a search (name, query, preset, levels) as a LogSavedSearch row; a saved search opens and runs by name (LD_OPEN_SAVED, which a composer's route can send for a link) and can be deleted."
+]
+;; @capabilities "search logs like Kibana Discover, lolo query over log lines, histogram of hits, field filters, live tail, saved log searches"
+uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
+uses Delay from "std/behaviors/std-delay"
+
+type HttpHeader = { name : string!, value : string! }
+type LogValue = string | number | boolean | [LogValue?] | Map string LogValue?
+type LogLine = { time : string!, level : string!, namespace : string!, message : string!, app : string!, release : string!, box : string!, data : Map string LogValue? }
+type LogFieldCount = { field : string!, value : string!, count : number! }
+type LogJobView = { id : string!, status : string!, error : string!, scanned : number!, total : number!, hits : [LogLine]!, histogram : [number]!, fields : [LogFieldCount]! }
+type LogJobStarted = { job : string! }
+type LdBox = { box : string!, label : string!, job : string!, status : string!, error : string!, scanned : number!, total : number!, hits : [LogLine]!, histogram : [number]!, fields : [LogFieldCount]! }
+type LdBar = { label : string!, value : number! }
+type LdDrill = { label : string, value : number }
+
+orbital LogDiscoverOrbital {
+  entity LogDiscoverRun [runtime] {
+    id : string!
+    query : string = "true"
+    preset : "15m" | "1h" | "24h" | "7d" = "1h"
+    levels : [string] = ["error", "warn", "info"]
+    from : instant? = null
+    to : instant? = null
+    append : boolean @description "The run in flight adds older hits to the ones shown (Load older)." = false
+    boxes : [LdBox] = []
+    index : number @description "The box the start or poll in flight is for." = 0
+    phase : "idle" | "starting" | "polling" | "done" = idle
+    hits : [LogLine] = []
+    histogram : [number] = []
+    fields : [LogFieldCount] = []
+    total : number = 0
+    tail : boolean = false
+    round : number @description "Poll rounds of the run in flight; each step carries it so a repeat of the last round is never taken for one (EXEC-QUEUE-4)." = 0
+  }
+
+  entity LogSavedSearch [persistent: log_saved_searches] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
+    @read none "This atom declares no identity entity, so it has no signed-in viewer to scope reads to; the composing program gates its pages (the launchpad requires sign-in)."
+    id : string!
+    name : string!
+    query : string!
+    preset : string!
+    levels : [string]!
+  }
+
+  trait LdLocalHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LdLocalHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+  trait LdLocalHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: LD_LOCAL_REPLIED
+      HTTP_FAILED: LD_LOCAL_FAILED
+      HTTP_CANCEL: LD_LOCAL_CANCEL
+    }
+    config {
+      host: "127.0.0.1"
+      port: 8088
+      tls: false
+      serverName: ""
+      credential: "ORB_FLEET_KEY_LOCAL"
+      credentialHeader: "x-fleet-key"
+      credentialPrefix: ""
+    }
+    listens {
+      LogDiscover.LD_LOCAL_SEND -> HTTP_SEND
+      LdLocalHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LdLocalHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LdLocalHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait LdMacHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LdMacHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+  trait LdMacHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: LD_MAC_REPLIED
+      HTTP_FAILED: LD_MAC_FAILED
+      HTTP_CANCEL: LD_MAC_CANCEL
+    }
+    config {
+      host: "127.0.0.1"
+      port: 4790
+      tls: false
+      serverName: ""
+      credential: "ORB_FLEET_KEY_LOCAL"
+      credentialHeader: "x-fleet-key"
+      credentialPrefix: ""
+    }
+    listens {
+      LogDiscover.LD_MAC_SEND -> HTTP_SEND
+      LdMacHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LdMacHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LdMacHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait LdRemoteHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LdRemoteHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+  trait LdRemoteHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: LD_REMOTE_REPLIED
+      HTTP_FAILED: LD_REMOTE_FAILED
+      HTTP_CANCEL: LD_REMOTE_CANCEL
+    }
+    config {
+      host: ""
+      port: 443
+      tls: true
+      serverName: ""
+      credential: "ORB_FLEET_KEY_REMOTE"
+      credentialHeader: "x-fleet-key"
+      credentialPrefix: ""
+    }
+    listens {
+      LogDiscover.LD_REMOTE_SEND -> HTTP_SEND
+      LdRemoteHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LdRemoteHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LdRemoteHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait LdDelay = Delay.traits.Delay {
+    listens {
+      LogDiscover.LD_WAIT -> START with { delayMs: ?delayMs }
+    }
+  }
+
+  trait LogDiscover -> LogDiscoverRun [server] {
+    config {
+      boxes : [string] = ["local", "mac"]
+        @label "Boxes"
+        @description "The boxes searched, in order: local (127.0.0.1:8088), mac (this launchpad, 127.0.0.1:4790) and remote (the LdRemoteHttp client's host)."
+        @tier "domain"
+      hitsShown : number = 500
+        @label "Lines shown"
+        @description "How many of the newest kept lines the table shows; Load older reaches the ones before them."
+        @tier "policy"
+      pollMs : number = 800
+        @label "Poll interval"
+        @tier "infra"
+      savedLimit : number = 200
+        @label "Saved searches listed"
+        @description "Most saved searches the board lists."
+        @tier "policy"
+      tailMs : number = 3000
+        @label "Live tail interval"
+        @tier "policy"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch LogSavedSearch { limit: @config.savedLimit, emit: { success: LD_SAVED_LOADED, failure: LD_SAVED_UNREAD } })
+
+      LD_RUN -> idle
+        (set @entity.query (if (= (str/trim ?query) "") "true" ?query))
+        (set @entity.preset ?preset)
+        (set @entity.levels ?levels)
+        (set @entity.append ?append)
+        (set @entity.to (if (= ?to null) @now ?to))
+        (set @entity.from (if (= ?from null) (time/add @now (- 0 (if (= ?preset "15m") 900000 (if (= ?preset "24h") 86400000 (if (= ?preset "7d") 604800000 3600000)))) "ms") ?from))
+        (set @entity.boxes (array/map @config.boxes (fn b (let ((box : LdBox { box: @b, label: @b, job: "", status: "starting", error: "", scanned: 0, total: 0, hits: [], histogram: [], fields: [] })) @box))))
+        (set @entity.index 0)
+        (set @entity.round (+ @entity.round 1))
+        (set @entity.phase starting)
+        (emit LD_SHOW_RUNNING { boxes: @entity.boxes, query: @entity.query, preset: @entity.preset, levels: @entity.levels })
+        (emit LD_SEND { index: 0, op: "start", round: (+ @entity.round 1) })
+
+      LD_SEND -> idle when (>= ?index (array/len @entity.boxes))
+        (when (= ?op "start") (do (set @entity.phase polling) (emit LD_WAIT { delayMs: @config.pollMs })))
+        (when (= ?op "poll") (emit LD_ROUND_DONE { round: ?round }))
+      LD_SEND -> idle when (< ?index (array/len @entity.boxes))
+        (set @entity.index ?index)
+        (let ((b (default (array/nth @entity.boxes ?index) (let ((none : LdBox { box: "", label: "", job: "", status: "done", error: "", scanned: 0, total: 0, hits: [], histogram: [], fields: [] })) @none))))
+          (if (and (= ?op "poll") (array/includes ["done", "failed"] @b.status))
+            (emit LD_SEND { index: (+ ?index 1), op: ?op, round: ?round })
+            (let ((body (bytes/from-string (if (= ?op "start")
+                    (json/stringify { op: "start", query: @entity.query, from: @entity.from, to: @entity.to, levels: @entity.levels })
+                    (json/stringify { op: "poll", job: @b.job }))))
+                  (headers [{ name: "content-type", value: "application/json" }]))
+              (if (= @b.box "remote")
+                (emit LD_REMOTE_SEND { key: (str/concat "ld-" ?op), method: "POST", target: "/api/hooks/log-search", headers: @headers, body: @body, stream: "none" })
+                (if (= @b.box "mac")
+                  (emit LD_MAC_SEND { key: (str/concat "ld-" ?op), method: "POST", target: "/api/hooks/log-search", headers: @headers, body: @body, stream: "none" })
+                  (emit LD_LOCAL_SEND { key: (str/concat "ld-" ?op), method: "POST", target: "/api/hooks/log-search", headers: @headers, body: @body, stream: "none" }))))))
+
+      LD_REPLIED -> idle
+        (let ((started (if (= ?status 202) (json/parse ?body LogJobStarted) null))
+              (job (if (= ?status 200) (json/parse ?body LogJobView) null)))
+          (do
+            (set @entity.boxes (array/map (array/zip @entity.boxes (array/range 0 (array/len @entity.boxes))) (fn p
+              (let ((b (array/nth @p 0)) (i (array/nth @p 1)))
+                (if (!= @i @entity.index) @b
+                  (if (!= @started null) (object/merge @b { job: @started.job, status: "queued" })
+                    (if (!= @job null) (object/merge @b { status: @job.status, error: @job.error, scanned: @job.scanned, total: @job.total, hits: @job.hits, histogram: @job.histogram, fields: @job.fields })
+                      (object/merge @b { status: "failed", error: (if (= ?status 401) "the fleet key was refused" (str/concat "answered " ?status ": " ?body)) }))))))))
+            (emit LD_SEND { index: (+ @entity.index 1), op: (if (= @entity.phase "starting") "start" "poll"), round: @entity.round })))
+      LD_UNREACHED -> idle
+        (set @entity.boxes (array/map (array/zip @entity.boxes (array/range 0 (array/len @entity.boxes))) (fn p
+          (if (= (array/nth @p 1) @entity.index) (object/merge (array/nth @p 0) { status: "failed", error: (str/concat "unreachable: " ?error) }) (array/nth @p 0)))))
+        (emit LD_SEND { index: (+ @entity.index 1), op: (if (= @entity.phase "starting") "start" "poll"), round: @entity.round })
+
+      LD_POLL_ROUND -> idle when (= @entity.phase "polling")
+        (set @entity.round (+ @entity.round 1))
+        (emit LD_SEND { index: 0, op: "poll", round: (+ @entity.round 1) })
+      LD_ROUND_DONE -> idle when (array/some @entity.boxes (fn b (not (array/includes ["done", "failed"] @b.status))))
+        (emit LD_SHOW_RUNNING { boxes: @entity.boxes, query: @entity.query, preset: @entity.preset, levels: @entity.levels })
+        (emit LD_WAIT { delayMs: @config.pollMs })
+      LD_ROUND_DONE -> idle when (array/every @entity.boxes (fn b (array/includes ["done", "failed"] @b.status)))
+        (let ((merged (array/take (array/sort (array/concat (if @entity.append @entity.hits []) (array/flatten (array/map @entity.boxes (fn b @b.hits)))) "time" "desc") @config.hitsShown)))
+          (do
+            (set @entity.phase done)
+            (set @entity.hits (if @entity.append (array/take (array/concat @entity.hits (array/filter @merged (fn h (not (array/some @entity.hits (fn s (and (= @s.time @h.time) (= @s.message @h.message) (= @s.box @h.box)))))))) (+ (array/len @entity.hits) @config.hitsShown)) @merged))
+            (set @entity.total (array/sum (array/map @entity.boxes (fn b @b.total))))
+            (set @entity.histogram (array/reduce @entity.boxes [] (fn acc b (if (= (array/len @acc) 0) @b.histogram (array/map (array/range 0 (array/len @acc)) (fn i (+ (default (array/nth @acc @i) 0) (default (array/nth @b.histogram @i) 0))))))))
+            (set @entity.fields (array/reduce (array/flatten (array/map @entity.boxes (fn b (array/concat @b.fields [(let ((own : LogFieldCount { field: "box", value: @b.box, count: @b.total })) @own)])))) (let ((none : [LogFieldCount] [])) @none) (fn acc c
+              (if (array/some @acc (fn x (and (= @x.field @c.field) (= @x.value @c.value))))
+                (array/map @acc (fn x (if (and (= @x.field @c.field) (= @x.value @c.value)) (object/merge @x { count: (+ @x.count @c.count) }) @x)))
+                (array/append @acc @c)))))
+            (emit LD_SHOW_DONE { boxes: @entity.boxes, hits: @entity.hits, histogram: @entity.histogram, fields: @entity.fields, total: @entity.total, from: (default @entity.from @now), to: (default @entity.to @now) })
+            (when @entity.tail (emit LD_WAIT { delayMs: @config.tailMs }))))
+
+      LD_ELAPSED -> idle when (= @entity.phase "polling")
+        (emit LD_POLL_ROUND {})
+      LD_ELAPSED -> idle when (and (= @entity.phase "done") @entity.tail)
+        (emit LD_RUN_AGAIN {})
+      LD_ELAPSED -> idle when (not (or (= @entity.phase "polling") (and (= @entity.phase "done") @entity.tail)))
+      LD_RUN_AGAIN -> idle
+        (emit LD_RUN_SELF { query: @entity.query, preset: @entity.preset, levels: @entity.levels, from: null, to: null, append: false })
+      LD_TAIL -> idle
+        (set @entity.tail ?on)
+        (when (and ?on (= @entity.phase "done")) (emit LD_RUN_AGAIN {}))
+
+      LD_SAVE -> idle
+        (persist upsert LogSavedSearch { id: ?name, name: ?name, query: @entity.query, preset: @entity.preset, levels: @entity.levels } { emit: { success: LD_SAVED, failure: LD_SAVE_FAILED } })
+      LD_SAVED -> idle
+        (fetch LogSavedSearch { limit: @config.savedLimit, emit: { success: LD_SAVED_LOADED, failure: LD_SAVED_UNREAD } })
+      LD_SAVE_FAILED -> idle
+        (notify error (str/concat "The search could not be saved: " (default ?error "")))
+      LD_DELETE_SAVED -> idle
+        (persist delete LogSavedSearch ?name { emit: { success: LD_SAVED, failure: LD_SAVE_FAILED } })
+      LD_SAVED_LOADED -> idle
+        (emit LD_SHOW_SAVED { saved: ?data })
+      LD_SAVED_UNREAD -> idle
+        (emit LD_SHOW_SAVED { saved: [] })
+      LD_OPEN_SAVED -> idle
+        (fetch LogSavedSearch { id: ?name, emit: { success: LD_SAVED_ONE, failure: LD_SAVED_MISSING } })
+      LD_SAVED_ONE -> idle
+        (emit LD_RUN_SELF { query: ?data.query, preset: (if (array/includes ["15m", "1h", "24h", "7d"] ?data.preset) ?data.preset "1h"), levels: ?data.levels, from: null, to: null, append: false })
+      LD_SAVED_MISSING -> idle
+        (notify error "No saved search by that name")
+    }
+
+    emits {
+      LD_LOCAL_SEND -> internal { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+      LD_MAC_SEND -> internal { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+      LD_REMOTE_SEND -> internal { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+      LD_SEND -> internal { index : number!  op : string!  round : number! }
+        @description "Start or poll the job of the box at index."
+      LD_ROUND_DONE -> internal { round : number! }
+      LD_POLL_ROUND -> internal { }
+      LD_RUN_AGAIN -> internal { }
+      LD_RUN_SELF -> internal { query : string!  preset : "15m" | "1h" | "24h" | "7d"!  levels : [string]!  from : instant?  to : instant?  append : boolean! }
+      LD_WAIT -> internal { delayMs : number! }
+      LD_SHOW_RUNNING -> internal { boxes : [LdBox]!  query : string!  preset : "15m" | "1h" | "24h" | "7d"!  levels : [string]! }
+      LD_SHOW_DONE -> internal { boxes : [LdBox]!  hits : [LogLine]!  histogram : [number]!  fields : [LogFieldCount]!  total : number!  from : instant!  to : instant! }
+      LD_SHOW_SAVED -> internal { saved : [LogSavedSearch]! }
+    }
+
+    listens {
+      LD_RUN -> input { query : string!  preset : "15m" | "1h" | "24h" | "7d"!  levels : [string]!  from : instant?  to : instant?  append : boolean! }
+        @description "Run a search: a lolo predicate over @line, the preset window ending now (or from..to), the levels read."
+        @synonyms "search logs, run log query, discover"
+      LD_TAIL -> input { on : boolean! }
+        @description "Turn live tail on or off."
+      LD_SAVE -> input { name : string! }
+        @description "Save the current search under a name."
+      LD_OPEN_SAVED -> input { name : string! }
+        @description "Open and run a saved search by name."
+      LD_DELETE_SAVED -> input { name : string! }
+        @description "Delete a saved search."
+      LogDiscover.LD_RUN_SELF -> LD_RUN
+      LogDiscoverView.LD_RUN -> LD_RUN
+      LogDiscoverView.LD_TAIL -> LD_TAIL
+      LogDiscoverView.LD_SAVE -> LD_SAVE
+      LogDiscoverView.LD_OPEN_SAVED -> LD_OPEN_SAVED
+      LogDiscoverView.LD_DELETE_SAVED -> LD_DELETE_SAVED
+      LdDelay.ELAPSED -> LD_ELAPSED
+      LD_ELAPSED { waitedMs : number }
+        @tier "internal"
+      LD_REPLIED { status : number!  body : string! }
+        @tier "internal"
+      LD_UNREACHED { error : string! }
+        @tier "internal"
+      LD_SAVED { id : string }
+        @tier "internal"
+      LD_SAVE_FAILED { error : string }
+        @tier "internal"
+      LD_SAVED_LOADED { data : [LogSavedSearch]! }
+        @tier "internal"
+      LD_SAVED_UNREAD { error : string }
+        @tier "internal"
+      LD_SAVED_ONE { data : LogSavedSearch! }
+        @tier "internal"
+      LD_SAVED_MISSING { error : string }
+        @tier "internal"
+      LdLocalHttp.LD_LOCAL_REPLIED -> LD_REPLIED with { status: ?status, body: (default (bytes/to-string ?body) "") }
+      LdLocalHttp.LD_LOCAL_FAILED -> LD_UNREACHED with { error: ?error }
+      LdMacHttp.LD_MAC_REPLIED -> LD_REPLIED with { status: ?status, body: (default (bytes/to-string ?body) "") }
+      LdMacHttp.LD_MAC_FAILED -> LD_UNREACHED with { error: ?error }
+      LdRemoteHttp.LD_REMOTE_REPLIED -> LD_REPLIED with { status: ?status, body: (default (bytes/to-string ?body) "") }
+      LdRemoteHttp.LD_REMOTE_FAILED -> LD_UNREACHED with { error: ?error }
+    }
+  }
+
+  entity LogDiscoverScreen [runtime] {
+    id : string!
+    query : string = "true"
+    preset : "15m" | "1h" | "24h" | "7d" = "1h"
+    levels : [string] = ["error", "warn", "info"]
+    saveName : string = ""
+    running : boolean = false
+    boxes : [LdBox] = []
+    hits : [LogLine] = []
+    histogram : [number] = []
+    fields : [LogFieldCount] = []
+    total : number = 0
+    from : instant? = null
+    to : instant? = null
+    tail : boolean = false
+    saved : [LogSavedSearch] = []
+    openIds : [string] = []
+  }
+
+  trait LogDiscoverView -> LogDiscoverScreen [client] {
+    config {
+      title : string = "Logs"
+      levelChoices : [string] = ["error", "warn", "info", "debug"]
+      fieldsShown : [string] = ["level", "box", "app", "namespace", "release"]
+      valuesShown : number = 6
+      bodyContent : node = {
+        type: stack
+        direction: vertical
+        gap: md
+        children: [
+          { type: stack, direction: horizontal, gap: sm, align: center, justify: between, wrap: true, children: [
+            { type: typography, variant: h3, content: @config.title },
+            { type: typography, variant: caption, color: muted, content: (if @entity.running "Searching…" (str/concat @entity.total " lines · " (array/len @entity.hits) " shown, newest first")) }
+          ] },
+          { type: textarea, rows: 3, value: @entity.query, onChange: QUERY_CHANGED, action: RUN_CLICKED, placeholder: "A lolo predicate over @line, e.g. (and (= @line.level \"error\") (str/includes @line.message \"timeout\")) — ⌘↵ runs it", aria-label: "Query" },
+          { type: stack, direction: horizontal, gap: sm, align: center, wrap: true, children: [
+            { type: select, aria-label: "Time", value: @entity.preset, action: PRESET_PICKED, options: [{ value: "15m", label: "Last 15 minutes" }, { value: "1h", label: "Last hour" }, { value: "24h", label: "Last 24 hours" }, { value: "7d", label: "Last 7 days" }] },
+            { type: stack, direction: horizontal, gap: xs, children: (array/map @config.levelChoices (fn l { type: button, label: @l, size: sm, variant: (if (array/includes @entity.levels @l) primary ghost), action: LEVEL_TOGGLED, actionPayload: { level: @l } })) },
+            { type: button, label: "Run", icon: "play", variant: primary, size: sm, action: RUN_CLICKED, isLoading: @entity.running },
+            { type: button, label: (if @entity.tail "Live tail on" "Live tail"), icon: "radio", size: sm, variant: (if @entity.tail primary secondary), action: TAIL_TOGGLED },
+            { type: input, label: "Save as", placeholder: "Name", value: @entity.saveName, onChange: SAVE_NAME_CHANGED, className: "w-40" },
+            { type: button, label: "Save", icon: "bookmark", size: sm, variant: secondary, action: SAVE_CLICKED }] },
+          (if (= (array/len @entity.saved) 0) null { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map @entity.saved (fn s
+            { type: stack, direction: horizontal, gap: none, children: [
+              { type: button, label: @s.name, icon: "bookmark", size: sm, variant: ghost, action: SAVED_OPENED, actionPayload: { name: @s.name } },
+              { type: button, label: "", icon: "x", size: sm, variant: ghost, aria-label: (str/concat "Delete " @s.name), action: SAVED_DELETED, actionPayload: { name: @s.name } }] })) }),
+          { type: stack, direction: horizontal, gap: sm, wrap: true, children: (array/map @entity.boxes (fn b
+            { type: badge, size: sm, label: (str/concat @b.label ": " (if (= @b.status "done") (str/concat @b.total " of " @b.scanned) (if (= @b.status "failed") @b.error @b.status))), variant: (if (= @b.status "failed") danger (if (= @b.status "done") success info)) })) },
+          (if (= (array/len @entity.histogram) 0) null { type: chart, chartType: histogram, height: 140, timeAxis: true, drillEvent: BAR_PICKED,
+            data: (array/map (array/range 0 (array/len @entity.histogram)) (fn i
+              { label: (time/format (time/add (default @entity.from @now) (/ (* @i (time/diff (default @entity.to @now) (default @entity.from @now) "ms")) (array/len @entity.histogram)) "ms") "YYYY-MM-DD HH:mm"), value: (default (array/nth @entity.histogram @i) 0) })) }),
+          { type: stack, direction: horizontal, gap: lg, align: start, children: [
+            { type: stack, direction: vertical, gap: sm, className: "w-64 shrink-0", children: (array/map @config.fieldsShown (fn f
+              { type: stack, direction: vertical, gap: xs, children: [
+                { type: typography, variant: caption, color: muted, content: @f },
+                { type: stack, direction: vertical, gap: none, children: (array/map (array/take (array/sort (array/filter @entity.fields (fn c (and (= @c.field @f) (!= @c.value "")))) "count" "desc") @config.valuesShown) (fn c
+                  { type: button, size: sm, variant: ghost, label: (str/concat @c.value " · " @c.count), action: FIELD_PICKED, actionPayload: { field: @f, value: @c.value } })) }] })) },
+            { type: stack, direction: vertical, gap: sm, className: "min-w-0 flex-1", children: [
+              { type: accordion, multiple: true, openItems: @entity.openIds, toggleEvent: HIT_TOGGLED,
+                items: (array/map (array/range 0 (array/len @entity.hits)) (fn i (let ((h (default (array/nth @entity.hits @i) { time: "", level: "", namespace: "", message: "", app: "", release: "", box: "", data: {} })))
+                  { id: (str/concat "hit-" @i),
+                    header: { type: stack, direction: horizontal, gap: sm, align: center, wrap: true, children: [
+                      { type: typography, variant: caption, color: muted, className: "font-mono", content: @h.time },
+                      { type: badge, size: sm, label: @h.level, variant: (if (= @h.level "error") danger (if (= @h.level "warn") warning neutral)) },
+                      { type: typography, variant: caption, color: muted, content: (str/concat @h.box (if (= @h.app "") "" (str/concat " · " @h.app)) " · " @h.namespace) },
+                      { type: typography, variant: body, content: @h.message }] },
+                    content: (if (array/includes @entity.openIds (str/concat "hit-" @i)) { type: code-block, language: "json", code: (json/stringify @h), maxHeight: "50vh" } null) }))) },
+              (if (= (array/len @entity.hits) 0) null { type: button, label: "Load older", icon: "chevrons-down", size: sm, variant: secondary, action: OLDER_CLICKED })] }
+          ] }
+        ]
+      }
+        @label "Body content tree"
+        @tier "internal"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main @config.bodyContent)
+      QUERY_CHANGED -> idle
+        (set @entity.query ?value)
+      SAVE_NAME_CHANGED -> idle
+        (set @entity.saveName ?value)
+      PRESET_PICKED -> idle
+        (set @entity.preset (if (array/includes ["15m", "1h", "24h", "7d"] ?value) ?value "1h"))
+        (emit LD_RUN { query: @entity.query, preset: (if (array/includes ["15m", "1h", "24h", "7d"] ?value) ?value "1h"), levels: @entity.levels, from: null, to: null, append: false })
+      LEVEL_TOGGLED -> idle
+        (set @entity.levels (if (array/includes @entity.levels ?level) (array/filter @entity.levels (fn l (!= @l ?level))) (array/append @entity.levels ?level)))
+        (render-ui main @config.bodyContent)
+      RUN_CLICKED -> idle
+        (emit LD_RUN { query: @entity.query, preset: @entity.preset, levels: @entity.levels, from: null, to: null, append: false })
+      FIELD_PICKED -> idle
+        (let ((q (str/concat "(and " @entity.query " (= @line." ?field " " (json/stringify ?value) "))")))
+          (do
+            (set @entity.query @q)
+            (emit LD_RUN { query: @q, preset: @entity.preset, levels: @entity.levels, from: @entity.from, to: @entity.to, append: false })))
+      BAR_PICKED -> idle
+        (let ((width (/ (time/diff (default @entity.to @now) (default @entity.from @now) "ms") (math/max 1 (array/len @entity.histogram)))))
+          (let ((i (array/findIndex (array/range 0 (array/len @entity.histogram)) (fn k (= (time/format (time/add (default @entity.from @now) (* @k @width) "ms") "YYYY-MM-DD HH:mm") (default ?label ""))))))
+            (when (>= (default @i -1) 0)
+              (emit LD_RUN { query: @entity.query, preset: @entity.preset, levels: @entity.levels, from: (time/add (default @entity.from @now) (* (default @i 0) @width) "ms"), to: (time/add (default @entity.from @now) (* (+ (default @i 0) 1) @width) "ms"), append: false }))))
+      OLDER_CLICKED -> idle
+        (emit LD_RUN { query: @entity.query, preset: @entity.preset, levels: @entity.levels, from: @entity.from, to: (default (as (default (time/parse (default (object/get (default (array/last @entity.hits) {}) "time") "")) @now) instant) @now), append: true })
+      TAIL_TOGGLED -> idle
+        (set @entity.tail (not @entity.tail))
+        (emit LD_TAIL { on: (not @entity.tail) })
+        (render-ui main @config.bodyContent)
+      SAVE_CLICKED -> idle when (!= (str/trim @entity.saveName) "")
+        (emit LD_SAVE { name: (str/trim @entity.saveName) })
+      SAVED_OPENED -> idle
+        (emit LD_OPEN_SAVED { name: ?name })
+      SAVED_DELETED -> idle
+        (emit LD_DELETE_SAVED { name: ?name })
+      HIT_TOGGLED -> idle
+        (set @entity.openIds (if ?isOpen (array/append (array/filter @entity.openIds (fn o (!= @o ?itemId))) ?itemId) (array/filter @entity.openIds (fn o (!= @o ?itemId)))))
+        (render-ui main @config.bodyContent)
+      SHOW_RUNNING -> idle
+        (set @entity.running true)
+        (set @entity.boxes ?boxes)
+        (set @entity.query ?query)
+        (set @entity.preset ?preset)
+        (set @entity.levels ?levels)
+        (render-ui main @config.bodyContent)
+      SHOW_DONE -> idle
+        (set @entity.running false)
+        (set @entity.boxes ?boxes)
+        (set @entity.hits ?hits)
+        (set @entity.histogram ?histogram)
+        (set @entity.fields ?fields)
+        (set @entity.total ?total)
+        (set @entity.from ?from)
+        (set @entity.to ?to)
+        (set @entity.openIds [])
+        (render-ui main @config.bodyContent)
+      SHOW_SAVED -> idle
+        (set @entity.saved ?saved)
+        (render-ui main @config.bodyContent)
+    }
+
+    emits {
+      LD_RUN -> external { query : string!  preset : "15m" | "1h" | "24h" | "7d"!  levels : [string]!  from : instant?  to : instant?  append : boolean! }
+      LD_TAIL -> external { on : boolean! }
+      LD_SAVE -> external { name : string! }
+      LD_OPEN_SAVED -> external { name : string! }
+      LD_DELETE_SAVED -> external { name : string! }
+      QUERY_CHANGED -> internal { value : string! }
+      SAVE_NAME_CHANGED -> internal { value : string! }
+      PRESET_PICKED -> internal { value : string! }
+      LEVEL_TOGGLED -> internal { level : string! }
+      RUN_CLICKED -> internal { }
+      FIELD_PICKED -> internal { field : string!  value : string! }
+      OLDER_CLICKED -> internal { }
+      TAIL_TOGGLED -> internal { }
+      SAVE_CLICKED -> internal { }
+      SAVED_OPENED -> internal { name : string! }
+      SAVED_DELETED -> internal { name : string! }
+      HIT_TOGGLED -> internal { itemId : string!  isOpen : boolean! }
+    }
+
+    listens {
+      LogDiscover.LD_SHOW_RUNNING -> SHOW_RUNNING
+      LogDiscover.LD_SHOW_DONE -> SHOW_DONE
+      LogDiscover.LD_SHOW_SAVED -> SHOW_SAVED
+      SHOW_RUNNING { boxes : [LdBox]!  query : string!  preset : "15m" | "1h" | "24h" | "7d"!  levels : [string]! }
+        @tier "internal"
+      SHOW_DONE { boxes : [LdBox]!  hits : [LogLine]!  histogram : [number]!  fields : [LogFieldCount]!  total : number!  from : instant!  to : instant! }
+        @tier "internal"
+      SHOW_SAVED { saved : [LogSavedSearch]! }
+        @tier "internal"
+      BAR_PICKED { label : string  value : number }
+        @description "A histogram bar was clicked: narrow the window to it."
+    }
+  }
+
+  page "/log-discover" as LogDiscoverPage -> LogDiscoverView, LogDiscover, LdLocalHttp, LdLocalHttpFrame, LdMacHttp, LdMacHttpFrame, LdRemoteHttp, LdRemoteHttpFrame, LdDelay
+}

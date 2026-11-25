@@ -125,7 +125,10 @@ orbital S3ServerOrbital {
               (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @p.requestId)))))))
       S3_WRITE_FAILED -> serving
         (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))
-          (when (!= @p null) (emit S3_REFUSE { requestId: @p.requestId, status: 500, code: "InternalError", message: (str/concat "The object could not be stored: " (default @payload.error "")) })))
+          (when (!= @p null)
+            (do
+              (log (str/concat "std-s3-server: " @p.bucket "/" @p.objKey " could not be stored: " (default @payload.error "")) "warn")
+              (emit S3_REFUSE { requestId: @p.requestId, status: 500, code: "InternalError", message: (str/concat "The object could not be stored: " (default @payload.error "")) }))))
 
       S3_META_READ -> serving
         (let ((p (array/find @entity.pending (fn q (= (str/concat "" @q.requestId) @payload.key)))))

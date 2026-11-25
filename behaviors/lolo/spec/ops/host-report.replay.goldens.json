@@ -1,0 +1,1000 @@
+{
+  "atom": "ops/atoms/std-host-report.lolo",
+  "trait": "HostReport",
+  "note": "The fleet-report hook answers from the last sample at once; a log file is read on the first ask (202) and answered whole once read at its listed size.",
+  "cases": [
+    {
+      "id": "an unverified ask is answered 401 and nothing else",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "REPORT_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {},
+            "rawBody": "{}",
+            "verified": false
+          },
+          "entity": {
+            "id": "r",
+            "sampling": false,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "REPORT_ANSWERED",
+                "payload": {
+                  "status": 401
+                }
+              }
+            ],
+            "emitCounts": {
+              "REPORT_ANSWERED": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a verified ask for the report answers 200 with the last sample",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "REPORT_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {},
+            "rawBody": "{}",
+            "verified": true
+          },
+          "entity": {
+            "id": "r",
+            "sampling": false,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "REPORT_ANSWERED",
+                "payload": {
+                  "status": 200
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an ask for a log the sample does not list answers 404",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "REPORT_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "log": {
+                "level": "warn",
+                "day": "2026-11-25"
+              }
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "r",
+            "sampling": false,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "REPORT_ANSWERED",
+                "payload": {
+                  "status": 404
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an ask for a listed log not yet read answers 202 and reads it",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "REPORT_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "log": {
+                "level": "error",
+                "day": "2026-11-25"
+              }
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "r",
+            "sampling": false,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "REPORT_ANSWERED",
+                "payload": {
+                  "status": 202
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "let",
+                "nested": [
+                  {
+                    "type": "let",
+                    "nested": [
+                      {
+                        "type": "if",
+                        "nested": [
+                          {
+                            "type": "if",
+                            "nested": [
+                              {
+                                "type": "do",
+                                "nested": [
+                                  {
+                                    "type": "os/read-file"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a listed log already read at its size answers 200 with the whole file",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "REPORT_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "log": {
+                "level": "error",
+                "day": "2026-11-25"
+              }
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "r",
+            "sampling": false,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12,
+                "text": "{\"m\":\"boom\"}"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "REPORT_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\"level\":\"error\",\"day\":\"2026-11-25\",\"bytes\":12,\"text\":\"{\\\"m\\\":\\\"boom\\\"}\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a log read at an older size answers 202 again",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "REPORT_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "log": {
+                "level": "error",
+                "day": "2026-11-25"
+              }
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "r",
+            "sampling": false,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 5,
+                "text": "old"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "REPORT_ANSWERED",
+                "payload": {
+                  "status": 202
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a release file counts toward its current app and a log file becomes a row",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "HOST_STAT_READ",
+          "payload": {
+            "kind": "file",
+            "size": 100
+          },
+          "entity": {
+            "id": "r",
+            "sampling": true,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [
+                {
+                  "name": "a",
+                  "guest": "g1",
+                  "release": "releases/3",
+                  "current": true,
+                  "loading": false,
+                  "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                  "heldBytes": 0,
+                  "diskBytes": 0
+                }
+              ],
+              "logs": [],
+              "problems": [],
+              "files": [
+                {
+                  "root": "apps",
+                  "rel": "a/releases/3/app.orb"
+                },
+                {
+                  "root": "logs",
+                  "rel": "warn/2026-11-24.jsonl"
+                }
+              ]
+            },
+            "index": 0,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HOST_STAT_NEXT",
+                "payload": {}
+              }
+            ],
+            "entity": {
+              "next": {
+                "disks": [],
+                "apps": [
+                  {
+                    "name": "a",
+                    "guest": "g1",
+                    "release": "releases/3",
+                    "current": true,
+                    "loading": false,
+                    "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                    "heldBytes": 0,
+                    "diskBytes": 100
+                  }
+                ],
+                "logs": [],
+                "problems": [],
+                "files": [
+                  {
+                    "root": "apps",
+                    "rel": "a/releases/3/app.orb"
+                  },
+                  {
+                    "root": "logs",
+                    "rel": "warn/2026-11-24.jsonl"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "from": "ready",
+          "event": "HOST_STAT_READ",
+          "payload": {
+            "kind": "file",
+            "size": 30
+          },
+          "entity": {
+            "id": "r",
+            "sampling": true,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": [
+                {
+                  "root": "apps",
+                  "rel": "a/releases/3/app.orb"
+                },
+                {
+                  "root": "logs",
+                  "rel": "warn/2026-11-24.jsonl"
+                }
+              ]
+            },
+            "index": 1,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "entity": {
+              "next": {
+                "disks": [],
+                "apps": [],
+                "logs": [
+                  {
+                    "level": "warn",
+                    "day": "2026-11-24",
+                    "bytes": 30
+                  }
+                ],
+                "problems": [],
+                "files": [
+                  {
+                    "root": "apps",
+                    "rel": "a/releases/3/app.orb"
+                  },
+                  {
+                    "root": "logs",
+                    "rel": "warn/2026-11-24.jsonl"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "note": "Each step's own HOST_STAT_NEXT cascades into an os/stat that fails with no host, so the index is not pinned here; the folded size and the log row are."
+    },
+    {
+      "id": "an app with no guest yet is skipped when reading held memory",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "HOST_HELD_NEXT",
+          "payload": {
+            "index": 0
+          },
+          "entity": {
+            "id": "r",
+            "sampling": true,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [
+                {
+                  "name": "b",
+                  "guest": "",
+                  "release": "",
+                  "current": true,
+                  "loading": true,
+                  "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                  "heldBytes": 0,
+                  "diskBytes": 0
+                }
+              ],
+              "logs": [],
+              "problems": [],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HOST_HELD_NEXT",
+                "payload": {
+                  "index": 1
+                }
+              }
+            ],
+            "emitCounts": {
+              "HOST_HELD_NEXT": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the end of the file stats publishes the sample and drops log texts whose size changed",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "HOST_STAT_NEXT",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "sampling": true,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [
+                {
+                  "level": "error",
+                  "day": "2026-11-25",
+                  "bytes": 12
+                },
+                {
+                  "level": "warn",
+                  "day": "2026-11-24",
+                  "bytes": 30
+                }
+              ],
+              "problems": [
+                "x: y"
+              ],
+              "files": []
+            },
+            "index": 0,
+            "logTexts": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12,
+                "text": "keep"
+              },
+              {
+                "level": "warn",
+                "day": "2026-11-24",
+                "bytes": 5,
+                "text": "stale"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "entity": {
+              "sampling": false,
+              "disks": [],
+              "apps": [],
+              "problems": [
+                "x: y"
+              ],
+              "logs": [
+                {
+                  "level": "error",
+                  "day": "2026-11-25",
+                  "bytes": 12
+                },
+                {
+                  "level": "warn",
+                  "day": "2026-11-24",
+                  "bytes": 30
+                }
+              ],
+              "logTexts": [
+                {
+                  "level": "error",
+                  "day": "2026-11-25",
+                  "bytes": 12,
+                  "text": "keep"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+app std-log-search [
+  version: "1.0.0",
+  kernel: { "guest": [spawn] },
+  env: ["ORB_BOX"],
+  fs: { "/srv/orb/logs/**": [read] },
+  inbound: ["log-search"],
+  egress: [],
+  description: "std-log-search — searches a host's log files with a lolo predicate, as jobs an operator starts and polls over the inbound hook log-search (POST /api/hooks/log-search), which verifies the x-fleet-key header against the ORB_FLEET_KEY credential (unset answers 401 and runs nothing). The files are the orb's ALMADAR_LOG_DIR layout: <logDir><level>/<YYYY-MM-DD>.jsonl, one JSON line per log line { severity, time, namespace, message, data }. `{ op: \"start\", query, from, to, levels }` queues a job and answers 202 { job }: query is a lolo expression over @line, each line read as { time, level (the file's folder), namespace, message, app and release (from data, empty when the line has none), box (the ORB_BOX environment variable, else the box knob), data }; from and to are ISO instants; levels the level folders read (empty reads all). `{ op: \"poll\", job }` answers 200 with the job: status queued, running, done or failed, the error of a failed one, scanned (lines read in the range), total (lines the predicate kept), hits (the newest sampleSize kept lines, newest first), histogram (buckets counts of kept lines over from..to, equal widths), fields (one { field, value, count } per value of each tracked field among kept lines) and the files read so far of all; an unknown job answers 404. One job runs at a time, the rest wait in order. A job compiles the query with program/read into a program whose one trait keeps `(array/filter @payload.lines (fn line <query>))`, opens it with program/open and no grants (so a query can read nothing and reach nothing), reads the day files in range (levels as asked, days from from to to) in chunks of chunkBytes with os/open and os/read (chunksPerStep chunks per dispatch, a 100 ms tick carrying the scan on, since the kernel caps one cascade), parses each line, keeps the ones whose time lies in range and hands them to the guest one chunk at a time with program/dispatch; a query that does not read or open fails the job with the reason, and a line that is not the declared shape is skipped and counted in skipped. A finished job is kept for jobTtlMs after it ends. Subject-agnostic: it knows nothing of the apps whose lines it reads."
+]
+;; @capabilities "search log files with a lolo predicate, log search jobs, histogram of log lines over time, top values of log fields, operator log search"
+
+type LogValue = string | number | boolean | [LogValue?] | Map string LogValue?
+type LogFileLine = { severity : string!, time : string!, namespace : string!, message : string!, data : Map string LogValue? }
+type LogLine = { time : string!, level : string!, namespace : string!, message : string!, app : string!, release : string!, box : string!, data : Map string LogValue? }
+type LogFieldCount = { field : string!, value : string!, count : number! }
+type LogHitsPayload = { hits : [LogLine]! }
+type LogGuestEmit = { event : string!, payload : LogHitsPayload? }
+type LogDispatched = { emitted : [LogGuestEmit]! }
+type LogOpened = { guest : string! }
+type LogJob = { id : string!, query : string!, from : string!, to : string!, levels : [string]!, status : "queued" | "running" | "done" | "failed"!, error : string!, scanned : number!, skipped : number!, total : number!, hits : [LogLine]!, histogram : [number]!, fields : [LogFieldCount]!, files : [string]!, fileIndex : number!, guest : string!, endedAt : instant? }
+type LogAsk = { op : string!, query : string, from : string, to : string, levels : [string], job : string }
+type LogFileRead = { data : bytes!, eof : boolean! }
+type LogQueryProgram = { name : string! }
+
+orbital LogSearchOrbital {
+  entity LogSearchRun [runtime] {
+    id : string!
+    jobs : [LogJob] = []
+    seq : number = 0
+    running : string @description "The job being read; empty when none runs." = ""
+    fd : number @description "The descriptor of the file being read." = -1
+    boxName : string @description "The box name every line reads as @line.box: ORB_BOX when set, else the box knob." = ""
+    eof : boolean @description "The chunk in the guest is the file's last." = false
+    steps : number @description "Chunks read in the current dispatch; a scan pauses after chunksPerStep and the resume tick carries it on, so one scan never runs as one cascade." = 0
+    paused : boolean @description "The scan waits for the resume tick." = false
+    chunk : number @description "Chunks read so far: each internal step carries it, so a step repeated for a new chunk is never taken for a repeat of the last (EXEC-QUEUE-4)." = 0
+    carry : string @description "The part of the last chunk after its last newline: the start of a line the next chunk ends." = ""
+  }
+
+  trait LogSearch -> LogSearchRun {
+    config {
+      logDir : string = "/srv/orb/logs/"
+        @label "Log folder"
+        @description "The folder ending in / holding one subfolder per level of <YYYY-MM-DD>.jsonl day files; a composer that moves it grants fs read on its own folder."
+        @tier "domain"
+      box : string = ""
+        @label "Box name"
+        @description "The name every line of this host reads as @line.box."
+        @tier "domain"
+      sampleSize : number = 500
+        @label "Hits kept"
+        @description "How many kept lines a job answers, newest first; total counts all of them."
+        @tier "policy"
+      buckets : number = 60
+        @label "Histogram buckets"
+        @tier "policy"
+      chunkBytes : number = 4194304
+        @label "Chunk size"
+        @description "Bytes read from a file at a time."
+        @tier "infra"
+      fieldsTracked : [string] = ["level", "namespace", "app", "release"]
+        @label "Fields counted"
+        @description "The fields of a line whose values each job counts for the field list."
+        @tier "policy"
+      chunksPerStep : number = 40
+        @label "Chunks per step"
+        @description "Chunks one dispatch reads before the scan pauses for the next resume tick (the kernel caps one cascade's steps)."
+        @tier "infra"
+      jobTtlMs : number = 600000
+        @label "Job lifetime"
+        @description "How long a finished job stays to be polled."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.boxName @config.box)
+        (os/getenv "ORB_BOX" { emit: { success: LS_BOX_READ, failure: LS_BOX_UNREAD } })
+      LS_BOX_READ -> ready
+        (when (!= (str/trim (default ?value "")) "") (set @entity.boxName (str/trim (default ?value ""))))
+      LS_BOX_UNREAD -> ready
+
+      LOG_ASKED -> ready when (not (default ?verified false))
+        (emit LOG_ANSWERED { status: 401, body: (json/stringify { error: "the x-fleet-key header does not match" }) })
+      LOG_ASKED -> ready when (and (default ?verified false) (= (default ?body.op "") "start"))
+        (let ((id (str/concat "job-" (+ @entity.seq 1) "-" (time/epoch-ms @now))))
+          (do
+            (set @entity.seq (+ @entity.seq 1))
+            (let ((fresh : LogJob { id: @id, query: (default ?body.query "true"), from: (default ?body.from ""), to: (default ?body.to ""), levels: (default ?body.levels []), status: "queued", error: "", scanned: 0, skipped: 0, total: 0, hits: [], histogram: (array/map (array/range 0 @config.buckets) (fn i 0)), fields: [], files: [], fileIndex: 0, guest: "", endedAt: null }))
+              (set @entity.jobs (array/append (array/filter @entity.jobs (fn j (or (= @j.endedAt null) (< (time/diff @now (default @j.endedAt @now) "ms") @config.jobTtlMs)))) @fresh)))
+            (emit LOG_ANSWERED { status: 202, body: (json/stringify { job: @id }) })
+            (emit LS_NEXT_JOB { after: @id })))
+      LOG_ASKED -> ready when (and (default ?verified false) (= (default ?body.op "") "poll"))
+        (let ((job (array/find @entity.jobs (fn j (= @j.id (default ?body.job ""))))))
+          (if (= @job null)
+            (emit LOG_ANSWERED { status: 404, body: (json/stringify { error: (str/concat "no job " (default ?body.job "")) }) })
+            (emit LOG_ANSWERED { status: 200, body: (json/stringify @job) })))
+      LOG_ASKED -> ready when (and (default ?verified false) (not (array/includes ["start", "poll"] (default ?body.op ""))))
+        (emit LOG_ANSWERED { status: 400, body: (json/stringify { error: "op is start or poll" }) })
+
+      LS_NEXT_JOB -> ready when (and (= @entity.running "") (array/some @entity.jobs (fn j (= @j.status "queued"))))
+        (let ((job (array/find @entity.jobs (fn j (= @j.status "queued")))))
+          (do
+            (set @entity.running @job.id)
+            (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j { status: "running" }) @j))))
+            (program/read (str/concat
+              "app log-query [\n  version: \"1.0.0\"\n]\n"
+              "type LogValue = string | number | boolean | [LogValue?] | Map string LogValue?\n"
+              "type LogLine = { time : string!, level : string!, namespace : string!, message : string!, app : string!, release : string!, box : string!, data : Map string LogValue? }\n"
+              "orbital LogQuery {\n  entity LogQueryRun [runtime] {\n    id : string!\n  }\n  trait Match -> LogQueryRun {\n    initial: s\n    state s {\n      MATCH -> s\n        (emit MATCHED { hits: (array/filter @payload.lines (fn line "
+              @job.query
+              ")) })\n    }\n    emits {\n      MATCHED -> external { hits : [LogLine]! }\n    }\n    listens {\n      MATCH -> input { lines : [LogLine]! }\n    }\n  }\n  page boot as LogQueryBoot -> Match\n}\n") { emit: { success: LS_QUERY_READ, failure: LS_QUERY_REFUSED } })))
+      LS_NEXT_JOB -> ready when (not (and (= @entity.running "") (array/some @entity.jobs (fn j (= @j.status "queued")))))
+
+      LS_QUERY_READ -> ready
+        (program/open ?result {} { emit: { success: LS_QUERY_OPENED, failure: LS_QUERY_REFUSED } })
+      LS_QUERY_REFUSED -> ready
+        (emit LS_JOB_END { status: "failed", error: (str/concat "the query is not a lolo expression over @line: " (default ?error "")) })
+      LS_QUERY_OPENED -> ready
+        (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j { guest: ?result.guest }) @j))))
+        (os/glob (str/concat @config.logDir "*/*.jsonl") { emit: { success: LS_FILES, failure: LS_FILES_FAILED } })
+      LS_FILES -> ready
+        (let ((job (array/find @entity.jobs (fn j (= @j.id @entity.running)))))
+          (when (!= @job null)
+            (let ((fromDay (str/slice @job.from 0 10)) (toDay (str/slice @job.to 0 10)))
+              (do
+                (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j { files: (array/filter (array/map ?paths (fn p (let ((ps (str/split @p "/"))) (str/join (array/slice @ps (math/max 0 (- (array/len @ps) 2))) "/"))))
+                  (fn rel (let ((parts (str/split @rel "/")))
+                    (let ((level (default (array/nth @parts 0) "")) (day (str/replace (default (array/nth @parts 1) "") ".jsonl" "")))
+                      (and (or (= (array/len @job.levels) 0) (array/includes @job.levels @level)) (>= @day @fromDay) (<= @day @toDay)))))), fileIndex: 0 }) @j))))
+                (emit LS_FILE_NEXT { chunk: @entity.chunk })))))
+      LS_FILES_FAILED -> ready
+        (emit LS_JOB_END { status: "failed", error: (str/concat "the log files could not be listed: " ?error) })
+
+      LS_FILE_NEXT -> ready
+        (let ((job (array/find @entity.jobs (fn j (= @j.id @entity.running)))))
+          (if (= @job null)
+            (set @entity.running "")
+            (if (>= @job.fileIndex (array/len @job.files))
+              (emit LS_JOB_END { status: "done", error: "" })
+              (do
+                (set @entity.carry "")
+                (os/open (str/concat @config.logDir (default (array/nth @job.files @job.fileIndex) "")) "r" { emit: { success: LS_FILE_OPENED, failure: LS_FILE_SKIP } })))))
+      LS_FILE_OPENED -> ready
+        (set @entity.fd ?fd)
+        (os/read ?fd @config.chunkBytes { emit: { success: LS_CHUNK, failure: LS_FILE_SKIP } })
+      LS_FILE_SKIP -> ready
+        (set @entity.chunk (+ @entity.chunk 1))
+        (emit LS_FILE_DONE { chunk: (+ @entity.chunk 1) })
+
+      LS_CHUNK -> ready
+        (let ((job (array/find @entity.jobs (fn j (= @j.id @entity.running)))))
+          (when (!= @job null)
+            (let ((text (str/concat @entity.carry (default (bytes/to-string ?data) ""))) (chunk (+ @entity.chunk 1)))
+              (let ((pieces (str/split @text "\n")))
+                (let ((whole (if ?eof @pieces (array/dropLast @pieces 1)))
+                      (level (default (array/nth (str/split (default (array/nth @job.files @job.fileIndex) "") "/") 0) "")))
+                  (let ((parsed (array/map (array/filter @whole (fn l (!= (str/trim @l) ""))) (fn l (json/parse @l LogFileLine)))))
+                    (let ((lines (array/map (array/filter @parsed (fn p (and (!= @p null) (>= (default (object/get (default @p {}) "time") "") @job.from) (<= (default (object/get (default @p {}) "time") "") @job.to))))
+                            (fn p (let ((f (default @p { severity: "", time: "", namespace: "", message: "", data: {} })))
+                              { time: @f.time, level: @level, namespace: @f.namespace, message: @f.message, app: (default (as (default (object/get (default @f.data {}) "app") "") string) ""), release: (default (as (default (object/get (default @f.data {}) "release") "") string) ""), box: @entity.boxName, data: (default @f.data {}) })))))
+                      (do
+                        (set @entity.chunk @chunk)
+                        (set @entity.carry (if ?eof "" (default (array/last @pieces) "")))
+                        (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j { scanned: (+ @job.scanned (array/len @lines)), skipped: (+ @job.skipped (array/count @parsed (fn p (= @p null)))) }) @j))))
+                        (emit LS_MATCH { lines: @lines, eof: ?eof, chunk: @chunk })))))))))
+      LS_MATCH -> ready when (= (array/len ?lines) 0)
+        (emit LS_AFTER_MATCH { eof: ?eof, chunk: ?chunk })
+      LS_MATCH -> ready when (> (array/len ?lines) 0)
+        (let ((job (array/find @entity.jobs (fn j (= @j.id @entity.running)))))
+          (when (!= @job null)
+            (do
+              (set @entity.eof ?eof)
+              (program/dispatch "LogQuery.Match.MATCH" { lines: ?lines } { guest: @job.guest emit: { success: LS_MATCHED, failure: LS_MATCH_FAILED } }))))
+      LS_MATCHED -> ready
+        (let ((job (array/find @entity.jobs (fn j (= @j.id @entity.running)))))
+          (when (!= @job null)
+            (let ((hits (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "MATCHED"))) (let ((none : LogGuestEmit { event: "", payload: null })) @none)) "payload.hits") []))
+                  (fromMs (time/epoch-ms (default (time/parse @job.from) @now)))
+                  (toMs (time/epoch-ms (default (time/parse @job.to) @now))))
+              (let ((span (math/max 1 (- @toMs @fromMs))))
+                (do
+                  (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j {
+                    total: (+ @job.total (array/len @hits)),
+                    hits: (array/take (array/sort (array/concat @job.hits @hits) "time" "desc") @config.sampleSize),
+                    histogram: (array/map (array/range 0 @config.buckets) (fn i
+                      (+ (default (array/nth @job.histogram @i) 0)
+                        (array/count @hits (fn h (= @i (math/clamp (math/floor (/ (* (- (time/epoch-ms (default (time/parse @h.time) @now)) @fromMs) @config.buckets) @span)) 0 (- @config.buckets 1)))))))),
+                    fields: (array/reduce
+                      (array/flatten (array/map @hits (fn h (array/map @config.fieldsTracked (fn f { field: @f, value: (default (as (default (object/get @h @f) "") string) ""), count: 1 })))))
+                      @job.fields
+                      (fn acc c (if (array/some @acc (fn x (and (= @x.field @c.field) (= @x.value @c.value))))
+                        (array/map @acc (fn x (if (and (= @x.field @c.field) (= @x.value @c.value)) (object/merge @x { count: (+ @x.count 1) }) @x)))
+                        (array/append @acc @c))))
+                  }) @j))))
+                  (emit LS_AFTER_MATCH { eof: @entity.eof, chunk: @entity.chunk }))))))
+      LS_MATCH_FAILED -> ready
+        (emit LS_JOB_END { status: "failed", error: (str/concat "the query failed on a line: " ?error) })
+      LS_AFTER_MATCH -> ready when ?eof
+        (emit LS_FILE_DONE { chunk: @entity.chunk })
+      LS_AFTER_MATCH -> ready when (and (not ?eof) (< @entity.steps @config.chunksPerStep))
+        (set @entity.steps (+ @entity.steps 1))
+        (os/read @entity.fd @config.chunkBytes { emit: { success: LS_CHUNK, failure: LS_FILE_SKIP } })
+      LS_AFTER_MATCH -> ready when (and (not ?eof) (>= @entity.steps @config.chunksPerStep))
+        (set @entity.paused true)
+      LS_FILE_DONE -> ready
+        (when (>= @entity.fd 0) (os/close @entity.fd { emit: { success: LS_CLOSED, failure: LS_CLOSED } }))
+        (set @entity.fd -1)
+        (let ((job (array/find @entity.jobs (fn j (= @j.id @entity.running)))))
+          (when (!= @job null)
+            (do
+              (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j { fileIndex: (+ @job.fileIndex 1) }) @j))))
+              (emit LS_FILE_NEXT { chunk: @entity.chunk }))))
+      LS_CLOSED -> ready
+      LS_RESUME -> ready
+        (set @entity.paused false)
+        (set @entity.steps 0)
+        (os/read @entity.fd @config.chunkBytes { emit: { success: LS_CHUNK, failure: LS_FILE_SKIP } })
+
+      LS_JOB_END -> ready
+        (let ((job (array/find @entity.jobs (fn j (= @j.id @entity.running)))))
+          (do
+            (when (and (!= @job null) (!= (default (object/get (default @job {}) "guest") "") ""))
+              (program/close (default (object/get (default @job {}) "guest") "") { emit: { success: LS_CLOSED, failure: LS_CLOSED } }))
+            (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j { status: ?status, error: ?error, endedAt: @now }) @j))))
+            (emit LS_NEXT_JOB { after: @entity.running })
+            (set @entity.running "")))
+    }
+
+    ticks {
+      resume every 100ms [background] when @entity.paused
+        (emit LS_RESUME { chunk: @entity.chunk })
+    }
+
+    emits {
+      LS_RESUME -> internal { chunk : number! }
+        @description "Carry a paused scan on in a fresh dispatch."
+      LOG_ANSWERED -> internal { status : number!  body : string! }
+        @description "The log-search hook's answer."
+      LS_NEXT_JOB -> internal { after : string! }
+        @description "Start the next queued job when none runs."
+      LS_JOB_END -> internal { status : string!  error : string! }
+        @description "End the running job."
+      LS_FILE_NEXT -> internal { chunk : number! }
+        @description "Open the running job's next file."
+      LS_FILE_DONE -> internal { chunk : number! }
+        @description "The current file is read."
+      LS_MATCH -> internal { lines : [LogLine]!  eof : boolean!  chunk : number! }
+        @description "Hand one chunk's lines in range to the query."
+      LS_AFTER_MATCH -> internal { eof : boolean!  chunk : number! }
+        @description "The chunk is counted; read on or finish the file."
+    }
+
+    listens {
+      LOG_ASKED -> inbound "log-search" answers LOG_ANSWERED verifies "x-fleet-key" "ORB_FLEET_KEY" {
+        headers : Map string string
+        body : LogAsk?
+        rawBody : string
+        verified : boolean
+      }
+        @description "An operator starts a log search job or polls one at /api/hooks/log-search."
+        @synonyms "log search, search logs, kibana, discover"
+      LS_QUERY_READ { result : LogQueryProgram! }
+        @tier "internal"
+      LS_QUERY_REFUSED { error : string }
+        @tier "internal"
+      LS_QUERY_OPENED { result : LogOpened! }
+        @tier "internal"
+      LS_FILES { paths : [string]! }
+        @tier "internal"
+      LS_FILES_FAILED { error : string!, kind : string }
+        @tier "internal"
+      LS_FILE_OPENED { fd : number! }
+        @tier "internal"
+      LS_FILE_SKIP { error : string, kind : string }
+        @tier "internal"
+      LS_CHUNK { data : bytes!, eof : boolean! }
+        @tier "internal"
+      LS_MATCHED { result : LogDispatched! }
+        @tier "internal"
+      LS_MATCH_FAILED { error : string! }
+        @tier "internal"
+      LS_CLOSED { }
+        @tier "internal"
+      LS_BOX_READ { value : string }
+        @tier "internal"
+      LS_BOX_UNREAD { error : string, kind : string }
+        @tier "internal"
+    }
+  }
+
+  page boot as LogSearchStart -> LogSearch
+}

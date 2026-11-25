@@ -1,0 +1,110 @@
+{
+  "atom": "ops/atoms/std-log-retention.lolo",
+  "trait": "LogRetention",
+  "note": "Days are UTC day files named YYYY-MM-DD.jsonl under one folder per level.",
+  "cases": [
+    {
+      "id": "a sweep dooms each file at or past its level's days and keeps the rest",
+      "now": 1795608000000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RETENTION_GLOBBED",
+          "payload": {
+            "paths": [
+              "/srv/orb/logs/error/2026-11-21.jsonl",
+              "/srv/orb/logs/error/2026-11-20.jsonl",
+              "/srv/orb/logs/warn/2026-11-23.jsonl",
+              "/srv/orb/logs/warn/2026-11-22.jsonl",
+              "/srv/orb/logs/info/2026-11-25.jsonl",
+              "/srv/orb/logs/info/2026-11-24.jsonl",
+              "/srv/orb/logs/audit/2020-01-01.jsonl",
+              "/srv/orb/logs/warn/notes.jsonl"
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "sweeping": true,
+            "doomed": [],
+            "removed": [],
+            "problems": [],
+            "sweptAt": null
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RETENTION_REMOVE",
+                "payload": {
+                  "index": 0
+                }
+              }
+            ],
+            "entity": {
+              "doomed": [
+                "error/2026-11-20.jsonl",
+                "warn/2026-11-22.jsonl",
+                "info/2026-11-24.jsonl"
+              ]
+            }
+          }
+        }
+      ],
+      "note": "error keeps 5 day files (21..25), warn 3 (23..25), info 1 (25); audit has no rule and notes is not a day: both are left alone."
+    },
+    {
+      "id": "control: with nothing past its days nothing is doomed",
+      "now": 1795608000000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RETENTION_GLOBBED",
+          "payload": {
+            "paths": [
+              "/srv/orb/logs/error/2026-11-25.jsonl",
+              "/srv/orb/logs/warn/2026-11-23.jsonl"
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "sweeping": true,
+            "doomed": [],
+            "removed": [],
+            "problems": [],
+            "sweptAt": null
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "entity": {
+              "doomed": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a sweep already running does not start a second",
+      "now": 1795608000000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "RETENTION_SWEEP",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "sweeping": true,
+            "doomed": [],
+            "removed": [],
+            "problems": [],
+            "sweptAt": null
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,8 @@ app std-conversation [
 ]
 type ConversationOutboxData = { content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string }
 type ConversationOutboxWrite = { id : string!, pendingId : string!, content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string }
-type ConversationOutboxEntry = { id : string!, data : ConversationOutboxData!, status : "sending" | "sent" | "failed"!, error : string! }
+type ConversationMedia = { name : string!, size : number, type : string, content : string! }
+type ConversationOutboxEntry = { id : string!, data : ConversationOutboxData!, status : "sending" | "sent" | "failed"!, error : string!, waiting : boolean!, media : ConversationMedia?, since : number! }
 
 ;; @capabilities "send messages in order with a status for each (sending, sent, failed) and resend, persist conversation messages, delete a message, pin a message, toggle an emoji reaction, announce mentioned people, mark a conversation read, read receipts, unread counts, open a direct message, add a member, thread reply counts, post as a token holder with no account, one vote per token holder"
 
@@ -297,18 +298,31 @@ orbital ConversationOrbital {
     state idle {
       INIT -> idle
         (set @entity.prefix (str/concat "m" (math/floor (* (math/random) 1000000000)) (math/floor (* (math/random) 1000000000)) (math/floor (* (math/random) 1000000000))))
-      OUTBOX_SEND -> idle
+      OUTBOX_SEND -> idle when (not (array/some @entity.entries (fn e (and @e.waiting (= @e.id (default ?id ""))))))
         (set @entity.seq (+ @entity.seq 1))
-        (set @entity.entries (array/append @entity.entries { id: (str/concat @entity.prefix "-" @entity.seq), data: ?data, status: "sending", error: "" }))
+        (set @entity.entries (let ((entry : ConversationOutboxEntry { id: (str/concat @entity.prefix "-" @entity.seq), data: ?data, status: "sending", error: "", waiting: false, media: null, since: 0 })) (array/append @entity.entries @entry)))
         (emit OUTBOX_CHANGED { entries: @entity.entries })
         (emit OUTBOX_NEXT {})
-      OUTBOX_NEXT -> idle when (and (= @entity.sending "") (array/some @entity.entries (fn e (= @e.status "sending"))))
-        (let ((next (array/find @entity.entries (fn e (= @e.status "sending")))))
+      OUTBOX_SEND -> idle when (array/some @entity.entries (fn e (and @e.waiting (= @e.id (default ?id "")))))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id (default ?id "")) (let ((sent : ConversationOutboxEntry { id: @e.id, data: ?data, status: "sending", error: "", waiting: false, media: null, since: 0 })) @sent) @e))))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_NEXT {})
+      OUTBOX_STAGE -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (set @entity.entries (array/append @entity.entries { id: (str/concat @entity.prefix "-" @entity.seq), data: ?data, status: "sending", error: "", waiting: true, media: ?media, since: (time/epoch-ms @now) }))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_UPLOAD { id: (str/concat @entity.prefix "-" @entity.seq), media: ?media, data: ?data })
+      OUTBOX_UPLOAD_FAILED -> idle when (array/some @entity.entries (fn e (and @e.waiting (= @e.id ?id))))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id ?id) (object/merge @e { status: "failed", error: ?error }) @e))))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+      OUTBOX_UPLOAD_FAILED -> idle when (not (array/some @entity.entries (fn e (and @e.waiting (= @e.id ?id)))))
+      OUTBOX_NEXT -> idle when (and (= @entity.sending "") (array/some @entity.entries (fn e (and (= @e.status "sending") (not @e.waiting)))))
+        (let ((next (array/find @entity.entries (fn e (and (= @e.status "sending") (not @e.waiting))))))
           (do
             (set @entity.sending @next.id)
             (set @entity.startedMs (time/epoch-ms @now))
             (emit OUTBOX_WRITE { data: (object/merge @next.data { id: @next.id, pendingId: @next.id }) })))
-      OUTBOX_NEXT -> idle when (not (and (= @entity.sending "") (array/some @entity.entries (fn e (= @e.status "sending")))))
+      OUTBOX_NEXT -> idle when (not (and (= @entity.sending "") (array/some @entity.entries (fn e (and (= @e.status "sending") (not @e.waiting))))))
       MESSAGE_SAVED -> idle when (and (!= @entity.sending "") (= (default ?id "") @entity.sending))
         (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id @entity.sending) (object/merge @e { status: "sent", error: "" }) @e))))
         (set @entity.sending "")
@@ -324,10 +338,15 @@ orbital ConversationOrbital {
         (emit OUTBOX_CHANGED { entries: @entity.entries })
         (emit OUTBOX_NEXT {})
       MESSAGE_SAVE_FAILED -> idle when (= @entity.sending "")
-      OUTBOX_RETRY -> idle when (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed"))))
+      OUTBOX_RETRY -> idle when (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed") (not @e.waiting))))
         (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id ?id) (object/merge @e { status: "sending", error: "" }) @e))))
         (emit OUTBOX_CHANGED { entries: @entity.entries })
         (emit OUTBOX_NEXT {})
+      OUTBOX_RETRY -> idle when (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed") @e.waiting)))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id ?id) (object/merge @e { status: "sending", error: "", since: (time/epoch-ms @now) }) @e))))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (let ((staged (array/find @entity.entries (fn e (= @e.id ?id)))))
+          (when (!= @staged null) (emit OUTBOX_UPLOAD { id: @staged.id, media: @staged.media, data: @staged.data })))
       OUTBOX_RETRY -> idle when (not (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed")))))
       OUTBOX_SETTLE -> idle when (array/some @entity.entries (fn e (and (= @e.status "sent") (array/includes ?ids @e.id))))
         (set @entity.entries (array/filter @entity.entries (fn e (not (and (= @e.status "sent") (array/includes ?ids @e.id))))))
@@ -342,9 +361,18 @@ orbital ConversationOrbital {
         (set @entity.sending "")
         (emit OUTBOX_CHANGED { entries: @entity.entries })
         (emit OUTBOX_NEXT {})
+      uploadTimeout every 1000ms
+        when (array/some @entity.entries (fn e (and @e.waiting (= @e.status "sending") (> (- (time/epoch-ms @now) @e.since) @config.uploadTimeoutMs))))
+        (set @entity.entries (array/map @entity.entries (fn e (if (and @e.waiting (= @e.status "sending") (> (- (time/epoch-ms @now) @e.since) @config.uploadTimeoutMs)) (object/merge @e { status: "failed", error: "timeout" }) @e))))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
     }
 
     config {
+      uploadTimeoutMs : number = 60000
+        @label "Upload timeout"
+        @description "How long a staged message may wait for its media's upload before it is shown as failed with a retry; a late upload still sends it."
+        @synonyms "upload deadline, media timeout"
+        @tier "presentation"
       sendTimeoutMs : number = 15000
         @label "Send timeout"
         @description "How long a message may wait for the store's answer before it is shown as failed and the next one goes out; a late success still marks it sent."
@@ -365,6 +393,14 @@ orbital ConversationOrbital {
         @description "The viewer's unsettled messages and their status (sending, sent, failed), oldest first, for the conversation to show next to the rows it read."
         @synonyms "outbox, pending messages, send status"
         @tier "domain"
+      OUTBOX_UPLOAD -> external {
+        id : string!
+        media : ConversationMedia?
+        data : ConversationOutboxData!
+      }
+        @description "Upload this staged message's media: answer with OUTBOX_SEND { data, id } carrying the stored attachment, or OUTBOX_UPLOAD_FAILED { id, error }."
+        @synonyms "upload media, store photo, send attachment"
+        @tier "domain"
       OUTBOX_NEXT {
       }
         @description "Internal: hand the oldest waiting message over when the line is free."
@@ -376,9 +412,24 @@ orbital ConversationOrbital {
       MessagePersistor.MESSAGE_SAVE_FAILED -> MESSAGE_SAVE_FAILED
       OUTBOX_SEND {
         data : ConversationOutboxData!
+        id : string
       }
-        @description "Send a message: it shows as sending at once and goes out after the ones before it."
+        @description "Send a message: it shows as sending at once and goes out after the ones before it. With the id of a staged message, its uploaded data replaces the preview and it goes out."
         @synonyms "send message, post, submit"
+        @tier "domain"
+      OUTBOX_STAGE {
+        data : ConversationOutboxData!
+        media : ConversationMedia?
+      }
+        @description "Show a message with media at once, its attachment a local preview, and ask for the media's upload (OUTBOX_UPLOAD); it is written only after OUTBOX_SEND names it with the uploaded data."
+        @synonyms "stage photo, attach media, upload then send"
+        @tier "domain"
+      OUTBOX_UPLOAD_FAILED {
+        id : string!
+        error : string!
+      }
+        @description "The staged message's upload failed: it shows as failed, and a retry asks for the upload again."
+        @synonyms "upload failed, media failed"
         @tier "domain"
       OUTBOX_RETRY {
         id : string!

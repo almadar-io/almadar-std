@@ -478,7 +478,7 @@
                 "event": "FLEET_ANSWERED",
                 "payload": {
                   "status": 400,
-                  "body": "usage: deploy [--target box|local] [--only <app>[,<app>\u2026]] [--runtime]"
+                  "body": "usage: deploy [--target box|local] [--only <app>[,<app>\u2026]] [--runtime]\n       preview <file> [--name <name>] [--target box|local]\n       stop <name> [--target box|local]"
                 }
               }
             ]
@@ -1542,6 +1542,901 @@
                 }
               }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "preview reads the file, composes an atom with the server program and deploys it named after --name",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false,
+            "preview": {
+              "orb": "orb-dev",
+              "stage": "/w/preview",
+              "origin": "http://{name}.localhost:5065",
+              "env": {
+                "FIRESTORE_PROJECT_ID": "demo"
+              },
+              "stopSteps": [
+                "rm -rf \"/srv/apps/$1\""
+              ],
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "name": [
+                "shop-x"
+              ]
+            },
+            "positionals": [
+              "preview",
+              "p/a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "neverEmits": [
+              "FLEET_DEPLOY",
+              "FLEET_RUNTIME_BUILD"
+            ],
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "FLEET_PREVIEW_READ",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "local",
+            "link": "http://shop-x.localhost:5065",
+            "apps": [
+              {
+                "name": "preview-shop-x",
+                "program": "/w/preview/preview-shop-x.orb",
+                "site": "preview-shop-x",
+                "staticDir": "",
+                "env": {
+                  "FIRESTORE_AUTH": "emulator",
+                  "FIRESTORE_DATABASE_ID": "preview-shop-x",
+                  "FIRESTORE_PROJECT_ID": "demo"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              }
+            ],
+            "preview": {
+              "file": "p/a.lolo",
+              "app": "preview-shop-x",
+              "stage": "/w/preview",
+              "orb": "orb-dev",
+              "server": "std/net/std-http-server.lolo"
+            }
+          },
+          "payload": {
+            "key": "preview",
+            "result": {
+              "program": {
+                "orbitals": [
+                  {
+                    "pages": [
+                      {
+                        "protocol": "route"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_BUILD",
+                "payload": {
+                  "requestId": "preview-shop-x",
+                  "steps": [
+                    {
+                      "scope": "root",
+                      "args": [
+                        "-c",
+                        "mkdir -p \"$3\" && \"$4\" compose --app-name \"$2\" --resolve \"$1\" \"$5\" -o \"$3/$2.orb\"",
+                        "sh",
+                        "p/a.lolo",
+                        "preview-shop-x",
+                        "/w/preview",
+                        "orb-dev",
+                        "std/net/std-http-server.lolo"
+                      ],
+                      "stdin": "",
+                      "feed": false,
+                      "tolerate": false,
+                      "raw": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "payload": {
+            "requestId": "preview-shop-x",
+            "outputs": [
+              ""
+            ],
+            "rawOuts": [
+              ""
+            ],
+            "codes": [
+              0
+            ],
+            "failures": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_DEPLOY",
+                "payload": {
+                  "target": "local",
+                  "only": [],
+                  "apps": [
+                    {
+                      "name": "preview-shop-x",
+                      "program": "/w/preview/preview-shop-x.orb",
+                      "site": "preview-shop-x",
+                      "staticDir": "",
+                      "env": {
+                        "FIRESTORE_AUTH": "emulator",
+                        "FIRESTORE_DATABASE_ID": "preview-shop-x",
+                        "FIRESTORE_PROJECT_ID": "demo"
+                      },
+                      "firestoreDatabase": "",
+                      "origins": []
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "local",
+            "link": "http://shop-x.localhost:5065",
+            "apps": [
+              {
+                "name": "preview-shop-x",
+                "program": "/w/preview/preview-shop-x.orb",
+                "site": "preview-shop-x",
+                "staticDir": "",
+                "env": {
+                  "FIRESTORE_AUTH": "emulator",
+                  "FIRESTORE_DATABASE_ID": "preview-shop-x",
+                  "FIRESTORE_PROJECT_ID": "demo"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              }
+            ],
+            "preview": {
+              "file": "p/a.lolo",
+              "app": "preview-shop-x",
+              "stage": "/w/preview",
+              "orb": "orb-dev",
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        },
+        {
+          "event": "FLEET_RESULTS",
+          "from": "ready",
+          "payload": {
+            "results": [
+              {
+                "app": "preview-shop-x",
+                "version": 1,
+                "ok": true,
+                "failures": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "ok preview-shop-x release 1\npreview http://shop-x.localhost:5065"
+                }
+              }
+            ],
+            "entity": {
+              "busy": false
+            }
+          },
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "local",
+            "link": "http://shop-x.localhost:5065",
+            "apps": [
+              {
+                "name": "preview-shop-x",
+                "program": "/w/preview/preview-shop-x.orb",
+                "site": "preview-shop-x",
+                "staticDir": "",
+                "env": {
+                  "FIRESTORE_AUTH": "emulator",
+                  "FIRESTORE_DATABASE_ID": "preview-shop-x",
+                  "FIRESTORE_PROJECT_ID": "demo"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              }
+            ],
+            "preview": {
+              "file": "p/a.lolo",
+              "app": "preview-shop-x",
+              "stage": "/w/preview",
+              "orb": "orb-dev",
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        }
+      ],
+      "note": "With no substrate host the step's program/read fails inside step 0 and answers cannot-read, so step 0 pins only that nothing builds before the read; the later steps seed the run."
+    },
+    {
+      "id": "control: a preview name outside a-z, 0-9 and dash is refused",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false,
+            "preview": {
+              "orb": "orb-dev",
+              "stage": "/w/preview",
+              "origin": "http://{name}.localhost:5065",
+              "env": {
+                "FIRESTORE_PROJECT_ID": "demo"
+              },
+              "stopSteps": [
+                "rm -rf \"/srv/apps/$1\""
+              ],
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "name": [
+                "Shop X"
+              ]
+            },
+            "positionals": [
+              "preview",
+              "p/a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "error: a preview name is lower-case letters, digits and dashes (got Shop X); pass --name"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_RUNTIME_BUILD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a target with no preview record refuses preview",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false,
+            "preview": {
+              "orb": "orb-dev",
+              "stage": "/w/preview",
+              "origin": "http://{name}.localhost:5065",
+              "env": {
+                "FIRESTORE_PROJECT_ID": "demo"
+              },
+              "stopSteps": [
+                "rm -rf \"/srv/apps/$1\""
+              ],
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {
+              "target": [
+                "box"
+              ],
+              "name": [
+                "a"
+              ]
+            },
+            "positionals": [
+              "preview",
+              "p/a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "error: target box declares no preview"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "stop runs the target's stop steps for that preview and answers stopped",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false,
+            "preview": {
+              "orb": "orb-dev",
+              "stage": "/w/preview",
+              "origin": "http://{name}.localhost:5065",
+              "env": {
+                "FIRESTORE_PROJECT_ID": "demo"
+              },
+              "stopSteps": [
+                "rm -rf \"/srv/apps/$1\""
+              ],
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {},
+            "positionals": [
+              "stop",
+              "shop-x"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_BUILD",
+                "payload": {
+                  "requestId": "stop-shop-x",
+                  "steps": [
+                    {
+                      "scope": "root",
+                      "args": [
+                        "-c",
+                        "rm -rf \"/srv/apps/$1\"",
+                        "sh",
+                        "preview-shop-x"
+                      ],
+                      "stdin": "",
+                      "feed": false,
+                      "tolerate": false,
+                      "raw": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "payload": {
+            "requestId": "stop-shop-x",
+            "outputs": [
+              ""
+            ],
+            "rawOuts": [
+              ""
+            ],
+            "codes": [
+              0
+            ],
+            "failures": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "stopped preview-shop-x"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_DEPLOY",
+              "FLEET_RUNTIME_DEPLOY"
+            ],
+            "entity": {
+              "busy": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: stop with a name outside a-z, 0-9 and dash is refused",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false,
+            "preview": {
+              "orb": "orb-dev",
+              "stage": "/w/preview",
+              "origin": "http://{name}.localhost:5065",
+              "env": {
+                "FIRESTORE_PROJECT_ID": "demo"
+              },
+              "stopSteps": [
+                "rm -rf \"/srv/apps/$1\""
+              ],
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_ARGS_DONE",
+          "from": "ready",
+          "payload": {
+            "stage": "fleet",
+            "flags": {},
+            "positionals": [
+              "stop",
+              "../x"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "error: a preview name is lower-case letters, digits and dashes (got ../x); pass --name"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_RUNTIME_BUILD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a previewed app that declares its own http page is composed alone",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false,
+            "preview": {
+              "orb": "orb-dev",
+              "stage": "/w/preview",
+              "origin": "http://{name}.localhost:5065",
+              "env": {
+                "FIRESTORE_PROJECT_ID": "demo"
+              },
+              "stopSteps": [
+                "rm -rf \"/srv/apps/$1\""
+              ],
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_PREVIEW_READ",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "local",
+            "preview": {
+              "file": "p/a.lolo",
+              "app": "preview-shop-x",
+              "stage": "/w/preview",
+              "orb": "orb-dev",
+              "server": "std/net/std-http-server.lolo"
+            }
+          },
+          "payload": {
+            "key": "preview",
+            "result": {
+              "program": {
+                "orbitals": [
+                  {
+                    "pages": [
+                      {
+                        "protocol": "route"
+                      }
+                    ]
+                  },
+                  {
+                    "pages": [
+                      {
+                        "protocol": "http"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_BUILD",
+                "payload": {
+                  "requestId": "preview-shop-x",
+                  "steps": [
+                    {
+                      "scope": "root",
+                      "args": [
+                        "-c",
+                        "mkdir -p \"$3\" && \"$4\" compose --app-name \"$2\" --resolve \"$1\" -o \"$3/$2.orb\"",
+                        "sh",
+                        "p/a.lolo",
+                        "preview-shop-x",
+                        "/w/preview",
+                        "orb-dev"
+                      ],
+                      "stdin": "",
+                      "feed": false,
+                      "tolerate": false,
+                      "raw": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a file that cannot be read answers 400 and frees the command",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb"
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": ""
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false,
+            "preview": {
+              "orb": "orb-dev",
+              "stage": "/w/preview",
+              "origin": "http://{name}.localhost:5065",
+              "env": {
+                "FIRESTORE_PROJECT_ID": "demo"
+              },
+              "stopSteps": [
+                "rm -rf \"/srv/apps/$1\""
+              ],
+              "server": "std/net/std-http-server.lolo"
+            }
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_PREVIEW_UNREAD",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "preview": {
+              "file": "p/x.lolo",
+              "app": "preview-x",
+              "stage": "/w/preview",
+              "orb": "orb-dev",
+              "server": "s"
+            }
+          },
+          "payload": {
+            "key": "preview",
+            "error": "no such file"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "error: cannot read p/x.lolo: no such file"
+                }
+              }
+            ],
+            "entity": {
+              "busy": false
+            }
           }
         }
       ]

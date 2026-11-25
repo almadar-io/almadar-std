@@ -42,6 +42,8 @@ export const OS_DEV_OPERATORS: Record<string, StdOperatorMeta> = {
       example: '["os/audio-in", { "sampleRate": 16000, "channels": 1 }, { "key": "mic", "emit": { "success": "MIC_OPEN", "failure": "MIC_FAILED", "onMessage": "MIC_FRAME" } }]',
     }),
     runsOn: 'client',
+    host: 'substrate',
+    grant: undefined,
   },
   'os/video-decode': {
     ...osEffect({
@@ -54,6 +56,8 @@ export const OS_DEV_OPERATORS: Record<string, StdOperatorMeta> = {
       example: '["os/video-decode", { "codec": "avc1.42E01E", "description": "AU...", "codedWidth": 320, "codedHeight": 240 }, { "key": "clip", "emit": { "success": "DECODER_OPEN", "failure": "DECODER_FAILED", "onMessage": "VIDEO_FRAME" } }]',
     }),
     runsOn: 'client',
+    host: 'substrate',
+    grant: undefined,
   },
   'os/video-feed': {
     ...osEffect({
@@ -64,5 +68,7 @@ export const OS_DEV_OPERATORS: Record<string, StdOperatorMeta> = {
       example: '["os/video-feed", "clip", { "data": "AAAA...", "timestamp": 0, "key": true }, { "emit": { "failure": "FEED_FAILED" } }]',
     }),
     runsOn: 'client',
+    host: 'substrate',
+    grant: undefined,
   },
 };

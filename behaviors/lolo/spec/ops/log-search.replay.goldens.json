@@ -1,0 +1,485 @@
+{
+  "atom": "ops/atoms/std-log-search.lolo",
+  "trait": "LogSearch",
+  "note": "Jobs started and polled over the log-search hook; with no host every ask fails inside its step.",
+  "cases": [
+    {
+      "id": "an ask without the fleet key is answered 401",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LOG_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "op": "poll",
+              "job": "x"
+            },
+            "rawBody": "",
+            "verified": false
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [],
+            "seq": 0,
+            "running": "",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LOG_ANSWERED",
+                "payload": {
+                  "status": 401
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a start queues a job and answers 202 with its id",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LOG_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "op": "start",
+              "query": "(= @line.level \"error\")",
+              "from": "2026-11-25T00:00:00.000Z",
+              "to": "2026-11-25T01:00:00.000Z",
+              "levels": [
+                "error"
+              ]
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [],
+            "seq": 0,
+            "running": "",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LOG_ANSWERED",
+                "payload": {
+                  "status": 202,
+                  "body": "{\"job\":\"job-1-1000\"}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "With no host the job's program/read fails inside the same step, so the job's later state is that failure's."
+    },
+    {
+      "id": "control: a poll for an unknown job is answered 404",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LOG_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "op": "poll",
+              "job": "nope"
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [
+              {
+                "id": "job-1",
+                "query": "true",
+                "from": "2026-11-25T00:00:00.000Z",
+                "to": "2026-11-25T01:00:00.000Z",
+                "levels": [],
+                "status": "running",
+                "error": "",
+                "scanned": 0,
+                "skipped": 0,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fields": [],
+                "files": [
+                  "error/2026-11-25.jsonl"
+                ],
+                "fileIndex": 0,
+                "guest": "g1",
+                "endedAt": null
+              }
+            ],
+            "seq": 0,
+            "running": "",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LOG_ANSWERED",
+                "payload": {
+                  "status": 404
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a poll for a known job answers it",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LOG_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "op": "poll",
+              "job": "job-1"
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [
+              {
+                "id": "job-1",
+                "query": "true",
+                "from": "2026-11-25T00:00:00.000Z",
+                "to": "2026-11-25T01:00:00.000Z",
+                "levels": [],
+                "status": "running",
+                "error": "",
+                "scanned": 0,
+                "skipped": 0,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fields": [],
+                "files": [
+                  "error/2026-11-25.jsonl"
+                ],
+                "fileIndex": 0,
+                "guest": "g1",
+                "endedAt": null
+              }
+            ],
+            "seq": 0,
+            "running": "",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LOG_ANSWERED",
+                "payload": {
+                  "status": 200
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an op other than start or poll is answered 400",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LOG_ASKED",
+          "payload": {
+            "headers": {},
+            "body": {
+              "op": "drop"
+            },
+            "rawBody": "",
+            "verified": true
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [],
+            "seq": 0,
+            "running": "",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LOG_ANSWERED",
+                "payload": {
+                  "status": 400
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a chunk's matches fold into total, histogram, fields and newest-first hits",
+      "now": 1000,
+      "config": {
+        "buckets": 4,
+        "fieldsTracked": [
+          "namespace"
+        ]
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LS_MATCHED",
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "MATCHED",
+                  "payload": {
+                    "hits": [
+                      {
+                        "time": "2026-11-25T00:10:00.000Z",
+                        "level": "error",
+                        "namespace": "a",
+                        "message": "m",
+                        "app": "x",
+                        "release": "",
+                        "box": "local",
+                        "data": {}
+                      },
+                      {
+                        "time": "2026-11-25T00:50:00.000Z",
+                        "level": "error",
+                        "namespace": "b",
+                        "message": "m",
+                        "app": "x",
+                        "release": "",
+                        "box": "local",
+                        "data": {}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [
+              {
+                "id": "job-1",
+                "query": "true",
+                "from": "2026-11-25T00:00:00.000Z",
+                "to": "2026-11-25T01:00:00.000Z",
+                "levels": [],
+                "status": "running",
+                "error": "",
+                "scanned": 0,
+                "skipped": 0,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fields": [],
+                "files": [
+                  "error/2026-11-25.jsonl"
+                ],
+                "fileIndex": 0,
+                "guest": "g1",
+                "endedAt": null
+              }
+            ],
+            "seq": 0,
+            "running": "job-1",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local",
+            "eof": false
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "jobs": [
+                {
+                  "id": "job-1",
+                  "query": "true",
+                  "from": "2026-11-25T00:00:00.000Z",
+                  "to": "2026-11-25T01:00:00.000Z",
+                  "levels": [],
+                  "status": "done",
+                  "error": "",
+                  "scanned": 0,
+                  "skipped": 0,
+                  "total": 2,
+                  "hits": [
+                    {
+                      "time": "2026-11-25T00:50:00.000Z",
+                      "level": "error",
+                      "namespace": "b",
+                      "message": "m",
+                      "app": "x",
+                      "release": "",
+                      "box": "local",
+                      "data": {}
+                    },
+                    {
+                      "time": "2026-11-25T00:10:00.000Z",
+                      "level": "error",
+                      "namespace": "a",
+                      "message": "m",
+                      "app": "x",
+                      "release": "",
+                      "box": "local",
+                      "data": {}
+                    }
+                  ],
+                  "histogram": [
+                    1,
+                    0,
+                    0,
+                    1
+                  ],
+                  "fields": [
+                    {
+                      "field": "namespace",
+                      "value": "a",
+                      "count": 1
+                    },
+                    {
+                      "field": "namespace",
+                      "value": "b",
+                      "count": 1
+                    }
+                  ],
+                  "files": [
+                    "error/2026-11-25.jsonl"
+                  ],
+                  "fileIndex": 1,
+                  "guest": "g1",
+                  "endedAt": "1970-01-01T00:00:01.000Z"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "note": "With no host the next os/read fails inside the step, so the file ends and the job is done in the same step; the fold is what is pinned."
+    },
+    {
+      "id": "a chunk that ends inside a line keeps that line's start for the next read",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LS_CHUNK",
+          "payload": {
+            "data": "",
+            "eof": false
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [
+              {
+                "id": "job-1",
+                "query": "true",
+                "from": "2026-11-25T00:00:00.000Z",
+                "to": "2026-11-25T01:00:00.000Z",
+                "levels": [],
+                "status": "running",
+                "error": "",
+                "scanned": 0,
+                "skipped": 0,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fields": [],
+                "files": [
+                  "error/2026-11-25.jsonl"
+                ],
+                "fileIndex": 0,
+                "guest": "g1",
+                "endedAt": null
+              }
+            ],
+            "seq": 0,
+            "running": "job-1",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,925 @@
+{
+  "atom": "ops/atoms/std-fleet-board.lolo",
+  "trait": "FleetBoard",
+  "note": "Boxes answer the std-host-report hook; the board folds them into std-status-board rows.",
+  "cases": [
+    {
+      "id": "a report answered 200 is kept and the board is drawn once every box answered",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_REPORTED",
+          "payload": {
+            "box": "local",
+            "status": 200,
+            "body": "{\"sampledAt\": null, \"machine\": {\"memoryTotal\": 8589934592, \"memoryUsed\": 1, \"memoryPercent\": 50, \"cpuPercent\": 10, \"load1\": 0.5, \"load5\": 0.5, \"load15\": 0.5, \"uptimeSeconds\": 1}, \"disks\": [], \"apps\": [{\"name\": \"preview-std-browse\", \"guest\": \"g1\", \"release\": \"releases/1\", \"current\": true, \"loading\": false, \"lastUsedMs\": \"2026-11-25T07:00:00.000Z\", \"heldBytes\": 2097152, \"diskBytes\": 1048576}, {\"name\": \"kflow\", \"guest\": \"g2\", \"release\": \"releases/4\", \"current\": true, \"loading\": false, \"lastUsedMs\": \"2026-11-25T07:00:00.000Z\", \"heldBytes\": 0, \"diskBytes\": 0}], \"logs\": [{\"level\": \"error\", \"day\": \"2026-11-25\", \"bytes\": 2048}], \"problems\": []}"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 1,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": null,
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_SHOW",
+                "payload": {}
+              }
+            ],
+            "entity": {
+              "waiting": 0,
+              "boxes": [
+                {
+                  "box": "local",
+                  "label": "Local box",
+                  "report": {
+                    "sampledAt": null,
+                    "machine": {
+                      "memoryTotal": 8589934592,
+                      "memoryUsed": 1,
+                      "memoryPercent": 50,
+                      "cpuPercent": 10,
+                      "load1": 0.5,
+                      "load5": 0.5,
+                      "load15": 0.5,
+                      "uptimeSeconds": 1
+                    },
+                    "disks": [],
+                    "apps": [
+                      {
+                        "name": "preview-std-browse",
+                        "guest": "g1",
+                        "release": "releases/1",
+                        "current": true,
+                        "loading": false,
+                        "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                        "heldBytes": 2097152,
+                        "diskBytes": 1048576
+                      },
+                      {
+                        "name": "kflow",
+                        "guest": "g2",
+                        "release": "releases/4",
+                        "current": true,
+                        "loading": false,
+                        "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                        "heldBytes": 0,
+                        "diskBytes": 0
+                      }
+                    ],
+                    "logs": [
+                      {
+                        "level": "error",
+                        "day": "2026-11-25",
+                        "bytes": 2048
+                      }
+                    ],
+                    "problems": []
+                  },
+                  "error": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the board draws a box that answered with no error",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_SHOW",
+          "payload": {},
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_BOARD_SHOW",
+                "payload": {
+                  "error": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an open local preview offers Stop preview",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_ROW_OPENED",
+          "payload": {
+            "rowId": "local|app|preview-std-browse|releases/1"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_BOARD_DETAIL",
+                "payload": {
+                  "detail": {
+                    "rowId": "local|app|preview-std-browse|releases/1",
+                    "phase": "ready",
+                    "code": "",
+                    "codeTitle": "",
+                    "errorLines": [],
+                    "error": "",
+                    "items": [
+                      {
+                        "label": "Release",
+                        "tone": "success",
+                        "statusLabel": "releases/1",
+                        "meta": "serving new clients"
+                      },
+                      {
+                        "label": "Memory held",
+                        "tone": "neutral",
+                        "statusLabel": "2 MB",
+                        "meta": "value data of its rows, frames and sessions"
+                      },
+                      {
+                        "label": "Release disk",
+                        "tone": "neutral",
+                        "statusLabel": "1 MB",
+                        "meta": ""
+                      }
+                    ],
+                    "actions": [
+                      {
+                        "action": "stop",
+                        "label": "Stop preview",
+                        "icon": "square",
+                        "danger": true
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an open app that is not a preview offers no action",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_ROW_OPENED",
+          "payload": {
+            "rowId": "local|app|kflow|releases/4"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_BOARD_DETAIL",
+                "payload": {
+                  "detail": {
+                    "rowId": "local|app|kflow|releases/4",
+                    "phase": "ready",
+                    "code": "",
+                    "codeTitle": "",
+                    "errorLines": [],
+                    "error": "",
+                    "items": [
+                      {
+                        "label": "Release",
+                        "tone": "success",
+                        "statusLabel": "releases/4",
+                        "meta": "serving new clients"
+                      },
+                      {
+                        "label": "Memory held",
+                        "tone": "neutral",
+                        "statusLabel": "0 KB",
+                        "meta": "value data of its rows, frames and sessions"
+                      },
+                      {
+                        "label": "Release disk",
+                        "tone": "neutral",
+                        "statusLabel": "0 KB",
+                        "meta": ""
+                      }
+                    ],
+                    "actions": []
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Stop preview runs orb fleet stop with the name without its prefix",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_ROW_ACTION",
+          "payload": {
+            "rowId": "local|app|preview-std-browse|releases/1",
+            "action": "stop"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_CLI_RUN",
+                "payload": {
+                  "stage": "stop",
+                  "argv": [
+                    "fleet",
+                    "stop",
+                    "std-browse"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a stop on a remote row runs nothing",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_ROW_ACTION",
+          "payload": {
+            "rowId": "remote|app|preview-x|releases/1",
+            "action": "stop"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "a log still being read is asked again and a read one is shown whole",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_LOG_REPLIED",
+          "payload": {
+            "status": 202,
+            "body": "{\"pending\":true}"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": {
+              "box": "local",
+              "rowId": "local|log|error|2026-11-25",
+              "level": "error",
+              "day": "2026-11-25",
+              "tries": 0
+            }
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "FB_BOARD_DETAIL"
+            ],
+            "entity": {
+              "logAsk": {
+                "box": "local",
+                "rowId": "local|log|error|2026-11-25",
+                "level": "error",
+                "day": "2026-11-25",
+                "tries": 1
+              }
+            }
+          }
+        },
+        {
+          "from": "idle",
+          "event": "FB_LOG_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"level\": \"error\", \"day\": \"2026-11-25\", \"bytes\": 2048, \"text\": \"line one\\nline two\"}"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": {
+              "box": "local",
+              "rowId": "local|log|error|2026-11-25",
+              "level": "error",
+              "day": "2026-11-25",
+              "tries": 1
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_BOARD_DETAIL",
+                "payload": {
+                  "detail": {
+                    "rowId": "local|log|error|2026-11-25",
+                    "phase": "ready",
+                    "items": [],
+                    "code": "line one\nline two",
+                    "codeTitle": "error 2026-11-25 · 2 KB",
+                    "errorLines": [],
+                    "error": "",
+                    "actions": []
+                  }
+                }
+              }
+            ],
+            "entity": {
+              "logAsk": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a load while a read is in flight sends nothing",
+      "now": 5000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_READ",
+          "payload": {},
+          "entity": {
+            "id": "f",
+            "waiting": 2,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": null,
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null,
+            "readAt": "1970-01-01T00:00:01.000Z"
+          },
+          "expect": {
+            "neverEmits": [
+              "FB_LOCAL_SEND",
+              "FB_REMOTE_SEND",
+              "FB_BOARD_LOADING"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a read stuck past 30 seconds may start again",
+      "now": 40000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_READ",
+          "payload": {},
+          "entity": {
+            "id": "f",
+            "waiting": 2,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": null,
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null,
+            "readAt": "1970-01-01T00:00:01.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FB_BOARD_LOADING",
+                "payload": {}
+              }
+            ],
+            "emitCounts": {
+              "FB_LOCAL_SEND": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "with the remote box on, a refused local key is noted and the remote box is read next",
+      "now": 2000,
+      "config": {
+        "remote": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_REPORTED",
+          "payload": {
+            "box": "local",
+            "status": 401,
+            "body": "{}"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 2,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": null,
+                "error": ""
+              },
+              {
+                "box": "remote",
+                "label": "Remote box",
+                "report": null,
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null,
+            "readAt": "1970-01-01T00:00:01.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_NEXT_BOX",
+                "payload": {
+                  "box": "local"
+                }
+              },
+              {
+                "event": "FB_REMOTE_SEND",
+                "payload": {
+                  "key": "remote-report"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "With no substrate host the remote send fails inside the same step, so the step's entity and later emits are that failure's; the order local answer, then the remote send, is what is pinned."
+    },
+    {
+      "id": "control: with the remote box off, the local answer draws the board",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_REPORTED",
+          "payload": {
+            "box": "local",
+            "status": 401,
+            "body": "{}"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 1,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": null,
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null,
+            "readAt": "1970-01-01T00:00:01.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_NEXT_BOX",
+                "payload": {
+                  "box": "local"
+                }
+              },
+              {
+                "event": "FB_SHOW",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "FB_REMOTE_SEND"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

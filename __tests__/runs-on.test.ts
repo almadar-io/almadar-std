@@ -19,6 +19,9 @@ const OS_EFFECTS = [
 // Effects either side runs: the browser's HTTP port and the stream handles it answers (EXEC-HTTP).
 const OS_ANY = ['os/close', 'os/fetch', 'os/recv'];
 
+// Device ports the client's own host answers (G-CROSS-806): a host ask like browser/open-file-picker, never the OS host's.
+const OS_CLIENT = ['os/audio-in', 'os/video-decode', 'os/video-feed'];
+
 const MEM_EFFECTS = ['mem/alloc', 'mem/arena-drop', 'mem/arena-new', 'mem/atomic-add', 'mem/atomic-cas', 'mem/atomic-load', 'mem/atomic-store', 'mem/borrow', 'mem/free', 'mem/freeze', 'mem/release', 'mem/write'];
 const KERNEL_EFFECTS = ['kernel/commit', 'kernel/queue-back', 'kernel/queue-front'];
 const KERNEL_PURE = ['kernel/apply', 'kernel/frame', 'kernel/stamp', 'kernel/step', 'kernel/worklist'];
@@ -84,7 +87,13 @@ describe('runsOn', () => {
 
   it('the os family is exactly the contract: effects run on the server, path math is pure, os/debounce is gone', () => {
     const declared = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('os/')).sort();
-    expect(declared).toEqual([...OS_EFFECTS, ...OS_PURE, ...OS_ANY].sort());
+    expect(declared).toEqual([...OS_EFFECTS, ...OS_PURE, ...OS_ANY, ...OS_CLIENT].sort());
+    for (const name of OS_CLIENT) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
+      expect(STD_OPERATORS[name].runsOn, name).toBe('client');
+      expect(STD_OPERATORS[name].host, name).toBe('substrate');
+      expect(STD_OPERATORS[name].grant, name).toBeUndefined();
+    }
     for (const name of OS_ANY) {
       expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
       expect(STD_OPERATORS[name].runsOn, name).toBe('any');
@@ -215,7 +224,7 @@ describe('runsOn', () => {
       'audio/change-music', 'audio/clock', 'audio/play-sound', 'audio/schedule', 'audio/stop-music', 'audio/stop-sound', 'auth/consent', 'auth/sign-in', 'auth/sign-out',
       'browser/beacon', 'browser/clipboard-read', 'browser/clipboard-write', 'browser/embed', 'browser/geolocation-current', 'browser/open-file-picker', 'browser/page-facts', 'browser/prompt', 'browser/push-subscribe', 'browser/read-file',
       'browser/tab-act', 'browser/tab-apply', 'browser/tab-apply-many', 'browser/tab-capture', 'browser/tab-close', 'browser/tab-list', 'browser/tab-navigate', 'browser/tab-open', 'browser/tab-query', 'browser/tab-unwatch', 'browser/tab-watch',
-      'navigate', 'navigate-back', 'program/host-ask', 'render-ui', 'send-server',
+      'navigate', 'navigate-back', ...OS_CLIENT, 'program/host-ask', 'render-ui', 'send-server',
     ]);
   });
 

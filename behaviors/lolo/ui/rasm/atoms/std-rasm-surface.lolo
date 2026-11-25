@@ -41,6 +41,7 @@ orbital RasmSurfaceOrbital {
     paints : Map string RasmPaintEntry @description "Every control's latest paint by control id." = {}
     shownPaints : Map string RasmPaintEntry @description "The paints the last repaint drew: the canvas reads these, so a paint that arrives between repaints is drawn once, at the next repaint." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
+    measuredSeen : Map string RasmMeasureItem @description "The size last relayed for each measured text, by id: RASM_MEASURED carries only the texts whose size differs from it." = {}
     layer : RasmThemeLayer @description "The palette and fonts the announced theme lays over the host theme on the canvas." = { palette: {}, fonts: {} }
     viewW : number @description "The canvas width the layout uses: the config width, then the container's width." = 720
     viewH : number @description "The canvas height: the root's content height plus the margins, or with fill on the largest of the container's height, minHeight and the root's content height, as the canvas itself grows." = 520
@@ -231,7 +232,9 @@ orbital RasmSurfaceOrbital {
       SURFACE_ORIGINS -> ready
         (emit RASM_PAGE_ORIGINS { offsets: ?offsets })
       SURFACE_MEASURED -> ready
-        (emit RASM_MEASURED { items: ?items })
+        (when (array/some ?items (fn it (let ((was (object/get @entity.measuredSeen @it.id null))) (or (= @was null) (!= @was.width @it.width) (!= @was.height @it.height) (!= @was.lines @it.lines)))))
+          (emit RASM_MEASURED { items: (array/filter ?items (fn it (let ((was (object/get @entity.measuredSeen @it.id null))) (or (= @was null) (!= @was.width @it.width) (!= @was.height @it.height) (!= @was.lines @it.lines))))) }))
+        (set @entity.measuredSeen (array/reduce ?items @entity.measuredSeen (fn acc it (object/set @acc @it.id @it))))
       KEY_NEXT -> ready
         (emit RASM_KEY { key: "next" })
       KEY_PREVIOUS -> ready
@@ -452,7 +455,9 @@ orbital RasmSurfaceOrbital {
       SURFACE_ORIGINS -> dirty
         (emit RASM_PAGE_ORIGINS { offsets: ?offsets })
       SURFACE_MEASURED -> dirty
-        (emit RASM_MEASURED { items: ?items })
+        (when (array/some ?items (fn it (let ((was (object/get @entity.measuredSeen @it.id null))) (or (= @was null) (!= @was.width @it.width) (!= @was.height @it.height) (!= @was.lines @it.lines)))))
+          (emit RASM_MEASURED { items: (array/filter ?items (fn it (let ((was (object/get @entity.measuredSeen @it.id null))) (or (= @was null) (!= @was.width @it.width) (!= @was.height @it.height) (!= @was.lines @it.lines))))) }))
+        (set @entity.measuredSeen (array/reduce ?items @entity.measuredSeen (fn acc it (object/set @acc @it.id @it))))
       KEY_NEXT -> dirty
         (emit RASM_KEY { key: "next" })
       KEY_PREVIOUS -> dirty
@@ -560,7 +565,7 @@ orbital RasmSurfaceOrbital {
       RASM_MEASURED -> external {
         items : [RasmMeasureItem]!
       }
-        @description "Sizes of the measured texts."
+        @description "Sizes of the measured texts whose size changed since they were last relayed: every text the first time it is measured, then only the ones that differ."
         @tier "primary"
       RASM_RESIZE -> external {
         width : number!

@@ -1,0 +1,100 @@
+app std-log-retention [
+  version: "1.0.0",
+  fs: { "/srv/orb/logs/**": [read, remove] },
+  egress: [],
+  description: "std-log-retention — keeps a folder of daily log files to a retention per level. The folder (the dir knob, ending in /) holds one subfolder per level with one <YYYY-MM-DD>.jsonl per UTC day, the layout the orb's ALMADAR_LOG_DIR writer keeps. At INIT and then every hour it globs <dir>*/*.jsonl and removes each file whose level has a rule in the keep knob ({ level, days }) and whose day is days or more days before today, so a level keeps exactly its last days day files, today included; a level with no rule and a file whose name is not a day are left alone. The files removed by the last sweep are its entity's removed field, and a file that could not be removed is named in problems. Subject-agnostic: it knows nothing of what writes the files."
+]
+;; @capabilities "delete old daily log files per level, log retention, keep errors longer than warnings"
+
+type RetentionRule = { level : string!, days : number! }
+
+orbital LogRetentionOrbital {
+  entity LogRetentionRun [runtime] {
+    id : string!
+    sweeping : boolean = false
+    doomed : [string] = []
+    removed : [string] = []
+    problems : [string] = []
+    sweptAt : instant? = null
+  }
+
+  trait LogRetention -> LogRetentionRun {
+    config {
+      dir : string = "/srv/orb/logs/"
+        @label "Log folder"
+        @description "The folder ending in / holding one subfolder per level; a composer that moves it grants fs read and remove on its own folder."
+        @tier "domain"
+      keep : [RetentionRule] = [{ level: "error", days: 5 }, { level: "warn", days: 3 }, { level: "info", days: 1 }, { level: "debug", days: 1 }]
+        @label "Days kept per level"
+        @description "For each level folder, how many day files are kept, today included; a level not listed is never swept."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit RETENTION_SWEEP {})
+      RETENTION_SWEEP -> ready when (not @entity.sweeping)
+        (set @entity.sweeping true)
+        (os/glob (str/concat @config.dir "*/*.jsonl") { emit: { success: RETENTION_GLOBBED, failure: RETENTION_UNGLOBBED } })
+      RETENTION_GLOBBED -> ready
+        (set @entity.removed [])
+        (set @entity.problems [])
+        (set @entity.doomed (array/filter (array/map ?paths (fn p (let ((ps (str/split @p "/"))) (str/join (array/slice @ps (math/max 0 (- (array/len @ps) 2))) "/"))))
+          (fn rel (let ((parts (str/split @rel "/")))
+            (let ((rule (array/find @config.keep (fn r (= @r.level (default (array/nth @parts 0) "")))))
+                  (day (time/parse (str/replace (default (array/nth @parts 1) "") ".jsonl" ""))))
+              (and (!= @rule null) (!= @day null) (= (array/len @parts) 2)
+                (>= (time/diff (default (time/parse (time/format @now "YYYY-MM-DD")) @now) @day "d") (default @rule.days 0))))))))
+        (emit RETENTION_REMOVE { index: 0 })
+      RETENTION_UNGLOBBED -> ready
+        (set @entity.problems [(str/concat "list: " ?error)])
+        (set @entity.sweeping false)
+        (set @entity.sweptAt @now)
+      RETENTION_REMOVE -> ready when (< ?index (array/len @entity.doomed))
+        (os/remove (str/concat @config.dir (default (array/nth @entity.doomed ?index) "")) { key: (str/concat "" ?index) emit: { success: RETENTION_REMOVED, failure: RETENTION_UNREMOVED } })
+      RETENTION_REMOVE -> ready when (>= ?index (array/len @entity.doomed))
+        (set @entity.sweeping false)
+        (set @entity.sweptAt @now)
+      RETENTION_REMOVED -> ready
+        (let ((i (default (str/to-int (default ?key "0")) 0)))
+          (do
+            (set @entity.removed (array/append @entity.removed (default (array/nth @entity.doomed @i) "")))
+            (emit RETENTION_REMOVE { index: (+ @i 1) })))
+      RETENTION_UNREMOVED -> ready
+        (let ((i (default (str/to-int (default ?key "0")) 0)))
+          (do
+            (set @entity.problems (array/append @entity.problems (str/concat (default (array/nth @entity.doomed @i) "") ": " ?error)))
+            (emit RETENTION_REMOVE { index: (+ @i 1) })))
+    }
+
+    ticks {
+      hourly every 1h [background]
+        (emit RETENTION_SWEEP {})
+    }
+
+    emits {
+      RETENTION_SWEEP -> internal { }
+        @description "Sweep the folder now."
+      RETENTION_REMOVE -> internal { index : number! }
+        @description "Remove the next expired file."
+    }
+
+    listens {
+      RETENTION_GLOBBED { paths : [string]! }
+        @description "The log files."
+        @tier "internal"
+      RETENTION_UNGLOBBED { error : string!, kind : string }
+        @description "The log files could not be listed."
+        @tier "internal"
+      RETENTION_REMOVED { key : string }
+        @description "A file was removed."
+        @tier "internal"
+      RETENTION_UNREMOVED { error : string!, kind : string, key : string }
+        @description "A file could not be removed."
+        @tier "internal"
+    }
+  }
+
+  page boot as LogRetentionStart -> LogRetention
+}

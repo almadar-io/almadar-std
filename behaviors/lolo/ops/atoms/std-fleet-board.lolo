@@ -1,0 +1,341 @@
+app std-fleet-board [
+  version: "1.0.0",
+  exec: [exe, env ORB_BIN, "orb"],
+  env: ["ORB_BIN", "PATH", "HOME"],
+  net: { "127.0.0.1:8088": [tcp] },
+  description: "std-fleet-board — the fleet of central orbs at a glance: for the local box and, when its host is set, the remote box, each box's memory, cpu, load and disk as figures, its hosted apps (release, current or retired, memory held, release disk, last use; a preview app links to its page) and its log files by level and day, read from each box's std-host-report hook (POST /api/hooks/fleet-report) by one std-http-client per box, the boxes read one after another (local, then remote) because std-http-client carries one call per frame and every client of a composing program shares the HttpFlight frame, and whose credential knob puts the box's fleet key in the x-fleet-key header, so the program never holds it. Opening a log row reads that whole file through the same hook, asking again at once while the box answers 202 (reading), up to 30 times; a load while a read is in flight (younger than 30 seconds) is ignored, and a log asked for during a read is asked again when the read ends; the trait runs on the server only, so the browser never starts a call of its own on the clients' frame; opening a local preview app row offers Stop preview, which runs `<orb> fleet stop <name>` (the orb ORB_BIN names, else orb on PATH) and reads the board again. A box that cannot be reached or refuses the key is named in the board's note and its figures are left out. Drawn by std-status-board; the composer sends BOARD_OPEN when it brings the board into view."
+]
+;; @capabilities "see the load, disk, hosted apps and log files of the local and remote central orb boxes, read a log file, stop a preview"
+uses Board from "std/behaviors/std-status-board"
+uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
+uses Cli from "std/behaviors/std-cli"
+
+type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type StatusBoardSection = { key : string!, label : string! }
+type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type StatusBoardAction = { action : string!, label : string!, icon : string!, danger : boolean! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string!, actions : [StatusBoardAction]? }
+type HttpHeader = { name : string!, value : string! }
+type FbMachine = { memoryTotal : number!, memoryUsed : number!, memoryPercent : number!, cpuPercent : number!, load1 : number!, load5 : number!, load15 : number!, uptimeSeconds : number! }
+type FbDisk = { path : string!, total : number!, used : number!, available : number!, usedPercent : number! }
+type FbApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant!, heldBytes : number!, diskBytes : number! }
+type FbLog = { level : string!, day : string!, bytes : number! }
+type FbReport = { sampledAt : instant?, machine : FbMachine!, disks : [FbDisk]!, apps : [FbApp]!, logs : [FbLog]!, problems : [string]! }
+type FbBox = { box : string!, label : string!, report : FbReport?, error : string! }
+type FbLogText = { level : string!, day : string!, bytes : number!, text : string! }
+type FbLogAsk = { box : string!, rowId : string!, level : string!, day : string!, tries : number! }
+
+orbital FleetBoardOrbital {
+  entity FleetBoardRun [runtime] {
+    id : string!
+    waiting : number = 0
+    boxes : [FbBox] = []
+    fetchedAt : instant? = null
+    logAsk : FbLogAsk? = null
+    readAt : instant @description "When the read in flight began; a read waiting longer than 30 seconds no longer holds the next one back." = "1970-01-01T00:00:00Z"
+  }
+
+  trait FbLocalHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      FbLocalHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait FbLocalHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: FB_LOCAL_HTTP_REPLIED
+      HTTP_FAILED: FB_LOCAL_HTTP_FAILED
+      HTTP_CANCEL: FB_LOCAL_HTTP_CANCEL
+    }
+    config {
+      host: "127.0.0.1"
+      port: 8088
+      tls: false
+      serverName: ""
+      credential: "ORB_FLEET_KEY_LOCAL"
+      credentialHeader: "x-fleet-key"
+      credentialPrefix: ""
+    }
+    listens {
+      FleetBoard.FB_LOCAL_SEND -> HTTP_SEND
+      FbLocalHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      FbLocalHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      FbLocalHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait FbRemoteHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      FbRemoteHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait FbRemoteHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: FB_REMOTE_HTTP_REPLIED
+      HTTP_FAILED: FB_REMOTE_HTTP_FAILED
+      HTTP_CANCEL: FB_REMOTE_HTTP_CANCEL
+    }
+    config {
+      host: ""
+      port: 443
+      tls: true
+      serverName: ""
+      credential: "ORB_FLEET_KEY_REMOTE"
+      credentialHeader: "x-fleet-key"
+      credentialPrefix: ""
+    }
+    listens {
+      FleetBoard.FB_REMOTE_SEND -> HTTP_SEND
+      FbRemoteHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      FbRemoteHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      FbRemoteHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait FbCli = Cli.traits.CliRunner {
+    config {
+      commands: [{ anchor: { env: "ORB_BIN" } }, "orb"]
+      passEnv: ["PATH", "HOME"]
+    }
+    listens {
+      FleetBoard.FB_CLI_RUN -> CLI_RUN
+    }
+  }
+
+  trait FleetBoardView = Board.traits.StatusBoard {
+    listens {
+      FleetBoard.FB_BOARD_LOADING -> BOARD_LOADING
+      FleetBoard.FB_BOARD_SHOW -> BOARD_SHOW
+      FleetBoard.FB_BOARD_DETAIL -> BOARD_DETAIL
+      LOAD_CLICKED { }
+      REFRESH_CLICKED { }
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+      SEARCHED {
+        searchTerm : string!
+      }
+      SECTION_PICKED {
+        key : string!
+      }
+      ROW_ACTION_CLICKED {
+        rowId : string!
+        action : string!
+      }
+    }
+    config {
+      title: "Fleet"
+      icon: "server"
+      idleDescription: "The load, disk, hosted apps and logs of each central orb box."
+      emptyTitle: "No box answered"
+      emptyDescription: "Neither box could be read."
+    }
+  }
+
+  trait FleetBoard -> FleetBoardRun [server] {
+    config {
+      localLabel : string = "Local box"
+        @label "Local box label"
+        @tier "domain"
+      remoteLabel : string = "Remote box"
+        @label "Remote box label"
+        @tier "domain"
+      remote : boolean = false
+        @label "Read the remote box"
+        @description "Whether the FbRemoteHttp client (its host set by the composer) is read too."
+        @tier "domain"
+      previewPrefix : string = "preview-"
+        @label "Preview app prefix"
+        @description "A local app whose name starts with this is a preview: its row links to its page and offers Stop preview."
+        @tier "domain"
+      previewOrigin : string = "http://{name}.localhost:5065"
+        @label "Preview page"
+        @description "A preview's page, {name} replaced by the app name without the prefix."
+        @tier "domain"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      FB_LOAD -> idle
+        (emit FB_READ {})
+      FB_READ -> idle when (and (> @entity.waiting 0) (< (time/diff @now @entity.readAt "ms") 30000))
+      FB_READ -> idle when (or (<= @entity.waiting 0) (>= (time/diff @now @entity.readAt "ms") 30000))
+        (set @entity.readAt @now)
+        (emit FB_BOARD_LOADING {})
+        (set @entity.boxes (array/concat [{ box: "local", label: @config.localLabel, report: null, error: "" }] (if @config.remote [{ box: "remote", label: @config.remoteLabel, report: null, error: "" }] [])))
+        (set @entity.waiting (if @config.remote 2 1))
+        (emit FB_LOCAL_SEND { key: "local-report", method: "POST", target: "/api/hooks/fleet-report", headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string "{}"), stream: "none" })
+
+      FB_REPORTED -> idle
+        (let ((report (if (= ?status 200) (json/parse ?body FbReport) null)))
+          (set @entity.boxes (array/map @entity.boxes (fn b (if (= @b.box ?box)
+            (let ((nb : FbBox { box: @b.box, label: @b.label, report: @report, error: (if (!= @report null) "" (if (= ?status 401) "the fleet key was refused" (str/concat "answered " ?status ": " ?body))) })) @nb)
+            @b)))))
+        (set @entity.waiting (- @entity.waiting 1))
+        (emit FB_NEXT_BOX { box: ?box })
+      FB_UNREACHED -> idle
+        (set @entity.boxes (array/map @entity.boxes (fn b (if (= @b.box ?box) (let ((nb : FbBox { box: @b.box, label: @b.label, report: null, error: (str/concat "unreachable: " ?error) })) @nb) @b))))
+        (set @entity.waiting (- @entity.waiting 1))
+        (emit FB_NEXT_BOX { box: ?box })
+      FB_NEXT_BOX -> idle when (and (= ?box "local") @config.remote)
+        (emit FB_REMOTE_SEND { key: "remote-report", method: "POST", target: "/api/hooks/fleet-report", headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string "{}"), stream: "none" })
+      FB_NEXT_BOX -> idle when (not (and (= ?box "local") @config.remote))
+        (emit FB_SHOW {})
+
+      FB_SHOW -> idle
+        (set @entity.fetchedAt @now)
+        (when (!= @entity.logAsk null) (emit FB_LOG_ASK {}))
+        (emit FB_BOARD_SHOW {
+          note: (str/join (array/concat
+            (array/map (array/filter @entity.boxes (fn b (!= @b.error ""))) (fn b (str/concat @b.label ": " @b.error)))
+            (array/flatten (array/map (array/filter @entity.boxes (fn b (!= @b.report null))) (fn b (array/map (default (object/get (default @b.report {}) "problems") []) (fn p (str/concat @b.label ": " @p))))))) " · "),
+          tiles: (array/flatten (array/map (array/filter @entity.boxes (fn b (!= @b.report null))) (fn b (let ((r (default @b.report (let ((e : FbReport { sampledAt: null, machine: { memoryTotal: 0, memoryUsed: 0, memoryPercent: 0, cpuPercent: 0, load1: 0, load5: 0, load15: 0, uptimeSeconds: 0 }, disks: [], apps: [], logs: [], problems: [] })) @e))))
+            (array/concat
+              [{ label: (str/concat @b.label " memory"), value: (str/concat (math/round @r.machine.memoryPercent) "% of " (math/round (/ @r.machine.memoryTotal 1073741824)) " GB"), tone: (if (> @r.machine.memoryPercent 85) "danger" (if (> @r.machine.memoryPercent 70) "warning" "neutral")), icon: "memory-stick" },
+               { label: (str/concat @b.label " cpu"), value: (str/concat (math/round @r.machine.cpuPercent) "% · load " (/ (math/round (* @r.machine.load1 100)) 100)), tone: (if (> @r.machine.cpuPercent 85) "danger" "neutral"), icon: "cpu" }]
+              (array/map @r.disks (fn d { label: (str/concat @b.label " disk " @d.path), value: (str/concat (math/round @d.usedPercent) "% · " (math/round (/ @d.available 1073741824)) " GB free"), tone: (if (> @d.usedPercent 90) "danger" (if (> @d.usedPercent 80) "warning" "neutral")), icon: "hard-drive" }))))))),
+          sections: (array/flatten (array/map @entity.boxes (fn b [{ key: (str/concat @b.box "-apps"), label: (str/concat @b.label " apps") }, { key: (str/concat @b.box "-logs"), label: (str/concat @b.label " logs") }]))),
+          rows: (array/flatten (array/map (array/filter @entity.boxes (fn b (!= @b.report null))) (fn b (let ((r (default @b.report (let ((e : FbReport { sampledAt: null, machine: { memoryTotal: 0, memoryUsed: 0, memoryPercent: 0, cpuPercent: 0, load1: 0, load5: 0, load15: 0, uptimeSeconds: 0 }, disks: [], apps: [], logs: [], problems: [] })) @e))))
+            (array/concat
+              (array/map @r.apps (fn a (let ((preview (and (= @b.box "local") (str/startsWith @a.name @config.previewPrefix))))
+                (let ((row : StatusBoardRow { id: (str/concat @b.box "|app|" @a.name "|" @a.release), section: (str/concat @b.box "-apps"), title: @a.name, subtitle: (str/concat (if (= @a.release "") "loading" @a.release) (if @preview " · preview" "")), tone: (if @a.loading "info" (if @a.current "success" "neutral")), statusLabel: (if @a.loading "Loading" (if @a.current "Current" "Retired")), icon: (if @preview "eye" "box"), meta: [(str/concat (if (< @a.heldBytes 1048576) (str/concat (math/ceil (/ @a.heldBytes 1024)) " KB") (str/concat (math/round (/ @a.heldBytes 1048576)) " MB")) " held"), (str/concat (if (< @a.diskBytes 1048576) (str/concat (math/ceil (/ @a.diskBytes 1024)) " KB") (str/concat (math/round (/ @a.diskBytes 1048576)) " MB")) " on disk")], at: @a.lastUsedMs, url: (if @preview (str/replaceAll @config.previewOrigin "{name}" (str/slice @a.name (str/len @config.previewPrefix))) "") }))
+                  @row))))
+              (array/map @r.logs (fn l (let ((row : StatusBoardRow { id: (str/concat @b.box "|log|" @l.level "|" @l.day), section: (str/concat @b.box "-logs"), title: (str/concat @l.level " " @l.day), subtitle: (str/concat (math/ceil (/ @l.bytes 1024)) " KB"), tone: (if (= @l.level "error") "danger" (if (= @l.level "warn") "warning" "neutral")), statusLabel: @l.level, icon: "file-text", meta: [], at: null, url: "" }))
+                @row)))))))),
+          fetchedAt: @now,
+          error: (if (array/every @entity.boxes (fn b (= @b.report null))) (str/join (array/map @entity.boxes (fn b (str/concat @b.label ": " @b.error))) " · ") "")
+        })
+
+      FB_ROW_OPENED -> idle when (str/includes ?rowId "|app|")
+        (let ((parts (str/split ?rowId "|")))
+          (let ((box (default (array/nth @parts 0) "")) (name (default (array/nth @parts 2) "")) (release (default (array/nth @parts 3) "")))
+            (let ((b (array/find @entity.boxes (fn x (= @x.box @box)))))
+              (let ((a (array/find (default (object/get (default (object/get (default @b {}) "report") {}) "apps") []) (fn x (and (= @x.name @name) (= @x.release @release))))))
+                (emit FB_BOARD_DETAIL { detail: (if (= @a null)
+                  { rowId: ?rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "The app is no longer on the board", actions: [] }
+                  { rowId: ?rowId, phase: "ready", code: "", codeTitle: "", errorLines: [], error: "",
+                    items: [{ label: "Release", tone: (if @a.current "success" "neutral"), statusLabel: (if (= @a.release "") "loading" @a.release), meta: (if @a.current "serving new clients" "draining its pinned clients") },
+                            { label: "Memory held", tone: "neutral", statusLabel: (if (< @a.heldBytes 1048576) (str/concat (math/ceil (/ @a.heldBytes 1024)) " KB") (str/concat (math/round (/ @a.heldBytes 1048576)) " MB")), meta: "value data of its rows, frames and sessions" },
+                            { label: "Release disk", tone: "neutral", statusLabel: (if (< @a.diskBytes 1048576) (str/concat (math/ceil (/ @a.diskBytes 1024)) " KB") (str/concat (math/round (/ @a.diskBytes 1048576)) " MB")), meta: "" }],
+                    actions: (if (and (= @box "local") (str/startsWith @name @config.previewPrefix)) [{ action: "stop", label: "Stop preview", icon: "square", danger: true }] []) }) })))))
+      FB_ROW_OPENED -> idle when (str/includes ?rowId "|log|")
+        (let ((parts (str/split ?rowId "|")))
+          (do
+            (set @entity.logAsk { box: (default (array/nth @parts 0) ""), rowId: ?rowId, level: (default (array/nth @parts 2) ""), day: (default (array/nth @parts 3) ""), tries: 0 })
+            (emit FB_LOG_ASK {})))
+      FB_LOG_ASK -> idle when (and (!= @entity.logAsk null) (> @entity.waiting 0) (< (time/diff @now @entity.readAt "ms") 30000))
+        (set @entity.logAsk (object/merge (default @entity.logAsk { box: "", rowId: "", level: "", day: "", tries: 0 }) { tries: 1 }))
+      FB_LOG_ASK -> idle when (and (!= @entity.logAsk null) (not (and (> @entity.waiting 0) (< (time/diff @now @entity.readAt "ms") 30000))))
+        (let ((ask (default @entity.logAsk { box: "", rowId: "", level: "", day: "", tries: 0 })))
+          (let ((body (bytes/from-string (json/stringify { log: { level: @ask.level, day: @ask.day } }))))
+            (if (= @ask.box "remote")
+              (emit FB_REMOTE_SEND { key: "remote-log", method: "POST", target: "/api/hooks/fleet-report", headers: [{ name: "content-type", value: "application/json" }], body: @body, stream: "none" })
+              (emit FB_LOCAL_SEND { key: "local-log", method: "POST", target: "/api/hooks/fleet-report", headers: [{ name: "content-type", value: "application/json" }], body: @body, stream: "none" }))))
+      FB_LOG_REPLIED -> idle when (!= @entity.logAsk null)
+        (let ((ask (default @entity.logAsk { box: "", rowId: "", level: "", day: "", tries: 0 })))
+          (if (and (= ?status 202) (< @ask.tries 30))
+            (do
+              (set @entity.logAsk (object/merge @ask { tries: (+ @ask.tries 1) }))
+              (emit FB_LOG_ASK {}))
+            (do
+              (set @entity.logAsk null)
+              (let ((held (if (= ?status 200) (json/parse ?body FbLogText) null)))
+                (emit FB_BOARD_DETAIL { detail: (if (= @held null)
+                  { rowId: @ask.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: (str/concat "The box answered " ?status ": " ?body), actions: [] }
+                  { rowId: @ask.rowId, phase: "ready", items: [], code: @held.text, codeTitle: (str/concat @ask.level " " @ask.day " · " (math/ceil (/ @held.bytes 1024)) " KB"), errorLines: [], error: "", actions: [] }) })))))
+      FB_LOG_UNREACHED -> idle when (!= @entity.logAsk null)
+        (let ((ask (default @entity.logAsk { box: "", rowId: "", level: "", day: "", tries: 0 })))
+          (do
+            (set @entity.logAsk null)
+            (emit FB_BOARD_DETAIL { detail: { rowId: @ask.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: (str/concat "The box could not be reached: " ?error), actions: [] } })))
+
+      FB_ROW_ACTION -> idle when (and (= ?action "stop") (str/startsWith ?rowId "local|app|"))
+        (let ((name (default (array/nth (str/split ?rowId "|") 2) "")))
+          (do
+            (emit FB_CLI_RUN { stage: "stop", argv: ["fleet", "stop", (str/slice @name (str/len @config.previewPrefix))] })
+            (emit FB_BOARD_DETAIL { detail: { rowId: ?rowId, phase: "loading", items: [], code: "", codeTitle: "", errorLines: [], error: "", actions: [] } })))
+      FB_STOPPED -> idle when (= ?exitCode 0)
+        (notify success (str/trim ?stdout))
+        (emit FB_READ {})
+      FB_STOPPED -> idle when (!= ?exitCode 0)
+        (notify error (str/concat "Stop failed: " (str/trim (if (= (str/trim ?stderr) "") ?stdout ?stderr))))
+        (emit FB_READ {})
+      FB_STOP_FAILED -> idle
+        (notify error (str/concat "Stop could not run: " ?error))
+    }
+
+    emits {
+      FB_BOARD_LOADING -> internal { }
+        @description "Internal: a read began, to the board."
+      FB_BOARD_SHOW -> internal { note : string!  tiles : [StatusBoardTile]!  sections : [StatusBoardSection]!  rows : [StatusBoardRow]!  fetchedAt : instant!  error : string! }
+        @description "Internal: the figures, sections and rows, to the board."
+      FB_BOARD_DETAIL -> internal { detail : StatusBoardDetail! }
+        @description "Internal: one row's detail, to the board."
+      FB_LOCAL_SEND -> internal { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: a request to the local box."
+      FB_REMOTE_SEND -> internal { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: a request to the remote box."
+      FB_CLI_RUN -> internal { stage : string!  argv : [string]! }
+        @description "Internal: run the orb command."
+      FB_READ -> internal { }
+        @description "Internal: read every box."
+      FB_NEXT_BOX -> internal { box : string! }
+        @description "Internal: a box answered; read the next one or draw."
+      FB_SHOW -> internal { }
+        @description "Internal: draw the boxes read."
+      FB_LOG_ASK -> internal { }
+        @description "Internal: ask the box for the open log file."
+    }
+
+    listens {
+      FB_LOAD -> input { }
+        @description "Read every box afresh."
+        @synonyms "fleet status, box load, refresh fleet"
+      FleetBoardView.BOARD_LOAD -> FB_LOAD
+      FleetBoardView.BOARD_REFRESH -> FB_LOAD
+      FleetBoardView.BOARD_ROW_OPENED -> FB_ROW_OPENED
+      FleetBoardView.BOARD_ROW_ACTION -> FB_ROW_ACTION
+      FB_ROW_OPENED { rowId : string! }
+        @description "The board opened a row."
+        @tier "internal"
+      FB_ROW_ACTION { rowId : string!, action : string! }
+        @description "An action of an open row was pressed."
+        @tier "internal"
+      FB_REPORTED { box : string!, status : number!, body : string! }
+        @description "A box answered the report."
+        @tier "internal"
+      FB_UNREACHED { box : string!, error : string! }
+        @description "A box could not be reached."
+        @tier "internal"
+      FB_LOG_REPLIED { status : number!, body : string! }
+        @description "A box answered the log ask."
+        @tier "internal"
+      FB_LOG_UNREACHED { error : string! }
+        @description "The log ask did not reach the box."
+        @tier "internal"
+      FB_STOPPED { stage : string!, exitCode : number!, stdout : string!, stderr : string! }
+        @description "The stop command finished."
+        @tier "internal"
+      FB_STOP_FAILED { stage : string!, error : string! }
+        @description "The stop command could not run."
+        @tier "internal"
+      FbLocalHttp.FB_LOCAL_HTTP_REPLIED -> FB_REPORTED with { box: "local", status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "local-report")
+      FbLocalHttp.FB_LOCAL_HTTP_FAILED -> FB_UNREACHED with { box: "local", error: ?error } when (= ?key "local-report")
+      FbRemoteHttp.FB_REMOTE_HTTP_REPLIED -> FB_REPORTED with { box: "remote", status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "remote-report")
+      FbRemoteHttp.FB_REMOTE_HTTP_FAILED -> FB_UNREACHED with { box: "remote", error: ?error } when (= ?key "remote-report")
+      FbLocalHttp.FB_LOCAL_HTTP_REPLIED -> FB_LOG_REPLIED with { status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "local-log")
+      FbLocalHttp.FB_LOCAL_HTTP_FAILED -> FB_LOG_UNREACHED with { error: ?error } when (= ?key "local-log")
+      FbRemoteHttp.FB_REMOTE_HTTP_REPLIED -> FB_LOG_REPLIED with { status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "remote-log")
+      FbRemoteHttp.FB_REMOTE_HTTP_FAILED -> FB_LOG_UNREACHED with { error: ?error } when (= ?key "remote-log")
+      FbCli.CLI_DONE -> FB_STOPPED
+      FbCli.CLI_FAILED -> FB_STOP_FAILED
+    }
+  }
+
+  page "/fleet-board" as FleetBoardPage -> FleetBoard, FleetBoardView, FbLocalHttp, FbLocalHttpFrame, FbRemoteHttp, FbRemoteHttpFrame, FbCli
+}

@@ -2802,6 +2802,87 @@
           }
         }
       ]
+    },
+    {
+      "id": "a runtime deploy makes the owned folders and hands them to the server user before it starts",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health",
+        "owner": "10001:10001",
+        "ownedDirs": [
+          "central",
+          "apps",
+          "data",
+          "logs"
+        ]
+      },
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ],
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118",
+            "env": {}
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|context"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "entity": {
+            "id": "h",
+            "op": "runtime",
+            "image": "almadar-central-orb:20261118",
+            "prevImage": "almadar-central-orb:20261117",
+            "runtimeEnv": {}
+          },
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "almadar-central-orb:20261117\n",
+            "stdoutBytes": "",
+            "stderr": "",
+            "stage": "#runtime|build"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|start",
+                  "cmd": "cd '/srv/orb/stack' && mkdir -p '../central' '../apps' '../data' '../logs' && chown -R '10001:10001' '../central' '../apps' '../data' '../logs' && { grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=almadar-central-orb:20261118' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d"
+                }
+              }
+            ],
+            "neverEmits": []
+          }
+        }
+      ]
     }
   ]
 }

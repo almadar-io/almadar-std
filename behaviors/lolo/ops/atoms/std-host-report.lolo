@@ -1,0 +1,245 @@
+app std-host-report [
+  version: "1.0.0",
+  sys: [memory, cpu, processes, disk],
+  fs: { "/srv/orb/apps/**": [read, meta], "/srv/orb/logs/**": [read, meta] },
+  inbound: ["fleet-report"],
+  egress: [],
+  description: "std-host-report — what a central host reports about itself to its operator, sampled on an interval and answered at once over the inbound hook fleet-report (POST /api/hooks/fleet-report), which verifies the x-fleet-key header against the ORB_FLEET_KEY credential (an unset credential answers 401 and runs nothing, EXEC-INBOUND-1). Each sample takes the machine's memory, cpu, load and uptime through the composed std-system-stats, then os/disk-usage of every path the diskPaths knob lists, then asks the composer for the hosted apps (APPS_LIST { key }, which std-program-host's ProgramApps answers as APPS_LISTED { key, apps }), reads each open guest's held bytes with program/inputs { stats: true, guest } (EXEC-COST-2, rows + frames + guests + arenas), then globs <appsDir>/*/releases/*/* and <logDir>/*/*.jsonl and stats each file: a release file's size counts toward its app's diskBytes, and a log file is one row { level, day, bytes } (the layout the orb's log file writer keeps: <logDir>/<level>/<YYYY-MM-DD>.jsonl). A read the host refuses is named in problems (what: why) and the rest of the sample is still taken; the previous sample's values stay until a new one replaces them. The hook's body is {} for the report or { log: { level, day } } for one log file: the report answers 200 with { sampledAt, machine, disks, apps, logs, problems } as JSON; a log file already read since its size last changed answers 200 { level, day, bytes, text } with the whole file, one not yet read answers 202 { pending: true } and is read now, so the caller asks again; a log the last sample does not list answers 404; an unverified request answers 401. Subject-agnostic: it knows nothing of which apps or what box."
+]
+;; @capabilities "report this host's memory, cpu, load, disk, hosted apps and their memory and disk, and its log files, to an operator holding the fleet key"
+uses Stats from "std/behaviors/std-system-stats"
+
+type HostMachine = { memoryTotal : number!, memoryUsed : number!, memoryPercent : number!, cpuPercent : number!, load1 : number!, load5 : number!, load15 : number!, uptimeSeconds : number! }
+type HostDisk = { path : string!, total : number!, used : number!, available : number!, usedPercent : number! }
+type HostListedApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant! }
+type HostApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant!, heldBytes : number!, diskBytes : number! }
+type HostLogFile = { level : string!, day : string!, bytes : number! }
+type HostLogText = { level : string!, day : string!, bytes : number!, text : string! }
+type HostHeldBytes = { rows : number!, frames : number!, guests : number!, arenas : number! }
+type HostKernelStats = { heldBytes : HostHeldBytes! }
+type HostInputsRead = { stats : HostKernelStats! }
+type HostLogAsk = { level : string!, day : string! }
+type HostReportAsk = { log : HostLogAsk? }
+type HostFile = { root : "apps" | "logs"!, rel : string! }
+type HostReportNext = { disks : [HostDisk]!, apps : [HostApp]!, logs : [HostLogFile]!, problems : [string]!, files : [HostFile]! }
+
+orbital HostReportOrbital {
+  entity HostReportRun [runtime] {
+    id : string!
+    sampling : boolean = false
+    sampledAt : instant? = null
+    machine : HostMachine = { memoryTotal: 0, memoryUsed: 0, memoryPercent: 0, cpuPercent: 0, load1: 0, load5: 0, load15: 0, uptimeSeconds: 0 }
+    disks : [HostDisk] = []
+    apps : [HostApp] = []
+    logs : [HostLogFile] = []
+    problems : [string] = []
+    next : HostReportNext = { disks: [], apps: [], logs: [], problems: [], files: [] }
+    index : number = 0
+    logTexts : [HostLogText] = []
+  }
+
+  trait HostReportMeter = Stats.traits.SystemStatsMeter {
+    config {
+      intervalMs: 10000
+    }
+    listens {
+      HostReport.HOST_REPORT_START -> STATS_START
+    }
+  }
+
+  trait HostReport -> HostReportRun {
+    config {
+      diskPaths : [string] = ["/"]
+        @label "Disk paths"
+        @description "The paths whose filesystem's size, use and free space each sample reads."
+        @tier "domain"
+      appsDir : string = "/srv/orb/apps/"
+        @label "Apps folder"
+        @description "The hosted apps' folder (std-program-host's appsDir) ending in /: each app's releases/<n>/ files count toward its disk use. A composer that moves it grants fs read and meta on its own folder."
+        @tier "domain"
+      logDir : string = "/srv/orb/logs/"
+        @label "Log folder"
+        @description "The folder ending in / the orb writes its log files in, one subfolder per level holding one <YYYY-MM-DD>.jsonl per day. A composer that moves it grants fs read and meta on its own folder."
+        @tier "domain"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit HOST_REPORT_START {})
+
+      STATS_READ -> ready when (not @entity.sampling)
+        (set @entity.sampling true)
+        (set @entity.machine { memoryTotal: ?memoryTotal, memoryUsed: ?memoryUsed, memoryPercent: ?memoryPercent, cpuPercent: ?cpuPercent, load1: ?load1, load5: ?load5, load15: ?load15, uptimeSeconds: ?uptimeSeconds })
+        (set @entity.next { disks: [], apps: [], logs: [], problems: (array/map ?unavailable (fn s (str/concat @s ": unavailable"))), files: [] })
+        (set @entity.index 0)
+        (emit HOST_DISK_NEXT {})
+
+      HOST_DISK_NEXT -> ready when (< @entity.index (array/len @config.diskPaths))
+        (os/disk-usage (default (array/nth @config.diskPaths @entity.index) "/") { emit: { success: HOST_DISK_READ, failure: HOST_DISK_FAILED } })
+      HOST_DISK_NEXT -> ready when (>= @entity.index (array/len @config.diskPaths))
+        (emit APPS_LIST { key: "host-report" })
+      HOST_DISK_READ -> ready
+        (set @entity.next (object/merge @entity.next { disks: (array/append @entity.next.disks { path: ?path, total: ?total, used: ?used, available: ?available, usedPercent: ?usedPercent }) }))
+        (set @entity.index (+ @entity.index 1))
+        (emit HOST_DISK_NEXT {})
+      HOST_DISK_FAILED -> ready
+        (set @entity.next (object/merge @entity.next { problems: (array/append @entity.next.problems (str/concat "disk " (default (array/nth @config.diskPaths @entity.index) "") ": " ?error)) }))
+        (set @entity.index (+ @entity.index 1))
+        (emit HOST_DISK_NEXT {})
+
+      APPS_LISTED -> ready when (and @entity.sampling (= ?key "host-report"))
+        (set @entity.next (object/merge @entity.next { apps: (array/map ?apps (fn a { name: @a.name, guest: @a.guest, release: @a.release, current: @a.current, loading: @a.loading, lastUsedMs: @a.lastUsedMs, heldBytes: 0, diskBytes: 0 })) }))
+        (emit HOST_HELD_NEXT { index: 0 })
+
+      HOST_HELD_NEXT -> ready when (and (< ?index (array/len @entity.next.apps)) (= (default (array/nth (array/map @entity.next.apps (fn a @a.guest)) ?index) "") ""))
+        (emit HOST_HELD_NEXT { index: (+ ?index 1) })
+      HOST_HELD_NEXT -> ready when (and (< ?index (array/len @entity.next.apps)) (!= (default (array/nth (array/map @entity.next.apps (fn a @a.guest)) ?index) "") ""))
+        (set @entity.index ?index)
+        (program/inputs { stats: true, guest: (default (array/nth (array/map @entity.next.apps (fn a @a.guest)) ?index) "") } { emit: { success: HOST_HELD_READ, failure: HOST_HELD_FAILED } })
+      HOST_HELD_NEXT -> ready when (>= ?index (array/len @entity.next.apps))
+        (os/glob (str/concat @config.appsDir "*/releases/*/*") { emit: { success: HOST_RELEASES_GLOBBED, failure: HOST_RELEASES_UNGLOBBED } })
+      HOST_HELD_READ -> ready
+        (let ((held (+ ?result.stats.heldBytes.rows ?result.stats.heldBytes.frames ?result.stats.heldBytes.guests ?result.stats.heldBytes.arenas)) (at @entity.index))
+          (set @entity.next (object/merge @entity.next { apps: (array/map (array/zip @entity.next.apps (array/range 0 (array/len @entity.next.apps))) (fn p (if (= (array/nth @p 1) @at) (object/merge (array/nth @p 0) { heldBytes: @held }) (array/nth @p 0)))) })))
+        (emit HOST_HELD_NEXT { index: (+ @entity.index 1) })
+      HOST_HELD_FAILED -> ready
+        (set @entity.next (object/merge @entity.next { problems: (array/append @entity.next.problems (str/concat "memory of " (default (array/nth (array/map @entity.next.apps (fn a @a.name)) @entity.index) "") ": " ?error)) }))
+        (emit HOST_HELD_NEXT { index: (+ @entity.index 1) })
+
+      HOST_RELEASES_GLOBBED -> ready
+        (set @entity.next (object/merge @entity.next { files: (array/map ?paths (fn p { root: "apps", rel: (str/slice @p (str/len @config.appsDir)) })) }))
+        (emit HOST_LOGS_GLOB {})
+      HOST_RELEASES_UNGLOBBED -> ready
+        (set @entity.next (object/merge @entity.next { problems: (array/append @entity.next.problems (str/concat "releases: " ?error)) }))
+        (emit HOST_LOGS_GLOB {})
+      HOST_LOGS_GLOB -> ready
+        (os/glob (str/concat @config.logDir "*/*.jsonl") { emit: { success: HOST_LOGS_GLOBBED, failure: HOST_LOGS_UNGLOBBED } })
+      HOST_LOGS_GLOBBED -> ready
+        (set @entity.next (object/merge @entity.next { files: (array/concat @entity.next.files (array/map ?paths (fn p { root: "logs", rel: (str/slice @p (str/len @config.logDir)) }))) }))
+        (set @entity.index 0)
+        (emit HOST_STAT_NEXT {})
+      HOST_LOGS_UNGLOBBED -> ready
+        (set @entity.next (object/merge @entity.next { problems: (array/append @entity.next.problems (str/concat "logs: " ?error)) }))
+        (set @entity.index 0)
+        (emit HOST_STAT_NEXT {})
+
+      HOST_STAT_NEXT -> ready when (and (< @entity.index (array/len @entity.next.files)) (= (default (array/nth (array/map @entity.next.files (fn f @f.root)) @entity.index) "") "apps"))
+        (os/stat (str/concat @config.appsDir (default (array/nth (array/map @entity.next.files (fn f @f.rel)) @entity.index) "")) { emit: { success: HOST_STAT_READ, failure: HOST_STAT_FAILED } })
+      HOST_STAT_NEXT -> ready when (and (< @entity.index (array/len @entity.next.files)) (!= (default (array/nth (array/map @entity.next.files (fn f @f.root)) @entity.index) "") "apps"))
+        (os/stat (str/concat @config.logDir (default (array/nth (array/map @entity.next.files (fn f @f.rel)) @entity.index) "")) { emit: { success: HOST_STAT_READ, failure: HOST_STAT_FAILED } })
+      HOST_STAT_NEXT -> ready when (>= @entity.index (array/len @entity.next.files))
+        (set @entity.disks @entity.next.disks)
+        (set @entity.apps @entity.next.apps)
+        (set @entity.logs @entity.next.logs)
+        (set @entity.problems @entity.next.problems)
+        (set @entity.logTexts (array/filter @entity.logTexts (fn t (array/some @entity.next.logs (fn l (and (= @l.level @t.level) (= @l.day @t.day) (= @l.bytes @t.bytes)))))))
+        (set @entity.sampledAt @now)
+        (set @entity.sampling false)
+      HOST_STAT_READ -> ready
+        (let ((root (default (array/nth (array/map @entity.next.files (fn f @f.root)) @entity.index) "")) (rel (default (array/nth (array/map @entity.next.files (fn f @f.rel)) @entity.index) "")))
+          (if (= @root "logs")
+            (let ((parts (str/split @rel "/")))
+              (set @entity.next (object/merge @entity.next { logs: (array/append @entity.next.logs { level: (default (array/nth @parts 0) ""), day: (str/replace (default (array/nth @parts 1) "") ".jsonl" ""), bytes: ?size }) })))
+            (let ((app (default (array/nth (str/split @rel "/") 0) "")))
+              (set @entity.next (object/merge @entity.next { apps: (array/map @entity.next.apps (fn a (if (and (= @a.name @app) @a.current) (object/merge @a { diskBytes: (+ @a.diskBytes ?size) }) @a))) })))))
+        (set @entity.index (+ @entity.index 1))
+        (emit HOST_STAT_NEXT {})
+      HOST_STAT_FAILED -> ready
+        (set @entity.index (+ @entity.index 1))
+        (emit HOST_STAT_NEXT {})
+
+      REPORT_ASKED -> ready when (not (default ?verified false))
+        (emit REPORT_ANSWERED { status: 401, body: (json/stringify { error: "the x-fleet-key header does not match" }) })
+      REPORT_ASKED -> ready when (and (default ?verified false) (= (default ?body.log null) null))
+        (emit REPORT_ANSWERED { status: 200, body: (json/stringify { sampledAt: @entity.sampledAt, machine: @entity.machine, disks: @entity.disks, apps: @entity.apps, logs: @entity.logs, problems: @entity.problems }) })
+      REPORT_ASKED -> ready when (and (default ?verified false) (!= (default ?body.log null) null))
+        (let ((ask (default ?body.log { level: "", day: "" })))
+          (let ((listed (array/find @entity.logs (fn l (and (= @l.level @ask.level) (= @l.day @ask.day)))))
+                (held (array/find @entity.logTexts (fn t (and (= @t.level @ask.level) (= @t.day @ask.day))))))
+            (if (= @listed null)
+              (emit REPORT_ANSWERED { status: 404, body: (json/stringify { error: (str/concat "no log " @ask.level " " @ask.day) }) })
+              (if (and (!= @held null) (= @held.bytes @listed.bytes))
+                (emit REPORT_ANSWERED { status: 200, body: (json/stringify @held) })
+                (do
+                  (emit REPORT_ANSWERED { status: 202, body: (json/stringify { pending: true }) })
+                  (os/read-file (str/concat @config.logDir @ask.level "/" @ask.day ".jsonl") { key: (str/concat @ask.level "/" @ask.day "/" @listed.bytes) emit: { success: HOST_LOG_READ, failure: HOST_LOG_UNREAD } }))))))
+      HOST_LOG_READ -> ready
+        (let ((parts (str/split (default ?key "") "/")))
+          (set @entity.logTexts (array/append (array/filter @entity.logTexts (fn t (not (and (= @t.level (default (array/nth @parts 0) "")) (= @t.day (default (array/nth @parts 1) "")))))) { level: (default (array/nth @parts 0) ""), day: (default (array/nth @parts 1) ""), bytes: (default (str/to-number (default (array/nth @parts 2) "0")) 0), text: (default (bytes/to-string ?data) "") })))
+      HOST_LOG_UNREAD -> ready
+        (set @entity.problems (array/append @entity.problems (str/concat "log " (default ?key "") ": " ?error)))
+    }
+
+    emits {
+      HOST_REPORT_START -> internal { }
+        @description "Start sampling."
+      APPS_LIST -> external { key : string! }
+        @description "Ask the composer's program host for the hosted apps; answered as APPS_LISTED under the key."
+      REPORT_ANSWERED -> internal { status : number!  body : string! }
+        @description "The fleet-report hook's answer."
+      HOST_DISK_NEXT -> internal { }
+        @description "Read the next disk path."
+      HOST_HELD_NEXT -> internal { index : number! }
+        @description "Read the next app guest's held bytes."
+      HOST_LOGS_GLOB -> internal { }
+        @description "List the log files."
+      HOST_STAT_NEXT -> internal { }
+        @description "Stat the next release or log file."
+    }
+
+    listens {
+      HostReportMeter.STATS_READ -> STATS_READ
+      STATS_READ { memoryTotal : number!, memoryUsed : number!, memoryAvailable : number!, memoryPercent : number!, cpuPercent : number!, load1 : number!, load5 : number!, load15 : number!, uptimeSeconds : number!, unavailable : [string]!, at : instant! }
+        @description "A finished machine sample from the composed std-system-stats; starts the rest of the sample."
+      APPS_LISTED { key : string!, apps : [HostListedApp]! }
+        @description "The program host's hosted apps, answering APPS_LIST."
+      REPORT_ASKED -> inbound "fleet-report" answers REPORT_ANSWERED verifies "x-fleet-key" "ORB_FLEET_KEY" {
+        headers : Map string string
+        body : HostReportAsk?
+        rawBody : string
+        verified : boolean
+      }
+        @description "An operator asks for the report or for one log file at /api/hooks/fleet-report; verified is the kernel's constant-time check of x-fleet-key against the ORB_FLEET_KEY credential."
+        @synonyms "fleet report, host report, box stats"
+      HOST_DISK_READ { path : string!, total : number!, used : number!, available : number!, usedPercent : number!, filesystem : string! }
+        @description "os/disk-usage's success."
+        @tier "internal"
+      HOST_DISK_FAILED { error : string!, kind : string }
+        @description "os/disk-usage's failure."
+        @tier "internal"
+      HOST_HELD_READ { result : HostInputsRead! }
+        @description "program/inputs' success for one guest."
+        @tier "internal"
+      HOST_HELD_FAILED { error : string! }
+        @description "program/inputs' failure for one guest."
+        @tier "internal"
+      HOST_RELEASES_GLOBBED { paths : [string]! }
+        @description "The release files."
+        @tier "internal"
+      HOST_RELEASES_UNGLOBBED { error : string!, kind : string }
+        @description "The release files could not be listed."
+        @tier "internal"
+      HOST_LOGS_GLOBBED { paths : [string]! }
+        @description "The log files."
+        @tier "internal"
+      HOST_LOGS_UNGLOBBED { error : string!, kind : string }
+        @description "The log files could not be listed."
+        @tier "internal"
+      HOST_STAT_READ { kind : string!, size : number!, mode : number, uid : number, gid : number, atime : number, mtime : number, ctime : number }
+        @description "os/stat's success."
+        @tier "internal"
+      HOST_STAT_FAILED { error : string!, kind : string }
+        @description "os/stat's failure; the file is left out."
+        @tier "internal"
+      HOST_LOG_READ { data : bytes!, key : string }
+        @description "A log file read for an operator."
+        @tier "internal"
+      HOST_LOG_UNREAD { error : string!, kind : string, key : string }
+        @description "A log file could not be read."
+        @tier "internal"
+    }
+  }
+
+  page boot as HostReportStart -> HostReport, HostReportMeter
+}
