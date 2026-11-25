@@ -1,0 +1,122 @@
+app std-pptx [
+  version: "1.0.0",
+  description: "std-pptx — writes a PowerPoint presentation (.pptx, the file Google Slides, Keynote and PowerPoint all open) from pictures. PPTX { key, slides: [{ image, notes }] } answers PPTX_ANSWERED { key, data, slides } with the file as bytes, or PPTX_REFUSED { key, reason }. Each slide is one PNG stretched over the whole slide, in the order given, with its notes as the slide's speaker notes (one paragraph per line; the characters &, < and > are escaped). The slide is `width` by `height` in EMU (914400 per inch), 16:9 by default; give pictures of that proportion. The file is the minimal Office Open XML package: one blank master and layout, a plain theme, a notes master, and per slide the slide, its picture and its notes page; the composed std-zip writes the archive, so this atom holds no archive writer of its own. Refusals: empty (no slides), and std-zip's own (busy, encoder, size, count, name)."
+]
+
+uses ZipAtom from "std/behaviors/std-zip"
+
+type PptxSlide = { image : bytes!, notes : string }
+type ZipEntry = { name : string!, data : bytes! }
+
+orbital PptxOrbital {
+  entity PptxRun [runtime] {
+    id : string!
+    slides : number @description "How many slides the file being written holds." = 0
+  }
+
+  trait Archive = ZipAtom.traits.Zip {
+    listens {
+      Pptx.PPTX_PACK -> ZIP
+      Deflate.GZIP_ANSWERED -> ENTRY_PACKED
+      Deflate.GZIP_REFUSED -> ENTRY_REFUSED
+    }
+  }
+
+  trait Deflate = ZipAtom.traits.Deflate {
+    listens {
+      Archive.ZIP_ENTRY -> GZIP
+    }
+  }
+
+  trait Pptx -> PptxRun [client] {
+    config {
+      width : number = 12192000
+        @label "Slide width"
+        @description "In EMU, 914400 per inch. The default is the 16:9 slide, 13.33 inches wide."
+        @tier "presentation"
+      height : number = 6858000
+        @label "Slide height"
+        @description "In EMU, 914400 per inch. The default is the 16:9 slide, 7.5 inches high."
+        @tier "presentation"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PPTX -> idle when (= (array/len @payload.slides) 0)
+        (emit PPTX_REFUSED { key: @payload.key, reason: "empty" })
+      PPTX -> idle when (> (array/len @payload.slides) 0)
+        (set @entity.slides (array/len @payload.slides))
+        (let ((idx (array/range 0 (array/len @payload.slides) 1)) (blank : PptxSlide { image: (bytes/from-string ""), notes: "" }))
+          (let ((fixed : [ZipEntry] [
+                  { name: "[Content_Types].xml", data: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"png\" ContentType=\"image/png\"/><Override PartName=\"/ppt/presentation.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml\"/><Override PartName=\"/ppt/slideMasters/slideMaster1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml\"/><Override PartName=\"/ppt/slideLayouts/slideLayout1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml\"/><Override PartName=\"/ppt/theme/theme1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.theme+xml\"/><Override PartName=\"/ppt/theme/theme2.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.theme+xml\"/><Override PartName=\"/ppt/notesMasters/notesMaster1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml\"/>" (str/join (array/map @idx (fn i (str/concat "<Override PartName=\"/ppt/slides/slide" (+ @i 1) ".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.slide+xml\"/><Override PartName=\"/ppt/notesSlides/notesSlide" (+ @i 1) ".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml\"/>"))) "") "</Types>")) },
+                  { name: "_rels/.rels", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"ppt/presentation.xml\"/></Relationships>") },
+                  { name: "ppt/theme/theme1.xml", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" name=\"Plain\"><a:themeElements><a:clrScheme name=\"Plain\"><a:dk1><a:srgbClr val=\"000000\"/></a:dk1><a:lt1><a:srgbClr val=\"FFFFFF\"/></a:lt1><a:dk2><a:srgbClr val=\"44546A\"/></a:dk2><a:lt2><a:srgbClr val=\"E7E6E6\"/></a:lt2><a:accent1><a:srgbClr val=\"4472C4\"/></a:accent1><a:accent2><a:srgbClr val=\"ED7D31\"/></a:accent2><a:accent3><a:srgbClr val=\"A5A5A5\"/></a:accent3><a:accent4><a:srgbClr val=\"FFC000\"/></a:accent4><a:accent5><a:srgbClr val=\"5B9BD5\"/></a:accent5><a:accent6><a:srgbClr val=\"70AD47\"/></a:accent6><a:hlink><a:srgbClr val=\"0563C1\"/></a:hlink><a:folHlink><a:srgbClr val=\"954F72\"/></a:folHlink></a:clrScheme><a:fontScheme name=\"Plain\"><a:majorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:majorFont><a:minorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:minorFont></a:fontScheme><a:fmtScheme name=\"Plain\"><a:fillStyleLst><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w=\"9525\"><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:ln><a:ln w=\"9525\"><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:ln><a:ln w=\"9525\"><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>") },
+                  { name: "ppt/theme/theme2.xml", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" name=\"Plain\"><a:themeElements><a:clrScheme name=\"Plain\"><a:dk1><a:srgbClr val=\"000000\"/></a:dk1><a:lt1><a:srgbClr val=\"FFFFFF\"/></a:lt1><a:dk2><a:srgbClr val=\"44546A\"/></a:dk2><a:lt2><a:srgbClr val=\"E7E6E6\"/></a:lt2><a:accent1><a:srgbClr val=\"4472C4\"/></a:accent1><a:accent2><a:srgbClr val=\"ED7D31\"/></a:accent2><a:accent3><a:srgbClr val=\"A5A5A5\"/></a:accent3><a:accent4><a:srgbClr val=\"FFC000\"/></a:accent4><a:accent5><a:srgbClr val=\"5B9BD5\"/></a:accent5><a:accent6><a:srgbClr val=\"70AD47\"/></a:accent6><a:hlink><a:srgbClr val=\"0563C1\"/></a:hlink><a:folHlink><a:srgbClr val=\"954F72\"/></a:folHlink></a:clrScheme><a:fontScheme name=\"Plain\"><a:majorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:majorFont><a:minorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:minorFont></a:fontScheme><a:fmtScheme name=\"Plain\"><a:fillStyleLst><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w=\"9525\"><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:ln><a:ln w=\"9525\"><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:ln><a:ln w=\"9525\"><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>") },
+                  { name: "ppt/slideMasters/slideMaster1.xml", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><p:sldMaster xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val=\"000000\"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMap bg1=\"lt1\" tx1=\"dk1\" bg2=\"lt2\" tx2=\"dk2\" accent1=\"accent1\" accent2=\"accent2\" accent3=\"accent3\" accent4=\"accent4\" accent5=\"accent5\" accent6=\"accent6\" hlink=\"hlink\" folHlink=\"folHlink\"/><p:sldLayoutIdLst><p:sldLayoutId id=\"2147483649\" r:id=\"rId1\"/></p:sldLayoutIdLst></p:sldMaster>") },
+                  { name: "ppt/slideMasters/_rels/slideMaster1.xml.rels", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout\" Target=\"../slideLayouts/slideLayout1.xml\"/><Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme\" Target=\"../theme/theme1.xml\"/></Relationships>") },
+                  { name: "ppt/slideLayouts/slideLayout1.xml", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><p:sldLayout xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" type=\"blank\"><p:cSld name=\"Blank\"><p:spTree><p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>") },
+                  { name: "ppt/slideLayouts/_rels/slideLayout1.xml.rels", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster\" Target=\"../slideMasters/slideMaster1.xml\"/></Relationships>") },
+                  { name: "ppt/notesMasters/notesMaster1.xml", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><p:notesMaster xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMap bg1=\"lt1\" tx1=\"dk1\" bg2=\"lt2\" tx2=\"dk2\" accent1=\"accent1\" accent2=\"accent2\" accent3=\"accent3\" accent4=\"accent4\" accent5=\"accent5\" accent6=\"accent6\" hlink=\"hlink\" folHlink=\"folHlink\"/></p:notesMaster>") },
+                  { name: "ppt/notesMasters/_rels/notesMaster1.xml.rels", data: (bytes/from-string "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme\" Target=\"../theme/theme2.xml\"/></Relationships>") },
+                  { name: "ppt/presentation.xml", data: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><p:presentation xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"><p:sldMasterIdLst><p:sldMasterId id=\"2147483648\" r:id=\"rId1\"/></p:sldMasterIdLst><p:notesMasterIdLst><p:notesMasterId r:id=\"rId2\"/></p:notesMasterIdLst><p:sldIdLst>" (str/join (array/map @idx (fn i (str/concat "<p:sldId id=\"" (+ @i 256) "\" r:id=\"rId" (+ @i 4) "\"/>"))) "") "</p:sldIdLst><p:sldSz cx=\"" @config.width "\" cy=\"" @config.height "\"/><p:notesSz cx=\"6858000\" cy=\"9144000\"/></p:presentation>")) },
+                  { name: "ppt/_rels/presentation.xml.rels", data: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster\" Target=\"slideMasters/slideMaster1.xml\"/><Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster\" Target=\"notesMasters/notesMaster1.xml\"/><Relationship Id=\"rId3\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme\" Target=\"theme/theme1.xml\"/>" (str/join (array/map @idx (fn i (str/concat "<Relationship Id=\"" (str/concat "rId" (+ @i 4)) "\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide\" Target=\"" (str/concat "slides/slide" (+ @i 1) ".xml") "\"/>"))) "") "</Relationships>")) }])
+                (perSlide : [ZipEntry] (array/flatten (array/map @idx (fn i (let ((s : PptxSlide (default (array/nth @payload.slides @i) @blank)))
+                  [{ name: (str/concat "ppt/slides/slide" (+ @i 1) ".xml"), data: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><p:sld xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/><p:pic><p:nvPicPr><p:cNvPr id=\"2\" name=\"Slide\"/><p:cNvPicPr><a:picLocks noChangeAspect=\"1\"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed=\"rId2\"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"" @config.width "\" cy=\"" @config.height "\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></p:spPr></p:pic></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>")) },
+                   { name: (str/concat "ppt/slides/_rels/slide" (+ @i 1) ".xml.rels"), data: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout\" Target=\"../slideLayouts/slideLayout1.xml\"/>" (str/concat "<Relationship Id=\"" "rId2" "\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\" Target=\"" (str/concat "../media/image" (+ @i 1) ".png") "\"/>") (str/concat "<Relationship Id=\"" "rId3" "\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide\" Target=\"" (str/concat "../notesSlides/notesSlide" (+ @i 1) ".xml") "\"/>") "</Relationships>")) },
+                   { name: (str/concat "ppt/media/image" (+ @i 1) ".png"), data: @s.image },
+                   { name: (str/concat "ppt/notesSlides/notesSlide" (+ @i 1) ".xml"), data: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><p:notes xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/><p:sp><p:nvSpPr><p:cNvPr id=\"2\" name=\"Notes\"/><p:cNvSpPr><a:spLocks noGrp=\"1\"/></p:cNvSpPr><p:nvPr><p:ph type=\"body\" idx=\"1\"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/>" (str/join (array/map (str/split (default @s.notes "") "\n") (fn line (str/concat "<a:p><a:r><a:rPr lang=\"en-US\"/><a:t>" (str/replaceAll (str/replaceAll (str/replaceAll @line "&" "&amp;") "<" "&lt;") ">" "&gt;") "</a:t></a:r></a:p>"))) "") "</p:txBody></p:sp></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>")) },
+                   { name: (str/concat "ppt/notesSlides/_rels/notesSlide" (+ @i 1) ".xml.rels"), data: (bytes/from-string (str/concat "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster\" Target=\"../notesMasters/notesMaster1.xml\"/>" (str/concat "<Relationship Id=\"" "rId2" "\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide\" Target=\"" (str/concat "../slides/slide" (+ @i 1) ".xml") "\"/>") "</Relationships>")) }]))))))
+            (emit PPTX_PACK { key: @payload.key, entries: (array/concat @fixed @perSlide) })))
+      PACKED -> idle
+        (emit PPTX_ANSWERED { key: @payload.key, data: @payload.data, slides: @entity.slides })
+      PACK_REFUSED -> idle
+        (emit PPTX_REFUSED { key: @payload.key, reason: @payload.reason })
+    }
+
+    emits {
+      PPTX_PACK -> internal {
+        key : string!
+        entries : [ZipEntry]!
+      }
+        @description "The package's parts, for std-zip to write."
+      PPTX_ANSWERED -> external {
+        key : string!
+        data : bytes!
+        slides : number!
+      }
+        @description "The presentation file."
+        @tier "primary"
+      PPTX_REFUSED -> external {
+        key : string!
+        reason : string!
+      }
+        @description "No file was written: empty, or std-zip's reason."
+        @tier "primary"
+    }
+
+    listens {
+      PPTX -> input {
+        key : string!
+        slides : [PptxSlide]!
+      }
+        @description "Write these pictures, each with its speaker notes, as one presentation file."
+        @synonyms "powerpoint, slides file, export deck, google slides"
+      PACKED {
+        key : string!
+        data : bytes!
+        count : number!
+      }
+        @description "std-zip's archive."
+      PACK_REFUSED {
+        key : string!
+        reason : string!
+      }
+        @description "std-zip wrote nothing."
+      Archive.ZIP_ANSWERED -> PACKED
+      Archive.ZIP_REFUSED -> PACK_REFUSED
+    }
+  }
+
+  page boot as PptxOrbitalStart -> Pptx, Archive, Deflate
+}

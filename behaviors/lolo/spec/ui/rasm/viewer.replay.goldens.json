@@ -1,0 +1,586 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-viewer.lolo",
+ "trait": "RasmViewer",
+ "cases": [
+  {
+   "id": "opening-shows-the-pictures-from-the-asked-one",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_VIEWER_OPEN",
+     "payload": {
+      "id": "v",
+      "urls": [
+       "https://orb.test/a.jpg",
+       "https://orb.test/b.jpg",
+       "https://orb.test/c.jpg"
+      ],
+      "index": 1
+     },
+     "expect": {
+      "entity": {
+       "urls": [
+        "https://orb.test/a.jpg",
+        "https://orb.test/b.jpg",
+        "https://orb.test/c.jpg"
+       ],
+       "index": 1
+      },
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: opening another viewer changes nothing",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [],
+    "index": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_VIEWER_OPEN",
+     "payload": {
+      "id": "other",
+      "urls": [
+       "https://orb.test/a.jpg",
+       "https://orb.test/b.jpg",
+       "https://orb.test/c.jpg"
+      ],
+      "index": 1
+     },
+     "expect": {
+      "entity": {
+       "urls": [],
+       "index": 0
+      },
+      "emitCounts": {
+       "RASM_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge: an index past the end opens at the last picture",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_VIEWER_OPEN",
+     "payload": {
+      "id": "v",
+      "urls": [
+       "https://orb.test/a.jpg",
+       "https://orb.test/b.jpg",
+       "https://orb.test/c.jpg"
+      ],
+      "index": 9
+     },
+     "expect": {
+      "entity": {
+       "index": 2
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "next-steps-one-picture",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "v:next",
+      "x": 380,
+      "y": 300
+     },
+     "expect": {
+      "entity": {
+       "index": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: next on the last picture stays there",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 2,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "v:next",
+      "x": 380,
+      "y": 300
+     },
+     "expect": {
+      "entity": {
+       "index": 2
+      },
+      "emitCounts": {
+       "RASM_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: previous on the first picture stays there",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ACTIVATE",
+     "payload": {
+      "id": "v:prev"
+     },
+     "expect": {
+      "entity": {
+       "index": 0
+      },
+      "emitCounts": {
+       "RASM_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-swipe-toward-the-start-shows-the-next-picture",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "v:photo",
+      "x": 300,
+      "y": 300
+     },
+     "expect": {
+      "entity": {
+       "pressing": true
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "v:photo",
+      "x": 200,
+      "y": 300
+     },
+     "expect": {
+      "entity": {
+       "index": 1,
+       "pressing": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "under-rtl-the-same-swipe-shows-the-previous-picture",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 1,
+    "dir": "rtl"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "v:photo",
+      "x": 300,
+      "y": 300
+     },
+     "expect": {}
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "v:photo",
+      "x": 200,
+      "y": 300
+     },
+     "expect": {
+      "entity": {
+       "index": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a short press on the picture steps nothing",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "v:photo",
+      "x": 300,
+      "y": 300
+     },
+     "expect": {}
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "v:photo",
+      "x": 290,
+      "y": 300
+     },
+     "expect": {
+      "entity": {
+       "index": 0,
+       "pressing": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-arrow-keys-step-and-rtl-mirrors-them",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_KEYPRESS",
+     "payload": {
+      "target": "",
+      "key": "ArrowRight",
+      "shift": false,
+      "alt": false,
+      "ctrl": false,
+      "meta": false
+     },
+     "expect": {
+      "entity": {
+       "index": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "under-rtl-arrow-left-shows-the-next-picture",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "rtl"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_KEYPRESS",
+     "payload": {
+      "target": "",
+      "key": "ArrowLeft",
+      "shift": false,
+      "alt": false,
+      "ctrl": false,
+      "meta": false
+     },
+     "expect": {
+      "entity": {
+       "index": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "close-emits-the-close-event",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "v:close",
+      "x": 380,
+      "y": 10
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_CLOSED",
+        "payload": {
+         "id": "v"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-placed-viewer-with-pictures-paints-once",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    },
+    "urls": [
+     "https://orb.test/a.jpg",
+     "https://orb.test/b.jpg",
+     "https://orb.test/c.jpg"
+    ],
+    "index": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "VIEWER_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a viewer with no pictures paints nothing",
+   "config": {
+    "id": "v"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 400,
+     "h": 700
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "VIEWER_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emitCounts": {
+       "RASM_PAINT": 0
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

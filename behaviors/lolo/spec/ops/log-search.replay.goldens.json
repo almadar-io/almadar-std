@@ -480,6 +480,212 @@
           }
         }
       ]
+    },
+    {
+      "id": "a chunk wholly older than the window is passed over without matching",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LS_CHUNK",
+          "payload": {
+            "data": "eyJzZXZlcml0eSI6ICJFUlJPUiIsICJ0aW1lIjogIjIwMjYtMTEtMjRUMjM6NTg6MDAuMDAwWiIsICJuYW1lc3BhY2UiOiAibnMiLCAibWVzc2FnZSI6ICJhIiwgImRhdGEiOiB7fX0KeyJzZXZlcml0eSI6ICJFUlJPUiIsICJ0aW1lIjogIjIwMjYtMTEtMjRUMjM6NTk6MDAuMDAwWiIsICJuYW1lc3BhY2UiOiAibnMiLCAibWVzc2FnZSI6ICJiIiwgImRhdGEiOiB7fX0K",
+            "eof": false
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [
+              {
+                "id": "job-1",
+                "query": "true",
+                "from": "2026-11-25T00:00:00.000Z",
+                "to": "2026-11-25T01:00:00.000Z",
+                "levels": [],
+                "status": "running",
+                "error": "",
+                "scanned": 0,
+                "skipped": 0,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fields": [],
+                "files": [
+                  "error/2026-11-25.jsonl"
+                ],
+                "fileIndex": 0,
+                "guest": "g1",
+                "endedAt": null
+              }
+            ],
+            "seq": 0,
+            "running": "job-1",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LS_MATCH",
+                "payload": {
+                  "lines": [],
+                  "eof": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a chunk that starts after the window ends the file",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LS_CHUNK",
+          "payload": {
+            "data": "eyJzZXZlcml0eSI6ICJFUlJPUiIsICJ0aW1lIjogIjIwMjYtMTEtMjVUMDE6MDA6MDEuMDAwWiIsICJuYW1lc3BhY2UiOiAibnMiLCAibWVzc2FnZSI6ICJhIiwgImRhdGEiOiB7fX0KeyJzZXZlcml0eSI6ICJFUlJPUiIsICJ0aW1lIjogIjIwMjYtMTEtMjVUMDE6MDI6MDAuMDAwWiIsICJuYW1lc3BhY2UiOiAibnMiLCAibWVzc2FnZSI6ICJiIiwgImRhdGEiOiB7fX0K",
+            "eof": false
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [
+              {
+                "id": "job-1",
+                "query": "true",
+                "from": "2026-11-25T00:00:00.000Z",
+                "to": "2026-11-25T01:00:00.000Z",
+                "levels": [],
+                "status": "running",
+                "error": "",
+                "scanned": 0,
+                "skipped": 0,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fields": [],
+                "files": [
+                  "error/2026-11-25.jsonl"
+                ],
+                "fileIndex": 0,
+                "guest": "g1",
+                "endedAt": null
+              }
+            ],
+            "seq": 0,
+            "running": "job-1",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LS_MATCH",
+                "payload": {
+                  "lines": [],
+                  "eof": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a chunk across the window start keeps only its lines inside the window",
+      "now": 1000,
+      "config": {
+        "buckets": 4
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "LS_CHUNK",
+          "payload": {
+            "data": "eyJzZXZlcml0eSI6ICJFUlJPUiIsICJ0aW1lIjogIjIwMjYtMTEtMjRUMjM6NTk6MDAuMDAwWiIsICJuYW1lc3BhY2UiOiAibnMiLCAibWVzc2FnZSI6ICJvbGQiLCAiZGF0YSI6IHt9fQp7InNldmVyaXR5IjogIkVSUk9SIiwgInRpbWUiOiAiMjAyNi0xMS0yNVQwMDoxMDowMC4wMDBaIiwgIm5hbWVzcGFjZSI6ICJucyIsICJtZXNzYWdlIjogImluIiwgImRhdGEiOiB7fX0K",
+            "eof": false
+          },
+          "entity": {
+            "id": "s",
+            "jobs": [
+              {
+                "id": "job-1",
+                "query": "true",
+                "from": "2026-11-25T00:00:00.000Z",
+                "to": "2026-11-25T01:00:00.000Z",
+                "levels": [],
+                "status": "running",
+                "error": "",
+                "scanned": 0,
+                "skipped": 0,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fields": [],
+                "files": [
+                  "error/2026-11-25.jsonl"
+                ],
+                "fileIndex": 0,
+                "guest": "g1",
+                "endedAt": null
+              }
+            ],
+            "seq": 0,
+            "running": "job-1",
+            "fd": -1,
+            "carry": "",
+            "boxName": "local"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LS_MATCH",
+                "payload": {
+                  "eof": false,
+                  "lines": [
+                    {
+                      "time": "2026-11-25T00:10:00.000Z",
+                      "level": "error",
+                      "namespace": "ns",
+                      "message": "in",
+                      "app": "",
+                      "release": "",
+                      "box": "local",
+                      "data": {}
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

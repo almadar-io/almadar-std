@@ -4,7 +4,7 @@ app std-host-report [
   fs: { "/srv/orb/apps/**": [read, meta], "/srv/orb/logs/**": [read, meta] },
   inbound: ["fleet-report"],
   egress: [],
-  description: "std-host-report — what a central host reports about itself to its operator, sampled on an interval and answered at once over the inbound hook fleet-report (POST /api/hooks/fleet-report), which verifies the x-fleet-key header against the ORB_FLEET_KEY credential (an unset credential answers 401 and runs nothing, EXEC-INBOUND-1). Each sample takes the machine's memory, cpu, load and uptime through the composed std-system-stats, then os/disk-usage of every path the diskPaths knob lists, then asks the composer for the hosted apps (APPS_LIST { key }, which std-program-host's ProgramApps answers as APPS_LISTED { key, apps }), reads each open guest's held bytes with program/inputs { stats: true, guest } (EXEC-COST-2, rows + frames + guests + arenas), then globs <appsDir>/*/releases/*/* and <logDir>/*/*.jsonl and stats each file: a release file's size counts toward its app's diskBytes, and a log file is one row { level, day, bytes } (the layout the orb's log file writer keeps: <logDir>/<level>/<YYYY-MM-DD>.jsonl). A read the host refuses is named in problems (what: why) and the rest of the sample is still taken; the previous sample's values stay until a new one replaces them. The hook's body is {} for the report or { log: { level, day } } for one log file: the report answers 200 with { sampledAt, machine, disks, apps, logs, problems } as JSON; a log file already read since its size last changed answers 200 { level, day, bytes, text } with the whole file, one not yet read answers 202 { pending: true } and is read now, so the caller asks again; a log the last sample does not list answers 404; an unverified request answers 401. Subject-agnostic: it knows nothing of which apps or what box."
+  description: "std-host-report — what a central host reports about itself to its operator, sampled on an interval and answered at once over the inbound hook fleet-report (POST /api/hooks/fleet-report), which verifies the x-fleet-key header against the ORB_FLEET_KEY credential (an unset credential answers 401 and runs nothing, EXEC-INBOUND-1). Each sample takes the machine's memory, cpu, load and uptime through the composed std-system-stats, then os/disk-usage of every path the diskPaths knob lists, then asks the composer for the hosted apps (APPS_LIST { key }, which std-program-host's ProgramApps answers as APPS_LISTED { key, apps }), reads each open guest's held bytes with program/inputs { stats: true, guest } (EXEC-COST-2, rows + frames + guests + arenas), then globs <appsDir>/*/releases/*/* and <logDir>/*/*.jsonl and stats each file: a release file's size counts toward its app's diskBytes (every release of the app), an app deployed there but not loaded is listed too (loaded false, its highest release, no guest or memory), and a log file is one row { level, day, bytes } (the layout the orb's log file writer keeps: <logDir>/<level>/<YYYY-MM-DD>.jsonl). A read the host refuses is named in problems (what: why) and the rest of the sample is still taken; the previous sample's values stay until a new one replaces them. The hook's body is {} for the report or { log: { level, day } } for one log file: the report answers 200 with { sampledAt, machine, disks, apps, logs, problems } as JSON; a log file already read since its size last changed answers 200 { level, day, bytes, text } with the whole file, one not yet read answers 202 { pending: true } and is read now, so the caller asks again; a log the last sample does not list answers 404; an unverified request answers 401. Subject-agnostic: it knows nothing of which apps or what box."
 ]
 ;; @capabilities "report this host's memory, cpu, load, disk, hosted apps and their memory and disk, and its log files, to an operator holding the fleet key"
 uses Stats from "std/behaviors/std-system-stats"
@@ -12,7 +12,7 @@ uses Stats from "std/behaviors/std-system-stats"
 type HostMachine = { memoryTotal : number!, memoryUsed : number!, memoryPercent : number!, cpuPercent : number!, load1 : number!, load5 : number!, load15 : number!, uptimeSeconds : number! }
 type HostDisk = { path : string!, total : number!, used : number!, available : number!, usedPercent : number! }
 type HostListedApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant! }
-type HostApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant!, heldBytes : number!, diskBytes : number! }
+type HostApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant?, heldBytes : number!, diskBytes : number!, loaded : boolean! }
 type HostLogFile = { level : string!, day : string!, bytes : number! }
 type HostLogText = { level : string!, day : string!, bytes : number!, text : string! }
 type HostHeldBytes = { rows : number!, frames : number!, guests : number!, arenas : number! }
@@ -89,7 +89,7 @@ orbital HostReportOrbital {
         (emit HOST_DISK_NEXT {})
 
       APPS_LISTED -> ready when (and @entity.sampling (= ?key "host-report"))
-        (set @entity.next (object/merge @entity.next { apps: (array/map ?apps (fn a { name: @a.name, guest: @a.guest, release: @a.release, current: @a.current, loading: @a.loading, lastUsedMs: @a.lastUsedMs, heldBytes: 0, diskBytes: 0 })) }))
+        (set @entity.next (object/merge @entity.next { apps: (array/map ?apps (fn a { name: @a.name, guest: @a.guest, release: @a.release, current: @a.current, loading: @a.loading, lastUsedMs: @a.lastUsedMs, heldBytes: 0, diskBytes: 0, loaded: true })) }))
         (emit HOST_HELD_NEXT { index: 0 })
 
       HOST_HELD_NEXT -> ready when (and (< ?index (array/len @entity.next.apps)) (= (default (array/nth (array/map @entity.next.apps (fn a @a.guest)) ?index) "") ""))
@@ -141,8 +141,15 @@ orbital HostReportOrbital {
           (if (= @root "logs")
             (let ((parts (str/split @rel "/")))
               (set @entity.next (object/merge @entity.next { logs: (array/append @entity.next.logs { level: (default (array/nth @parts 0) ""), day: (str/replace (default (array/nth @parts 1) "") ".jsonl" ""), bytes: ?size }) })))
-            (let ((app (default (array/nth (str/split @rel "/") 0) "")))
-              (set @entity.next (object/merge @entity.next { apps: (array/map @entity.next.apps (fn a (if (and (= @a.name @app) @a.current) (object/merge @a { diskBytes: (+ @a.diskBytes ?size) }) @a))) })))))
+            (let ((parts (str/split @rel "/")))
+              (let ((app (default (array/nth @parts 0) "")) (release (str/concat "releases/" (default (array/nth @parts 2) ""))))
+                (if (array/some @entity.next.apps (fn a (= @a.name @app)))
+                  (set @entity.next (object/merge @entity.next { apps: (array/map @entity.next.apps (fn a
+                    (if (and (= @a.name @app) (or @a.current (not @a.loaded)))
+                      (object/merge @a { diskBytes: (+ @a.diskBytes ?size), release: (if (and (not @a.loaded) (> (default (str/to-number (str/replace @release "releases/" "")) 0) (default (str/to-number (str/replace @a.release "releases/" "")) 0))) @release @a.release) })
+                      @a))) }))
+                  (let ((idle : HostApp { name: @app, guest: "", release: @release, current: true, loading: false, lastUsedMs: null, heldBytes: 0, diskBytes: ?size, loaded: false }))
+                    (set @entity.next (object/merge @entity.next { apps: (array/append @entity.next.apps @idle) }))))))))
         (set @entity.index (+ @entity.index 1))
         (emit HOST_STAT_NEXT {})
       HOST_STAT_FAILED -> ready

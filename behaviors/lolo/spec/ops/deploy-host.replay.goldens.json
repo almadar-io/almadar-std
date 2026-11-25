@@ -2883,6 +2883,364 @@
           }
         }
       ]
+    },
+    {
+      "id": "with pruneBuildCache, a healthy runtime deploy also clears docker's build cache",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health",
+        "pruneBuildCache": true
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|context",
+                  "argv": [
+                    "-a",
+                    "--delete",
+                    "--",
+                    "/w/ctx/",
+                    "deploy@box:/srv/orb/build/"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_RSYNC_DONE",
+          "payload": {
+            "stage": "#runtime|context",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|stack",
+                  "argv": [
+                    "-a",
+                    "--exclude",
+                    ".env",
+                    "--",
+                    "/w/stack/",
+                    "deploy@box:/srv/orb/stack/"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_RSYNC_DONE",
+          "payload": {
+            "stage": "#runtime|stack",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|build"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|build",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "almadar-central-orb:20261117\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|start"
+                }
+              }
+            ],
+            "entity": {
+              "prevImage": "almadar-central-orb:20261117",
+              "image": "almadar-central-orb:20261118"
+            }
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|start",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_CURL_RUN",
+                "payload": {
+                  "stage": "#runtime|health"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_CURL_DONE",
+          "payload": {
+            "stage": "#runtime|health",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|prune",
+                  "cmd": "docker images 'almadar-central-orb' --format '{{.Tag}}' | grep -E '^[0-9]+$' | sort -rn | tail -n +4 | while read -r t; do docker rmi 'almadar-central-orb:'\"$t\" >/dev/null || true; done; docker builder prune -af >/dev/null 2>&1; true"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
+    },
+    {
+      "id": "control: without pruneBuildCache the build cache is kept",
+      "config": {
+        "host": "deploy@box",
+        "healthUrl": "https://api.example/api/health",
+        "pruneBuildCache": false
+      },
+      "steps": [
+        {
+          "trait": "DeployHost",
+          "from": "idle",
+          "event": "DEPLOY_RUNTIME",
+          "payload": {
+            "contextDir": "/w/ctx",
+            "stackDir": "/w/stack",
+            "tag": "20261118"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|context",
+                  "argv": [
+                    "-a",
+                    "--delete",
+                    "--",
+                    "/w/ctx/",
+                    "deploy@box:/srv/orb/build/"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_RSYNC_DONE",
+          "payload": {
+            "stage": "#runtime|context",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_RSYNC_RUN",
+                "payload": {
+                  "stage": "#runtime|stack",
+                  "argv": [
+                    "-a",
+                    "--exclude",
+                    ".env",
+                    "--",
+                    "/w/stack/",
+                    "deploy@box:/srv/orb/stack/"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_RSYNC_DONE",
+          "payload": {
+            "stage": "#runtime|stack",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|build"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|build",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "almadar-central-orb:20261117\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|start"
+                }
+              }
+            ],
+            "entity": {
+              "prevImage": "almadar-central-orb:20261117",
+              "image": "almadar-central-orb:20261118"
+            }
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_REMOTE_DONE",
+          "payload": {
+            "stage": "#runtime|start",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_CURL_RUN",
+                "payload": {
+                  "stage": "#runtime|health"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "DeployHost",
+          "from": "running",
+          "event": "DH_CURL_DONE",
+          "payload": {
+            "stage": "#runtime|health",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DH_REMOTE",
+                "payload": {
+                  "stage": "#runtime|prune",
+                  "cmd": "docker images 'almadar-central-orb' --format '{{.Tag}}' | grep -E '^[0-9]+$' | sort -rn | tail -n +4 | while read -r t; do docker rmi 'almadar-central-orb:'\"$t\" >/dev/null || true; done; true"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "HostRemote",
+        "HostSsh",
+        "HostSh",
+        "HostRsync",
+        "HostCurl",
+        "HostRegistry",
+        "DeployHost",
+        "AppRelease"
+      ]
     }
   ]
 }

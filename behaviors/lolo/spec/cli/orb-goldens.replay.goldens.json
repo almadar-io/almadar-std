@@ -6186,7 +6186,7 @@
                 "event": "GOLDENS_ANSWERED",
                 "payload": {
                   "status": 400,
-                  "body": "usage: orb goldens <file.goldens.json>"
+                  "body": "usage: orb goldens [--parity] <file.goldens.json | directory>"
                 }
               }
             ]
@@ -9777,6 +9777,82 @@
                   ]
                 }
               }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "parity: a case both kernels answer alike is a pass line",
+      "steps": [
+        {
+          "event": "GOLDENS_VERDICT",
+          "from": "running",
+          "entity": {
+            "id": "r",
+            "parity": true,
+            "curCase": {
+              "id": "c1",
+              "steps": []
+            },
+            "lines": [],
+            "cursor": 0,
+            "files": [],
+            "golden": {
+              "atom": "",
+              "trait": "",
+              "cases": []
+            }
+          },
+          "payload": {
+            "equal": true,
+            "why": ""
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "lines": [
+                "pass  c1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "parity: a case the kernels answer differently is a fail line with the reason",
+      "steps": [
+        {
+          "event": "GOLDENS_VERDICT",
+          "from": "running",
+          "entity": {
+            "id": "r",
+            "parity": true,
+            "curCase": {
+              "id": "c1",
+              "steps": []
+            },
+            "lines": [],
+            "cursor": 0,
+            "files": [],
+            "golden": {
+              "atom": "",
+              "trait": "",
+              "cases": []
+            }
+          },
+          "payload": {
+            "equal": false,
+            "why": "first unequal step: {}"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "lines": [
+                "fail  c1",
+                "  the .lolo kernel and the native kernel differ",
+                "  first unequal step: {}"
+              ]
             }
           }
         }

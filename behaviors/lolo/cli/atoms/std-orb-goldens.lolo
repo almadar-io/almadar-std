@@ -2,7 +2,7 @@ app std-orb-goldens [
   version: "1.0.0",
   inbound: ["cli-goldens"],
   fs: { cwd: "**": [read], "/**": [read] },
-  description: "std-orb-goldens — the `orb goldens <file.goldens.json>` command, the parity-golden replay as a std program. The file names an atom (a path under the std lolo root, resolved three levels above the file: spec/<topic>/<file>), a default trait and cases; each case is a list of steps { trait, from, event, payload, expect { fired, state, emits [{ event, payload }], neverEmits [event] } }. It reads the file and the atom (os/read-file, program/read) and plays each case's steps in ONE program/step call, a fresh kernel per case. An expected emit matches the emit at the same position by event name and by every payload key it names (a nested value compares whole). One line per case, `pass` or `fail`, the unmet expectations indented under a fail, then `N passed, M failed`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); a failed read, parse or step answers 500 with its error. An expect may carry emitCounts ({ EVENT: n }, the event is emitted exactly n times in the step; 0 means never) and exactEmits, the step's complete ordered emit list: it must have as many emits as the step produced and each, in position, must match by event name and the payload keys it names, so an early incomplete emit is not masked by a later full one. A case is checked against the schema before it is played: an unknown case, step or expect key (note and golden are doc-only case strings, never asserted) each fail the case with a message. An expect.entity names fields of the step's row after its effects (program/step's result.entityAfter); each named key must be present and equal whole (a nested value compares whole), and a step answer with no row fails each named key. A case entity seeds the first step and a step entity seeds that step, through program/step's per-request entity; now is forwarded likewise, and a case config sets the knobs of the default trait on each of its steps. When a case fails, the failure also names each trait that fired in a step's cascade (other than the step's own trait) which no earlier step of the case plays and the case's `defaults` (a list of trait names that run on their entity defaults on purpose) does not list; a passing case is never annotated. A step answers list ({ operator, ok } or { operator, error: { kind, message } }) is the host's plain answers to that step's os asks and client host asks (audio/clock, audio/schedule: any runsOn client op), forwarded to program/step, so the kernel unwraps, mints and routes them as it does live: a sealed handle is minted, never fed, and a client host ask's answer returns through the ask's declared success route (the ok fields and key) or failure route ({ error, kind, key }) as a browser host returns it. A case credentials map (credential name to value) is test-only: the replay holds those credentials for each step of the case, answering the kernel's credential asks, and they are never journaled or printed; a name the map does not give is not held. A file `store: \"memory\"` replays its cases with rows kept in the replay's own memory instead of the program's declared `.lolo` store driver (program/step's `store` option), for a program whose store a replay cannot reach; the atom path is handed to program/step as `source`, so the program resolves with the imports and `locales/` catalogs beside it."
+  description: "std-orb-goldens — the `orb goldens <file.goldens.json>` command, the parity-golden replay as a std program. With --parity (orb goldens --parity <file | directory>) nothing in a case's expect is read: each case's steps become a script of { trait, event, payload } (a step's from, entity, answers, now, identity, session and the case's config are not carried), and std-kernel-dispatch's KernelParity plays that script on the native kernel and on the .lolo kernel side by side over the resolved atom, opened as program/open opens it with no route; a case passes when PARITY_ANSWERED says equal, and fails with the first unequal step, or with the reason parity could not be judged; an atom that does not resolve fails its file and the run goes on. A release gate ratchets those failures with orb gate (std scripts/gates/t7.sh). The file names an atom (a path under the std lolo root, resolved three levels above the file: spec/<topic>/<file>), a default trait and cases; each case is a list of steps { trait, from, event, payload, expect { fired, state, emits [{ event, payload }], neverEmits [event] } }. It reads the file and the atom (os/read-file, program/read) and plays each case's steps in ONE program/step call, a fresh kernel per case. An expected emit matches the emit at the same position by event name and by every payload key it names (a nested value compares whole). One line per case, `pass` or `fail`, the unmet expectations indented under a fail, then `N passed, M failed`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); a failed read, parse or step answers 500 with its error. An expect may carry emitCounts ({ EVENT: n }, the event is emitted exactly n times in the step; 0 means never) and exactEmits, the step's complete ordered emit list: it must have as many emits as the step produced and each, in position, must match by event name and the payload keys it names, so an early incomplete emit is not masked by a later full one. A case is checked against the schema before it is played: an unknown case, step or expect key (note and golden are doc-only case strings, never asserted) each fail the case with a message. An expect.entity names fields of the step's row after its effects (program/step's result.entityAfter); each named key must be present and equal whole (a nested value compares whole), and a step answer with no row fails each named key. A case entity seeds the first step and a step entity seeds that step, through program/step's per-request entity; now is forwarded likewise, and a case config sets the knobs of the default trait on each of its steps. When a case fails, the failure also names each trait that fired in a step's cascade (other than the step's own trait) which no earlier step of the case plays and the case's `defaults` (a list of trait names that run on their entity defaults on purpose) does not list; a passing case is never annotated. A step answers list ({ operator, ok } or { operator, error: { kind, message } }) is the host's plain answers to that step's os asks and client host asks (audio/clock, audio/schedule: any runsOn client op), forwarded to program/step, so the kernel unwraps, mints and routes them as it does live: a sealed handle is minted, never fed, and a client host ask's answer returns through the ask's declared success route (the ok fields and key) or failure route ({ error, kind, key }) as a browser host returns it. A case credentials map (credential name to value) is test-only: the replay holds those credentials for each step of the case, answering the kernel's credential asks, and they are never journaled or printed; a name the map does not give is not held. A file `store: \"memory\"` replays its cases with rows kept in the replay's own memory instead of the program's declared `.lolo` store driver (program/step's `store` option), for a program whose store a replay cannot reach; the atom path is handed to program/step as `source`, so the program resolves with the imports and `locales/` catalogs beside it."
 ]
 uses Spec from "almadar-std/orb-goldens"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -28,6 +28,8 @@ type GoldenState = { before : string, after : string }
 type GoldenEffect = { type : string, args : [GoldenValue?], status : string, error : string, nested : [GoldenEffect] }
 type GoldenOutcome = { trait : string!, fired : boolean, emitted : [GoldenEmitted] }
 type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]!, outcomes : [GoldenOutcome], effects : [GoldenEffect], rendered : [GoldenPayload], entityAfter : GoldenPayload? }
+type GoldenResolved = { program : SExpr! }
+type GoldenParityAnswer = { equal : boolean!, results : [GoldenPayload]! }
 type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult! }
 
 orbital GoldensOrbital {
@@ -50,6 +52,10 @@ orbital GoldensOrbital {
     skipped : number! = 0
     passed : number! = 0
     failed : number! = 0
+    parity : boolean @description "A parity run (orb goldens --parity): each case is played on the native kernel and on the .lolo kernel, and passes when both answer alike." = false
+    cwd : string = ""
+    resolved : GoldenFull?
+    kernel : behavior?
   }
 
   trait OrbGoldens -> GoldensRun [optimistic] {
@@ -57,21 +63,27 @@ orbital GoldensOrbital {
 
     state ready {
       INIT -> ready
-      GOLDENS_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit GOLDENS_ANSWERED { status: 400, body: "usage: orb goldens <file.goldens.json>" })
-      GOLDENS_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (str/endsWith (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json"))
-        (set @entity.files [(default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "")])
+      GOLDENS_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (not (or (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "--parity")))))
+        (emit GOLDENS_ANSWERED { status: 400, body: "usage: orb goldens [--parity] <file.goldens.json | directory>" })
+      GOLDENS_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (or (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "--parity"))) (str/endsWith (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json"))
+        (set @entity.parity (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2))
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (set @entity.files [(default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "")])
         (set @entity.fileCursor 0)
         (set @entity.lines [])
         (emit GOLDENS_FILE_NEXT {})
-      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json")) (not (os/path-is-absolute (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))))
-        (set @entity.dir (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
+      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (or (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "--parity"))) (not (str/endsWith (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json")) (not (os/path-is-absolute (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))))
+        (set @entity.parity (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2))
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (set @entity.dir (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
         (set @entity.lines [])
-        (os/glob { anchor: "cwd" path: (os/path-join (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "**" "*.replay.goldens.json") } { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
-      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json")) (os/path-is-absolute (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "")))
-        (set @entity.dir (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
+        (os/glob { anchor: "cwd" path: (os/path-join (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "**" "*.replay.goldens.json") } { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
+      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (or (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "--parity"))) (not (str/endsWith (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json")) (os/path-is-absolute (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "")))
+        (set @entity.parity (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2))
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (set @entity.dir (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
         (set @entity.lines [])
-        (os/glob (str/concat "/" (str/slice (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") 1 (str/len (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))) "/**/*.replay.goldens.json") { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
+        (os/glob (str/concat "/" (str/slice (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") 1 (str/len (default (array/last (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))) "/**/*.replay.goldens.json") { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
     }
 
     state listing {
@@ -118,7 +130,22 @@ orbital GoldensOrbital {
         (emit GOLDENS_ANSWERED { status: 500, body: "goldens: the atom file is not valid text" })
       GOLDENS_ATOM_READ -> reading when (!= (bytes/to-string @payload.data) null)
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: GOLDENS_PROGRAM, failure: GOLDENS_FAILED } })
-      GOLDENS_PROGRAM -> running
+      GOLDENS_PROGRAM -> reading when @entity.parity
+        (program/read "" { resolve: true text: false path: (if (os/path-is-absolute @entity.atomPath) @entity.atomPath (os/path-join @entity.cwd @entity.atomPath)) } { key: "resolved" emit: { success: GOLDENS_RESOLVED, failure: GOLDENS_UNRESOLVED } })
+      GOLDENS_RESOLVED -> reading when (= @entity.kernel null)
+        (set @entity.resolved (as @payload.result.program GoldenFull))
+        (behavior/resolve { behavior: "std/behaviors/std-kernel-dispatch" } {} { emit: { success: GOLDENS_KERNEL, failure: GOLDENS_FAILED } })
+      GOLDENS_RESOLVED -> running when (!= @entity.kernel null)
+        (set @entity.resolved (as @payload.result.program GoldenFull))
+        (emit GOLDENS_NEXT {})
+      GOLDENS_UNRESOLVED -> reading
+        (set @entity.lines (array/append @entity.lines (str/concat "fail  " @entity.file "\n  the atom did not resolve: " (default @payload.error ""))))
+        (set @entity.fileCursor (+ @entity.fileCursor 1))
+        (emit GOLDENS_FILE_NEXT {})
+      GOLDENS_KERNEL -> running
+        (set @entity.kernel @payload.result)
+        (emit GOLDENS_NEXT {})
+      GOLDENS_PROGRAM -> running when (not @entity.parity)
         (set @entity.program (let ((ir (as @payload.result GoldenIrGrants))) (let ((extra (object/get @entity.golden "grants" {}))) (if (= @ir null) null (as (object/set @ir "osGrants" (array/reduce (object/keys @extra) (object/get @ir "osGrants" {}) (fn (acc k) (object/set @acc @k (array/concat (default (as (object/get @acc @k []) GoldenGrantList) []) (object/get @extra @k []))))) ) GoldenFull)))))
         (set @entity.programRef (as @payload.result GoldenProgramRef))
         (emit GOLDENS_NEXT {})
@@ -133,7 +160,35 @@ orbital GoldensOrbital {
         (set @entity.lines (array/append @entity.lines (str/concat "skip  " (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "id") "  (" (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip") ")")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GOLDENS_NEXT { at: @entity.cursor })
-      GOLDENS_NEXT -> running when (and (< @entity.cursor (array/len (object/get @entity.golden "cases"))) (!= (array/nth (object/get @entity.golden "cases") @entity.cursor) null) (not (object/has (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip")))
+      GOLDENS_NEXT -> running when (and @entity.parity (< @entity.cursor (array/len (object/get @entity.golden "cases"))) (!= (array/nth (object/get @entity.golden "cases") @entity.cursor) null) (not (object/has (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip")))
+        (set @entity.curCase (default (array/nth (object/get @entity.golden "cases") @entity.cursor) @entity.curCase))
+        (program/step @entity.kernel
+          [{ orbital: "KernelDispatchOrbital", trait: "KernelParity", from: "idle", event: "PARITY_RUN",
+             payload: { program: @entity.resolved, script: (let ((gf @entity.golden)) (array/map (object/get (default (array/nth (object/get @entity.golden "cases") @entity.cursor) @entity.curCase) "steps") (fn s { trait: (object/get @s "trait" (object/get @gf "trait")), event: (object/get @s "event"), payload: (object/get @s "payload" {}) }))) } }]
+          { key: "parity" emit: { success: GOLDENS_PARITY, failure: GOLDENS_PARITY_FAILED } })
+      GOLDENS_PARITY -> running
+        (let ((np : GoldenPlayed { trait: "", event: "", result: { transitionFired: false, state: {}, emitted: [] } }))
+         (let ((rr (object/get (default (array/first @payload.result) @np) "result")))
+          (let ((allEm : [GoldenEmitted] (if (== (object/get @rr "outcomes" null) null) (object/get @rr "emitted") (array/flatten (array/map (object/get @rr "outcomes" []) (fn oc (default (object/get @oc "emitted") [])))))))
+           (let ((ans (array/find @allEm (fn em (= (object/get @em "type") "PARITY_ANSWERED"))))
+                 (bad (array/find @allEm (fn em (= (object/get @em "type") "PARITY_FAILED")))))
+            (emit GOLDENS_VERDICT {
+              equal: (and (!= @ans null) (= (object/get (object/get @ans "payload" {}) "equal") true)),
+              why: (if (!= @ans null)
+                     (str/concat "first unequal step: " (json/stringify (array/find (object/get (default (as (object/get @ans "payload" {}) GoldenParityAnswer) { equal: false, results: [] }) "results") (fn c (!= (object/get @c "equal") true)))))
+                     (if (!= @bad null)
+                       (str/concat "parity could not be judged: " (json/stringify (object/get @bad "payload" {})))
+                       (str/concat "PARITY_RUN did not answer; emitted: " (str/join (array/map @allEm (fn em (object/get @em "type"))) ", ")))) })))))
+      GOLDENS_PARITY_FAILED -> running
+        (emit GOLDENS_VERDICT { equal: false, why: (str/concat "step error: " (if (str/startsWith (json/stringify @payload.error) "\"") @payload.error (json/stringify @payload.error))) })
+      GOLDENS_VERDICT -> running
+        (set @entity.lines (array/concat @entity.lines
+          (if @payload.equal
+            [(str/concat "pass  " (object/get @entity.curCase "id"))]
+            [(str/concat "fail  " (object/get @entity.curCase "id")) "  the .lolo kernel and the native kernel differ" (str/concat "  " @payload.why)])))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit GOLDENS_NEXT {})
+      GOLDENS_NEXT -> running when (and (not @entity.parity) (< @entity.cursor (array/len (object/get @entity.golden "cases"))) (!= (array/nth (object/get @entity.golden "cases") @entity.cursor) null) (not (object/has (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip")))
         (set @entity.curCase (default (array/nth (object/get @entity.golden "cases") @entity.cursor) @entity.curCase))
         (set @entity.fails (let ((cc @entity.curCase)) (array/concat
           (array/map (array/filter (object/keys @cc) (fn k (not (array/includes ["skip", "entity", "config", "credentials", "defaults", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
@@ -315,6 +370,24 @@ orbital GoldensOrbital {
         @tier "internal"
       GOLDENS_CASE_FAILED { error : string }
         @description "A case whose steps failed to play."
+        @tier "internal"
+      GOLDENS_RESOLVED { result : GoldenResolved! }
+        @description "A parity run's atom resolved."
+        @tier "internal"
+      GOLDENS_UNRESOLVED { error : string }
+        @description "A parity run's atom that did not resolve; its file fails and the run goes on."
+        @tier "internal"
+      GOLDENS_KERNEL { result : behavior! }
+        @description "std-kernel-dispatch resolved, the program each parity case steps."
+        @tier "internal"
+      GOLDENS_PARITY { result : [GoldenPlayed]! }
+        @description "One case's PARITY_RUN played."
+        @tier "internal"
+      GOLDENS_PARITY_FAILED { error : string }
+        @description "A PARITY_RUN the kernel could not step."
+        @tier "internal"
+      GOLDENS_VERDICT { equal : boolean!, why : string! }
+        @description "A parity case judged."
         @tier "internal"
       GOLDENS_FAILED { error : string }
         @description "A read or parse that failed."

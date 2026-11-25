@@ -536,6 +536,8 @@ orbital BehaviorPlayground {
         ] }] })
       BEHAVIOR_FAILED -> open when (!= ?behavior @entity.behavior)
       OPEN -> open when (= ?behavior @entity.behavior)
+      GUEST_DEPLOY_ASKED -> open when (!= @entity.value null)
+        (emit PLAYGROUND_DEPLOY { behavior: @entity.behavior, value: @entity.value })
       OPEN -> opening when (!= ?behavior @entity.behavior)
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
@@ -580,6 +582,11 @@ orbital BehaviorPlayground {
         @description "What the status strip shows."
       GUEST_RESET -> external { }
         @description "The opened behavior is replaced or closed: the guest session ends."
+      PLAYGROUND_DEPLOY -> external {
+        behavior : string!
+        value : behavior
+      }
+        @description "The viewer asked to deploy the open behavior; a composer that deploys answers the stage with GUEST_DEPLOY_ANSWERED."
     }
 
     listens {
@@ -593,6 +600,9 @@ orbital BehaviorPlayground {
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED
       GuestSession.GUEST_REOPEN -> GUEST_REOPEN
+      GuestStage.GUEST_DEPLOY -> GUEST_DEPLOY_ASKED
+      GUEST_DEPLOY_ASKED { }
+        @description "The stage's deploy button was pressed."
       GUEST_REOPEN { }
         @description "The guest session asked for the open behavior's program again (its integrations changed)."
       OPEN {

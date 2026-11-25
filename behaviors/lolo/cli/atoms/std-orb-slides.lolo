@@ -1,0 +1,354 @@
+app std-orb-slides [
+  version: "1.0.0",
+  inbound: ["cli-slides"],
+  exec: [env ORB_CHROME],
+  env: ["ORB_CHROME", "PATH", "HOME"],
+  net: { "127.0.0.1:9334": [tcp] },
+  fs: { cwd: "**/*.json": [read], cwd: "**/*.pptx": [write, create], env HOME: ".almadar/slides/**": [read, write, create], env HOME: ".almadar": [create], env HOME: ".almadar/slides": [create] },
+  description: "std-orb-slides — the `orb slides export --url <deck> --frames <n> --out <file.pptx> [--notes <file.json>] [--width <px>] [--height <px>] [--wait <ms>] [--settle <ms>]` command. It keeps a copy of a running slide deck as a presentation file that Google Slides, Keynote and PowerPoint open, for the day the live deck cannot be shown. It opens the deck in a headless Chrome (std-chrome, the browser named by ORB_CHROME) at width by height (1920 by 1080 unless said), waits `wait` ms (8000) for the first paint, takes a picture, then presses the advance key (ArrowRight) and takes the next picture after `settle` ms (1700), until it holds `frames` pictures: one slide of the file per build of the deck, in order. `frames` is stated, never guessed: it is the deck's slides plus all their builds. `--out` and `--notes` are paths under the working directory. `--notes` names a JSON array of strings, the speaker notes of each frame in order (a frame past the end of the list has none). std-pptx writes the file; this command holds no file format of its own. It answers `wrote <n> slides to <file>` (status 200), usage (400) for a missing or malformed word, or the failing step's code and message (500); Chrome is stopped before any answer after it started."
+]
+;; @capabilities "export a running slide deck as a PowerPoint or Google Slides file"
+
+uses ChromeA from "std/behaviors/std-chrome"
+uses PptxA from "std/behaviors/std-pptx"
+
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgsFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type SlideNotes = [string]
+type PptxSlide = { image : bytes!, notes : string }
+
+orbital OrbSlidesOrbital {
+  uses Args from "std/behaviors/std-args"
+  uses Delay from "std/behaviors/std-delay"
+
+  entity SlidesRun [runtime] {
+    id : string!
+    url : string = ""
+    out : string = ""
+    frames : number = 0
+    width : number = 1920
+    height : number = 1080
+    waitMs : number = 8000
+    settleMs : number = 1700
+    notesPath : string = ""
+    notes : [string] = []
+    shots : [bytes] = []
+    started : boolean @description "Chrome was started by this run and is not stopped yet." = false
+    status : number = 200
+    body : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbSlides.SLIDES_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait SlidesWait = Delay.traits.Delay {
+    listens {
+      OrbSlides.SLIDES_WAIT -> START
+    }
+  }
+
+  trait OrbSlides -> SlidesRun {
+    config {
+      advanceKey : "ArrowRight" | "ArrowDown" | "Space" | "Enter" = "ArrowRight"
+        @label "The key that advances the deck"
+        @tier "domain"
+      usage : string = "usage: orb slides export --url <deck> --frames <n> --out <file.pptx> [--notes <file.json>] [--width <px>] [--height <px>] [--wait <ms>] [--settle <ms>]"
+        @label "Usage line"
+        @tier "presentation"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SLIDES_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SLIDES_ANSWERED { status: 400, body: @config.usage })
+      SLIDES_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SLIDES_ARGS_PARSE { stage: "slides" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "url" aliases: [] takesValue: true repeatable: false }, { name: "frames" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "notes" aliases: [] takesValue: true repeatable: false }, { name: "width" aliases: [] takesValue: true repeatable: false }, { name: "height" aliases: [] takesValue: true repeatable: false }, { name: "wait" aliases: [] takesValue: true repeatable: false }, { name: "settle" aliases: [] takesValue: true repeatable: false }] })
+      SLIDES_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (default (array/nth @payload.positionals 0) "") "export") (!= (default (array/nth (default (object/get @payload.flags "url" null) []) 0) "") "") (!= (default (array/nth (default (object/get @payload.flags "out" null) []) 0) "") "") (> (default (str/to-number (default (array/nth (default (object/get @payload.flags "frames" null) []) 0) "")) 0) 0)))
+        (emit SLIDES_ANSWERED { status: 400, body: @config.usage })
+      SLIDES_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (default (array/nth @payload.positionals 0) "") "export") (!= (default (array/nth (default (object/get @payload.flags "url" null) []) 0) "") "") (!= (default (array/nth (default (object/get @payload.flags "out" null) []) 0) "") "") (> (default (str/to-number (default (array/nth (default (object/get @payload.flags "frames" null) []) 0) "")) 0) 0))
+        (set @entity.url (default (array/nth (default (object/get @payload.flags "url" null) []) 0) ""))
+        (set @entity.out (default (array/nth (default (object/get @payload.flags "out" null) []) 0) ""))
+        (set @entity.frames (default (str/to-number (default (array/nth (default (object/get @payload.flags "frames" null) []) 0) "")) 0))
+        (set @entity.width (default (str/to-number (default (array/nth (default (object/get @payload.flags "width" null) []) 0) "1920")) 1920))
+        (set @entity.height (default (str/to-number (default (array/nth (default (object/get @payload.flags "height" null) []) 0) "1080")) 1080))
+        (set @entity.waitMs (default (str/to-number (default (array/nth (default (object/get @payload.flags "wait" null) []) 0) "8000")) 8000))
+        (set @entity.settleMs (default (str/to-number (default (array/nth (default (object/get @payload.flags "settle" null) []) 0) "1700")) 1700))
+        (set @entity.notesPath (default (array/nth (default (object/get @payload.flags "notes" null) []) 0) ""))
+        (set @entity.notes [])
+        (set @entity.shots [])
+        (set @entity.started false)
+        (if (= @entity.notesPath "")
+          (emit SLIDES_CHROME_START {})
+          (os/read-file { anchor: "cwd" path: @entity.notesPath } { key: "notes" emit: { success: SLIDES_NOTES_READ, failure: SLIDES_NOTES_FAILED } }))
+      SLIDES_NOTES_READ -> ready
+      SLIDES_NOTES_FAILED -> ready
+      SLIDES_NEXT -> ready
+      SLIDES_WROTE -> ready
+      SLIDES_WRITE_FAILED -> ready
+      CHROME_UP -> ready
+      CHROME_DOWN -> ready
+      CHROME_BROKE -> ready
+      PAGE_SIZED -> ready
+      PAGE_OPENED -> ready
+      PAGE_KEYED -> ready
+      PAGE_SHOT -> ready
+      PAGE_BROKE -> ready
+      WAITED -> ready
+      FILE_BUILT -> ready
+      FILE_REFUSED -> ready
+    }
+
+    state running {
+      INIT -> ready
+      SLIDES_CALLED -> running
+        (emit SLIDES_ANSWERED { status: 500, body: "busy: an export is already running" })
+      SLIDES_ARGS_DONE -> running
+      SLIDES_NOTES_READ -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") SlideNotes) null)
+        (emit SLIDES_ANSWERED { status: 400, body: (str/concat "the notes file must be a JSON array of strings: " @entity.notesPath) })
+      SLIDES_NOTES_READ -> running when (!= (json/parse (default (bytes/to-string @payload.data) "") SlideNotes) null)
+        (set @entity.notes (default (json/parse (default (bytes/to-string @payload.data) "") SlideNotes) []))
+        (emit SLIDES_CHROME_START {})
+      SLIDES_NOTES_FAILED -> ready
+        (emit SLIDES_ANSWERED { status: 400, body: (str/concat "the notes file could not be read: " @entity.notesPath " (" @payload.error ")") })
+      CHROME_UP -> running
+        (set @entity.started true)
+        (emit SLIDES_VIEWPORT { key: "slides", width: @entity.width, height: @entity.height, deviceScaleFactor: 1, mobile: false, textZoom: 1 })
+      PAGE_SIZED -> running
+        (emit SLIDES_NAVIGATE { key: "slides", url: @entity.url })
+      PAGE_OPENED -> running
+        (emit SLIDES_WAIT { key: "frame", delayMs: @entity.waitMs })
+      WAITED -> running
+        (emit SLIDES_SHOT { key: "slides", fullPage: false })
+      PAGE_SHOT -> running
+        (set @entity.shots (array/concat @entity.shots [@payload.png]))
+        (emit SLIDES_NEXT {})
+      SLIDES_NEXT -> running when (< (array/len @entity.shots) @entity.frames)
+        (emit SLIDES_KEY { key: "slides", keyName: @config.advanceKey, shift: false })
+      SLIDES_NEXT -> running when (>= (array/len @entity.shots) @entity.frames)
+        (emit SLIDES_PPTX { key: "slides", slides: (array/map (array/range 0 (array/len @entity.shots) 1) (fn i { image: (default (array/nth @entity.shots @i) (bytes/from-string "")), notes: (default (array/nth @entity.notes @i) "") })) })
+      PAGE_KEYED -> running
+        (emit SLIDES_WAIT { key: "frame", delayMs: @entity.settleMs })
+      FILE_BUILT -> running
+        (os/write-file { anchor: "cwd" path: @entity.out } @payload.data { key: "out" emit: { success: SLIDES_WROTE, failure: SLIDES_WRITE_FAILED } })
+      SLIDES_WROTE -> stopping
+        (set @entity.status 200)
+        (set @entity.body (str/concat "wrote " (array/len @entity.shots) " slides to " @entity.out))
+        (emit SLIDES_CHROME_STOP {})
+      SLIDES_WRITE_FAILED -> stopping
+        (set @entity.status 500)
+        (set @entity.body (str/concat "write: " @entity.out " (" @payload.error ")"))
+        (emit SLIDES_CHROME_STOP {})
+      FILE_REFUSED -> stopping
+        (set @entity.status 500)
+        (set @entity.body (str/concat "pptx: " @payload.reason))
+        (emit SLIDES_CHROME_STOP {})
+      PAGE_BROKE -> stopping
+        (set @entity.status 500)
+        (set @entity.body (str/concat @payload.code ": " @payload.error))
+        (emit SLIDES_WAIT { key: "stop", delayMs: 1 })
+      CHROME_BROKE -> ready when (not @entity.started)
+        (emit SLIDES_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.message) })
+      CHROME_BROKE -> stopping when @entity.started
+        (set @entity.status 500)
+        (set @entity.body (str/concat @payload.code ": " @payload.message))
+        (emit SLIDES_CHROME_STOP {})
+      CHROME_DOWN -> running
+    }
+
+    state stopping {
+      INIT -> ready
+      SLIDES_CALLED -> stopping
+        (emit SLIDES_ANSWERED { status: 500, body: "busy: an export is already running" })
+      CHROME_DOWN -> ready
+        (set @entity.started false)
+        (emit SLIDES_ANSWERED { status: @entity.status, body: @entity.body })
+      CHROME_BROKE -> ready
+        (set @entity.started false)
+        (emit SLIDES_ANSWERED { status: @entity.status, body: @entity.body })
+      PAGE_BROKE -> stopping
+      PAGE_SHOT -> stopping
+      PAGE_KEYED -> stopping
+      PAGE_OPENED -> stopping
+      PAGE_SIZED -> stopping
+      WAITED -> stopping
+        (emit SLIDES_CHROME_STOP {})
+      FILE_BUILT -> stopping
+      FILE_REFUSED -> stopping
+      SLIDES_NEXT -> stopping
+      SLIDES_WROTE -> stopping
+      SLIDES_WRITE_FAILED -> stopping
+      SLIDES_ARGS_DONE -> stopping
+      SLIDES_NOTES_READ -> stopping
+      SLIDES_NOTES_FAILED -> stopping
+      CHROME_UP -> stopping
+    }
+
+    emits {
+      SLIDES_ANSWERED -> external { status : number!, body : string! }
+        @description "The command's answer, which the cli hook prints."
+        @tier "internal"
+      SLIDES_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgsFlag]!
+      }
+        @description "Internal: std-args request for the call's words."
+        @tier "internal"
+      SLIDES_NEXT -> internal { }
+      SLIDES_WAIT {
+        key : string!
+        delayMs : number!
+      }
+        @description "Internal: wait before the next picture."
+        @tier "internal"
+      SLIDES_CHROME_START -> external { }
+        @description "Start the browser."
+        @tier "internal"
+      SLIDES_CHROME_STOP -> external { }
+        @description "Stop the browser."
+        @tier "internal"
+      SLIDES_VIEWPORT -> external {
+        key : string!
+        width : number!
+        height : number!
+        deviceScaleFactor : number!
+        mobile : boolean!
+        textZoom : number!
+      }
+        @description "Size the page."
+        @tier "internal"
+      SLIDES_NAVIGATE -> external {
+        key : string!
+        url : string!
+      }
+        @description "Open the deck."
+        @tier "internal"
+      SLIDES_KEY -> external {
+        key : string!
+        keyName : "ArrowRight" | "ArrowDown" | "Space" | "Enter"!
+        shift : boolean!
+      }
+        @description "Advance the deck one build."
+        @tier "internal"
+      SLIDES_SHOT -> external {
+        key : string!
+        fullPage : boolean!
+      }
+        @description "Take the picture of the frame on show."
+        @tier "internal"
+      SLIDES_PPTX -> external {
+        key : string!
+        slides : [PptxSlide]!
+      }
+        @description "The frames and their notes, for std-pptx to write."
+        @tier "internal"
+    }
+
+    listens {
+      SLIDES_CALLED -> inbound "cli-slides" answers SLIDES_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb slides` with its arguments and working directory."
+        @synonyms "orb slides, export slides, export deck, powerpoint, google slides"
+      SLIDES_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      SLIDES_NOTES_READ { data : bytes! }
+        @description "The notes file's bytes."
+      SLIDES_NOTES_FAILED { error : string!  kind : string }
+        @description "The notes file could not be read."
+      SLIDES_WROTE { bytes : number }
+        @description "The presentation file is written."
+      SLIDES_WRITE_FAILED { error : string!  kind : string }
+        @description "The presentation file could not be written."
+      CHROME_UP { browser : string!  targetId : string! }
+        @description "std-chrome's CHROME_READY."
+      CHROME_DOWN { }
+        @description "std-chrome's CHROME_STOPPED."
+      CHROME_BROKE { code : string!  message : string! }
+        @description "std-chrome's CHROME_FAILED."
+      PAGE_SIZED { key : string! }
+        @description "std-chrome's PAGE_VIEWPORT_SET."
+      PAGE_OPENED { key : string!  url : string!  title : string! }
+        @description "std-chrome's PAGE_LOADED."
+      PAGE_KEYED { key : string! }
+        @description "std-chrome's PAGE_KEY_SENT."
+      PAGE_SHOT { key : string!  png : bytes! }
+        @description "std-chrome's PAGE_SCREENSHOT_TAKEN."
+      PAGE_BROKE { key : string!  error : string!  code : string! }
+        @description "std-chrome's PAGE_FAILED."
+      WAITED { waitedMs : number!  key : string }
+        @description "std-delay's ELAPSED."
+      FILE_BUILT { key : string!  data : bytes!  slides : number! }
+        @description "std-pptx's PPTX_ANSWERED."
+      FILE_REFUSED { key : string!  reason : string! }
+        @description "std-pptx's PPTX_REFUSED."
+      ArgsCli.ARGS_PARSED -> SLIDES_ARGS_DONE
+      SlidesWait.ELAPSED -> WAITED
+      SlidesChrome.Chrome.CHROME_READY -> CHROME_UP
+      SlidesChrome.Chrome.CHROME_STOPPED -> CHROME_DOWN
+      SlidesChrome.Chrome.CHROME_FAILED -> CHROME_BROKE
+      SlidesChrome.Chrome.PAGE_VIEWPORT_SET -> PAGE_SIZED
+      SlidesChrome.Chrome.PAGE_LOADED -> PAGE_OPENED
+      SlidesChrome.Chrome.PAGE_KEY_SENT -> PAGE_KEYED
+      SlidesChrome.Chrome.PAGE_SCREENSHOT_TAKEN -> PAGE_SHOT
+      SlidesChrome.Chrome.PAGE_FAILED -> PAGE_BROKE
+      SlidesFile.Pptx.PPTX_ANSWERED -> FILE_BUILT
+      SlidesFile.Pptx.PPTX_REFUSED -> FILE_REFUSED
+    }
+  }
+
+  page boot as OrbSlidesPage -> OrbSlides, ArgsCli, SlidesWait
+}
+
+orbital SlidesChrome = ChromeA.orbitals.ChromeOrbital {
+  traits {
+    ChromeDaemon {
+      config { readyPort: 9334 }
+    }
+    CdpHttp {
+      config { port: 9334 }
+    }
+    CdpWs {
+      config { port: 9334 }
+    }
+    Cdp {
+      config { timeoutMs: 120000 }
+    }
+    Chrome {
+      config {
+        port: 9334
+        gpu: true
+        extraArgs: ["--hide-scrollbars"]
+        profileDir: { anchor: { env: "HOME" } path: ".almadar/slides/chrome/profile" }
+        downloadDir: { anchor: { env: "HOME" } path: ".almadar/slides/chrome/downloads" }
+        preferencesDir: { anchor: { env: "HOME" } path: ".almadar/slides/chrome/profile/Default" }
+        preferencesFile: { anchor: { env: "HOME" } path: ".almadar/slides/chrome/profile/Default/Preferences" }
+      }
+    }
+  }
+  listens {
+    OrbSlidesOrbital.OrbSlides.SLIDES_CHROME_START -> Chrome.CHROME_START
+    OrbSlidesOrbital.OrbSlides.SLIDES_CHROME_STOP -> Chrome.CHROME_STOP
+    OrbSlidesOrbital.OrbSlides.SLIDES_VIEWPORT -> Chrome.PAGE_VIEWPORT
+    OrbSlidesOrbital.OrbSlides.SLIDES_NAVIGATE -> Chrome.PAGE_NAVIGATE
+    OrbSlidesOrbital.OrbSlides.SLIDES_KEY -> Chrome.PAGE_KEY
+    OrbSlidesOrbital.OrbSlides.SLIDES_SHOT -> Chrome.PAGE_SCREENSHOT
+  }
+}
+
+orbital SlidesFile = PptxA.orbitals.PptxOrbital {
+  listens {
+    OrbSlidesOrbital.OrbSlides.SLIDES_PPTX -> Pptx.PPTX
+  }
+}

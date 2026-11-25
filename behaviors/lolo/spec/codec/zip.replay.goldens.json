@@ -1,0 +1,211 @@
+{
+ "atom": "codec/atoms/std-zip.lolo",
+ "trait": "Zip",
+ "source": "The archive of the first case was checked with the system unzip (unzip -t reports no errors, and both entries read back byte for byte).",
+ "note": "data is standard base64 of the bytes. Deflate is the composed std-gzip, run for real.",
+ "cases": [
+  {
+   "id": "two entries become one archive, in the order given",
+   "defaults": [
+    "Deflate"
+   ],
+   "steps": [
+    {
+     "event": "ZIP",
+     "from": "idle",
+     "payload": {
+      "key": "k",
+      "entries": [
+       {
+        "name": "a.txt",
+        "data": "aGVsbG8gemlw"
+       },
+       {
+        "name": "dir/b.xml",
+        "data": "PGE+c2Vjb25kIGZpbGUsIGEgbGl0dGxlIGxvbmdlciwgbG9uZ2VyLCBsb25nZXIsIGxvbmdlcjwvYT4="
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZIP_ANSWERED",
+        "payload": {
+         "key": "k",
+         "count": 2,
+         "data": "UEsDBBQAAAgIAAAAIQCLc5WsCwAAAAkAAAAFAAAAYS50eHTLSM3JyVeoyiwAAFBLAwQUAAAICAAAACEAQ4BrUy8AAAA7AAAACQAAAGRpci9iLnhtbHXFwQkAIAgF0FUcIGgBcRcpC+GjUO5PE3R6rHJtZExaDmukBK+CETK2nfaRu8oDUEsBAhQAFAAACAgAAAAhAItzlawLAAAACQAAAAUAAAAAAAAAAAAAAAAAAAAAAGEudHh0UEsBAhQAFAAACAgAAAAhAEOAa1MvAAAAOwAAAAkAAAAAAAAAAAAAAAAALgAAAGRpci9iLnhtbFBLBQYAAAAAAgACAGoAAACEAAAAAAA="
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZIP_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no entries is refused empty and writes nothing",
+   "defaults": [
+    "Deflate"
+   ],
+   "steps": [
+    {
+     "event": "ZIP",
+     "from": "idle",
+     "payload": {
+      "key": "k",
+      "entries": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ZIP_REFUSED",
+        "payload": {
+         "key": "k",
+         "reason": "empty"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZIP_ANSWERED",
+       "ZIP_ENTRY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an entry with an empty name is refused before anything is deflated",
+   "defaults": [
+    "Deflate"
+   ],
+   "steps": [
+    {
+     "event": "ZIP",
+     "from": "idle",
+     "payload": {
+      "key": "k",
+      "entries": [
+       {
+        "name": "a.txt",
+        "data": "aGVsbG8gemlw"
+       },
+       {
+        "name": "",
+        "data": "PGE+c2Vjb25kIGZpbGUsIGEgbGl0dGxlIGxvbmdlciwgbG9uZ2VyLCBsb25nZXIsIGxvbmdlcjwvYT4="
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ZIP_REFUSED",
+        "payload": {
+         "key": "k",
+         "reason": "name"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZIP_ANSWERED",
+       "ZIP_ENTRY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a member whose header is not the plain ten bytes is refused as an encoder fault",
+   "steps": [
+    {
+     "event": "ENTRY_PACKED",
+     "from": "packing",
+     "entity": {
+      "id": "z",
+      "key": "k",
+      "entries": [
+       {
+        "name": "a.txt",
+        "data": "aGVsbG8gemlw"
+       }
+      ],
+      "cursor": 0,
+      "local": [],
+      "central": [],
+      "offset": 0
+     },
+     "payload": {
+      "data": "bm90IGEgZ3ppcCBtZW1iZXIgYXQgYWxs",
+      "size": 9,
+      "crc": 1
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ZIP_REFUSED",
+        "payload": {
+         "key": "k",
+         "reason": "encoder"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZIP_ANSWERED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second request while one archive is being written is refused busy",
+   "steps": [
+    {
+     "event": "ZIP",
+     "from": "packing",
+     "entity": {
+      "id": "z",
+      "key": "first",
+      "entries": [
+       {
+        "name": "a.txt",
+        "data": "aGVsbG8gemlw"
+       }
+      ],
+      "cursor": 0,
+      "local": [],
+      "central": [],
+      "offset": 0
+     },
+     "payload": {
+      "key": "second",
+      "entries": [
+       {
+        "name": "b.txt",
+        "data": "aGVsbG8gemlw"
+       }
+      ]
+     },
+     "expect": {
+      "state": "packing",
+      "emits": [
+       {
+        "event": "ZIP_REFUSED",
+        "payload": {
+         "key": "second",
+         "reason": "busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZIP_ANSWERED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

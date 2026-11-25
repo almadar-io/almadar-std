@@ -1,7 +1,7 @@
 {
   "atom": "ops/atoms/std-fleet-board.lolo",
   "trait": "FleetBoard",
-  "note": "Boxes answer the std-host-report hook; the board folds them into std-status-board rows.",
+  "note": "Boxes answer the std-host-report hook; the reader hands every box as read to its own dashboard view.",
   "cases": [
     {
       "id": "a report answered 200 is kept and the board is drawn once every box answered",
@@ -164,25 +164,125 @@
             "fired": true,
             "emits": [
               {
-                "event": "FB_BOARD_SHOW",
+                "event": "FB_VIEW_SHOW",
                 "payload": {
+                  "previewPrefix": "preview-",
+                  "previewOrigin": "http://{name}.localhost:5065"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "opening a log file shows it loading and asks the box for it",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_LOG_OPENED",
+          "payload": {
+            "box": "local",
+            "level": "error",
+            "day": "2026-11-25"
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [
+              {
+                "box": "local",
+                "label": "Local box",
+                "report": {
+                  "sampledAt": null,
+                  "machine": {
+                    "memoryTotal": 8589934592,
+                    "memoryUsed": 1,
+                    "memoryPercent": 50,
+                    "cpuPercent": 10,
+                    "load1": 0.5,
+                    "load5": 0.5,
+                    "load15": 0.5,
+                    "uptimeSeconds": 1
+                  },
+                  "disks": [],
+                  "apps": [
+                    {
+                      "name": "preview-std-browse",
+                      "guest": "g1",
+                      "release": "releases/1",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 2097152,
+                      "diskBytes": 1048576
+                    },
+                    {
+                      "name": "kflow",
+                      "guest": "g2",
+                      "release": "releases/4",
+                      "current": true,
+                      "loading": false,
+                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
+                      "heldBytes": 0,
+                      "diskBytes": 0
+                    }
+                  ],
+                  "logs": [
+                    {
+                      "level": "error",
+                      "day": "2026-11-25",
+                      "bytes": 2048
+                    }
+                  ],
+                  "problems": []
+                },
+                "error": ""
+              }
+            ],
+            "fetchedAt": null,
+            "logAsk": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_VIEW_LOG",
+                "payload": {
+                  "phase": "loading",
+                  "text": "",
                   "error": ""
                 }
+              },
+              {
+                "event": "FB_LOG_ASK",
+                "payload": {}
               }
-            ]
+            ],
+            "entity": {
+              "logAsk": {
+                "box": "local",
+                "rowId": "local|error|2026-11-25",
+                "level": "error",
+                "day": "2026-11-25",
+                "tries": 0
+              }
+            }
           }
         }
       ]
     },
     {
-      "id": "an open local preview offers Stop preview",
+      "id": "control: a stop of a local app that is not a preview runs nothing",
       "now": 1000,
       "steps": [
         {
           "from": "idle",
-          "event": "FB_ROW_OPENED",
+          "event": "FB_STOP_ASKED",
           "payload": {
-            "rowId": "local|app|preview-std-browse|releases/1"
+            "box": "local",
+            "name": "kflow"
           },
           "entity": {
             "id": "f",
@@ -243,158 +343,7 @@
           },
           "expect": {
             "fired": true,
-            "emits": [
-              {
-                "event": "FB_BOARD_DETAIL",
-                "payload": {
-                  "detail": {
-                    "rowId": "local|app|preview-std-browse|releases/1",
-                    "phase": "ready",
-                    "code": "",
-                    "codeTitle": "",
-                    "errorLines": [],
-                    "error": "",
-                    "items": [
-                      {
-                        "label": "Release",
-                        "tone": "success",
-                        "statusLabel": "releases/1",
-                        "meta": "serving new clients"
-                      },
-                      {
-                        "label": "Memory held",
-                        "tone": "neutral",
-                        "statusLabel": "2 MB",
-                        "meta": "value data of its rows, frames and sessions"
-                      },
-                      {
-                        "label": "Release disk",
-                        "tone": "neutral",
-                        "statusLabel": "1 MB",
-                        "meta": ""
-                      }
-                    ],
-                    "actions": [
-                      {
-                        "action": "stop",
-                        "label": "Stop preview",
-                        "icon": "square",
-                        "danger": true
-                      }
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control: an open app that is not a preview offers no action",
-      "now": 1000,
-      "steps": [
-        {
-          "from": "idle",
-          "event": "FB_ROW_OPENED",
-          "payload": {
-            "rowId": "local|app|kflow|releases/4"
-          },
-          "entity": {
-            "id": "f",
-            "waiting": 0,
-            "boxes": [
-              {
-                "box": "local",
-                "label": "Local box",
-                "report": {
-                  "sampledAt": null,
-                  "machine": {
-                    "memoryTotal": 8589934592,
-                    "memoryUsed": 1,
-                    "memoryPercent": 50,
-                    "cpuPercent": 10,
-                    "load1": 0.5,
-                    "load5": 0.5,
-                    "load15": 0.5,
-                    "uptimeSeconds": 1
-                  },
-                  "disks": [],
-                  "apps": [
-                    {
-                      "name": "preview-std-browse",
-                      "guest": "g1",
-                      "release": "releases/1",
-                      "current": true,
-                      "loading": false,
-                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
-                      "heldBytes": 2097152,
-                      "diskBytes": 1048576
-                    },
-                    {
-                      "name": "kflow",
-                      "guest": "g2",
-                      "release": "releases/4",
-                      "current": true,
-                      "loading": false,
-                      "lastUsedMs": "2026-11-25T07:00:00.000Z",
-                      "heldBytes": 0,
-                      "diskBytes": 0
-                    }
-                  ],
-                  "logs": [
-                    {
-                      "level": "error",
-                      "day": "2026-11-25",
-                      "bytes": 2048
-                    }
-                  ],
-                  "problems": []
-                },
-                "error": ""
-              }
-            ],
-            "fetchedAt": null,
-            "logAsk": null
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "FB_BOARD_DETAIL",
-                "payload": {
-                  "detail": {
-                    "rowId": "local|app|kflow|releases/4",
-                    "phase": "ready",
-                    "code": "",
-                    "codeTitle": "",
-                    "errorLines": [],
-                    "error": "",
-                    "items": [
-                      {
-                        "label": "Release",
-                        "tone": "success",
-                        "statusLabel": "releases/4",
-                        "meta": "serving new clients"
-                      },
-                      {
-                        "label": "Memory held",
-                        "tone": "neutral",
-                        "statusLabel": "0 KB",
-                        "meta": "value data of its rows, frames and sessions"
-                      },
-                      {
-                        "label": "Release disk",
-                        "tone": "neutral",
-                        "statusLabel": "0 KB",
-                        "meta": ""
-                      }
-                    ],
-                    "actions": []
-                  }
-                }
-              }
-            ]
+            "emits": []
           }
         }
       ]
@@ -405,10 +354,10 @@
       "steps": [
         {
           "from": "idle",
-          "event": "FB_ROW_ACTION",
+          "event": "FB_STOP_ASKED",
           "payload": {
-            "rowId": "local|app|preview-std-browse|releases/1",
-            "action": "stop"
+            "box": "local",
+            "name": "preview-std-browse"
           },
           "entity": {
             "id": "f",
@@ -492,10 +441,10 @@
       "steps": [
         {
           "from": "idle",
-          "event": "FB_ROW_ACTION",
+          "event": "FB_STOP_ASKED",
           "payload": {
-            "rowId": "remote|app|preview-x|releases/1",
-            "action": "stop"
+            "box": "remote",
+            "name": "preview-std-browse"
           },
           "entity": {
             "id": "f",
@@ -555,7 +504,8 @@
             "logAsk": null
           },
           "expect": {
-            "fired": false
+            "fired": true,
+            "emits": []
           }
         }
       ]
@@ -724,18 +674,11 @@
             "fired": true,
             "emits": [
               {
-                "event": "FB_BOARD_DETAIL",
+                "event": "FB_VIEW_LOG",
                 "payload": {
-                  "detail": {
-                    "rowId": "local|log|error|2026-11-25",
-                    "phase": "ready",
-                    "items": [],
-                    "code": "line one\nline two",
-                    "codeTitle": "error 2026-11-25 · 2 KB",
-                    "errorLines": [],
-                    "error": "",
-                    "actions": []
-                  }
+                  "phase": "ready",
+                  "text": "line one\nline two",
+                  "error": ""
                 }
               }
             ],
@@ -805,7 +748,7 @@
           "expect": {
             "emits": [
               {
-                "event": "FB_BOARD_LOADING",
+                "event": "FB_VIEW_LOADING",
                 "payload": {}
               }
             ],
@@ -917,6 +860,130 @@
             "neverEmits": [
               "FB_REMOTE_SEND"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the behavior's resolved file is deployed as a preview on the local box",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_PREVIEW_PATH",
+          "payload": {
+            "result": {
+              "path": "/x/ui/core/atoms/std-status-board.lolo",
+              "owner": "@almadar/std"
+            }
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [],
+            "fetchedAt": null,
+            "logAsk": null,
+            "deploying": "std-status-board"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_CLI_RUN",
+                "payload": {
+                  "stage": "preview",
+                  "argv": [
+                    "fleet",
+                    "preview",
+                    "/x/ui/core/atoms/std-status-board.lolo",
+                    "--name",
+                    "std-status-board",
+                    "--target",
+                    "local"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a finished preview deploy answers the board's link for it",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_STOPPED",
+          "payload": {
+            "stage": "preview",
+            "exitCode": 0,
+            "stdout": "ok preview-std-status-board release 1\npreview http://std-status-board.localhost:5065",
+            "stderr": ""
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [],
+            "fetchedAt": null,
+            "logAsk": null,
+            "deploying": "std-status-board"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_PREVIEW_ANSWERED",
+                "payload": {
+                  "ok": true,
+                  "link": "http://std-status-board.localhost:5065",
+                  "error": ""
+                }
+              }
+            ],
+            "entity": {
+              "deploying": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a deploy asked while one runs is refused",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "FB_PREVIEW_ASKED",
+          "payload": {
+            "behavior": "almadar-std/std-browse",
+            "value": {
+              "behavior": "almadar-std/std-browse"
+            }
+          },
+          "entity": {
+            "id": "f",
+            "waiting": 0,
+            "boxes": [],
+            "fetchedAt": null,
+            "logAsk": null,
+            "deploying": "std-status-board"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FB_PREVIEW_ANSWERED",
+                "payload": {
+                  "ok": false,
+                  "link": "",
+                  "error": "a deploy of std-status-board is still running"
+                }
+              }
+            ],
+            "entity": {
+              "deploying": "std-status-board"
+            }
           }
         }
       ]

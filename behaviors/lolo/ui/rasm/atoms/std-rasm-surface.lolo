@@ -139,11 +139,12 @@ orbital RasmSurfaceOrbital {
         (emit RASM_ACCESS { target: ?target, action: ?action })
       SURFACE_MOTION -> ready
         (emit RASM_MOTION { reduced: ?reduced })
-      SURFACE_DIRECTION -> ready
+      SURFACE_DIRECTION -> ready when (!= ?direction @entity.dir)
         (set @entity.dir ?direction)
         (emit RASM_DIRECTION { direction: ?direction })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
+      SURFACE_DIRECTION -> ready when (= ?direction @entity.dir)
       SURFACE_WHEEL -> ready
         (emit RASM_WHEEL { target: ?target, x: ?x, y: ?y, dx: ?dx, dy: ?dy })
       SURFACE_SCROLLED -> ready
@@ -362,11 +363,12 @@ orbital RasmSurfaceOrbital {
         (emit RASM_ACCESS { target: ?target, action: ?action })
       SURFACE_MOTION -> dirty
         (emit RASM_MOTION { reduced: ?reduced })
-      SURFACE_DIRECTION -> dirty
+      SURFACE_DIRECTION -> dirty when (!= ?direction @entity.dir)
         (set @entity.dir ?direction)
         (emit RASM_DIRECTION { direction: ?direction })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
+      SURFACE_DIRECTION -> dirty when (= ?direction @entity.dir)
       SURFACE_WHEEL -> dirty
         (emit RASM_WHEEL { target: ?target, x: ?x, y: ?y, dx: ?dx, dy: ?dy })
       SURFACE_SCROLLED -> dirty
@@ -632,7 +634,7 @@ orbital RasmSurfaceOrbital {
       RASM_DIRECTION -> external {
         direction : "ltr" | "rtl"!
       }
-        @description "The surface's reading direction, announced once before the root is placed."
+        @description "The surface's reading direction, announced when it differs from the one the kit holds: every control starts in ltr, so an ltr page announces none and an rtl page announces it once, before the root is placed."
         @tier "primary"
       RASM_MOTION -> external {
         reduced : boolean!

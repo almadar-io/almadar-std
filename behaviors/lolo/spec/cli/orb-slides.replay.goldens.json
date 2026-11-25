@@ -1,0 +1,329 @@
+{
+ "atom": "cli/atoms/std-orb-slides.lolo",
+ "trait": "OrbSlides",
+ "orbital": "OrbSlidesOrbital",
+ "note": "The command`s own steps. The browser, the wait and the file writer are other atoms with their own goldens; the whole command was run against a live deck (61 frames, every frame checked by eye).",
+ "cases": [
+  {
+   "id": "the three required words start the browser",
+   "steps": [
+    {
+     "event": "SLIDES_ARGS_DONE",
+     "from": "ready",
+     "entity": {
+      "id": "r"
+     },
+     "payload": {
+      "stage": "slides",
+      "flags": {
+       "url": [
+        "http://deck"
+       ],
+       "frames": [
+        "3"
+       ],
+       "out": [
+        "deck.pptx"
+       ]
+      },
+      "positionals": [
+       "export"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "entity": {
+       "url": "http://deck",
+       "frames": 3,
+       "out": "deck.pptx",
+       "width": 1920,
+       "height": 1080
+      },
+      "emits": [
+       {
+        "event": "SLIDES_CHROME_START"
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "SlidesChromeChrome"
+   ],
+   "note": "In a replay there is no browser to start, so the browser atom answers a failure in the same step; the case checks the words were read and the start was asked."
+  },
+  {
+   "id": "control: without --frames the answer is the usage line and nothing starts",
+   "steps": [
+    {
+     "event": "SLIDES_ARGS_DONE",
+     "from": "ready",
+     "entity": {
+      "id": "r"
+     },
+     "payload": {
+      "stage": "slides",
+      "flags": {
+       "url": [
+        "http://deck"
+       ],
+       "out": [
+        "deck.pptx"
+       ]
+      },
+      "positionals": [
+       "export"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SLIDES_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb slides export --url <deck> --frames <n> --out <file.pptx> [--notes <file.json>] [--width <px>] [--height <px>] [--wait <ms>] [--settle <ms>]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_CHROME_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a word other than export is refused with the usage line",
+   "steps": [
+    {
+     "event": "SLIDES_ARGS_DONE",
+     "from": "ready",
+     "entity": {
+      "id": "r"
+     },
+     "payload": {
+      "stage": "slides",
+      "flags": {
+       "url": [
+        "http://deck"
+       ],
+       "frames": [
+        "3"
+       ],
+       "out": [
+        "deck.pptx"
+       ]
+      },
+      "positionals": [
+       "import"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SLIDES_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb slides export --url <deck> --frames <n> --out <file.pptx> [--notes <file.json>] [--width <px>] [--height <px>] [--wait <ms>] [--settle <ms>]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_CHROME_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a picture short of the frame count advances the deck one build",
+   "steps": [
+    {
+     "event": "PAGE_SHOT",
+     "from": "running",
+     "entity": {
+      "id": "r",
+      "url": "http://deck",
+      "out": "deck.pptx",
+      "frames": 2,
+      "width": 1920,
+      "height": 1080,
+      "waitMs": 8000,
+      "settleMs": 1700,
+      "notesPath": "",
+      "notes": [
+       "first note"
+      ],
+      "shots": [],
+      "started": true,
+      "status": 200,
+      "body": ""
+     },
+     "payload": {
+      "key": "slides",
+      "png": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "SLIDES_NEXT"
+       },
+       {
+        "event": "SLIDES_KEY",
+        "payload": {
+         "key": "slides",
+         "keyName": "ArrowRight",
+         "shift": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_PPTX"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the last picture hands every frame with its note to the file writer",
+   "steps": [
+    {
+     "event": "PAGE_SHOT",
+     "from": "running",
+     "entity": {
+      "id": "r",
+      "url": "http://deck",
+      "out": "deck.pptx",
+      "frames": 2,
+      "width": 1920,
+      "height": 1080,
+      "waitMs": 8000,
+      "settleMs": 1700,
+      "notesPath": "",
+      "notes": [
+       "first note"
+      ],
+      "shots": [
+       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      ],
+      "started": true,
+      "status": 200,
+      "body": ""
+     },
+     "payload": {
+      "key": "slides",
+      "png": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "SLIDES_NEXT"
+       },
+       {
+        "event": "SLIDES_PPTX",
+        "payload": {
+         "key": "slides",
+         "slides": [
+          {
+           "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+           "notes": "first note"
+          },
+          {
+           "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+           "notes": ""
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_KEY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure stops the browser before the command answers",
+   "steps": [
+    {
+     "event": "PAGE_BROKE",
+     "from": "running",
+     "entity": {
+      "id": "r",
+      "url": "http://deck",
+      "out": "deck.pptx",
+      "frames": 2,
+      "width": 1920,
+      "height": 1080,
+      "waitMs": 8000,
+      "settleMs": 1700,
+      "notesPath": "",
+      "notes": [
+       "first note"
+      ],
+      "shots": [],
+      "started": true,
+      "status": 200,
+      "body": ""
+     },
+     "payload": {
+      "key": "slides",
+      "error": "the page did not load",
+      "code": "navigation-failed"
+     },
+     "expect": {
+      "state": "stopping",
+      "emits": [
+       {
+        "event": "SLIDES_WAIT",
+        "payload": {
+         "key": "stop",
+         "delayMs": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_ANSWERED"
+      ]
+     }
+    },
+    {
+     "event": "WAITED",
+     "from": "stopping",
+     "payload": {
+      "waitedMs": 1,
+      "key": "stop"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SLIDES_CHROME_STOP"
+       },
+       {
+        "event": "SLIDES_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "navigation-failed: the page did not load"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "SlidesWait",
+    "SlidesChromeChrome"
+   ]
+  }
+ ]
+}

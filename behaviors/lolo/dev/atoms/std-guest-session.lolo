@@ -183,6 +183,9 @@ orbital GuestSessionOrbital {
     guestHeader : GuestHeader? @description "The app header the session answered (everything but its orbitals), the trace sidebar shows it."
     guestTheme : GuestTheme? @description "The theme the open program declares (its app theme: a key or an inline definition); the guest paints inside it, never in the opener's theme."
     guestTraceOpen : boolean @description "Whether the stage shows the trace sidebar." = false
+    guestDeploying : boolean @description "A deploy of the shown behavior is in flight." = false
+    guestDeployLink : string @description "The page the last deploy answered; empty until one succeeds." = ""
+    guestDeployError : string @description "Why the last deploy failed; empty when it did not." = ""
     guestWorkdir : string @description "The folder the live guest runs in; empty while its rows live in its own memory." = ""
     guestEnvironment : [GuestEnvStatus] @description "The environment names the guest holds, whether each is set and its last four characters; never a value." = []
     guestCredentials : [GuestCredentialStatus] @description "The credential slots the guest's program declares, whether each is set and its last four characters; never a value." = []
@@ -1654,6 +1657,16 @@ orbital GuestSessionOrbital {
         @label "Kernel label"
         @description "The label of the kernel switch."
         @tier "presentation"
+      deployButton : boolean = false
+        @label "Deploy button"
+        @description "Show the button that asks the composer to deploy the shown behavior (GUEST_DEPLOY) and, once it answers (GUEST_DEPLOY_ANSWERED), a link to the deployed page. Off unless the composer answers it."
+        @tier "presentation"
+      deployLabel : string = "Deploy to local box"
+        @label "Deploy label"
+        @tier "presentation"
+      deployedLabel : string = "Open deployed"
+        @label "Deployed link label"
+        @tier "presentation"
       signInTitle : string = "Sign in to open this page"
         @label "Sign-in title"
         @description "The title shown in place of a split guest's page that asked its viewer to sign in."
@@ -1731,6 +1744,19 @@ orbital GuestSessionOrbital {
       GUEST_KERNEL_CHOSEN -> idle
         (set @entity.guestKernel (if ?checked lolo native))
         (when (!= @entity.guestHandle "") (emit GUEST_KERNEL_PICK { guest: @entity.guestHandle, kernel: (if ?checked lolo native) }))
+        (emit GUEST_SHOWN {})
+      GUEST_DEPLOY_CHOSEN -> idle when (not @entity.guestDeploying)
+        (set @entity.guestDeploying true)
+        (set @entity.guestDeployLink "")
+        (set @entity.guestDeployError "")
+        (emit GUEST_DEPLOY {})
+        (emit GUEST_SHOWN {})
+      GUEST_DEPLOY_CHOSEN -> idle when @entity.guestDeploying
+      GUEST_DEPLOY_ANSWERED -> idle
+        (set @entity.guestDeploying false)
+        (set @entity.guestDeployLink (if ?ok ?link ""))
+        (set @entity.guestDeployError (if ?ok "" ?error))
+        (if ?ok (notify success (str/concat "Deployed: " ?link)) (notify error (str/concat "Deploy failed: " ?error)))
         (emit GUEST_SHOWN {})
       GUEST_PERSONA_CHOSEN -> idle when (and (!= @entity.guestHandle "") (!= @payload.itemId @entity.guestPersona))
         (emit GUEST_PERSONA_PICK { guest: @entity.guestHandle, persona: @payload.itemId })
@@ -1888,7 +1914,7 @@ orbital GuestSessionOrbital {
       GUEST_SHOWN -> idle
         (render-ui main { type: box, className: (str/concat "flex min-h-0 flex-col " @config.className), children: (array/concat (array/concat (if (and (= @entity.guestError "") (!= @entity.guestHandle "")) (let ((current (default (array/find @entity.guestPersonas (fn p (= @p.id @entity.guestPersona))) (default (array/first @entity.guestPersonas) { id: "", name: "", role: "" }))) (currentRole (default @current.role "")) (currentName (default @current.name ""))) [{ type: stack, direction: horizontal, justify: end, align: center, gap: md, className: "px-4 py-2 border-b border-border", children: (array/concat [
             { type: button, icon: activity, variant: (if @entity.guestTraceOpen primary ghost), size: sm, action: GUEST_TRACE_TOGGLED, aria-label: @config.traceLabel }
-          ] (if @config.integrationsSwitch [{ type: switch, label: @config.integrationsLabel, checked: (= @entity.guestIntegrations live), action: GUEST_INTEGRATIONS_CHOSEN }] []) (if @config.kernelSwitch [{ type: switch, label: @config.kernelLabel, checked: (= @entity.guestKernel lolo), action: GUEST_KERNEL_CHOSEN }] []) (if @entity.guestSignInAsked [{ type: button, icon: log-in, variant: primary, size: sm, label: @config.signInLabel, action: GUEST_SIGN_IN_CHOSEN }] []) (if (= (array/len @entity.guestPersonas) 0) [] [
+          ] (if @config.integrationsSwitch [{ type: switch, label: @config.integrationsLabel, checked: (= @entity.guestIntegrations live), action: GUEST_INTEGRATIONS_CHOSEN }] []) (if @config.kernelSwitch [{ type: switch, label: @config.kernelLabel, checked: (= @entity.guestKernel lolo), action: GUEST_KERNEL_CHOSEN }] []) (if @config.deployButton (array/concat [{ type: button, icon: rocket, variant: secondary, size: sm, label: @config.deployLabel, isLoading: @entity.guestDeploying, disabled: @entity.guestDeploying, action: GUEST_DEPLOY_CHOSEN }] (if (= @entity.guestDeployLink "") [] [{ type: button, icon: external-link, variant: ghost, size: sm, label: @config.deployedLabel, href: @entity.guestDeployLink }])) []) (if @entity.guestSignInAsked [{ type: button, icon: log-in, variant: primary, size: sm, label: @config.signInLabel, action: GUEST_SIGN_IN_CHOSEN }] []) (if (= (array/len @entity.guestPersonas) 0) [] [
             { type: menu, position: bottom-end, trigger: { type: button, variant: ghost, size: sm, rightIcon: chevron-down, children: [{ type: stack, direction: horizontal, align: center, gap: sm, children: [
               { type: icon, name: user-round, size: sm },
               { type: stack, direction: vertical, gap: none, align: start, children: [
@@ -1966,6 +1992,8 @@ orbital GuestSessionOrbital {
         integrations : "mock" | "live"!
       }
         @description "The integrations switch was flipped: the session opens the guest again with live or mocked integrations."
+      GUEST_DEPLOY -> external { }
+        @description "The viewer asked to deploy the shown behavior; the composer answers GUEST_DEPLOY_ANSWERED."
       GUEST_KERNEL_PICK -> external {
         guest : string!
         kernel : "native" | "lolo"!
@@ -2155,6 +2183,10 @@ orbital GuestSessionOrbital {
         checked : boolean!
       }
         @description "The viewer flipped the kernel switch: on is the .lolo kernel, off is native."
+      GUEST_DEPLOY_CHOSEN { }
+        @description "The viewer pressed the deploy button."
+      GUEST_DEPLOY_ANSWERED -> input { ok : boolean!  link : string!  error : string! }
+        @description "The composer's deploy ended: the deployed page's link, or why it failed."
       GUEST_PERSONAS {
         guest : string!
         personas : [GuestPersonaOption]!

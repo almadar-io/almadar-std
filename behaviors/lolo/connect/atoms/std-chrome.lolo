@@ -250,7 +250,7 @@ orbital ChromeOrbital {
         (emit CHROME_UNLOCKED {})
       CHROME_UNLOCKED -> starting when (= @entity.stage "unlock")
         (set @entity.stage "launch")
-        (emit DAEMON_START { argv: (array/concat ["--headless=new" (str/concat "--remote-debugging-port=" @config.port) "--no-first-run" "--no-default-browser-check" "--disable-gpu" (str/concat "--window-size=" @config.windowWidth "," @config.windowHeight) (str/concat "--user-data-dir=" @entity.profilePath) "about:blank"] @config.extraArgs) })
+        (emit DAEMON_START { argv: (array/concat (array/concat ["--headless=new" (str/concat "--remote-debugging-port=" @config.port) "--no-first-run" "--no-default-browser-check"] (if @config.gpu ["--enable-unsafe-webgpu" "--ignore-gpu-blocklist"] ["--disable-gpu"])) (array/concat [(str/concat "--window-size=" @config.windowWidth "," @config.windowHeight) (str/concat "--user-data-dir=" @entity.profilePath) "about:blank"] @config.extraArgs)) })
       CHROME_DAEMON_READY -> starting when (= @entity.stage "launch")
         (set @entity.stage "connect")
         (emit CDP_CONNECT { })
@@ -917,6 +917,10 @@ orbital ChromeOrbital {
         @label "Script directory"
         @description "A directory under the working directory, ending with /, that PAGE_INJECT script paths are relative to. The composer sets it and grants fs read on it."
         @tier "domain"
+      gpu : boolean = false
+        @label "Leave the GPU on"
+        @description "Off, Chrome is launched with --disable-gpu, which is right for reading and measuring pages. On, that argument is replaced by --enable-unsafe-webgpu and --ignore-gpu-blocklist, for a page that draws on a WebGPU or WebGL canvas and would otherwise show nothing in a screenshot."
+        @tier "policy"
       extraArgs : [string] = []
         @label "Extra Chrome arguments"
         @description "Arguments appended to the launch command. Empty by default: --no-sandbox is NOT default, because it drops the browser sandbox, and only a container that cannot create user namespaces (the organism that runs Chrome as root in a container) sets it."

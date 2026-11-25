@@ -283,6 +283,10 @@ orbital DeployHostOrbital {
         @description "How many releases an app deploy leaves per app (the newest ones), and how many docker image tags a runtime deploy leaves (at least 2: the running one and the one before it)."
         @synonyms "retention"
         @tier "domain"
+      pruneBuildCache : boolean = false
+        @label "Clear build cache"
+        @description "After a healthy runtime deploy, also delete docker's whole build cache on the server (docker builder prune -af), so cached layers from earlier builds do not pile up; the next build starts cold."
+        @tier "domain"
       workDir : string = ""
         @label "Work folder"
         @description "The local folder a fleet deploy stages each app in (<workDir>/<app>/release for the server, <workDir>/<app>/client for the web client); a gitignored build folder."
@@ -513,7 +517,7 @@ orbital DeployHostOrbital {
         (set @entity.envApply false)
 
       DH_CURL_DONE -> running when (and (= @payload.stage "#runtime|health") (= @payload.exitCode 0))
-        (emit DH_REMOTE { host: @config.host, stage: "#runtime|prune", cmd: (str/concat "docker images '" @config.image "' --format '{{.Tag}}' | grep -E '^[0-9]+$' | sort -rn | tail -n +" (+ (if (< @config.keep 2) 2 @config.keep) 1) " | while read -r t; do docker rmi '" @config.image ":'\"$t\" >/dev/null || true; done; true") })
+        (emit DH_REMOTE { host: @config.host, stage: "#runtime|prune", cmd: (str/concat "docker images '" @config.image "' --format '{{.Tag}}' | grep -E '^[0-9]+$' | sort -rn | tail -n +" (+ (if (< @config.keep 2) 2 @config.keep) 1) " | while read -r t; do docker rmi '" @config.image ":'\"$t\" >/dev/null || true; done; " (if @config.pruneBuildCache "docker builder prune -af >/dev/null 2>&1; " "") "true") })
       DH_CURL_DONE -> running when (and (= @payload.stage "#runtime|health") (!= @payload.exitCode 0) (!= @entity.prevImage ""))
         (set @entity.reason (default @payload.stderr "health check failed"))
         (emit DH_REMOTE { host: @config.host, stage: "#runtime|undo", cmd: (str/concat "cd '" (str/join (str/split (str/concat @config.root "/stack") "'") "'\\''") "' && { [ ! -d ../central.prev ] || { rm -rf ../central && mv ../central.prev ../central; }; } && " (if (= (array/len (object/keys (default @entity.runtimeEnv {}))) 0) "" "{ [ ! -f .env.prev ] || mv .env.prev .env; } && ") "{ grep -v '^ORB_IMAGE=' .env > .env.next || true; } && echo 'ORB_IMAGE=" @entity.prevImage "' >> .env.next && chmod 600 .env.next && mv .env.next .env && docker compose up -d") })

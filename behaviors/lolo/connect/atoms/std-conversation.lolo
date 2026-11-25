@@ -2,10 +2,11 @@ app std-conversation [
   version: "0.1.0",
   description: "std-conversation — the generic data mechanism of a chat conversation: the persisted message row and the coordinator that writes it. MessagePersistor owns every write to a conversation's messages: DO_CREATE persists a message stamped with the viewer's id and name and announces MESSAGE_SAVED, then MEMBERS_MENTIONED when the message mentions people; DO_DELETE removes a message (MESSAGE_DELETED); DO_PIN persists the pinned flag (MESSAGE_PINNED); DO_REACT persists the reaction set and its display roll-up and announces MESSAGE_REACTED with the reactor's emoji. Each persist failure surfaces as an error notification and its own failure event. The atom renders nothing and never reads: a consumer rebinds MessagePersistor onto its own message entity (the field names here are the contract) and listens its composer, viewer and reactor events into the DO_* inputs. With `stampTime` on, a created message also carries the dispatch's time in `timestamp`, so a conversation can be ordered and timed by it. ReadMarker owns the read state: MARK_READ { channel, channelName?, isDirect? } upserts the signed-in viewer's own ConversationMember row (id `<channel>:<viewer>`) with `lastReadAt` now and `unreadCount` 0 (and, when given, the conversation's name and kind, so a first read creates a complete membership) and announces READ_MARKED, which reaches every open window as a persist; a message is unread for a member when it is newer than their `lastReadAt` and someone else sent it, and read by everyone once every other member's `lastReadAt` has passed it, so unread counts and read receipts are derived from one fact and no write fans out per message. An anonymous viewer marks nothing. DirectMessageOpener: OPEN_DM { id, name } opens the direct message with a person, a conversation whose id is derived from its two people (dm-<lower id>-<higher id>, the same from either side), by upserting both memberships (each named for the other person, isDirect) and announcing DM_OPENED { channel, name, peer } once both are written. MemberAdder: ADD_MEMBER { channel, channelName, id, name } upserts that person's membership (MEMBER_ADDED). TokenMessagePersistor posts for a person with no account who holds a token: POST_BY_TOKEN { token, content, channel, threadRootId, once } asks the composed std-opaque-token resolver for the token's holder (TOKEN_POST_RESOLVE out, TOKEN_POST_HOLDER or TOKEN_POST_NO_HOLDER back), and writes the message with that holder's id and name as its sender and announces TOKEN_POST_SAVED, so a caller can never name the sender; with once the row's id is the thread and the holder, so a holder posts at most one message under a thread (a vote), and a second is refused as repeat (TOKEN_POST_REFUSED). ThreadRollup: REPLY_SAVED { threadRootId } (wire MESSAGE_SAVED) recounts the thread's replies and writes replyCount and repliers (each name once) on its first message (THREAD_UPDATED); a channel message recounts nothing.",
 ]
-type ConversationOutboxData = { content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string }
+type ConversationOutboxData = { content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string, batch : string }
 type ConversationOutboxWrite = { id : string!, pendingId : string!, content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string }
 type ConversationMedia = { name : string!, size : number, type : string, content : string! }
 type ConversationOutboxEntry = { id : string!, data : ConversationOutboxData!, status : "sending" | "sent" | "failed"!, error : string!, waiting : boolean!, media : ConversationMedia?, since : number! }
+type ConversationStaged = { data : ConversationOutboxData!, media : ConversationMedia! }
 
 ;; @capabilities "send messages in order with a status for each (sending, sent, failed) and resend, persist conversation messages, delete a message, pin a message, toggle an emoji reaction, announce mentioned people, mark a conversation read, read receipts, unread counts, open a direct message, add a member, thread reply counts, post as a token holder with no account, one vote per token holder"
 
@@ -27,6 +28,7 @@ orbital ConversationOrbital {
     pendingId : string @description "Unique identifier for a message still being processed." @synonyms "correlationId, transactionId, pendingReference" = ""
     attachment : string @description "URL of the file attached to this message." @synonyms "file, upload, media, attachment url" = ""
     attachmentKind : string @description "What the attachment is, as the sender declared it (for example image or audio); empty when there is none or it was not said." @synonyms "media type, attachment type" = ""
+    batch : string @description "Messages sent together share a batch (several photos picked at once), so a thread can show them as one group; empty for a message sent alone." @synonyms "album, group, sent together" = ""
     pinned : boolean @description "Whether this message is pinned to the top of the conversation." @synonyms "starred, highlighted, saved, important" = false
     ;; One entry per reacting user per emoji, "emoji:userId" — entity fields
     ;; can't hold a map, and [string] is the proven persistent-array shape.
@@ -288,6 +290,7 @@ orbital ConversationOrbital {
     seq : number @description "The last count used in a message id." = 0
     entries : [ConversationOutboxEntry] @description "The viewer's messages still sending, sent but not yet read back, or failed, oldest first." = []
     sending : string @description "The id of the one message in flight; empty when the line is free." = ""
+    uploading : string @description "The staged message whose media is uploading now, empty when none is: staged media uploads one at a time, in order." = ""
     startedMs : number @description "When the message in flight was handed over, in epoch ms." = 0
   }
 
@@ -305,17 +308,37 @@ orbital ConversationOrbital {
         (emit OUTBOX_NEXT {})
       OUTBOX_SEND -> idle when (array/some @entity.entries (fn e (and @e.waiting (= @e.id (default ?id "")))))
         (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id (default ?id "")) (let ((sent : ConversationOutboxEntry { id: @e.id, data: ?data, status: "sending", error: "", waiting: false, media: null, since: 0 })) @sent) @e))))
+        (when (= @entity.uploading (default ?id "")) (set @entity.uploading ""))
         (emit OUTBOX_CHANGED { entries: @entity.entries })
         (emit OUTBOX_NEXT {})
+        (emit OUTBOX_UPLOAD_NEXT {})
       OUTBOX_STAGE -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (set @entity.entries (array/append @entity.entries { id: (str/concat @entity.prefix "-" @entity.seq), data: ?data, status: "sending", error: "", waiting: true, media: ?media, since: (time/epoch-ms @now) }))
+        (set @entity.entries (array/append @entity.entries { id: (str/concat @entity.prefix "-" @entity.seq), data: ?data, status: "sending", error: "", waiting: true, media: ?media, since: (if (= @entity.uploading "") (time/epoch-ms @now) 0) }))
         (emit OUTBOX_CHANGED { entries: @entity.entries })
-        (emit OUTBOX_UPLOAD { id: (str/concat @entity.prefix "-" @entity.seq), media: ?media, data: ?data })
+        (when (= @entity.uploading "")
+          (do
+            (set @entity.uploading (str/concat @entity.prefix "-" @entity.seq))
+            (emit OUTBOX_UPLOAD { id: (str/concat @entity.prefix "-" @entity.seq), media: ?media, data: ?data })))
+      OUTBOX_STAGE_ALL -> idle when (> (array/len ?items) 0)
+        (set @entity.entries (array/concat @entity.entries (array/reduce ?items (let ((none : [ConversationOutboxEntry] [])) @none) (fn acc it (let ((entry : ConversationOutboxEntry { id: (str/concat @entity.prefix "-" (+ (+ @entity.seq (array/len @acc)) 1)), data: @it.data, status: "sending", error: "", waiting: true, media: @it.media, since: 0 })) (array/append @acc @entry))))))
+        (set @entity.seq (+ @entity.seq (array/len ?items)))
+        (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_UPLOAD_NEXT {})
+      OUTBOX_STAGE_ALL -> idle when (= (array/len ?items) 0)
       OUTBOX_UPLOAD_FAILED -> idle when (array/some @entity.entries (fn e (and @e.waiting (= @e.id ?id))))
         (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id ?id) (object/merge @e { status: "failed", error: ?error }) @e))))
+        (when (= @entity.uploading ?id) (set @entity.uploading ""))
         (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_UPLOAD_NEXT {})
       OUTBOX_UPLOAD_FAILED -> idle when (not (array/some @entity.entries (fn e (and @e.waiting (= @e.id ?id)))))
+      OUTBOX_UPLOAD_NEXT -> idle when (and (= @entity.uploading "") (array/some @entity.entries (fn e (and @e.waiting (= @e.status "sending")))))
+        (let ((next (array/find @entity.entries (fn e (and @e.waiting (= @e.status "sending"))))))
+          (do
+            (set @entity.uploading @next.id)
+            (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id @next.id) (object/merge @e { since: (time/epoch-ms @now) }) @e))))
+            (emit OUTBOX_UPLOAD { id: @next.id, media: @next.media, data: @next.data })))
+      OUTBOX_UPLOAD_NEXT -> idle when (not (and (= @entity.uploading "") (array/some @entity.entries (fn e (and @e.waiting (= @e.status "sending"))))))
       OUTBOX_NEXT -> idle when (and (= @entity.sending "") (array/some @entity.entries (fn e (and (= @e.status "sending") (not @e.waiting)))))
         (let ((next (array/find @entity.entries (fn e (and (= @e.status "sending") (not @e.waiting))))))
           (do
@@ -343,10 +366,9 @@ orbital ConversationOrbital {
         (emit OUTBOX_CHANGED { entries: @entity.entries })
         (emit OUTBOX_NEXT {})
       OUTBOX_RETRY -> idle when (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed") @e.waiting)))
-        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id ?id) (object/merge @e { status: "sending", error: "", since: (time/epoch-ms @now) }) @e))))
+        (set @entity.entries (array/map @entity.entries (fn e (if (= @e.id ?id) (object/merge @e { status: "sending", error: "", since: 0 }) @e))))
         (emit OUTBOX_CHANGED { entries: @entity.entries })
-        (let ((staged (array/find @entity.entries (fn e (= @e.id ?id)))))
-          (when (!= @staged null) (emit OUTBOX_UPLOAD { id: @staged.id, media: @staged.media, data: @staged.data })))
+        (emit OUTBOX_UPLOAD_NEXT {})
       OUTBOX_RETRY -> idle when (not (array/some @entity.entries (fn e (and (= @e.id ?id) (!= ?id "") (= @e.status "failed")))))
       OUTBOX_SETTLE -> idle when (array/some @entity.entries (fn e (and (= @e.status "sent") (array/includes ?ids @e.id))))
         (set @entity.entries (array/filter @entity.entries (fn e (not (and (= @e.status "sent") (array/includes ?ids @e.id))))))
@@ -362,9 +384,11 @@ orbital ConversationOrbital {
         (emit OUTBOX_CHANGED { entries: @entity.entries })
         (emit OUTBOX_NEXT {})
       uploadTimeout every 1000ms
-        when (array/some @entity.entries (fn e (and @e.waiting (= @e.status "sending") (> (- (time/epoch-ms @now) @e.since) @config.uploadTimeoutMs))))
-        (set @entity.entries (array/map @entity.entries (fn e (if (and @e.waiting (= @e.status "sending") (> (- (time/epoch-ms @now) @e.since) @config.uploadTimeoutMs)) (object/merge @e { status: "failed", error: "timeout" }) @e))))
+        when (array/some @entity.entries (fn e (and (= @e.id @entity.uploading) (= @e.status "sending") (> (- (time/epoch-ms @now) @e.since) @config.uploadTimeoutMs))))
+        (set @entity.entries (array/map @entity.entries (fn e (if (and (= @e.id @entity.uploading) (= @e.status "sending") (> (- (time/epoch-ms @now) @e.since) @config.uploadTimeoutMs)) (object/merge @e { status: "failed", error: "timeout" }) @e))))
+        (set @entity.uploading "")
         (emit OUTBOX_CHANGED { entries: @entity.entries })
+        (emit OUTBOX_UPLOAD_NEXT {})
     }
 
     config {
@@ -401,6 +425,8 @@ orbital ConversationOrbital {
         @description "Upload this staged message's media: answer with OUTBOX_SEND { data, id } carrying the stored attachment, or OUTBOX_UPLOAD_FAILED { id, error }."
         @synonyms "upload media, store photo, send attachment"
         @tier "domain"
+      OUTBOX_UPLOAD_NEXT { }
+        @description "Internal: start the oldest staged upload when none is uploading, so staged media upload one at a time."
       OUTBOX_NEXT {
       }
         @description "Internal: hand the oldest waiting message over when the line is free."
@@ -424,6 +450,8 @@ orbital ConversationOrbital {
         @description "Show a message with media at once, its attachment a local preview, and ask for the media's upload (OUTBOX_UPLOAD); it is written only after OUTBOX_SEND names it with the uploaded data."
         @synonyms "stage photo, attach media, upload then send"
         @tier "domain"
+      OUTBOX_STAGE_ALL { items : [ConversationStaged]! }
+        @description "Show several messages with media at once (photos picked together), each with its local preview, and upload their media one at a time in order; each is written only after OUTBOX_SEND names it."
       OUTBOX_UPLOAD_FAILED {
         id : string!
         error : string!

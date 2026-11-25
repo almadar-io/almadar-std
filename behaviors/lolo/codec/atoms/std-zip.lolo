@@ -1,0 +1,123 @@
+app std-zip [
+  version: "1.0.0",
+  description: "std-zip — writes a zip archive. ZIP { key, entries: [{ name, data }] } answers ZIP_ANSWERED { key, data, count } with the archive as bytes, the entries in the order given, or ZIP_REFUSED { key, reason } and no archive. Every entry is deflated by the composed std-gzip, one after another: an entry's bytes are the body of its gzip member (the member without its 10-byte header and its 8-byte trailer) and its CRC32 is the one std-gzip answers, so this atom holds no compressor and no checksum of its own. Names are UTF-8 (general-purpose bit 11) and stamped 1980-01-01 00:00, so the same entries always give the same archive. One archive is written at a time: a ZIP that arrives while one is being written is refused busy. Refusals: empty (no entries), name (an empty name, or one longer than 65535 bytes), count (more than 65535 entries), encoder (std-gzip refused an entry, or answered a member whose header is not the plain 10 bytes), size (the archive is past the 4 GiB a zip without the zip64 extension holds), busy. This atom writes; reading an archive is another atom's job."
+]
+
+uses GzipAtom from "std/behaviors/std-gzip"
+
+type ZipEntry = { name : string!, data : bytes! }
+
+orbital ZipOrbital {
+  entity ZipRun [runtime] {
+    id : string!
+    key : string @description "The caller's key for the archive being written." = ""
+    entries : [ZipEntry] @description "The entries of the archive being written." = []
+    cursor : number @description "The entry being deflated." = 0
+    local : [bytes] @description "The local header and body of each entry written so far." = []
+    central : [bytes] @description "The central directory record of each entry written so far." = []
+    offset : number @description "Where the next entry's local header starts." = 0
+  }
+
+  trait Deflate = GzipAtom.traits.Gunzip {
+    listens {
+      Zip.ZIP_ENTRY -> GZIP
+    }
+  }
+
+  trait Zip -> ZipRun [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ZIP -> idle when (= (array/len @payload.entries) 0)
+        (emit ZIP_REFUSED { key: @payload.key, reason: "empty" })
+      ZIP -> idle when (> (array/len @payload.entries) 65535)
+        (emit ZIP_REFUSED { key: @payload.key, reason: "count" })
+      ZIP -> idle when (and (> (array/len @payload.entries) 0) (<= (array/len @payload.entries) 65535) (array/some @payload.entries (fn e (or (= (bytes/length (bytes/from-string @e.name)) 0) (> (bytes/length (bytes/from-string @e.name)) 65535)))))
+        (emit ZIP_REFUSED { key: @payload.key, reason: "name" })
+      ZIP -> packing when (and (> (array/len @payload.entries) 0) (<= (array/len @payload.entries) 65535) (not (array/some @payload.entries (fn e (or (= (bytes/length (bytes/from-string @e.name)) 0) (> (bytes/length (bytes/from-string @e.name)) 65535))))))
+        (set @entity.key @payload.key)
+        (set @entity.entries @payload.entries)
+        (set @entity.cursor 0)
+        (set @entity.local [])
+        (set @entity.central [])
+        (set @entity.offset 0)
+        (emit ZIP_STEP {})
+      ZIP_STEP -> idle
+      ENTRY_PACKED -> idle
+      ENTRY_REFUSED -> idle
+    }
+
+    state packing {
+      INIT -> idle
+      ZIP -> packing
+        (emit ZIP_REFUSED { key: @payload.key, reason: "busy" })
+      ZIP_STEP -> packing when (< @entity.cursor (array/len @entity.entries))
+        (let ((e : ZipEntry (default (array/nth @entity.entries @entity.cursor) { name: "", data: (bytes/from-string "") })))
+          (emit ZIP_ENTRY { data: @e.data }))
+      ZIP_STEP -> idle when (and (>= @entity.cursor (array/len @entity.entries)) (> @entity.offset 4294967295))
+        (emit ZIP_REFUSED { key: @entity.key, reason: "size" })
+      ZIP_STEP -> idle when (and (>= @entity.cursor (array/len @entity.entries)) (<= @entity.offset 4294967295))
+        (let ((directory (bytes/concat @entity.central)) (n (array/len @entity.entries)))
+          (emit ZIP_ANSWERED { key: @entity.key, count: @n, data: (bytes/concat [(bytes/concat @entity.local) @directory (default (bytes/write-uint 101010256 4 "le") (bytes/from-string "")) (default (bytes/write-uint 0 2 "le") (bytes/from-string "")) (default (bytes/write-uint 0 2 "le") (bytes/from-string "")) (default (bytes/write-uint @n 2 "le") (bytes/from-string "")) (default (bytes/write-uint @n 2 "le") (bytes/from-string "")) (default (bytes/write-uint (bytes/length @directory) 4 "le") (bytes/from-string "")) (default (bytes/write-uint @entity.offset 4 "le") (bytes/from-string "")) (default (bytes/write-uint 0 2 "le") (bytes/from-string ""))]) }))
+      ENTRY_PACKED -> idle when (or (< (bytes/length @payload.data) 18) (!= (default (bytes/read-uint @payload.data 0 4 "be") 0) 529205248))
+        (emit ZIP_REFUSED { key: @entity.key, reason: "encoder" })
+      ENTRY_PACKED -> packing when (and (>= (bytes/length @payload.data) 18) (= (default (bytes/read-uint @payload.data 0 4 "be") 0) 529205248))
+        (let ((e : ZipEntry (default (array/nth @entity.entries @entity.cursor) { name: "", data: (bytes/from-string "") })) (body (bytes/slice @payload.data 10 (- (bytes/length @payload.data) 8))))
+          (let ((name (bytes/from-string @e.name)))
+            (let ((fields (bytes/concat [(default (bytes/write-uint 20 2 "le") (bytes/from-string "")) (default (bytes/write-uint 2048 2 "le") (bytes/from-string "")) (default (bytes/write-uint 8 2 "le") (bytes/from-string "")) (default (bytes/write-uint 0 2 "le") (bytes/from-string "")) (default (bytes/write-uint 33 2 "le") (bytes/from-string "")) (default (bytes/write-uint @payload.crc 4 "le") (bytes/from-string "")) (default (bytes/write-uint (bytes/length @body) 4 "le") (bytes/from-string "")) (default (bytes/write-uint @payload.size 4 "le") (bytes/from-string "")) (default (bytes/write-uint (bytes/length @name) 2 "le") (bytes/from-string "")) (default (bytes/write-uint 0 2 "le") (bytes/from-string ""))])))
+              (do
+                (set @entity.local (array/concat @entity.local [(bytes/concat [(default (bytes/write-uint 67324752 4 "le") (bytes/from-string "")) @fields @name @body])]))
+                (set @entity.central (array/concat @entity.central [(bytes/concat [(default (bytes/write-uint 33639248 4 "le") (bytes/from-string "")) (default (bytes/write-uint 20 2 "le") (bytes/from-string "")) @fields (default (bytes/write-uint 0 2 "le") (bytes/from-string "")) (default (bytes/write-uint 0 2 "le") (bytes/from-string "")) (default (bytes/write-uint 0 2 "le") (bytes/from-string "")) (default (bytes/write-uint 0 4 "le") (bytes/from-string "")) (default (bytes/write-uint @entity.offset 4 "le") (bytes/from-string "")) @name])]))
+                (set @entity.offset (+ (+ @entity.offset 30) (+ (bytes/length @name) (bytes/length @body))))
+                (set @entity.cursor (+ @entity.cursor 1))
+                (emit ZIP_STEP {})))))
+      ENTRY_REFUSED -> idle
+        (emit ZIP_REFUSED { key: @entity.key, reason: "encoder" })
+    }
+
+    emits {
+      ZIP_STEP -> internal { }
+      ZIP_ENTRY -> internal {
+        data : bytes!
+      }
+        @description "The next entry's bytes, for std-gzip to deflate."
+      ZIP_ANSWERED -> external {
+        key : string!
+        data : bytes!
+        count : number!
+      }
+        @description "The archive, with its entries in the order given."
+        @tier "primary"
+      ZIP_REFUSED -> external {
+        key : string!
+        reason : string!
+      }
+        @description "No archive was written: empty, name, count, encoder, size or busy."
+        @tier "primary"
+    }
+
+    listens {
+      ZIP -> input {
+        key : string!
+        entries : [ZipEntry]!
+      }
+        @description "Write these named byte values as one zip archive."
+        @synonyms "zip, archive, pack files, compress files"
+      ENTRY_PACKED {
+        data : bytes!
+        size : number!
+        crc : number!
+      }
+        @description "std-gzip's member for the entry being deflated."
+      ENTRY_REFUSED {
+        reason : string!
+      }
+        @description "std-gzip refused the entry being deflated."
+      Deflate.GZIP_ANSWERED -> ENTRY_PACKED
+      Deflate.GZIP_REFUSED -> ENTRY_REFUSED
+    }
+  }
+
+  page boot as ZipOrbitalStart -> Zip, Deflate
+}

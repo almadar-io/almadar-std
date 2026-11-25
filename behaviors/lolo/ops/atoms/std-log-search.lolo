@@ -62,7 +62,7 @@ orbital LogSearchOrbital {
         @label "Fields counted"
         @description "The fields of a line whose values each job counts for the field list."
         @tier "policy"
-      chunksPerStep : number = 40
+      chunksPerStep : number = 4
         @label "Chunks per step"
         @description "Chunks one dispatch reads before the scan pauses for the next resume tick (the kernel caps one cascade's steps)."
         @tier "infra"
@@ -156,15 +156,20 @@ orbital LogSearchOrbital {
               (let ((pieces (str/split @text "\n")))
                 (let ((whole (if ?eof @pieces (array/dropLast @pieces 1)))
                       (level (default (array/nth (str/split (default (array/nth @job.files @job.fileIndex) "") "/") 0) "")))
-                  (let ((parsed (array/map (array/filter @whole (fn l (!= (str/trim @l) ""))) (fn l (json/parse @l LogFileLine)))))
+                  (let ((nonEmpty (array/filter @whole (fn l (!= (str/trim @l) "")))))
+                  (let ((lastAt (default (object/get (default (json/parse (default (array/last @nonEmpty) "") LogFileLine) {}) "time") ""))
+                        (firstAt (default (object/get (default (json/parse (default (array/first @nonEmpty) "") LogFileLine) {}) "time") "")))
+                  (let ((before (and (!= @lastAt "") (< @lastAt @job.from)))
+                        (after (and (!= @firstAt "") (> @firstAt @job.to))))
+                  (let ((parsed (if (or @before @after) [] (array/map @nonEmpty (fn l (json/parse @l LogFileLine))))))
                     (let ((lines (array/map (array/filter @parsed (fn p (and (!= @p null) (>= (default (object/get (default @p {}) "time") "") @job.from) (<= (default (object/get (default @p {}) "time") "") @job.to))))
                             (fn p (let ((f (default @p { severity: "", time: "", namespace: "", message: "", data: {} })))
                               { time: @f.time, level: @level, namespace: @f.namespace, message: @f.message, app: (default (as (default (object/get (default @f.data {}) "app") "") string) ""), release: (default (as (default (object/get (default @f.data {}) "release") "") string) ""), box: @entity.boxName, data: (default @f.data {}) })))))
                       (do
                         (set @entity.chunk @chunk)
-                        (set @entity.carry (if ?eof "" (default (array/last @pieces) "")))
+                        (set @entity.carry (if (or ?eof @after) "" (default (array/last @pieces) "")))
                         (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j { scanned: (+ @job.scanned (array/len @lines)), skipped: (+ @job.skipped (array/count @parsed (fn p (= @p null)))) }) @j))))
-                        (emit LS_MATCH { lines: @lines, eof: ?eof, chunk: @chunk })))))))))
+                        (emit LS_MATCH { lines: @lines, eof: (or ?eof @after), chunk: @chunk }))))))))))))
       LS_MATCH -> ready when (= (array/len ?lines) 0)
         (emit LS_AFTER_MATCH { eof: ?eof, chunk: ?chunk })
       LS_MATCH -> ready when (> (array/len ?lines) 0)
@@ -184,14 +189,14 @@ orbital LogSearchOrbital {
                   (set @entity.jobs (array/map @entity.jobs (fn j (if (= @j.id @entity.running) (object/merge @j {
                     total: (+ @job.total (array/len @hits)),
                     hits: (array/take (array/sort (array/concat @job.hits @hits) "time" "desc") @config.sampleSize),
-                    histogram: (array/map (array/range 0 @config.buckets) (fn i
-                      (+ (default (array/nth @job.histogram @i) 0)
-                        (array/count @hits (fn h (= @i (math/clamp (math/floor (/ (* (- (time/epoch-ms (default (time/parse @h.time) @now)) @fromMs) @config.buckets) @span)) 0 (- @config.buckets 1)))))))),
+                    histogram: (let ((byBucket (array/groupBy @hits (fn h (str/concat (math/clamp (math/floor (/ (* (- (time/epoch-ms (default (time/parse @h.time) @now)) @fromMs) @config.buckets) @span)) 0 (- @config.buckets 1)))))))
+                      (array/map (array/range 0 @config.buckets) (fn i (+ (default (array/nth @job.histogram @i) 0) (array/len (default (object/get @byBucket (str/concat @i)) [])))))),
                     fields: (array/reduce
-                      (array/flatten (array/map @hits (fn h (array/map @config.fieldsTracked (fn f { field: @f, value: (default (as (default (object/get @h @f) "") string) ""), count: 1 })))))
+                      (array/flatten (array/map @config.fieldsTracked (fn f (array/map (object/entries (array/groupBy @hits (fn h (default (as (default (object/get @h @f) "") string) "")))) (fn e
+                        (let ((c : LogFieldCount { field: @f, value: (default (as (array/nth @e 0) string) ""), count: (array/len (default (array/nth @e 1) [])) })) @c))))))
                       @job.fields
                       (fn acc c (if (array/some @acc (fn x (and (= @x.field @c.field) (= @x.value @c.value))))
-                        (array/map @acc (fn x (if (and (= @x.field @c.field) (= @x.value @c.value)) (object/merge @x { count: (+ @x.count 1) }) @x)))
+                        (array/map @acc (fn x (if (and (= @x.field @c.field) (= @x.value @c.value)) (object/merge @x { count: (+ @x.count @c.count) }) @x)))
                         (array/append @acc @c))))
                   }) @j))))
                   (emit LS_AFTER_MATCH { eof: @entity.eof, chunk: @entity.chunk }))))))

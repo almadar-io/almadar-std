@@ -9008,6 +9008,65 @@
      }
     }
    ]
+  },
+  {
+   "id": "with the gpu knob on, Chrome is launched with its GPU left on for a page that draws with WebGPU or WebGL",
+   "note": "Paired with the start case above, whose launch keeps --disable-gpu: the knob changes that one argument and nothing else.",
+   "config": {
+    "gpu": true,
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_PATH_RESOLVED",
+     "from": "starting",
+     "entity": {
+      "id": "t",
+      "stage": "rp-download",
+      "profilePath": "/work/profile"
+     },
+     "payload": {
+      "path": "/work/downloads"
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_START",
+        "payload": {
+         "argv": [
+          "--headless=new",
+          "--remote-debugging-port=9222",
+          "--no-first-run",
+          "--no-default-browser-check",
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--window-size=1280,800",
+          "--user-data-dir=/work/profile",
+          "about:blank"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

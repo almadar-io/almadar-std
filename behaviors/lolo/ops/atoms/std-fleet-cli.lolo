@@ -1,7 +1,9 @@
 app std-fleet-cli [
   version: "1.0.0",
   inbound: ["cli-fleet"],
-  description: "std-fleet-cli — a deploy command over std-deploy-host fleets: `orb <command> deploy [--target <name>] [--only <app>[,<app>…]] [--runtime]`. The apps knob lists every app the command deploys ({ name, program, site, staticDir, env, firestoreDatabase, origins }, std-deploy-host's FleetAppSpec), and the targets knob the places it deploys to ({ name, env, indexes, stackEnv }): a target's env is laid over each app's env (a target name wins), and a target with indexes false deploys no store indexes (an emulator needs none). FLEET_CALLED { rawBody } (the cli hook, `{ argv, cwd }`) parses the words with std-args; a first word other than deploy, an unknown flag, an unknown target or an --only name the apps knob does not list answers the usage or the error (status 400). Otherwise it emits FLEET_DEPLOY { target, apps, only } once, which the composer routes to the std-deploy-host of that target as DEPLOY_FLEET, and answers when that host's FLEET_DONE arrives: one line per app (`ok <app> release <n>` or `failed <app>: <step error>; …`), status 200 when every app is ok, else 500. With --runtime the target's runtime record ({ steps, context, stack }) is built first: FLEET_RUNTIME_BUILD runs its steps as sh -c through std-step-runner (the first step prints the image tag), FLEET_RUNTIME_DEPLOY then starts that image on the target (std-deploy-host DEPLOY_RUNTIME from context, stack and env: CORS_ORIGIN, every app's origins in apps order without duplicates joined with a comma, under the target's stackEnv, which wins on a shared key), and the apps deploy only once FLEET_RUNTIME_UP arrives; a failed step or a runtime that did not come up answers status 500 and deploys no app. A target without a runtime record refuses --runtime (400). The target defaults to the defaultTarget knob. Two more words run previews on a target whose record declares preview ({ orb, stage, origin, server, env, stopSteps }): `preview <file> [--name <name>]` names the preview (--name, else the file name before its first dot; lower-case letters, digits and dashes, else 400), resolves the file and runs `<orb> compose --app-name preview-<name> --resolve <file> [<server>] -o <stage>/preview-<name>.orb` (an atom is wrapped into an app, and the preview record's server program, a std-http-server whose originFromEnv gives the web client its API origin, is composed in when no orbital of the file declares an http page; file and name reach the shell only as arguments), then deploys that program as the app preview-<name> with its web client on the hosting site of the same name and the env of the target, then of the preview record, then FIRESTORE_DATABASE_ID preview-<name> (each preview its own database), and answers the deploy lines plus `preview <origin with {name} replaced>`; `stop <name>` runs the preview record's stopSteps as sh -c with preview-<name> as $1 and answers `stopped preview-<name>`. A target with no preview record refuses both (400). One call at a time: a call while one runs answers status 409."
+  env: ["HOME"],
+  fs: { env HOME: ".almadar/fleet/**": [read] },
+  description: "std-fleet-cli — a deploy command over std-deploy-host fleets: `orb <command> deploy [--target <name>] [--only <app>[,<app>…]] [--runtime]`. The apps knob lists every app the command deploys ({ name, program, site, staticDir, env, firestoreDatabase, origins }, std-deploy-host's FleetAppSpec), and the targets knob the places it deploys to ({ name, env, indexes, stackEnv }): a target's env is laid over each app's env (a target name wins), and a target with indexes false deploys no store indexes (an emulator needs none). FLEET_CALLED { rawBody } (the cli hook, `{ argv, cwd }`) parses the words with std-args; a first word other than deploy, an unknown flag, an unknown target or an --only name the apps knob does not list answers the usage or the error (status 400). Otherwise it emits FLEET_DEPLOY { target, apps, only } once, which the composer routes to the std-deploy-host of that target as DEPLOY_FLEET, and answers when that host's FLEET_DONE arrives: one line per app (`ok <app> release <n>` or `failed <app>: <step error>; …`), status 200 when every app is ok, else 500. With --runtime the target's runtime record ({ steps, context, stack }) is built first: FLEET_RUNTIME_BUILD runs its steps as sh -c through std-step-runner (the first step prints the image tag), FLEET_RUNTIME_DEPLOY then starts that image on the target (std-deploy-host DEPLOY_RUNTIME from context, stack and env: CORS_ORIGIN, every app's origins in apps order without duplicates joined with a comma, under the target's stackEnv, which wins on a shared key), and the apps deploy only once FLEET_RUNTIME_UP arrives; a failed step or a runtime that did not come up answers status 500 and deploys no app. A target's secrets ({ NAME: file }) are read from secretDir under HOME after the build and written with the stack env (a file that cannot be read fails the runtime, status 500); no secret is kept in the manifest. A target without a runtime record refuses --runtime (400). The target defaults to the defaultTarget knob. Two more words run previews on a target whose record declares preview ({ orb, stage, origin, server, env, stopSteps }): `preview <file> [--name <name>]` names the preview (--name, else the file name before its first dot; lower-case letters, digits and dashes, else 400), resolves the file and runs `<orb> compose --app-name preview-<name> --resolve <file> [<server>] -o <stage>/preview-<name>.orb` (an atom is wrapped into an app, and the preview record's server program, a std-http-server whose originFromEnv gives the web client its API origin, is composed in when no orbital of the file declares an http page; file and name reach the shell only as arguments), then deploys that program as the app preview-<name> with its web client on the hosting site of the same name and the env of the target, then of the preview record, then FIRESTORE_DATABASE_ID preview-<name> (each preview its own database), and answers the deploy lines plus `preview <origin with {name} replaced>`; `stop <name>` runs the preview record's stopSteps as sh -c with preview-<name> as $1 and answers `stopped preview-<name>`. A target with no preview record refuses both (400). One call at a time: a call while one runs answers status 409."
 ]
 uses Args from "std/behaviors/std-args"
 
@@ -15,7 +17,9 @@ type FleetCliPage = { protocol : string }
 type FleetCliOrbital = { pages : [FleetCliPage] }
 type FleetCliProgram = { orbitals : [FleetCliOrbital] }
 type FleetCliRead = { program : FleetCliProgram! }
-type FleetCliTarget = { name : string!, env : Map string string, indexes : boolean!, runtime : FleetCliRuntime?, stackEnv : Map string string, preview : FleetCliPreview? }
+type FleetCliTarget = { name : string!, env : Map string string, indexes : boolean!, runtime : FleetCliRuntime?, stackEnv : Map string string, preview : FleetCliPreview?, secrets : Map string string? }
+type FleetCliSecret = { name : string!, file : string! }
+type FleetCliDeploy = { target : string!, contextDir : string!, stackDir : string!, tag : string!, env : Map string string! }
 type FleetCliStep = { scope : string!, args : [string]!, stdin : string!, feed : boolean!, tolerate : boolean!, raw : boolean! }
 type FleetCliResult = { app : string!, version : number!, ok : boolean!, failures : [string]! }
 
@@ -29,6 +33,8 @@ orbital FleetCliOrbital {
     link : string @description "The preview link the call in flight answers with once deployed." = ""
     stopping : string @description "The preview app the stop in flight removes." = ""
     preview : FleetCliPreviewRun? @description "The preview the call in flight composes." = null
+    deploy : FleetCliDeploy? @description "The runtime deploy waiting for its secrets to be read." = null
+    secretsLeft : [FleetCliSecret] @description "The target's secrets not read yet, in order." = []
     cwd : string @description "The working directory of the call in flight; a relative preview file is read from it." = ""
   }
 
@@ -52,6 +58,10 @@ orbital FleetCliOrbital {
         @description "The places the command deploys to by name, each with the env laid over every app's env there, whether store indexes are deployed there and the stackEnv lines written to the runtime stack's .env."
         @synonyms "environments, box, local"
         @tier "domain"
+      secretDir : string = ".almadar/fleet/"
+        @label "Secrets folder"
+        @description "The folder under HOME, ending in /, holding the files a target's secrets name; each file's trimmed text is written into the runtime stack's .env under its name, so no secret is kept in the program."
+        @tier "infra"
       defaultTarget : string = "local"
         @label "Default target"
         @description "The target used when --target is not given."
@@ -133,8 +143,34 @@ orbital FleetCliOrbital {
         (set @entity.stopping "")
       FLEET_RUNTIME_BUILT -> ready when (not (or (str/startsWith @payload.requestId "preview-") (str/startsWith @payload.requestId "stop-")))
         (let ((t (array/find @config.targets (fn x (= @x.name @entity.target)))))
-          (let ((origins (array/unique (array/flatten (array/map @config.apps (fn a (default @a.origins [])))))))
-            (emit FLEET_RUNTIME_DEPLOY { env: (object/merge (if (> (array/len @origins) 0) { CORS_ORIGIN: (str/join @origins ",") } {}) (default (object/get (default @t {}) "stackEnv") {})), target: @entity.target, contextDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "context") ""), stackDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "stack") ""), tag: (str/trim (default (array/first @payload.outputs) "")) })))
+          (let ((origins (array/unique (array/flatten (array/map @config.apps (fn a (default @a.origins []))))))
+                (secrets (array/map (object/entries (default (object/get (default @t {}) "secrets") {})) (fn e { name: (array/nth @e 0), file: (array/nth @e 1) }))))
+            (let ((deploy : FleetCliDeploy { target: @entity.target, contextDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "context") ""), stackDir: (default (object/get (default (object/get (default @t {}) "runtime") {}) "stack") ""), tag: (str/trim (default (array/first @payload.outputs) "")), env: (object/merge (if (> (array/len @origins) 0) { CORS_ORIGIN: (str/join @origins ",") } {}) (default (object/get (default @t {}) "stackEnv") {})) }))
+              (if (= (array/len @secrets) 0)
+                (emit FLEET_RUNTIME_DEPLOY @deploy)
+                (do
+                  (set @entity.deploy @deploy)
+                  (set @entity.secretsLeft @secrets)
+                  (emit FLEET_SECRET_NEXT { left: (array/len @secrets) }))))))
+      FLEET_SECRET_NEXT -> ready when (> (array/len @entity.secretsLeft) 0)
+        (let ((next (default (array/first @entity.secretsLeft) { name: "", file: "" })))
+          (os/read-file { anchor: { env: "HOME" }, path: (str/concat @config.secretDir @next.file) } { key: @next.name emit: { success: FLEET_SECRET_READ, failure: FLEET_SECRET_UNREAD } }))
+      FLEET_SECRET_NEXT -> ready when (= (array/len @entity.secretsLeft) 0)
+        (when (!= @entity.deploy null) (emit FLEET_RUNTIME_DEPLOY (default @entity.deploy { target: "", contextDir: "", stackDir: "", tag: "", env: {} })))
+        (set @entity.deploy null)
+      FLEET_SECRET_READ -> ready
+        (let ((d (default @entity.deploy { target: "", contextDir: "", stackDir: "", tag: "", env: {} })))
+          (do
+            (set @entity.deploy (object/merge @d { env: (object/set @d.env (default ?key "") (str/trim (default (bytes/to-string ?data) ""))) }))
+            (set @entity.secretsLeft (array/filter @entity.secretsLeft (fn x (!= @x.name (default ?key "")))))
+            (emit FLEET_SECRET_NEXT { left: (- (array/len @entity.secretsLeft) 1) })))
+      FLEET_SECRET_UNREAD -> ready
+        (let ((s (array/find @entity.secretsLeft (fn x (= @x.name (default ?key ""))))))
+          (do
+            (set @entity.busy false)
+            (set @entity.deploy null)
+            (set @entity.secretsLeft [])
+            (emit FLEET_ANSWERED { status: 500, body: (str/concat "failed runtime: secret " (default ?key "") " could not be read from " (default (object/get (default @s {}) "file") "") ": " (default ?error "")) })))
       FLEET_RUNTIME_BUILD_FAILED -> ready
         (set @entity.busy false)
         (set @entity.link "")
@@ -159,6 +195,9 @@ orbital FleetCliOrbital {
       FLEET_RUNTIME_BUILD -> external { requestId : string!  steps : [FleetCliStep]!  prefix : [string]!  env : Map string string  rootDir : string!  repoDir : string!  dirFlag : string!  rawInputs : [bytes]! }
         @description "Build the target's runtime context: its runtime steps, each run as sh -c, in order (std-step-runner's STEPS_RUN); the first step prints the image tag."
         @tier "primary"
+      FLEET_SECRET_NEXT -> internal { left : number! }
+        @description "Read the next secret of the runtime deploy, or deploy once none is left."
+        @tier "internal"
       FLEET_RUNTIME_DEPLOY -> external { target : string!  contextDir : string!  stackDir : string!  tag : string!  env : Map string string }
         @description "Start the built runtime on the target; the composer routes it to that target's std-deploy-host as DEPLOY_RUNTIME and its RUNTIME_DEPLOYED back as FLEET_RUNTIME_UP, its RUNTIME_ROLLED_BACK or runtime DEPLOY_FAILED as FLEET_RUNTIME_DOWN."
         @tier "primary"
@@ -199,6 +238,12 @@ orbital FleetCliOrbital {
         @tier "internal"
       FLEET_RUNTIME_BUILD_FAILED { requestId : string!  index : number!  code : string!  stderr : string!  stdout : string! }
         @description "A runtime build step failed (std-step-runner's STEPS_FAILED)."
+        @tier "internal"
+      FLEET_SECRET_READ { data : bytes!, key : string }
+        @description "A secret file read."
+        @tier "internal"
+      FLEET_SECRET_UNREAD { error : string, kind : string, key : string }
+        @description "A secret file could not be read."
         @tier "internal"
       FLEET_RUNTIME_UP { image : string! }
         @description "The target runs the new runtime image."

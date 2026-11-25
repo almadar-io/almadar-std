@@ -1,0 +1,191 @@
+app std-rasm-viewer [
+  version: "0.1.0",
+  description: "std-rasm-viewer — a photo viewer on the Rasm canvas: one picture at a time from a list, shown whole (scaled to fit its placed rect, centred, never cropped), with a counter (\"2 / 5\"), a previous and a next button at the sides and a close button in the top corner. RASM_VIEWER_OPEN { id, urls, index } for its id hands it the pictures and the one to show. A press on next or previous, the arrow keys (RASM_KEYPRESS ArrowRight and ArrowLeft) and a horizontal swipe over the picture (a press released more than `swipe` px to the side) step one picture, stopping at the first and the last; under rtl the buttons, the keys and the swipe are mirrored, so next is always toward the reading end. A press on close emits the configured `closeAction`, for the program to close what holds the viewer (a std-rasm-overlay). The buttons are focusable controls with role and name for assistive technology, and the picture is announced by `alt`. It paints nothing until it has a rect and pictures. Looks are viewer/control/idle (the round buttons, falling back to pressable/secondary/idle) and viewer/count/idle (the counter, falling back to text/body/idle).",
+  locales: [en, ar, sl]
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string? }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmViewerOrbital {
+  entity RasmViewerRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the viewer, null until placed." = null
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced: next is toward its end." = "ltr"
+    urls : [string] @description "The pictures RASM_VIEWER_OPEN handed it, in order." = []
+    index : number @description "The picture shown." = 0
+    pressX : number @description "Where a press on the picture began, for a swipe." = 0
+    pressing : boolean @description "A press on the picture is down." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmViewer -> RasmViewerRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit VIEWER_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit VIEWER_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit VIEWER_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_VIEWER_OPEN -> ready when (= ?id @config.id)
+        (set @entity.urls ?urls)
+        (set @entity.index (math/max 0 (math/min (- (array/len ?urls) 1) ?index)))
+        (set @entity.pressing false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit VIEWER_PAINT { n: @entity.paints })
+      RASM_VIEWER_OPEN -> ready when (!= ?id @config.id)
+      VIEWER_STEP -> ready when (!= (math/max 0 (math/min (- (array/len @entity.urls) 1) (+ @entity.index ?by))) @entity.index)
+        (set @entity.index (math/max 0 (math/min (- (array/len @entity.urls) 1) (+ @entity.index ?by))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit VIEWER_PAINT { n: @entity.paints })
+      VIEWER_STEP -> ready when (= (math/max 0 (math/min (- (array/len @entity.urls) 1) (+ @entity.index ?by))) @entity.index)
+      RASM_POINTER -> ready when (and (= ?kind "up") (= ?id (str/concat @config.id ":next")))
+        (emit VIEWER_STEP { by: 1 })
+      RASM_POINTER -> ready when (and (= ?kind "up") (= ?id (str/concat @config.id ":prev")))
+        (emit VIEWER_STEP { by: -1 })
+      RASM_POINTER -> ready when (and (= ?kind "up") (= ?id (str/concat @config.id ":close")))
+        (emit @config.closeAction { id: @config.id })
+      RASM_POINTER -> ready when (and (= ?kind "down") (= ?id (str/concat @config.id ":photo")))
+        (set @entity.pressing true)
+        (set @entity.pressX ?x)
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.pressing (> (math/abs (- ?x @entity.pressX)) @config.swipe))
+        (set @entity.pressing false)
+        (emit VIEWER_STEP { by: (if (= (< ?x @entity.pressX) (= @entity.dir "ltr")) 1 -1) })
+      RASM_POINTER -> ready when (and (= ?kind "up") @entity.pressing (<= (math/abs (- ?x @entity.pressX)) @config.swipe) (not (or (= ?id (str/concat @config.id ":next")) (= ?id (str/concat @config.id ":prev")) (= ?id (str/concat @config.id ":close")))))
+        (set @entity.pressing false)
+      RASM_POINTER -> ready when (not (or (and (= ?kind "up") (or (= ?id (str/concat @config.id ":next")) (= ?id (str/concat @config.id ":prev")) (= ?id (str/concat @config.id ":close")))) (and (= ?kind "down") (= ?id (str/concat @config.id ":photo"))) (and (= ?kind "up") @entity.pressing)))
+      RASM_ACTIVATE -> ready when (= ?id (str/concat @config.id ":next"))
+        (emit VIEWER_STEP { by: 1 })
+      RASM_ACTIVATE -> ready when (= ?id (str/concat @config.id ":prev"))
+        (emit VIEWER_STEP { by: -1 })
+      RASM_ACTIVATE -> ready when (= ?id (str/concat @config.id ":close"))
+        (emit @config.closeAction { id: @config.id })
+      RASM_ACTIVATE -> ready when (not (or (= ?id (str/concat @config.id ":next")) (= ?id (str/concat @config.id ":prev")) (= ?id (str/concat @config.id ":close"))))
+      RASM_KEYPRESS -> ready when (and (> (array/len @entity.urls) 0) (or (= ?key "ArrowRight") (= ?key "ArrowLeft")))
+        (emit VIEWER_STEP { by: (if (= (= ?key "ArrowRight") (= @entity.dir "ltr")) 1 -1) })
+      RASM_KEYPRESS -> ready when (not (and (> (array/len @entity.urls) 0) (or (= ?key "ArrowRight") (= ?key "ArrowLeft"))))
+      VIEWER_PAINT -> ready when (or (= @entity.rect null) (= (array/len @entity.urls) 0))
+      VIEWER_PAINT -> ready when (and (!= @entity.rect null) (> (array/len @entity.urls) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (ctl (default (object/get @entity.looks "viewer/control/idle" null) (default (object/get @entity.looks "pressable/secondary/idle" null) {}))) (cnt (default (object/get @entity.looks "viewer/count/idle" null) (default (object/get @entity.looks "text/body/idle" null) {}))) (b @config.control) (n (array/len @entity.urls)))
+          (let ((photoH (- @r.h (+ @b @config.gap))) (startX (+ @r.x @config.gap)) (endX (- (+ @r.x @r.w) (+ @b @config.gap))) (midY (+ @r.y (/ (- @r.h (+ @b @config.gap)) 2))))
+            (let ((prevX (if (= @entity.dir "rtl") @endX @startX)) (nextX (if (= @entity.dir "rtl") @startX @endX)) (closeX (if (= @entity.dir "rtl") @startX @endX)) (cy (- @midY (/ @b 2))))
+              (let ((button : [node] (array/flatten (array/map (array/filter [{ key: "prev", x: @prevX, y: @cy, d: (if (= @entity.dir "rtl") "M9 6 L15 12 L9 18" "M15 6 L9 12 L15 18"), on: (> @entity.index 0), order: 1 }, { key: "next", x: @nextX, y: @cy, d: (if (= @entity.dir "rtl") "M15 6 L9 12 L15 18" "M9 6 L15 12 L9 18"), on: (< @entity.index (- @n 1)), order: 2 }, { key: "close", x: @closeX, y: (+ @r.y @config.gap), d: "M7 7 L17 17 M17 7 L7 17", on: true, order: 3 }] (fn c @c.on)) (fn c [{ type: draw-shape, id: (str/concat @config.id ":" @c.key), shape: rect, anchor: "top-left", position: { x: @c.x, y: @c.y, z: (+ @config.z 2) }, width: @b, height: @b, fill: @ctl.fill, stroke: @ctl.stroke, strokeWidth: @ctl.strokeWidth, corners: { radius: [999, 999, 999, 999], kind: "round" }, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":" @c.key ":label"), disabled: false, order: @c.order, focused: false } }, { type: draw-shape, id: (str/concat @config.id ":" @c.key ":icon"), shape: "path", anchor: "top-left", position: { x: (+ @c.x (/ (- @b 24) 2)), y: (+ @c.y (/ (- @b 24) 2)), z: (+ @config.z 3) }, d: @c.d, fill: "rgba(0,0,0,0)", stroke: @ctl.textColor, strokeWidth: 2.5, hit: false }])))))
+                (emit RASM_PAINT {
+                  id: @config.id,
+                  z: @config.z,
+                  texts: [{ id: (str/concat @config.id ":prev:label"), key: @config.prevLabel, x: @prevX, y: @cy, z: (+ @config.z 4), align: "left", baseline: "top", color: "rgba(0,0,0,0)", wrap: false },
+                          { id: (str/concat @config.id ":next:label"), key: @config.nextLabel, x: @nextX, y: @cy, z: (+ @config.z 4), align: "left", baseline: "top", color: "rgba(0,0,0,0)", wrap: false },
+                          { id: (str/concat @config.id ":close:label"), key: @config.closeLabel, x: @closeX, y: (+ @r.y @config.gap), z: (+ @config.z 4), align: "left", baseline: "top", color: "rgba(0,0,0,0)", wrap: false }],
+                  nodes: (array/concat
+                    [{ type: draw-sprite, id: (str/concat @config.id ":photo"), asset: { url: (default (array/nth @entity.urls @entity.index) "") }, fit: "contain", anchor: "top-left", position: { x: @r.x, y: @r.y, z: (+ @config.z 1) }, width: @r.w, height: @photoH, alt: @config.alt, hit: true },
+                     { type: draw-text, id: (str/concat @config.id ":count"), text: (str/concat (+ @entity.index 1) " / " @n), anchor: "top-left", position: { x: (+ @r.x (/ @r.w 2)), y: (+ (+ @r.y @photoH) (+ @config.gap (/ @b 2))), z: (+ @config.z 2) }, align: "center", baseline: "middle", color: @cnt.textColor, font: @cnt.font, wrap: false, hit: false }]
+                    @button)
+                })))))
+    }
+
+    emits {
+      VIEWER_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect, looks, pictures and the one shown."
+        @tier "internal"
+      VIEWER_STEP -> internal {
+        by : number!
+      }
+        @description "Show the picture `by` places on, kept between the first and the last."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The picture, the counter and the buttons for the surface to collect."
+        @tier "primary"
+      @config.closeAction -> external {
+        id : string!
+      }
+        @description "The close button was pressed: the viewer's id, for the program to close what holds it."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: next is toward its end."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the viewer's rect when it is placed."
+      RASM_VIEWER_OPEN { id : string!  urls : [string]!  index : number! }
+        @description "Show these pictures, starting at `index`, in the viewer `id` names."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A press on a button steps or closes; a press on the picture released far enough to the side swipes."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of a focused button."
+      RASM_KEYPRESS { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "The arrow keys step one picture."
+    }
+
+    config {
+      id : string = "viewer"
+        @label "Id"
+        @description "The viewer's RASM_PLACE key, paint id and the id RASM_VIEWER_OPEN names."
+        @tier "presentation"
+      z : number = 30
+        @label "Z"
+        @description "Paint order on the surface; the picture and the buttons paint above."
+        @tier "presentation"
+      control : number = 48
+        @label "Button size"
+        @description "The diameter in px of the previous, next and close buttons, at least the 44 px touch target."
+        @tier "presentation"
+      gap : number = 12
+        @label "Gap"
+        @description "Space in px between the buttons and the viewer's edges, and above the counter."
+        @tier "presentation"
+      swipe : number = 40
+        @label "Swipe distance"
+        @description "How far in px a press on the picture must travel to the side to step one picture."
+        @tier "presentation"
+      closeAction : event = VIEWER_CLOSED
+        @label "Close event"
+        @description "What the close button emits, for the program to close what holds the viewer."
+        @tier "domain"
+      prevLabel : MessageKey = "viewer.prev"
+        @label "Previous label"
+        @description "What assistive technology announces for the previous button."
+        @tier "domain"
+      nextLabel : MessageKey = "viewer.next"
+        @label "Next label"
+        @description "What assistive technology announces for the next button."
+        @tier "domain"
+      closeLabel : MessageKey = "viewer.close"
+        @label "Close label"
+        @description "What assistive technology announces for the close button."
+        @tier "domain"
+      alt : string = ""
+        @label "Picture description"
+        @description "What assistive technology announces for the picture; empty marks it decorative."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmViewerStart -> RasmViewer
+}

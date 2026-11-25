@@ -1,0 +1,113 @@
+{
+ "atom": "codec/atoms/std-pptx.lolo",
+ "trait": "Pptx",
+ "source": "A two-slide file from this atom was checked with the system unzip (no errors) and rendered by macOS Quick Look; a 61-slide export opened the same way.",
+ "note": "image is standard base64 of a PNG. Archive and Deflate are the composed std-zip and std-gzip, run for real.",
+ "cases": [
+  {
+   "id": "two pictures with notes become one presentation of two slides",
+   "defaults": [
+    "Archive",
+    "Deflate"
+   ],
+   "steps": [
+    {
+     "event": "PPTX",
+     "from": "idle",
+     "payload": {
+      "key": "k",
+      "slides": [
+       {
+        "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+        "notes": "First & <second>\nline two"
+       },
+       {
+        "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+        "notes": ""
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PPTX_PACK"
+       },
+       {
+        "event": "PPTX_ANSWERED",
+        "payload": {
+         "key": "k",
+         "slides": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "PPTX_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no slides is refused empty and nothing is packed",
+   "defaults": [
+    "Archive",
+    "Deflate"
+   ],
+   "steps": [
+    {
+     "event": "PPTX",
+     "from": "idle",
+     "payload": {
+      "key": "k",
+      "slides": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PPTX_REFUSED",
+        "payload": {
+         "key": "k",
+         "reason": "empty"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PPTX_PACK",
+       "PPTX_ANSWERED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refusal of the archive writer is passed on with its reason",
+   "steps": [
+    {
+     "event": "PACK_REFUSED",
+     "from": "idle",
+     "payload": {
+      "key": "k",
+      "reason": "busy"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PPTX_REFUSED",
+        "payload": {
+         "key": "k",
+         "reason": "busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PPTX_ANSWERED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -2440,6 +2440,321 @@
           }
         }
       ]
+    },
+    {
+      "id": "a target with secrets reads each secret file before the runtime deploys",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb",
+            "origins": []
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": "",
+            "origins": []
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            },
+            "secrets": {
+              "ORB_FLEET_KEY": "remote.key"
+            },
+            "stackEnv": {
+              "ALMADAR_LOG_DIR": "/srv/orb/logs"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_BUILT",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box"
+          },
+          "payload": {
+            "requestId": "runtime-box",
+            "outputs": [
+              "20261125\n"
+            ],
+            "rawOuts": [
+              "",
+              ""
+            ],
+            "codes": [
+              0
+            ],
+            "failures": []
+          },
+          "expect": {
+            "neverEmits": [
+              "FLEET_RUNTIME_DEPLOY"
+            ],
+            "entity": {
+              "deploy": {
+                "target": "box",
+                "contextDir": "/w/ctx",
+                "stackDir": "/w/stack",
+                "tag": "20261125",
+                "env": {
+                  "ALMADAR_LOG_DIR": "/srv/orb/logs"
+                }
+              },
+              "secretsLeft": [
+                {
+                  "name": "ORB_FLEET_KEY",
+                  "file": "remote.key"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "note": "With no host the os/read-file fails inside the step; what is pinned is that nothing deploys before the secrets are read."
+    },
+    {
+      "id": "a read secret joins the runtime env, trimmed, and the runtime deploys",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb",
+            "origins": []
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": "",
+            "origins": []
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            },
+            "secrets": {
+              "ORB_FLEET_KEY": "remote.key"
+            },
+            "stackEnv": {
+              "ALMADAR_LOG_DIR": "/srv/orb/logs"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_SECRET_READ",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "deploy": {
+              "target": "box",
+              "contextDir": "/w/ctx",
+              "stackDir": "/w/stack",
+              "tag": "t1",
+              "env": {
+                "ALMADAR_LOG_DIR": "/srv/orb/logs"
+              }
+            },
+            "secretsLeft": [
+              {
+                "name": "ORB_FLEET_KEY",
+                "file": "remote.key"
+              }
+            ]
+          },
+          "payload": {
+            "data": "YWJjMTIzCg==",
+            "key": "ORB_FLEET_KEY"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_RUNTIME_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "contextDir": "/w/ctx",
+                  "stackDir": "/w/stack",
+                  "tag": "t1",
+                  "env": {
+                    "ALMADAR_LOG_DIR": "/srv/orb/logs",
+                    "ORB_FLEET_KEY": "abc123"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a secret that cannot be read fails the deploy naming it",
+      "config": {
+        "apps": [
+          {
+            "name": "shop",
+            "program": "p/shop.lolo",
+            "site": "shop-site",
+            "staticDir": "",
+            "env": {
+              "FIRESTORE_DATABASE_ID": "shopdb",
+              "X": "1"
+            },
+            "firestoreDatabase": "shopdb",
+            "origins": []
+          },
+          {
+            "name": "blog",
+            "program": "p/blog.lolo",
+            "site": "",
+            "staticDir": "",
+            "env": {},
+            "firestoreDatabase": "",
+            "origins": []
+          }
+        ],
+        "targets": [
+          {
+            "name": "box",
+            "env": {},
+            "indexes": true,
+            "runtime": {
+              "steps": [
+                "date +%Y",
+                "echo built"
+              ],
+              "context": "/w/ctx",
+              "stack": "/w/stack"
+            },
+            "secrets": {
+              "ORB_FLEET_KEY": "remote.key"
+            },
+            "stackEnv": {
+              "ALMADAR_LOG_DIR": "/srv/orb/logs"
+            }
+          },
+          {
+            "name": "local",
+            "env": {
+              "FIRESTORE_AUTH": "emulator",
+              "FIRESTORE_DATABASE_ID": "(default)"
+            },
+            "indexes": false
+          }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_SECRET_UNREAD",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "deploy": {
+              "target": "box",
+              "contextDir": "/w/ctx",
+              "stackDir": "/w/stack",
+              "tag": "t1",
+              "env": {}
+            },
+            "secretsLeft": [
+              {
+                "name": "ORB_FLEET_KEY",
+                "file": "remote.key"
+              }
+            ]
+          },
+          "payload": {
+            "error": "not found",
+            "kind": "not-found",
+            "key": "ORB_FLEET_KEY"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "failed runtime: secret ORB_FLEET_KEY could not be read from remote.key: not found"
+                }
+              }
+            ],
+            "neverEmits": [
+              "FLEET_RUNTIME_DEPLOY"
+            ],
+            "entity": {
+              "busy": false
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -48,7 +48,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -132,7 +133,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -218,7 +220,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -304,7 +307,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -420,7 +424,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -514,7 +519,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -600,7 +606,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -622,7 +629,8 @@
                   "loading": false,
                   "lastUsedMs": "1970-01-01T00:00:00.500Z",
                   "heldBytes": 0,
-                  "diskBytes": 0
+                  "diskBytes": 0,
+                  "loaded": true
                 }
               ],
               "logs": [],
@@ -662,7 +670,8 @@
                     "loading": false,
                     "lastUsedMs": "1970-01-01T00:00:00.500Z",
                     "heldBytes": 0,
-                    "diskBytes": 100
+                    "diskBytes": 100,
+                    "loaded": true
                   }
                 ],
                 "logs": [],
@@ -720,7 +729,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -824,7 +834,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -846,7 +857,8 @@
                   "loading": true,
                   "lastUsedMs": "1970-01-01T00:00:00.500Z",
                   "heldBytes": 0,
-                  "diskBytes": 0
+                  "diskBytes": 0,
+                  "loaded": true
                 }
               ],
               "logs": [],
@@ -914,7 +926,8 @@
                 "loading": false,
                 "lastUsedMs": "1970-01-01T00:00:00.500Z",
                 "heldBytes": 7,
-                "diskBytes": 9
+                "diskBytes": 9,
+                "loaded": true
               }
             ],
             "logs": [
@@ -995,6 +1008,124 @@
           }
         }
       ]
+    },
+    {
+      "id": "an app deployed but not loaded is listed idle with its highest release",
+      "now": 2000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "HOST_STAT_READ",
+          "payload": {
+            "kind": "file",
+            "size": 100
+          },
+          "entity": {
+            "id": "r",
+            "sampling": true,
+            "sampledAt": "1970-01-01T00:00:01.000Z",
+            "machine": {
+              "memoryTotal": 8,
+              "memoryUsed": 4,
+              "memoryPercent": 50,
+              "cpuPercent": 10,
+              "load1": 1,
+              "load5": 1,
+              "load15": 1,
+              "uptimeSeconds": 60
+            },
+            "disks": [
+              {
+                "path": "/",
+                "total": 100,
+                "used": 40,
+                "available": 60,
+                "usedPercent": 40
+              }
+            ],
+            "apps": [
+              {
+                "name": "a",
+                "guest": "g1",
+                "release": "releases/3",
+                "current": true,
+                "loading": false,
+                "lastUsedMs": "1970-01-01T00:00:00.500Z",
+                "heldBytes": 7,
+                "diskBytes": 9,
+                "loaded": true
+              }
+            ],
+            "logs": [
+              {
+                "level": "error",
+                "day": "2026-11-25",
+                "bytes": 12
+              }
+            ],
+            "problems": [],
+            "next": {
+              "disks": [],
+              "apps": [],
+              "logs": [],
+              "problems": [],
+              "files": [
+                {
+                  "root": "apps",
+                  "rel": "friday/releases/7/app.orb"
+                },
+                {
+                  "root": "apps",
+                  "rel": "friday/releases/9/app.orb"
+                }
+              ]
+            },
+            "index": 0,
+            "logTexts": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HOST_STAT_NEXT",
+                "payload": {}
+              }
+            ],
+            "entity": {
+              "next": {
+                "disks": [],
+                "apps": [
+                  {
+                    "name": "friday",
+                    "guest": "",
+                    "release": "releases/7",
+                    "current": true,
+                    "loading": false,
+                    "lastUsedMs": null,
+                    "heldBytes": 0,
+                    "diskBytes": 100,
+                    "loaded": false
+                  }
+                ],
+                "logs": [],
+                "problems": [],
+                "files": [
+                  {
+                    "root": "apps",
+                    "rel": "friday/releases/7/app.orb"
+                  },
+                  {
+                    "root": "apps",
+                    "rel": "friday/releases/9/app.orb"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "note": "Only the first file folds before the no-host cascade; the idle row is what is pinned."
     }
   ]
 }

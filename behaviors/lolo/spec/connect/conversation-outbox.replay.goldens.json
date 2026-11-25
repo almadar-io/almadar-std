@@ -1515,7 +1515,7 @@
             "type": "image/png",
             "content": "data:image/png;base64,AAAA"
            },
-           "since": 1700000000000
+           "since": 0
           }
          ]
         }
@@ -1687,6 +1687,506 @@
     }
    ],
    "now": 1700000000000
+  },
+  {
+   "id": "a-second-staged-photo-waits-while-the-first-uploads",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 1,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "status": "sending",
+      "error": "",
+      "waiting": true,
+      "media": {
+       "name": "p1.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      },
+      "since": 1700000000000
+     }
+    ],
+    "sending": "",
+    "startedMs": 0,
+    "uploading": "mP-1"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_STAGE",
+     "payload": {
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "media": {
+       "name": "p2.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "OUTBOX_UPLOAD",
+       "OUTBOX_WRITE"
+      ],
+      "entity": {
+       "seq": 2,
+       "uploading": "mP-1"
+      }
+     }
+    }
+   ],
+   "now": 1700000005000
+  },
+  {
+   "id": "the-next-staged-photo-uploads-once-the-first-is-sent",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 2,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "status": "sending",
+      "error": "",
+      "waiting": true,
+      "media": {
+       "name": "p1.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      },
+      "since": 1700000000000
+     },
+     {
+      "id": "mP-2",
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "status": "sending",
+      "error": "",
+      "waiting": true,
+      "media": {
+       "name": "p2.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      },
+      "since": 0
+     }
+    ],
+    "sending": "",
+    "startedMs": 0,
+    "uploading": "mP-1"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_SEND",
+     "payload": {
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "https://x.test/s3/media/photos/a",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "id": "mP-1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "OUTBOX_UPLOAD",
+        "payload": {
+         "id": "mP-2",
+         "media": {
+          "name": "p2.png",
+          "size": 3,
+          "type": "image/png",
+          "content": "data:image/png;base64,AAAA"
+         }
+        }
+       }
+      ],
+      "entity": {
+       "uploading": "mP-2"
+      }
+     }
+    }
+   ],
+   "now": 1700000005000
+  },
+  {
+   "id": "the-next-staged-photo-uploads-once-the-first-fails",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 2,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "status": "sending",
+      "error": "",
+      "waiting": true,
+      "media": {
+       "name": "p1.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      },
+      "since": 1700000000000
+     },
+     {
+      "id": "mP-2",
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "status": "sending",
+      "error": "",
+      "waiting": true,
+      "media": {
+       "name": "p2.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      },
+      "since": 0
+     }
+    ],
+    "sending": "",
+    "startedMs": 0,
+    "uploading": "mP-1"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_UPLOAD_FAILED",
+     "payload": {
+      "id": "mP-1",
+      "error": "the store refused"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "OUTBOX_UPLOAD",
+        "payload": {
+         "id": "mP-2",
+         "media": {
+          "name": "p2.png",
+          "size": 3,
+          "type": "image/png",
+          "content": "data:image/png;base64,AAAA"
+         }
+        }
+       }
+      ],
+      "entity": {
+       "uploading": "mP-2"
+      }
+     }
+    }
+   ],
+   "now": 1700000005000
+  },
+  {
+   "id": "control-a-retry-while-another-photo-uploads-waits-its-turn",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 2,
+    "entries": [
+     {
+      "id": "mP-1",
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "status": "failed",
+      "error": "the store refused",
+      "waiting": true,
+      "media": {
+       "name": "p1.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      },
+      "since": 1700000000000
+     },
+     {
+      "id": "mP-2",
+      "data": {
+       "content": "",
+       "channel": "family",
+       "attachment": "data:image/png;base64,AAAA",
+       "attachmentKind": "image",
+       "mentions": [],
+       "linkKind": "",
+       "linkId": "",
+       "linkLabel": "",
+       "linkHref": "",
+       "batch": "u1-7"
+      },
+      "status": "sending",
+      "error": "",
+      "waiting": true,
+      "media": {
+       "name": "p2.png",
+       "size": 3,
+       "type": "image/png",
+       "content": "data:image/png;base64,AAAA"
+      },
+      "since": 1700000000000
+     }
+    ],
+    "sending": "",
+    "startedMs": 0,
+    "uploading": "mP-2"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_RETRY",
+     "payload": {
+      "id": "mP-1"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "OUTBOX_UPLOAD"
+      ],
+      "entity": {
+       "uploading": "mP-2"
+      }
+     }
+    }
+   ],
+   "now": 1700000005000
+  },
+  {
+   "id": "photos-staged-together-all-show-at-once-and-upload-in-order",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 0,
+    "entries": [],
+    "sending": "",
+    "startedMs": 0,
+    "uploading": ""
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_STAGE_ALL",
+     "payload": {
+      "items": [
+       {
+        "data": {
+         "content": "",
+         "channel": "family",
+         "attachment": "data:image/png;base64,AAAA",
+         "attachmentKind": "image",
+         "mentions": [],
+         "linkKind": "",
+         "linkId": "",
+         "linkLabel": "",
+         "linkHref": "",
+         "batch": "u1-7"
+        },
+        "media": {
+         "name": "p1.png",
+         "size": 3,
+         "type": "image/png",
+         "content": "data:image/png;base64,AAAA"
+        }
+       },
+       {
+        "data": {
+         "content": "",
+         "channel": "family",
+         "attachment": "data:image/png;base64,AAAA",
+         "attachmentKind": "image",
+         "mentions": [],
+         "linkKind": "",
+         "linkId": "",
+         "linkLabel": "",
+         "linkHref": "",
+         "batch": "u1-7"
+        },
+        "media": {
+         "name": "p2.png",
+         "size": 3,
+         "type": "image/png",
+         "content": "data:image/png;base64,AAAA"
+        }
+       },
+       {
+        "data": {
+         "content": "",
+         "channel": "family",
+         "attachment": "data:image/png;base64,AAAA",
+         "attachmentKind": "image",
+         "mentions": [],
+         "linkKind": "",
+         "linkId": "",
+         "linkLabel": "",
+         "linkHref": "",
+         "batch": "u1-7"
+        },
+        "media": {
+         "name": "p3.png",
+         "size": 3,
+         "type": "image/png",
+         "content": "data:image/png;base64,AAAA"
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "OUTBOX_UPLOAD",
+        "payload": {
+         "id": "mP-1",
+         "media": {
+          "name": "p1.png",
+          "size": 3,
+          "type": "image/png",
+          "content": "data:image/png;base64,AAAA"
+         }
+        }
+       }
+      ],
+      "emitCounts": {
+       "OUTBOX_UPLOAD": 1
+      },
+      "neverEmits": [
+       "OUTBOX_WRITE"
+      ],
+      "entity": {
+       "seq": 3,
+       "uploading": "mP-1"
+      }
+     }
+    }
+   ],
+   "now": 1700000005000
+  },
+  {
+   "id": "control-staging-nothing-changes-nothing",
+   "entity": {
+    "id": "x",
+    "prefix": "mP",
+    "seq": 0,
+    "entries": [],
+    "sending": "",
+    "startedMs": 0,
+    "uploading": ""
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "OUTBOX_STAGE_ALL",
+     "payload": {
+      "items": []
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "OUTBOX_UPLOAD",
+       "OUTBOX_CHANGED"
+      ],
+      "entity": {
+       "seq": 0,
+       "uploading": ""
+      }
+     }
+    }
+   ],
+   "now": 1700000005000
   }
  ]
 }

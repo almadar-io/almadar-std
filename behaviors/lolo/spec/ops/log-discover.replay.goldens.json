@@ -1,0 +1,202 @@
+{
+  "atom": "ops/atoms/std-log-discover.lolo",
+  "trait": "LogDiscover",
+  "note": "Each poll round folds every box's hits so far; the search ends when every box is done or failed.",
+  "cases": [
+    {
+      "id": "a round with a box still searching shows the hits so far and polls again",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "LD_ROUND_DONE",
+          "payload": {
+            "round": 3
+          },
+          "entity": {
+            "id": "d",
+            "query": "true",
+            "preset": "1h",
+            "levels": [
+              "error"
+            ],
+            "append": false,
+            "from": "2026-11-25T10:00:00.000Z",
+            "to": "2026-11-25T11:00:00.000Z",
+            "boxes": [
+              {
+                "box": "local",
+                "label": "local",
+                "job": "j-local",
+                "status": "done",
+                "error": "",
+                "scanned": 10,
+                "total": 1,
+                "hits": [
+                  {
+                    "time": "2026-11-25T10:30:00.000Z",
+                    "level": "error",
+                    "namespace": "ns",
+                    "message": "one",
+                    "app": "a",
+                    "release": "r",
+                    "box": "local",
+                    "data": {}
+                  }
+                ],
+                "histogram": [
+                  1
+                ],
+                "fields": []
+              },
+              {
+                "box": "remote",
+                "label": "remote",
+                "job": "j-remote",
+                "status": "running",
+                "error": "",
+                "scanned": 10,
+                "total": 0,
+                "hits": [],
+                "histogram": [
+                  0
+                ],
+                "fields": []
+              }
+            ],
+            "index": 2,
+            "round": 3,
+            "phase": "polling",
+            "tail": false,
+            "hits": [],
+            "histogram": [],
+            "fields": [],
+            "total": 0
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LD_SHOW_DONE",
+                "payload": {
+                  "running": true,
+                  "total": 1
+                }
+              },
+              {
+                "event": "LD_WAIT",
+                "payload": {
+                  "delayMs": 1500
+                }
+              }
+            ],
+            "entity": {
+              "phase": "polling",
+              "total": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a round with every box done ends the search",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "idle",
+          "event": "LD_ROUND_DONE",
+          "payload": {
+            "round": 3
+          },
+          "entity": {
+            "id": "d",
+            "query": "true",
+            "preset": "1h",
+            "levels": [
+              "error"
+            ],
+            "append": false,
+            "from": "2026-11-25T10:00:00.000Z",
+            "to": "2026-11-25T11:00:00.000Z",
+            "boxes": [
+              {
+                "box": "local",
+                "label": "local",
+                "job": "j-local",
+                "status": "done",
+                "error": "",
+                "scanned": 10,
+                "total": 1,
+                "hits": [
+                  {
+                    "time": "2026-11-25T10:30:00.000Z",
+                    "level": "error",
+                    "namespace": "ns",
+                    "message": "one",
+                    "app": "a",
+                    "release": "r",
+                    "box": "local",
+                    "data": {}
+                  }
+                ],
+                "histogram": [
+                  1
+                ],
+                "fields": []
+              },
+              {
+                "box": "remote",
+                "label": "remote",
+                "job": "j-remote",
+                "status": "done",
+                "error": "",
+                "scanned": 10,
+                "total": 1,
+                "hits": [
+                  {
+                    "time": "2026-11-25T10:40:00.000Z",
+                    "level": "error",
+                    "namespace": "ns",
+                    "message": "two",
+                    "app": "a",
+                    "release": "r",
+                    "box": "remote",
+                    "data": {}
+                  }
+                ],
+                "histogram": [
+                  1
+                ],
+                "fields": []
+              }
+            ],
+            "index": 2,
+            "round": 3,
+            "phase": "polling",
+            "tail": false,
+            "hits": [],
+            "histogram": [],
+            "fields": [],
+            "total": 0
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LD_SHOW_DONE",
+                "payload": {
+                  "running": false,
+                  "total": 2
+                }
+              }
+            ],
+            "entity": {
+              "phase": "done",
+              "total": 2
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
