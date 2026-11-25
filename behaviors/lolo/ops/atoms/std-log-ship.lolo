@@ -1,0 +1,366 @@
+app std-log-ship [
+  version: "1.0.0",
+  fs: { "/srv/orb/logs/**": [read, write, create] },
+  env: ["ORB_BOX", "LOGS_S3_HOST", "LOGS_S3_REGION", "LOGS_S3_ACCESS_KEY_ID", "LOGS_S3_PUBLIC_URL"],
+  net: { env LOGS_S3_HOST, 443: [tcp] },
+  description: "std-log-ship — copies a folder of daily log files to S3-compatible storage through std-storage, piece by piece, and keeps the copies to a number of days. The folder (the dir knob, ending in /) holds one subfolder per level with one <YYYY-MM-DD>.jsonl per UTC day, the layout the orb's ALMADAR_LOG_DIR writer keeps. At INIT, then every ten minutes, it globs <dir>*/*.jsonl and, for each file, reads what was written since its last piece (at most pieceBytes at a time), gzips it and uploads it as <prefix><box>/<level>/<day>/<offset, 15 digits>.jsonl.gz, so the pieces of a day concatenated in key order are its file byte for byte. How far each file was shipped is kept in <dir><stateFile> as { <level>/<day>.jsonl: bytes shipped }, written after every piece, so a restart resumes where it stopped; a failed upload ends the pass and the next pass retries from there. Once a UTC day, after a pass, it lists <prefix><box>/ and deletes every piece whose day is keepDays or more days before today. The box name is the ORB_BOX environment variable. The bucket is StorageClient's bucket knob, which the composer sets; the store's host, region and access key id are the LOGS_S3_HOST, LOGS_S3_REGION and LOGS_S3_ACCESS_KEY_ID environment variables and its secret the LOGS_S3_SECRET_ACCESS_KEY credential, names of its own so no hosted app shares them. Subject-agnostic: it knows nothing of what writes the files. A composer keeps each local file until it is shipped (std-log-retention keeping at least two days)."
+]
+;; @capabilities "ship log files to object storage, log archive, copy daily logs to S3, expire archived logs"
+
+type HttpHeader = { name : string!, value : string! }
+type StorageFile = { name : string, size : number, type : string, content : string }
+type StorageItem = { id : string, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
+type StorageBatch = { files : [StorageFile]!, idx : number!, acl : string!, maxSize : number!, bucket : string!, items : [StorageItem]! }
+type StorageKey = { key : string!, size : number!, lastModified : number! }
+type LogShipped = Map string number
+type LogShipBytes = bytes
+
+orbital LogShipOrbital {
+  uses Storage from "std/behaviors/std-storage"
+
+  entity LogShipRun [runtime] {
+    id : string!
+    box : string = ""
+    shipped : LogShipped @description "Bytes shipped per <level>/<day>.jsonl, as the state file keeps them." = {}
+    ready : boolean @description "The state file was read (or is absent): a pass may start." = false
+    shipping : boolean = false
+    files : [string] @description "The files of the pass in flight, as <level>/<day>.jsonl." = []
+    index : number = 0
+    fd : number = -1
+    offset : number @description "Where the piece in flight starts in its file." = 0
+    length : number @description "The bytes of the piece in flight." = 0
+    last : boolean @description "The piece in flight reached the file's end." = false
+    cleanedDay : string @description "The UTC day the last cleanup ran." = ""
+    cleaning : boolean = false
+    token : string = ""
+    doomed : [string] = []
+    problems : [string] = []
+    shippedAt : instant? = null
+  }
+
+  trait LogShip -> LogShipRun {
+    config {
+      dir : string = "/srv/orb/logs/"
+        @label "Log folder"
+        @description "The folder ending in / holding one subfolder per level; a composer that moves it grants fs read, write and create on its own folder."
+        @tier "domain"
+      prefix : string = "logs/"
+        @label "Key prefix"
+        @description "Where the pieces go in the bucket, ending in /; the box name follows it."
+        @tier "domain"
+      stateFile : string = ".shipped.json"
+        @label "State file"
+        @description "The file in the log folder that keeps how far each log file was shipped."
+        @tier "infra"
+      pieceBytes : number = 33554432
+        @label "Piece size"
+        @description "The most bytes read, gzipped and uploaded as one piece."
+        @tier "infra"
+      keepDays : number = 30
+        @label "Days kept in the bucket"
+        @description "A piece whose day is this many or more days before today is deleted from the bucket."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (os/getenv "ORB_BOX" { key: "box" emit: { success: SHIP_BOX, failure: SHIP_BOX_UNREAD } })
+        (os/read-file (str/concat @config.dir @config.stateFile) { emit: { success: SHIP_STATE_READ, failure: SHIP_STATE_MISSING } })
+      SHIP_BOX -> ready
+        (set @entity.box (default ?value ""))
+        (emit SHIP_PASS {})
+      SHIP_BOX_UNREAD -> ready
+      SHIP_STATE_READ -> ready
+        (set @entity.shipped (default (json/parse (default (bytes/to-string ?data) "{}") LogShipped) {}))
+        (set @entity.ready true)
+        (emit SHIP_PASS {})
+      SHIP_STATE_MISSING -> ready
+        (set @entity.ready true)
+        (emit SHIP_PASS {})
+
+      SHIP_PASS -> ready when (and @entity.ready (not @entity.shipping) (not @entity.cleaning) (!= @entity.box ""))
+        (set @entity.shipping true)
+        (set @entity.problems [])
+        (os/glob (str/concat @config.dir "*/*.jsonl") { emit: { success: SHIP_GLOBBED, failure: SHIP_UNGLOBBED } })
+      SHIP_PASS -> ready when (not (and @entity.ready (not @entity.shipping) (not @entity.cleaning) (!= @entity.box "")))
+      SHIP_GLOBBED -> ready
+        (set @entity.files (array/sort (array/filter (array/map ?paths (fn p (let ((ps (str/split @p "/"))) (str/join (array/slice @ps (math/max 0 (- (array/len @ps) 2))) "/"))))
+          (fn rel (and (= (array/len (str/split @rel "/")) 2) (!= (time/parse (str/replace (default (array/nth (str/split @rel "/") 1) "") ".jsonl" "")) null))))))
+        (emit SHIP_FILE { index: 0 })
+      SHIP_UNGLOBBED -> ready
+        (set @entity.problems [(str/concat "list: " ?error)])
+        (set @entity.shipping false)
+
+      SHIP_FILE -> ready when (< ?index (array/len @entity.files))
+        (set @entity.index ?index)
+        (set @entity.offset (default (object/get @entity.shipped (default (array/nth @entity.files ?index) "")) 0))
+        (os/open (str/concat @config.dir (default (array/nth @entity.files ?index) "")) "r" { emit: { success: SHIP_OPENED, failure: SHIP_FILE_FAILED } })
+      SHIP_FILE -> ready when (>= ?index (array/len @entity.files))
+        (set @entity.shipping false)
+        (set @entity.shippedAt @now)
+        (when (!= @entity.cleanedDay (time/format @now "YYYY-MM-DD")) (emit SHIP_CLEAN { token: "" }))
+      SHIP_OPENED -> ready
+        (set @entity.fd ?fd)
+        (os/seek ?fd @entity.offset "set" { emit: { success: SHIP_SOUGHT, failure: SHIP_FILE_FAILED } })
+      SHIP_SOUGHT -> ready
+        (os/read @entity.fd @config.pieceBytes { emit: { success: SHIP_READ, failure: SHIP_FILE_FAILED } })
+      SHIP_READ -> ready when (= (bytes/length ?data) 0)
+        (emit SHIP_FILE_DONE {})
+      SHIP_READ -> ready when (> (bytes/length ?data) 0)
+        (set @entity.length (bytes/length ?data))
+        (set @entity.last (or ?eof (< (bytes/length ?data) @config.pieceBytes)))
+        (let ((rel (default (array/nth @entity.files @entity.index) "")) (gz (as (gzip/compress ?data) LogShipBytes)))
+          (if (= @gz null)
+            (do
+              (set @entity.problems (array/append @entity.problems (str/concat @rel ": gzip failed")))
+              (emit SHIP_FILE_DONE {}))
+            (emit STORAGE_UPLOAD {
+              requestId: (str/concat "ship-" @entity.offset),
+              key: (str/concat @config.prefix @entity.box "/" (str/replace @rel ".jsonl" "") "/" (str/padStart (str/concat @entity.offset) 15 "0") ".jsonl.gz"),
+              content: (str/concat "data:application/gzip;base64," (bytes/to-base64 (default @gz (bytes/from-string "")))),
+              contentType: "application/gzip" })))
+      SHIP_UPLOADED -> ready when @entity.shipping
+        (let ((next (+ @entity.offset @entity.length)))
+          (let ((map (object/set @entity.shipped (default (array/nth @entity.files @entity.index) "") @next)))
+            (do
+              (set @entity.shipped @map)
+              (set @entity.offset @next)
+              (os/write-file (str/concat @config.dir @config.stateFile) (bytes/from-string (json/stringify @map)) 420 { emit: { success: SHIP_STATE_WRITTEN, failure: SHIP_STATE_UNWRITTEN } }))))
+      SHIP_STATE_WRITTEN -> ready when @entity.last
+        (emit SHIP_FILE_DONE {})
+      SHIP_STATE_WRITTEN -> ready when (not @entity.last)
+        (os/read @entity.fd @config.pieceBytes { emit: { success: SHIP_READ, failure: SHIP_FILE_FAILED } })
+      SHIP_STATE_UNWRITTEN -> ready
+        (set @entity.problems (array/append @entity.problems (str/concat "state: " ?error)))
+        (emit SHIP_FILE_DONE {})
+      SHIP_STORE_FAILED -> ready when (and @entity.shipping (not @entity.cleaning))
+        (set @entity.problems (array/append @entity.problems (str/concat (default (array/nth @entity.files @entity.index) "") ": " ?message)))
+        (when (>= @entity.fd 0) (os/close @entity.fd { emit: { success: SHIP_CLOSED, failure: SHIP_CLOSED } }))
+        (set @entity.fd -1)
+        (set @entity.shipping false)
+      SHIP_FILE_FAILED -> ready
+        (set @entity.problems (array/append @entity.problems (str/concat (default (array/nth @entity.files @entity.index) "") ": " ?error)))
+        (emit SHIP_FILE_DONE {})
+      SHIP_FILE_DONE -> ready
+        (when (>= @entity.fd 0) (os/close @entity.fd { emit: { success: SHIP_CLOSED, failure: SHIP_CLOSED } }))
+        (set @entity.fd -1)
+        (emit SHIP_FILE { index: (+ @entity.index 1) })
+      SHIP_CLOSED -> ready
+
+      SHIP_CLEAN -> ready
+        (set @entity.cleaning true)
+        (when (= ?token "") (set @entity.doomed []))
+        (emit STORAGE_LIST { requestId: "clean", prefix: (str/concat @config.prefix @entity.box "/"), maxKeys: 1000, continuationToken: ?token })
+      SHIP_LISTED -> ready when @entity.cleaning
+        (set @entity.doomed (array/concat @entity.doomed (array/map (array/filter ?keys (fn k
+          (let ((day (time/parse (default (array/nth (str/split @k.key "/") (+ (array/len (str/split @config.prefix "/")) 1)) ""))))
+            (and (!= @day null) (>= (time/diff (default (time/parse (time/format @now "YYYY-MM-DD")) @now) (default @day @now) "d") @config.keepDays))))) (fn k @k.key))))
+        (if (and ?truncated (!= (default ?nextToken "") ""))
+          (emit SHIP_CLEAN { token: (default ?nextToken "") })
+          (emit SHIP_DELETE { index: 0 }))
+      SHIP_DELETE -> ready when (< ?index (array/len @entity.doomed))
+        (set @entity.index ?index)
+        (emit STORAGE_DELETE { requestId: (str/concat "clean-" ?index), key: (default (array/nth @entity.doomed ?index) "") })
+      SHIP_DELETE -> ready when (>= ?index (array/len @entity.doomed))
+        (set @entity.cleaning false)
+        (set @entity.cleanedDay (time/format @now "YYYY-MM-DD"))
+      SHIP_DELETED -> ready when @entity.cleaning
+        (emit SHIP_DELETE { index: (+ @entity.index 1) })
+      SHIP_STORE_FAILED -> ready when @entity.cleaning
+        (set @entity.problems (array/append @entity.problems (str/concat "cleanup: " ?message)))
+        (set @entity.cleaning false)
+    }
+
+    ticks {
+      every10m every 10m [background]
+        (emit SHIP_PASS {})
+    }
+
+    emits {
+      SHIP_PASS -> internal { }
+        @description "Ship what was written since the last pass."
+      SHIP_FILE -> internal { index : number! }
+        @description "Ship the next file of the pass."
+      SHIP_FILE_DONE -> internal { }
+        @description "The file in flight is shipped as far as it was written."
+      SHIP_CLEAN -> internal { token : string! }
+        @description "List a page of the box's pieces to delete the expired ones."
+      SHIP_DELETE -> internal { index : number! }
+        @description "Delete the next expired piece."
+      STORAGE_UPLOAD -> external { bucket : string  key : string  content : string  contentType : string  requestId : string }
+        @description "One gzipped piece to the bucket."
+        @tier "secondary"
+      STORAGE_LIST -> external { bucket : string  prefix : string  maxKeys : number  continuationToken : string  requestId : string }
+        @description "A page of the box's pieces."
+        @tier "secondary"
+      STORAGE_DELETE -> external { bucket : string  key : string!  requestId : string }
+        @description "Delete one expired piece."
+        @tier "secondary"
+    }
+
+    listens {
+      SHIP_BOX { value : string }
+        @tier "internal"
+      SHIP_BOX_UNREAD { error : string, kind : string, key : string }
+        @tier "internal"
+      SHIP_STATE_READ { data : bytes! }
+        @tier "internal"
+      SHIP_STATE_MISSING { error : string, kind : string }
+        @tier "internal"
+      SHIP_GLOBBED { paths : [string]! }
+        @tier "internal"
+      SHIP_UNGLOBBED { error : string!, kind : string }
+        @tier "internal"
+      SHIP_OPENED { fd : number! }
+        @tier "internal"
+      SHIP_SOUGHT { offset : number }
+        @tier "internal"
+      SHIP_READ { data : bytes!, eof : boolean! }
+        @tier "internal"
+      SHIP_FILE_FAILED { error : string!, kind : string }
+        @tier "internal"
+      SHIP_STATE_WRITTEN { bytes : number }
+        @tier "internal"
+      SHIP_STATE_UNWRITTEN { error : string!, kind : string }
+        @tier "internal"
+      SHIP_CLOSED { }
+        @tier "internal"
+      StorageCall.STORAGE_UPLOADED -> SHIP_UPLOADED
+      SHIP_UPLOADED { key : string, size : number, etag : string, url : string }
+        @tier "internal"
+      StorageCall.STORAGE_LISTED -> SHIP_LISTED
+      SHIP_LISTED { keys : [StorageKey]!, truncated : boolean!, nextToken : string }
+        @tier "internal"
+      StorageCall.STORAGE_DELETED -> SHIP_DELETED
+      SHIP_DELETED { deleted : boolean }
+        @tier "internal"
+      StorageClient.STORAGE_FAILED -> SHIP_STORE_FAILED
+      StorageCall.STORAGE_FAILED -> SHIP_STORE_FAILED
+      SHIP_STORE_FAILED { code : string, message : string! }
+        @description "The store refused or could not be reached, during a pass or a cleanup."
+        @tier "internal"
+    }
+  }
+
+  trait StorageClient = Storage.traits.StorageClient {
+    listens {
+      LogShip.STORAGE_UPLOAD -> STORAGE_UPLOAD
+      LogShip.STORAGE_LIST -> STORAGE_LIST
+      LogShip.STORAGE_DELETE -> STORAGE_DELETE
+      STORAGE_UPLOAD -> input {
+        bucket : string?
+        key : string?
+        content : string?
+        contentType : string?
+        metadata : (Map string string)?
+        file : StorageFile?
+        acl : string?
+        maxSize : number?
+        requestId : string?
+      }
+        @description "Store one object: a file payload (name, size, type, content as a base64 data URL; the key becomes <epoch ms>-<sanitised name>) or a key + content pair. acl public returns a public url."
+        @synonyms "upload file, put object, store file"
+      STORAGE_UPLOAD_MANY -> input {
+        bucket : string?
+        files : [StorageFile]?
+        acl : string?
+        maxSize : number?
+      }
+        @description "Store a batch of file payloads in order; the first failure stops the batch."
+        @synonyms "upload files, batch upload, drop zone upload"
+      STORAGE_DOWNLOAD -> input {
+        bucket : string?
+        key : string!
+        requestId : string?
+      }
+        @description "Fetch an object as base64."
+        @synonyms "download file, get object, read file"
+      STORAGE_LIST -> input {
+        bucket : string?
+        prefix : string?
+        maxKeys : number?
+        continuationToken : string?
+        requestId : string?
+      }
+        @description "List a page of keys; maxKeys defaults to 1000."
+        @synonyms "list files, list objects, browse bucket"
+      STORAGE_DELETE -> input {
+        bucket : string?
+        key : string!
+        requestId : string?
+      }
+        @description "Delete an object."
+        @synonyms "delete file, remove object"
+      STORAGE_GET_SIGNED_URL -> input {
+        bucket : string?
+        key : string!
+        expiresIn : number?
+        operation : string?
+      }
+        @description "Presign a get (default) or put url valid for expiresIn seconds (default 3600, whole seconds 1 to 604800)."
+        @synonyms "signed url, presign, temporary link"
+      STORAGE_RESOLVE {
+        mode : string!
+        bucket : string!
+        hasFile : boolean!
+        fileName : string!
+        fileSize : number!
+        fileType : string!
+        hasContent : boolean!
+        raw : string!
+        key : string!
+        contentType : string!
+        acl : string!
+        maxSize : number!
+        batch : StorageBatch?
+      }
+      STORAGE_PUT {
+        mode : string!
+        bucket : string!
+        key : string!
+        b64 : string!
+        contentType : string!
+        size : number!
+        etag : string!
+        isPublic : boolean!
+        fileName : string!
+        fileSize : number!
+        fileKind : string!
+        batch : StorageBatch?
+      }
+      STORAGE_BATCH_NEXT {
+        batch : StorageBatch!
+      }
+      StorageCall.STORAGE_BATCH_DONE -> STORAGE_BATCH_NEXT
+    }
+  }
+  trait StorageGate = Storage.traits.StorageGate {
+    config {
+      hostEnv: "LOGS_S3_HOST"
+      regionEnv: "LOGS_S3_REGION"
+      keyIdEnv: "LOGS_S3_ACCESS_KEY_ID"
+      publicUrlEnv: "LOGS_S3_PUBLIC_URL"
+    }
+  }
+  trait StorageCall = Storage.traits.StorageCall {}
+  trait StorageSigner = Storage.traits.StorageSigner {
+    config {
+      secretAccessKey: "LOGS_S3_SECRET_ACCESS_KEY"
+    }
+  }
+  trait StorageKeyed = Storage.traits.StorageKeyed {}
+  trait StorageHttp = Storage.traits.StorageHttp {
+    config {
+      host: { anchor: { env: "LOGS_S3_HOST" } }
+      port: 443
+      tls: true
+      signatureHeaders: ["authorization"]
+    }
+  }
+  trait StorageTimeout = Storage.traits.StorageTimeout {}
+  trait StorageRetry = Storage.traits.StorageRetry {}
+
+
+  page boot as LogShipBoot -> LogShip, StorageClient, StorageGate, StorageCall, StorageSigner, StorageKeyed, StorageHttp, StorageTimeout, StorageRetry
+}

@@ -478,7 +478,7 @@
                 "event": "FLEET_ANSWERED",
                 "payload": {
                   "status": 400,
-                  "body": "usage: deploy [--target box|local] [--only <app>[,<app>\u2026]] [--runtime]\n       preview <file> [--name <name>] [--target box|local]\n       stop <name> [--target box|local]"
+                  "body": "usage: deploy [--target box|local] [--only <app>[,<app>…]] [--runtime]\n       preview <file> [--name <name>] [--target box|local]\n       stop <name> [--target box|local]"
                 }
               }
             ]
@@ -2751,6 +2751,220 @@
             ],
             "entity": {
               "busy": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app's secret file is laid into that app's env only",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "FLEET_APP_SECRET_READ",
+          "payload": {
+            "data": "czNjcjN0Cg==",
+            "key": "tukaj-lej|MEDIA_SECRET"
+          },
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": [
+              {
+                "name": "tukaj-lej",
+                "program": "t.orb",
+                "site": "t",
+                "staticDir": "",
+                "env": {
+                  "A": "1"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              },
+              {
+                "name": "friday",
+                "program": "f.orb",
+                "site": "f",
+                "staticDir": "",
+                "env": {
+                  "B": "2"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              }
+            ],
+            "appSecretsLeft": [
+              {
+                "app": "tukaj-lej",
+                "name": "MEDIA_SECRET",
+                "file": "media.key"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FLEET_APP_SECRET_NEXT",
+                "payload": {
+                  "left": 0
+                }
+              }
+            ],
+            "entity": {
+              "appSecretsLeft": [],
+              "apps": [
+                {
+                  "name": "tukaj-lej",
+                  "program": "t.orb",
+                  "site": "t",
+                  "staticDir": "",
+                  "env": {
+                    "A": "1",
+                    "MEDIA_SECRET": "s3cr3t"
+                  },
+                  "firestoreDatabase": "",
+                  "origins": []
+                },
+                {
+                  "name": "friday",
+                  "program": "f.orb",
+                  "site": "f",
+                  "staticDir": "",
+                  "env": {
+                    "B": "2"
+                  },
+                  "firestoreDatabase": "",
+                  "origins": []
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "with no app secret left the apps are deployed",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "FLEET_APP_SECRET_NEXT",
+          "payload": {
+            "left": 0
+          },
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": [
+              {
+                "name": "tukaj-lej",
+                "program": "t.orb",
+                "site": "t",
+                "staticDir": "",
+                "env": {
+                  "A": "1"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              },
+              {
+                "name": "friday",
+                "program": "f.orb",
+                "site": "f",
+                "staticDir": "",
+                "env": {
+                  "B": "2"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              }
+            ],
+            "appSecretsLeft": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FLEET_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "only": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an unreadable app secret fails the deploy and names the file",
+      "now": 1000,
+      "steps": [
+        {
+          "from": "ready",
+          "event": "FLEET_APP_SECRET_UNREAD",
+          "payload": {
+            "error": "not found",
+            "kind": "not-found",
+            "key": "tukaj-lej|MEDIA_SECRET"
+          },
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": [
+              {
+                "name": "tukaj-lej",
+                "program": "t.orb",
+                "site": "t",
+                "staticDir": "",
+                "env": {
+                  "A": "1"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              },
+              {
+                "name": "friday",
+                "program": "f.orb",
+                "site": "f",
+                "staticDir": "",
+                "env": {
+                  "B": "2"
+                },
+                "firestoreDatabase": "",
+                "origins": []
+              }
+            ],
+            "appSecretsLeft": [
+              {
+                "app": "tukaj-lej",
+                "name": "MEDIA_SECRET",
+                "file": "media.key"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FLEET_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "failed tukaj-lej: secret MEDIA_SECRET could not be read from media.key: not found"
+                }
+              }
+            ],
+            "entity": {
+              "busy": false,
+              "appSecretsLeft": []
             }
           }
         }

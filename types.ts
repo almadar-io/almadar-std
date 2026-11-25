@@ -510,6 +510,13 @@ export interface StdOperatorMeta extends OperatorMeta {
   /** The operands a `site` operator evaluates on demand, by position: each reaches it as a callable. */
   lazyOperands?: number[];
   /**
+   * The answer follows from the operands alone (EXEC-PERF-2): no clock, entropy, locale, memory, host or kernel
+   * state is read. Stronger than `hasSideEffects: false`, which `time/now` and `math/random` also carry.
+   */
+  pure?: true;
+  /** The answer also follows from the viewer's locale and the program's message catalogs (the `i18n/*` readers). */
+  readsLocale?: true;
+  /**
    * Position of the argument naming the target entity (0-indexed), on a data
    * effect: the effect runs where that entity's rows live, so a `runsOn: server`
    * data effect on a client-resident entity runs on the client.

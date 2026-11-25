@@ -17,6 +17,7 @@ export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
   'i18n/t': {
     module: 'i18n',
     category: 'std-i18n',
+    readsLocale: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
@@ -33,6 +34,7 @@ export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
   'i18n/direction': {
     module: 'i18n',
     category: 'std-i18n',
+    readsLocale: true,
     evaluation: 'strict',
     minArity: 0,
     maxArity: 1,

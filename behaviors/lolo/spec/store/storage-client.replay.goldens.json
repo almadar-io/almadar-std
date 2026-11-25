@@ -383,7 +383,7 @@
        {
         "event": "STORAGE_FAILED",
         "payload": {
-         "message": "Upload rejected: file payload for 'a.txt' carries no content \u2014 the uploader must include the base64 data URL"
+         "message": "Upload rejected: file payload for 'a.txt' carries no content — the uploader must include the base64 data URL"
         }
        }
       ]
@@ -1236,6 +1236,74 @@
    "credentials": {
     "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
    }
+  },
+  {
+   "id": "a file upload with a key is stored under that key",
+   "now": 1000,
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "b",
+      "hasFile": true,
+      "fileName": "a.png",
+      "fileSize": 3,
+      "fileType": "image/png",
+      "hasContent": false,
+      "raw": "data:image/png;base64,AAAA",
+      "key": "tukaj-lej/photos/p1",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 0,
+      "batch": null
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_PUT",
+        "payload": {
+         "key": "tukaj-lej/photos/p1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a file upload without a key gets the time and its name",
+   "now": 1000,
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "b",
+      "hasFile": true,
+      "fileName": "a.png",
+      "fileSize": 3,
+      "fileType": "image/png",
+      "hasContent": false,
+      "raw": "data:image/png;base64,AAAA",
+      "key": "",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 0,
+      "batch": null
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_PUT",
+        "payload": {
+         "key": "1970-01-01T00:00:01.000Z-a.png"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -169,7 +169,7 @@ orbital StorageOrbital {
         (let ((dec (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (str/decode-uri-component (str/join (array/drop (str/split @payload.raw ",") 1) ",")) @payload.raw))) (if (= @dec null) (emit STORAGE_FAILED { message: "URI malformed" }) (let ((em (hash/md5 (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode @dec)) "hex"))) (if (= @em null) (emit STORAGE_FAILED { message: "The upload content could not be hashed" }) (emit STORAGE_PUT {
           mode: @payload.mode,
           bucket: @payload.bucket,
-          key: (if @payload.hasFile (str/concat @now "-" (str/join (array/map (array/filter (str/split @payload.fileName "") (fn c (!= @c ""))) (fn c (if (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-" @c) @c (if (= (str/len (str/encode-uri-component @c)) 12) "__" "_")))) "")) @payload.key),
+          key: (if (and @payload.hasFile (= @payload.key "")) (str/concat @now "-" (str/join (array/map (array/filter (str/split @payload.fileName "") (fn c (!= @c ""))) (fn c (if (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-" @c) @c (if (= (str/len (str/encode-uri-component @c)) 12) "__" "_")))) "")) @payload.key),
           b64: (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode @dec)),
           contentType: (if @payload.hasFile (if (and (or (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";")))) (!= (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) "")) (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) @payload.fileType) (if (!= @payload.contentType "") @payload.contentType (if (and (or (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";")))) (!= (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) "")) (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) "application/octet-stream"))),
           size: (- (math/floor (/ (* (str/len (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode @dec))) 3) 4)) (if (str/endsWith (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode @dec)) "==") 2 (if (str/endsWith (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode @dec)) "=") 1 0))),
@@ -324,7 +324,7 @@ orbital StorageOrbital {
         maxSize : number?
         requestId : string?
       }
-        @description "Store one object: a file payload (name, size, type, content as a base64 data URL; the key becomes <epoch ms>-<sanitised name>) or a key + content pair. acl public returns a public url."
+        @description "Store one object: a file payload (name, size, type, content as a base64 data URL; the key is the key given, else <epoch ms>-<sanitised name>) or a key + content pair. acl public returns a public url."
         @synonyms "upload file, put object, store file"
       STORAGE_UPLOAD_MANY -> input {
         bucket : string?
@@ -414,10 +414,10 @@ orbital StorageOrbital {
 
     state idle {
       INIT -> idle
-        (os/getenv "STORAGE_S3_HOST" { key: "host" emit: { success: STORAGE_ENV_HOST, failure: STORAGE_ENV_HOST_UNREAD } })
-        (os/getenv "STORAGE_S3_REGION" { key: "region" emit: { success: STORAGE_ENV_REGION, failure: STORAGE_ENV_REGION_UNREAD } })
-        (os/getenv "STORAGE_ACCESS_KEY_ID" { key: "keyid" emit: { success: STORAGE_ENV_KEY_ID, failure: STORAGE_ENV_KEY_ID_UNREAD } })
-        (os/getenv "STORAGE_PUBLIC_URL" { key: "public" emit: { success: STORAGE_ENV_PUBLIC, failure: STORAGE_ENV_PUBLIC_UNREAD } })
+        (os/getenv @config.hostEnv { key: "host" emit: { success: STORAGE_ENV_HOST, failure: STORAGE_ENV_HOST_UNREAD } })
+        (os/getenv @config.regionEnv { key: "region" emit: { success: STORAGE_ENV_REGION, failure: STORAGE_ENV_REGION_UNREAD } })
+        (os/getenv @config.keyIdEnv { key: "keyid" emit: { success: STORAGE_ENV_KEY_ID, failure: STORAGE_ENV_KEY_ID_UNREAD } })
+        (os/getenv @config.publicUrlEnv { key: "public" emit: { success: STORAGE_ENV_PUBLIC, failure: STORAGE_ENV_PUBLIC_UNREAD } })
       STORAGE_ENV_HOST -> idle
         (set @entity.hostText (str/trim (default @payload.value "")))
         (set @entity.authority (if (= (str/trim (default @payload.value "")) "") "" (str/concat (str/trim (default @payload.value "")) (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)))))
@@ -546,6 +546,21 @@ orbital StorageOrbital {
         @label "Signing region"
         @description "The AWS region requests and presigned urls are signed for when STORAGE_S3_REGION is unset or blank."
         @synonyms "aws region, s3 region"
+        @tier "infra"      hostEnv : string = "STORAGE_S3_HOST"
+        @label "Host variable"
+        @description "The environment variable holding the storage host; a composer that renames it grants it as an env-anchored net entry and gives StorageHttp's host anchor the same name."
+        @tier "infra"
+      regionEnv : string = "STORAGE_S3_REGION"
+        @label "Region variable"
+        @description "The environment variable holding the signing region."
+        @tier "infra"
+      keyIdEnv : string = "STORAGE_ACCESS_KEY_ID"
+        @label "Access key id variable"
+        @description "The environment variable holding the access key id; the secret is the StorageSigner's secretAccessKey credential."
+        @tier "infra"
+      publicUrlEnv : string = "STORAGE_PUBLIC_URL"
+        @label "Public url variable"
+        @description "The environment variable holding the public base url of public objects."
         @tier "infra"
     }
   }

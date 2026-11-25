@@ -18,6 +18,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/abs': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -32,6 +33,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/min': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: null,
@@ -46,6 +48,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/max': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: null,
@@ -60,6 +63,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/clamp': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
@@ -77,6 +81,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/floor': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -90,6 +95,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/ceil': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -103,6 +109,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/round': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
@@ -119,6 +126,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/pow': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -135,6 +143,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/sqrt': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -149,6 +158,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/log10': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -162,6 +172,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/ln': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -175,6 +186,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/mod': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -192,6 +204,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/sign': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -204,6 +217,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/lerp': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
@@ -220,6 +234,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/map': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 5,
     maxArity: 5,
@@ -266,6 +281,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/sin': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -278,6 +294,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/cos': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -290,6 +307,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/tan': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -302,6 +320,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/atan2': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -317,6 +336,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/asin': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -330,6 +350,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/acos': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -343,6 +364,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/atan': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -355,6 +377,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/hypot': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -370,6 +393,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/deg-rad': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -382,6 +406,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/rad-deg': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -394,6 +419,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/wrap': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
@@ -410,6 +436,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
   'math/approach': {
     module: 'math',
     category: 'std-math',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,

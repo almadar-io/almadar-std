@@ -20,6 +20,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/len': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -33,6 +34,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/range': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 3,
@@ -49,6 +51,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/first': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -61,6 +64,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/last': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -73,6 +77,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/nth': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -89,6 +94,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/slice': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
@@ -106,6 +112,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/concat': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: null,
@@ -119,6 +126,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/append': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -135,6 +143,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/prepend': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -151,6 +160,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/insert': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
@@ -168,6 +178,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/remove': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -184,6 +195,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/removeItem': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -200,6 +212,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/reverse': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -213,6 +226,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/sort': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 3,
@@ -243,6 +257,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/unique': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -256,6 +271,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/flatten': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -269,6 +285,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/zip': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -284,6 +301,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/includes': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -299,6 +317,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/indexOf': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -314,6 +333,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/find': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -331,6 +351,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/findIndex': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -348,6 +369,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/filter': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -366,6 +388,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/reject': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -384,6 +407,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/map': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -402,6 +426,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/reduce': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 3,
     maxArity: 3,
@@ -421,6 +446,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/pmap': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -439,6 +465,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/preduce': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 3,
     maxArity: 3,
@@ -458,6 +485,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/every': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -475,6 +503,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/some': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -492,6 +521,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/count': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 1,
     maxArity: 2,
@@ -510,6 +540,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/sum': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
@@ -525,6 +556,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/avg': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
@@ -541,6 +573,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/min': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
@@ -556,6 +589,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/max': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
@@ -571,6 +605,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/groupBy': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -586,6 +621,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/partition': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -603,6 +639,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/take': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -619,6 +656,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/drop': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -635,6 +673,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/takeLast': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -651,6 +690,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/dropLast': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -667,6 +707,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/cosine': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -683,6 +724,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
   'array/nearest': {
     module: 'array',
     category: 'std-array',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,

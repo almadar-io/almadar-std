@@ -104,6 +104,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '+': {
     module: 'core',
     category: 'arithmetic',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: null,
@@ -119,6 +120,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '-': {
     module: 'core',
     category: 'arithmetic',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 2,
@@ -136,6 +138,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '*': {
     module: 'core',
     category: 'arithmetic',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: null,
@@ -151,6 +154,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '/': {
     module: 'core',
     category: 'arithmetic',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -168,6 +172,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '%': {
     module: 'core',
     category: 'arithmetic',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -189,6 +194,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '=': {
     module: 'core',
     category: 'comparison',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -205,6 +211,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '==': {
     module: 'core',
     category: 'comparison',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -221,6 +228,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '!=': {
     module: 'core',
     category: 'comparison',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -237,6 +245,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '<': {
     module: 'core',
     category: 'comparison',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -253,6 +262,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '>': {
     module: 'core',
     category: 'comparison',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -269,6 +279,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '<=': {
     module: 'core',
     category: 'comparison',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -285,6 +296,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   '>=': {
     module: 'core',
     category: 'comparison',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -305,6 +317,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'series' },
     module: 'core',
     category: 'logic',
+    pure: true,
     evaluation: 'form',
     minArity: 2,
     maxArity: null,
@@ -318,6 +331,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'parallel' },
     module: 'core',
     category: 'logic',
+    pure: true,
     evaluation: 'form',
     minArity: 2,
     maxArity: null,
@@ -330,6 +344,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   default: {
     module: 'core',
     category: 'logic',
+    pure: true,
     evaluation: 'form',
     minArity: 2,
     maxArity: 2,
@@ -347,6 +362,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'invert' },
     module: 'core',
     category: 'logic',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -360,6 +376,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'branch', glyph: 'M-1 0 L0 0 L0.8 -0.7 M0 0 L0.8 0.7' },
     module: 'core',
     category: 'logic',
+    pure: true,
     evaluation: 'form',
     minArity: 3,
     maxArity: 3,
@@ -378,6 +395,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   as: {
     module: 'core',
     category: 'logic',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -399,6 +417,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'scope' },
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'form',
     minArity: 2,
     maxArity: 2,
@@ -420,6 +439,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'ladder' },
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'form',
     minArity: 1,
     maxArity: null,
@@ -433,6 +453,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   list: {
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'strict',
     minArity: 0,
     maxArity: null,
@@ -447,6 +468,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'branch', glyph: 'M-1 0 L0 0 L0.8 -0.7' },
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'form',
     minArity: 2,
     maxArity: 2,
@@ -463,6 +485,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'template' },
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'form',
     minArity: 2,
     maxArity: 2,
@@ -482,6 +505,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'template' },
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'site',
     minArity: 1,
     maxArity: 1,
@@ -498,6 +522,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     visual: { form: 'template' },
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'site',
     minArity: 1,
     maxArity: null,
@@ -514,6 +539,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   unquote: {
     module: 'core',
     category: 'control',
+    pure: true,
     evaluation: 'form',
     minArity: 1,
     maxArity: 1,

@@ -18,6 +18,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/keys': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -30,6 +31,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/values': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -42,6 +44,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/entries': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -54,6 +57,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/fromEntries': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -66,6 +70,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/get': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'site',
     lazyOperands: [2],
     minArity: 2,
@@ -83,6 +88,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/set': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'site',
     minArity: 3,
     maxArity: 3,
@@ -100,6 +106,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/has': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -115,6 +122,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/merge': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: null,
@@ -127,6 +135,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/deepMerge': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: null,
@@ -139,6 +148,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/pick': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -154,6 +164,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/omit': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -169,6 +180,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/mapValues': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -186,6 +198,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/mapKeys': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -203,6 +216,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/filter': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'site',
     minArity: 2,
     maxArity: 2,
@@ -220,6 +234,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/equals': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -235,6 +250,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/clone': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -247,6 +263,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
   'object/deepClone': {
     module: 'object',
     category: 'std-object',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,

@@ -30,10 +30,12 @@ type KReadAnswer = { program : SExpr!, guest : string?, route : string? }
 type KNav = { trait : string!, path : string! }
 type KPaint = { slot : string!, trait : string!, orbital : string?, embedded : boolean!, content : node? }
 type KSeed = { trait : string!, event : string! }
+type KHeldProgram = { orbitals : [orbital] }
+type KLoloOpen = { guest : string!, seeds : [KSeed]!, route : string? }
 type KLegRun = { kind : "targeted" | "mount" | "discover" | "completion" | "tick", trait : string?, event : string?, payload : SExpr?, entityId : string!, seeds : [KSeed]?, route : string?, traits : [string]?, failure : string?, key : string?, tick : string?, rows : [string]? }
 type KOpenAnswer = { guest : string!, outcomes : [KNativeOutcome]! }
 type KRun = { q : [KItem]!, states : Map string string!, frames : Map string KFrame!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KItem]!, seen : [string]!, pending : [string]!, later : [KItem]!, scopes : [string]!, refused : string!, next : [KItem]!, nextPending : [string]!, held : [KItem]!, paints : [KPaint]!, navs : [KNav]!, directives : [KDirective]! }
-type KStepEmit = { event : string!, payload : SExpr?, completion : boolean? }
+type KStepEmit = { event : string!, payload : SExpr?, completion : boolean?, seen : SExpr? }
 type KScriptStep = { trait : string!, event : string!, payload : SExpr, tickPass : boolean? }
 type KTickRan = { trait : string!, tick : string!, rows : [string]! }
 type KNativeTick = { states : Map string string!, outcomes : [KNativeOutcome]!, emitted : [KNativeEmit], ran : [KTickRan]! }
@@ -296,7 +298,7 @@ orbital KernelDispatchOrbital {
                              (frame : SExpr (if (or (= @share.key "") (= (array/len @share.intrinsic) 0))
                                               (object/get (object/get @acc.frames @fslot { row: {} }) "row")
                                               (object/merge (default (as (object/get (object/get @acc.frames @fslot { row: {} }) "row") KRowMap) {}) (default (as (object/get (object/get @acc.frames @oslot { row: {} }) "row") KRowMap) {})))))
-                        (if (and @framed (not @it.completion) (array/includes @acc.seen (value/key [@slot @it.event @from @it.payload @frame])))
+                        (if (and (not @it.completion) (array/includes @acc.seen (if @framed (value/key [@slot @it.event @from @it.payload @frame]) (value/key [@slot @it.event @from @it.payload "!unframed"]))))
                           (let ((flush : boolean (and @it.seed (not (array/some @rest (fn x @x.seed))))))
                             { wait: false, request: { trait: "" }, acc: { q: (let ((q0 : [KItem] (if @flush (array/concat @rest @acc.later) @rest)) (ds : [KDirective] (if @flush @acc.directives []))) (array/reduce @ds @q0 (fn (moved d) (if @d.front (array/concat (array/filter @moved (fn x (= @x.event @d.event))) (array/filter @moved (fn x (!= @x.event @d.event)))) (array/concat (array/filter @moved (fn x (!= @x.event @d.event))) (array/filter @moved (fn x (= @x.event @d.event)))))))), states: @acc.states, frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: (array/concat @acc.collapsed [@it]), seen: @acc.seen, pending: @acc.pending, later: (if @flush [] @acc.later), scopes: @acc.scopes, refused: @acc.refused, next: @acc.next, nextPending: @acc.nextPending, held: @acc.held, paints: @acc.paints, navs: @acc.navs, directives: (if @flush [] @acc.directives) } })
                           { wait: true, request: (object/merge (if (= @it.at -2) (if @framed (if (= @it.row "") { trait: @it.trait, from: @from, tick: @it.event, entity: @frame } { trait: @it.trait, from: @from, tick: @it.event, entity: @frame, entityId: @it.row }) (if (= @it.row "") { trait: @it.trait, from: @from, tick: @it.event } { trait: @it.trait, from: @from, tick: @it.event, entityId: @it.row })) (if @framed
@@ -403,19 +405,18 @@ orbital KernelDispatchOrbital {
                                   refused: (default @r.rejected ""),
                                   next: @acc.next, nextPending: @acc.nextPending,
                                   held: (if @lifecycle (array/filter @acc.held (fn h (!= @h.trait @it.trait))) @acc.held),
-                                  states: (if @r.delivered (if @dropRow (object/omit @acc.states [@slot]) (object/set @acc.states @slot @r.to)) @acc.states),
-                                  frames: (if @r.delivered
-                                            (if @dropRow (object/omit @acc.frames [@fslot @oslot])
+                                  states: (if @dropRow (object/omit @acc.states [@slot]) (if @r.delivered (object/set @acc.states @slot @r.to) @acc.states)),
+                                  frames: (if @dropRow (object/omit @acc.frames [@fslot @oslot]) (if @r.delivered
                                               (if (= (default @r.entity null) null) @acc.frames (if (or (= @share.key "") (= (array/len @share.intrinsic) 0))
                                                 (object/set @acc.frames @fslot { row: @r.entity })
-                                                (object/set (object/set @acc.frames @fslot { row: (object/omit (default (as @r.entity KRowMap) {}) @share.intrinsic) }) @oslot { row: (object/pick (default (as @r.entity KRowMap) {}) @share.intrinsic) }))))
-                                            @acc.frames),
+                                                (object/set (object/set @acc.frames @fslot { row: (object/omit (default (as @r.entity KRowMap) {}) @share.intrinsic) }) @oslot { row: (object/pick (default (as @r.entity KRowMap) {}) @share.intrinsic) })))
+                                            @acc.frames)),
                                   outcomes: (if @r.delivered (array/concat @acc.outcomes [{ trait: @it.trait, event: (if (= @it.at -2) "" (if (= @it.event "$MOUNT") (object/get (default (array/find @entity.routes (fn rt (and (= @rt.trait @it.trait) (= @rt.at @it.at)))) { orbital: "", trait: "", at: -1, trigger: "", event: "", sourceKind: "any", sourceOrbital: "", sourceTrait: "", keyed: false, guarded: false, mapped: false }) "trigger") @it.event)), from: @from, to: @r.to, fired: @r.fired }]) @acc.outcomes),
-                                  emitted: (array/concat @acc.emitted (array/map @r.emits (fn e { trait: @it.trait, event: @e.event, payload: (default @e.payload {}) }))),
+                                  emitted: (array/concat @acc.emitted (array/map @r.emits (fn e { trait: @it.trait, event: @e.event, payload: (default @e.seen {}) }))),
                                   paints: (array/concat @acc.paints (default @r.rendered [])),
                                   navs: (array/concat @acc.navs (default @r.navigations [])),
                                   collapsed: @acc.collapsed,
-                                  seen: (if (and @r.delivered (not @it.completion)) (array/concat @acc.seen [(value/key [@slot @it.event @from @it.payload (default @r.before {})])]) @acc.seen),
+                                  seen: (if (and @r.delivered (not @it.completion)) (array/concat @acc.seen [(value/key [@slot @it.event @from @it.payload (default @r.before {})])] (if (object/has @acc.frames @fslot) [] [(value/key [@slot @it.event @from @it.payload "!unframed"])])) @acc.seen),
                                   pending: (array/filter @acc.pending (fn p (or (!= @p @it.trait) (not (and (< @it.at 0) (array/includes ["INIT", "LOAD", "$MOUNT"] @it.event)))))) })))))))
                           ))))
                          (do
@@ -473,8 +474,8 @@ orbital KernelDispatchOrbital {
       KERNEL_MACHINE_UNREAD { }
       KERNEL_SETTLED { result : SExpr }
       KERNEL_SETTLE_FAILED { error : string }
-      KernelParity.KERNEL_LOAD -> KERNEL_LOAD
-      KernelParity.KERNEL_MOUNT -> KERNEL_MOUNT
+      KernelParity.KERNEL_ATTACH -> KERNEL_ATTACH
+      KernelParity.KERNEL_MOUNT_SEEDS -> KERNEL_MOUNT_SEEDS
       KernelParity.KERNEL_DISPATCH -> KERNEL_DISPATCH
       KernelParity.KERNEL_TICK -> KERNEL_TICK
       KernelParity.KERNEL_FRAMES_READ -> KERNEL_FRAMES_READ
@@ -528,6 +529,9 @@ orbital KernelDispatchOrbital {
     id : string!
     native : string! = ""
     route : string! = ""
+    program : KHeldProgram?
+    loloSeeds : [KSeed]! = []
+    loloRoute : string! = ""
     script : [KScriptStep]! = []
     at : number! = 0
     judging : number! @description "The step being judged: -1 the mount, else the script step." = -1
@@ -556,12 +560,10 @@ orbital KernelDispatchOrbital {
         (set @entity.at 0)
         (set @entity.results [])
         (set @entity.orbitals (array/map (object/get (default (as ?program KProgram) { orbitals: [] }) "orbitals") (fn o (object/get @o "name"))))
+        (set @entity.program (as ?program KHeldProgram))
         (if (= ?route null)
-          (program/open ?program {} { emit: { success: PARITY_NATIVE_OPENED, failure: PARITY_FAILED_IN } })
-          (program/open ?program { route: ?route } { emit: { success: PARITY_NATIVE_OPENED, failure: PARITY_FAILED_IN } }))
-        (if (= ?route null)
-          (emit KERNEL_LOAD { program: ?program })
-          (emit KERNEL_LOAD { program: ?program, route: ?route }))
+          (program/open ?program { drawSeed: "parity" } { emit: { success: PARITY_NATIVE_OPENED, failure: PARITY_FAILED_IN } })
+          (program/open ?program { route: ?route, drawSeed: "parity" } { emit: { success: PARITY_NATIVE_OPENED, failure: PARITY_FAILED_IN } }))
     }
 
     state opening {
@@ -572,8 +574,15 @@ orbital KernelDispatchOrbital {
         (set @entity.nativeOutcomes ?result.outcomes)
         (set @entity.nativeEmitted (default ?result.emitted []))
         (set @entity.nativeRefused "")
+        (if (= @entity.route "")
+          (program/open @entity.program { mount: false, drawSeed: "parity" } { emit: { success: PARITY_LOLO_OPENED, failure: PARITY_FAILED_IN } })
+          (program/open @entity.program { mount: false, route: @entity.route, drawSeed: "parity" } { emit: { success: PARITY_LOLO_OPENED, failure: PARITY_FAILED_IN } }))
+      PARITY_LOLO_OPENED -> opening
+        (set @entity.loloSeeds ?result.seeds)
+        (set @entity.loloRoute (default ?result.route ""))
+        (emit KERNEL_ATTACH { program: (default @entity.program { orbitals: [] }), guest: ?result.guest, browser: [] })
       PARITY_LOADED -> mounting
-        (emit KERNEL_MOUNT { route: (if (= @entity.route "") "boot" @entity.route), boot: true })
+        (emit KERNEL_MOUNT_SEEDS { route: @entity.loloRoute, seeds: @entity.loloSeeds })
       PARITY_FAILED_IN -> idle
         (emit PARITY_FAILED { error: (default ?error "the program could not be opened") })
     }
@@ -673,8 +682,8 @@ orbital KernelDispatchOrbital {
     }
 
     emits {
-      KERNEL_LOAD -> internal { program : SExpr!, route : string? }
-      KERNEL_MOUNT -> internal { route : string!, boot : boolean! }
+      KERNEL_ATTACH -> internal { program : KHeldProgram!, guest : string!, browser : [string]? }
+      KERNEL_MOUNT_SEEDS -> internal { route : string, seeds : [KSeed]! }
       KERNEL_DISPATCH -> internal { trait : string!, event : string!, payload : SExpr! }
       KERNEL_TICK -> internal { ticks : [KTickRan]! }
       KERNEL_FRAMES_READ -> internal { }
@@ -692,6 +701,7 @@ orbital KernelDispatchOrbital {
       PARITY_RUN -> input { program : SExpr!, route : string?, script : [KScriptStep]! }
         @description "Run a resolved program on the native kernel and the .lolo kernel side by side: open it on route (absent: as program/open opens with no route), then play the script, comparing states, outcomes, emits and rows after the mount and after each step."
       PARITY_NATIVE_OPENED { result : KNativeOpen! }
+      PARITY_LOLO_OPENED { result : KLoloOpen! }
       PARITY_NATIVE_DONE { result : KNative! }
       PARITY_FAILED_IN { error : string }
       PARITY_NATIVE_REFUSED { error : string }

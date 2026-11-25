@@ -1,0 +1,356 @@
+{
+  "atom": "ops/atoms/std-log-ship.lolo",
+  "trait": "LogShip",
+  "note": "Pieces of daily log files shipped by byte offset; the state keeps how far each file went; expired pieces are listed and deleted.",
+  "cases": [
+    {
+      "id": "a piece read from a file is uploaded under its box, level, day and 15-digit offset",
+      "now": 1795651200000,
+      "steps": [
+        {
+          "trait": "LogShip",
+          "from": "ready",
+          "event": "SHIP_READ",
+          "payload": {
+            "data": "b25lCnR3bwo=",
+            "eof": false
+          },
+          "entity": {
+            "id": "s",
+            "box": "remote",
+            "shipped": {},
+            "ready": true,
+            "shipping": true,
+            "files": [
+              "warn/2026-11-25.jsonl"
+            ],
+            "index": 0,
+            "fd": 7,
+            "offset": 4096,
+            "length": 0,
+            "last": false,
+            "cleanedDay": "2026-11-25",
+            "cleaning": false,
+            "token": "",
+            "doomed": [],
+            "problems": [],
+            "shippedAt": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "STORAGE_UPLOAD",
+                "payload": {
+                  "key": "logs/remote/warn/2026-11-25/000000000004096.jsonl.gz",
+                  "contentType": "application/gzip"
+                }
+              }
+            ],
+            "entity": {
+              "length": 8,
+              "last": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: nothing new in a file uploads nothing and moves to the next file",
+      "now": 1795651200000,
+      "steps": [
+        {
+          "trait": "LogShip",
+          "from": "ready",
+          "event": "SHIP_READ",
+          "payload": {
+            "data": "",
+            "eof": true
+          },
+          "entity": {
+            "id": "s",
+            "box": "remote",
+            "shipped": {},
+            "ready": true,
+            "shipping": true,
+            "files": [
+              "warn/2026-11-25.jsonl"
+            ],
+            "index": 0,
+            "fd": 7,
+            "offset": 4096,
+            "length": 0,
+            "last": false,
+            "cleanedDay": "2026-11-25",
+            "cleaning": false,
+            "token": "",
+            "doomed": [],
+            "problems": [],
+            "shippedAt": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SHIP_FILE_DONE",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an uploaded piece moves the file's shipped offset on by its length",
+      "now": 1795651200000,
+      "steps": [
+        {
+          "trait": "LogShip",
+          "from": "ready",
+          "event": "SHIP_UPLOADED",
+          "payload": {
+            "key": "k",
+            "size": 10,
+            "etag": "e",
+            "url": "u"
+          },
+          "entity": {
+            "id": "s",
+            "box": "remote",
+            "shipped": {
+              "warn/2026-11-25.jsonl": 4096,
+              "error/2026-11-25.jsonl": 12
+            },
+            "ready": true,
+            "shipping": true,
+            "files": [
+              "warn/2026-11-25.jsonl"
+            ],
+            "index": 0,
+            "fd": 7,
+            "offset": 4096,
+            "length": 8,
+            "last": false,
+            "cleanedDay": "2026-11-25",
+            "cleaning": false,
+            "token": "",
+            "doomed": [],
+            "problems": [],
+            "shippedAt": null
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "offset": 4104,
+              "shipped": {
+                "warn/2026-11-25.jsonl": 4104,
+                "error/2026-11-25.jsonl": 12
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a file resumes from the offset the state kept",
+      "now": 1795651200000,
+      "steps": [
+        {
+          "trait": "LogShip",
+          "from": "ready",
+          "event": "SHIP_FILE",
+          "payload": {
+            "index": 0
+          },
+          "entity": {
+            "id": "s",
+            "box": "remote",
+            "shipped": {
+              "warn/2026-11-25.jsonl": 777
+            },
+            "ready": true,
+            "shipping": true,
+            "files": [
+              "warn/2026-11-25.jsonl"
+            ],
+            "index": 0,
+            "fd": 7,
+            "offset": 0,
+            "length": 0,
+            "last": false,
+            "cleanedDay": "2026-11-25",
+            "cleaning": false,
+            "token": "",
+            "doomed": [],
+            "problems": [],
+            "shippedAt": null
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "offset": 777,
+              "index": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cleanup deletes only pieces keepDays or more days old",
+      "now": 1795651200000,
+      "steps": [
+        {
+          "trait": "LogShip",
+          "from": "ready",
+          "event": "SHIP_LISTED",
+          "payload": {
+            "keys": [
+              {
+                "key": "logs/remote/warn/2026-10-20/000000000000000.jsonl.gz",
+                "size": 1,
+                "lastModified": 0
+              },
+              {
+                "key": "logs/remote/warn/2026-10-26/000000000000000.jsonl.gz",
+                "size": 1,
+                "lastModified": 0
+              },
+              {
+                "key": "logs/remote/error/2026-11-20/000000000000000.jsonl.gz",
+                "size": 1,
+                "lastModified": 0
+              }
+            ],
+            "truncated": false,
+            "nextToken": ""
+          },
+          "entity": {
+            "id": "s",
+            "box": "remote",
+            "shipped": {},
+            "ready": true,
+            "shipping": false,
+            "files": [
+              "warn/2026-11-25.jsonl"
+            ],
+            "index": 0,
+            "fd": 7,
+            "offset": 0,
+            "length": 0,
+            "last": false,
+            "cleanedDay": "2026-11-25",
+            "cleaning": true,
+            "token": "",
+            "doomed": [],
+            "problems": [],
+            "shippedAt": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SHIP_DELETE",
+                "payload": {
+                  "index": 0
+                }
+              }
+            ],
+            "entity": {
+              "doomed": [
+                "logs/remote/warn/2026-10-20/000000000000000.jsonl.gz",
+                "logs/remote/warn/2026-10-26/000000000000000.jsonl.gz"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the box name arriving after the state file starts the first pass",
+      "now": 1795651200000,
+      "steps": [
+        {
+          "trait": "LogShip",
+          "from": "ready",
+          "event": "SHIP_BOX",
+          "payload": {
+            "value": "local"
+          },
+          "entity": {
+            "id": "s",
+            "box": "",
+            "shipped": {},
+            "ready": true,
+            "shipping": false,
+            "files": [
+              "warn/2026-11-25.jsonl"
+            ],
+            "index": 0,
+            "fd": 7,
+            "offset": 0,
+            "length": 0,
+            "last": false,
+            "cleanedDay": "2026-11-25",
+            "cleaning": false,
+            "token": "",
+            "doomed": [],
+            "problems": [],
+            "shippedAt": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SHIP_PASS",
+                "payload": {}
+              }
+            ],
+            "entity": {
+              "box": "local"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a pass does not start before the box is named",
+      "now": 1795651200000,
+      "steps": [
+        {
+          "trait": "LogShip",
+          "from": "ready",
+          "event": "SHIP_PASS",
+          "payload": {},
+          "entity": {
+            "id": "s",
+            "box": "",
+            "shipped": {},
+            "ready": true,
+            "shipping": false,
+            "files": [
+              "warn/2026-11-25.jsonl"
+            ],
+            "index": 0,
+            "fd": 7,
+            "offset": 0,
+            "length": 0,
+            "last": false,
+            "cleanedDay": "2026-11-25",
+            "cleaning": false,
+            "token": "",
+            "doomed": [],
+            "problems": [],
+            "shippedAt": null
+          },
+          "expect": {
+            "fired": true,
+            "emits": [],
+            "entity": {
+              "shipping": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

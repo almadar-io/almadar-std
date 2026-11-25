@@ -17,6 +17,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/to-number': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -30,6 +31,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/to-int': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -42,6 +44,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/len': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -55,6 +58,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/concat': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: null,
@@ -67,6 +71,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/upper': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -79,6 +84,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/lower': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -91,6 +97,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/trim': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -103,6 +110,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/trimStart': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -115,6 +123,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/trimEnd': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -127,6 +136,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/split': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -142,6 +152,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/join': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -157,6 +168,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/slice': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
@@ -173,6 +185,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/replace': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
@@ -189,6 +202,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/replace-pattern': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
@@ -206,6 +220,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/find-pattern': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
@@ -223,6 +238,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/replaceAll': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 3,
     maxArity: 3,
@@ -239,6 +255,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/includes': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -254,6 +271,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/startsWith': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -269,6 +287,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/endsWith': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -284,6 +303,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/padStart': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
@@ -300,6 +320,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/padEnd': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
@@ -316,6 +337,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/repeat': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -331,6 +353,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/reverse': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -343,6 +366,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/capitalize': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -355,6 +379,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/titleCase': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -367,6 +392,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/camelCase': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -379,6 +405,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/kebabCase': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -391,6 +418,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/snakeCase': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -403,6 +431,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/template': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -419,6 +448,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/truncate': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 3,
@@ -436,6 +466,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/encode-uri-component': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -448,6 +479,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/decode-uri-component': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -461,6 +493,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/uri-component-valid': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
@@ -473,6 +506,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/collate': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 2,
     maxArity: 2,
@@ -488,6 +522,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
   'str/collate-key': {
     module: 'str',
     category: 'std-str',
+    pure: true,
     evaluation: 'strict',
     minArity: 1,
     maxArity: 1,
