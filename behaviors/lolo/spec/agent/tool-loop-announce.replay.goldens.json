@@ -1,0 +1,212 @@
+{
+  "atom": "agent/atoms/std-agent-tool-loop.lolo",
+  "trait": "AgentToolLoop",
+  "orbital": "AgentToolLoopOrbital",
+  "note": "A loop another assistant delegates to must not answer the person's conversation: std-agent-session hears ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED from any orbital, and showed a delegate's answer as the final reply (seen live 2026-11-25 in the AI MakeIT talk demo). `announces: delegate` reports the turn as DELEGATE_REPLIED / DELEGATE_REPLY_FAILED in their place. Written before the atom change; each arm is paired with the default as its control.",
+  "cases": [
+    {
+      "id": "a-delegate-answers-as-delegate-replied-and-never-as-the-conversations-reply",
+      "note": "announces: delegate",
+      "steps": [
+        {
+          "event": "ToolsReplied",
+          "from": "thinking",
+          "payload": {
+            "reply": "Added the task.",
+            "steps": [],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DELEGATE_REPLIED",
+                "payload": {
+                  "reply": "Added the task."
+                }
+              }
+            ],
+            "neverEmits": [
+              "ASSISTANT_REPLIED"
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ],
+        "announces": "delegate"
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-by-default-the-loop-answers-the-conversation",
+      "note": "announces left at its default",
+      "steps": [
+        {
+          "event": "ToolsReplied",
+          "from": "thinking",
+          "payload": {
+            "reply": "Added the task.",
+            "steps": [],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASSISTANT_REPLIED",
+                "payload": {
+                  "reply": "Added the task."
+                }
+              }
+            ],
+            "neverEmits": [
+              "DELEGATE_REPLIED"
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-delegates-failure-is-delegate-reply-failed-and-never-the-conversations-failure",
+      "note": "announces: delegate",
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "payload": {
+            "message": "model unavailable"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DELEGATE_REPLY_FAILED",
+                "payload": {
+                  "error": "model unavailable"
+                }
+              }
+            ],
+            "neverEmits": [
+              "ASSISTANT_REPLY_FAILED"
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ],
+        "announces": "delegate"
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-by-default-a-failure-is-the-conversations-failure",
+      "note": "announces left at its default",
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "payload": {
+            "message": "model unavailable"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASSISTANT_REPLY_FAILED",
+                "payload": {
+                  "error": "model unavailable"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DELEGATE_REPLY_FAILED"
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    }
+  ]
+}

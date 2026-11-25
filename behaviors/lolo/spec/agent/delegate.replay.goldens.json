@@ -1,0 +1,140 @@
+{
+  "atom": "agent/atoms/std-agent-delegate.lolo",
+  "trait": "AgentDelegate",
+  "orbital": "AgentDelegateOrbital",
+  "note": "A coordinator's tool call hands a request to one delegate and waits; the delegate's reply is the tool result under the coordinator's call id. Written before the atom. Each arm is paired with a control. The orbital holds the delegate's own tool loop, which has no model in a replay, so the cases that check the desk's answers start from a seeded `waiting` state and only the first case sends an ASK.",
+  "cases": [
+    {
+      "id": "an ask is handed to the delegate's own loop as a one-turn conversation",
+      "defaults": ["DelegateLoop", "DelegateLlm", "DelegateChatRequest", "DelegateChatRequestDelay", "DelegateChatRequestDeadline", "DelegateChatHttp", "DelegateChatHttpFrame"],
+      "steps": [
+        {
+          "event": "ASK",
+          "from": "idle",
+          "entity": { "id": "d", "callId": "" },
+          "payload": { "request": "Add a task: order the catering." },
+          "expect": {
+            "fired": true,
+            "emits": [
+              { "event": "DELEGATED", "payload": { "messages": [{ "role": "user", "content": "Add a task: order the catering." }] } }
+            ],
+            "neverEmits": ["ANSWERED"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a pending call announced while idle is kept",
+      "steps": [
+        {
+          "event": "CALL_PENDING",
+          "from": "idle",
+          "entity": { "id": "d", "callId": "" },
+          "payload": { "callId": "c1", "tool": "Desk.AgentDelegate.ASK" },
+          "expect": { "fired": true, "state": "idle", "entity": { "callId": "c1" } }
+        }
+      ]
+    },
+    {
+      "id": "the reply answers the pending call",
+      "steps": [
+        {
+          "event": "DELEGATE_REPLIED",
+          "from": "waiting",
+          "entity": { "id": "d", "callId": "c1" },
+          "payload": { "reply": "Added order the catering." },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [{ "event": "ANSWERED", "payload": { "callId": "c1", "result": "Added order the catering." } }],
+            "neverEmits": ["ANSWER_FAILED"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the reply answers the pending call announced after the ask",
+      "steps": [
+        {
+          "event": "CALL_PENDING",
+          "from": "waiting",
+          "entity": { "id": "d", "callId": "old" },
+          "payload": { "callId": "c2", "tool": "Desk.AgentDelegate.ASK" },
+          "expect": { "fired": true, "state": "waiting", "entity": { "callId": "c2" } }
+        },
+        {
+          "event": "DELEGATE_REPLIED",
+          "payload": { "reply": "done" },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [{ "event": "ANSWERED", "payload": { "callId": "c2", "result": "done" } }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed delegate fails the pending call",
+      "steps": [
+        {
+          "event": "DELEGATE_FAILED",
+          "from": "waiting",
+          "entity": { "id": "d", "callId": "c3" },
+          "payload": { "error": "model unavailable" },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [{ "event": "ANSWER_FAILED", "payload": { "callId": "c3", "error": "model unavailable" } }],
+            "neverEmits": ["ANSWERED"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a reply nobody asked for answers no call",
+      "steps": [
+        {
+          "event": "DELEGATE_REPLIED",
+          "from": "idle",
+          "entity": { "id": "d", "callId": "c4" },
+          "payload": { "reply": "unrelated" },
+          "expect": { "state": "idle", "neverEmits": ["ANSWERED", "ANSWER_FAILED"] }
+        },
+        {
+          "event": "DELEGATE_FAILED",
+          "payload": { "error": "unrelated" },
+          "expect": { "state": "idle", "neverEmits": ["ANSWERED", "ANSWER_FAILED"] }
+        }
+      ]
+    },
+    {
+      "id": "control: a second ask while waiting is not handed over",
+      "steps": [
+        {
+          "event": "ASK",
+          "from": "waiting",
+          "entity": { "id": "d", "callId": "c5" },
+          "payload": { "request": "another" },
+          "expect": { "state": "waiting", "neverEmits": ["DELEGATED"] }
+        }
+      ]
+    },
+    {
+      "id": "control: a restart while waiting drops the wait, and a late reply answers nothing",
+      "steps": [
+        {
+          "event": "INIT",
+          "from": "waiting",
+          "entity": { "id": "d", "callId": "c6" },
+          "payload": {},
+          "expect": { "fired": true, "state": "idle" }
+        },
+        {
+          "event": "DELEGATE_REPLIED",
+          "payload": { "reply": "late" },
+          "expect": { "state": "idle", "neverEmits": ["ANSWERED"] }
+        }
+      ]
+    }
+  ]
+}

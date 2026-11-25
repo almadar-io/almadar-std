@@ -1,0 +1,103 @@
+app std-agent-abilities [
+  version: "1.0.0",
+  description: "std-agent-abilities — what one assistant may do, as a list read from its own tool loop and never written by hand. The trait emits ABILITIES_ASKED when it starts and whenever it hears ASK_AGAIN; the composer binds that to a std-agent-tool-loop's LIST_TOOLS and binds the loop's TOOLS_LISTED and TOOLS_LIST_FAILED back here. The loop answers with the tools a request made now by this viewer would be offered (its configured tools under a turn's role filter and scope narrowing), so the list is the assistant's real tools for the person reading it. Each line is `title · label: description` for a tool `labels` names by its address, and `title · description` for one it does not; the description is the one the program declares on the input. An empty answer shows `empty`; a failed listing shows the error.",
+]
+
+type AgentToolListed = {
+  tool : string!
+  kind : "input" | "read"!
+  description : string!
+}
+type AgentToolLabel = { tool : string!, label : string! }
+
+orbital AgentAbilitiesOrbital {
+  entity AgentAbilityList [runtime] {
+    id : string!
+    tools : [AgentToolListed] @description "The tools the loop last listed." = []
+    error : string @description "Why the last listing failed." = ""
+  }
+
+  trait AgentAbilities -> AgentAbilityList {
+    config {
+      title : string = "Assistant"
+        @label "Whose abilities are these?"
+        @description "The name each line starts with."
+        @tier "presentation"
+      labels : [AgentToolLabel] = []
+        @label "Short names for its tools"
+        @description "The short name shown for a tool, by the tool's address; a tool not named here shows its declared description alone."
+        @tier "presentation"
+      waiting : string = "…"
+        @label "Shown until the list arrives"
+        @tier "presentation"
+      empty : string = "Nothing for your role."
+        @label "Shown when the list is empty"
+        @description "The loop lists only what the viewer's role may use."
+        @tier "presentation"
+    }
+    initial: asking
+
+    state asking {
+      INIT -> asking
+        (emit ABILITIES_ASKED {})
+        (render-ui main { type: typography, variant: body, color: muted, content: @config.waiting })
+      ASK_AGAIN -> asking
+        (emit ABILITIES_ASKED {})
+      TOOLS_LISTED -> listed
+        (set @entity.tools ?tools)
+        (set @entity.error "")
+        (render-ui main { type: stack, direction: vertical, gap: sm, children: (if (= (array/len ?tools) 0) [{ type: typography, variant: body, color: muted, content: @config.empty }] (array/map ?tools (fn t { type: typography, variant: body, content: (let ((named : [AgentToolLabel] (array/filter @config.labels (fn l (= @l.tool @t.tool))))) (if (= (array/len @named) 0) (str/concat @config.title " · " @t.description) (str/concat @config.title " · " (str/join (array/map @named (fn l @l.label)) ", ") ": " @t.description))) }))) })
+      TOOLS_LIST_FAILED -> failed
+        (set @entity.error ?error)
+        (render-ui main { type: typography, variant: body, color: muted, content: (str/concat @config.title " · " ?error) })
+    }
+
+    state listed {
+      INIT -> asking
+        (emit ABILITIES_ASKED {})
+        (render-ui main { type: typography, variant: body, color: muted, content: @config.waiting })
+      ASK_AGAIN -> listed
+        (emit ABILITIES_ASKED {})
+      TOOLS_LISTED -> listed
+        (set @entity.tools ?tools)
+        (render-ui main { type: stack, direction: vertical, gap: sm, children: (if (= (array/len ?tools) 0) [{ type: typography, variant: body, color: muted, content: @config.empty }] (array/map ?tools (fn t { type: typography, variant: body, content: (let ((named : [AgentToolLabel] (array/filter @config.labels (fn l (= @l.tool @t.tool))))) (if (= (array/len @named) 0) (str/concat @config.title " · " @t.description) (str/concat @config.title " · " (str/join (array/map @named (fn l @l.label)) ", ") ": " @t.description))) }))) })
+      TOOLS_LIST_FAILED -> listed
+    }
+
+    state failed {
+      INIT -> asking
+        (emit ABILITIES_ASKED {})
+        (render-ui main { type: typography, variant: body, color: muted, content: @config.waiting })
+      ASK_AGAIN -> asking
+        (emit ABILITIES_ASKED {})
+        (render-ui main { type: typography, variant: body, color: muted, content: @config.waiting })
+      TOOLS_LISTED -> listed
+        (set @entity.tools ?tools)
+        (set @entity.error "")
+        (render-ui main { type: stack, direction: vertical, gap: sm, children: (if (= (array/len ?tools) 0) [{ type: typography, variant: body, color: muted, content: @config.empty }] (array/map ?tools (fn t { type: typography, variant: body, content: (let ((named : [AgentToolLabel] (array/filter @config.labels (fn l (= @l.tool @t.tool))))) (if (= (array/len @named) 0) (str/concat @config.title " · " @t.description) (str/concat @config.title " · " (str/join (array/map @named (fn l @l.label)) ", ") ": " @t.description))) }))) })
+      TOOLS_LIST_FAILED -> failed
+        (set @entity.error ?error)
+    }
+
+    emits {
+      ABILITIES_ASKED -> external { }
+        @description "Asks the assistant's tool loop for its tools; bind it to the loop's LIST_TOOLS."
+        @tier "domain"
+    }
+
+    listens {
+      ASK_AGAIN { }
+        @description "Ask the loop again, for a list that may have changed (another viewer, another role)."
+      TOOLS_LISTED {
+        tools : [AgentToolListed]!
+      }
+        @description "The loop's answer."
+      TOOLS_LIST_FAILED {
+        error : string!
+      }
+        @description "The loop could not list its tools."
+    }
+  }
+
+  page "/agent-abilities" as AgentAbilitiesPage -> AgentAbilities
+}

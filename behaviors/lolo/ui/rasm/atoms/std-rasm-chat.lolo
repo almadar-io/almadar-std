@@ -35,6 +35,7 @@ orbital RasmChatOrbital {
     dragging : boolean @description "A press on the conversation is dragging it." = false
     dragY : number @description "Where the drag began." = 0
     dragBack : number @description "The scroll offset when the drag began." = 0
+    heading : string @description "A literal header RASM_CHAT_TITLE set, painted instead of the `title` key; empty paints the key." = ""
   }
 
   trait RasmChat -> RasmChatRun [client] {
@@ -86,6 +87,11 @@ orbital RasmChatOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit CHAT_PAINT { n: @entity.paints })
       RASM_CHAT_LOADING -> ready when (!= ?id @config.id)
+      RASM_CHAT_TITLE -> ready when (= ?id @config.id)
+        (set @entity.heading ?title)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CHAT_PAINT { n: @entity.paints })
+      RASM_CHAT_TITLE -> ready when (!= ?id @config.id)
       CHAT_PAINT -> ready when (and (!= @entity.rect null) @entity.live)
         (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (pn (default (object/get @entity.looks (str/concat @config.lookSet "/panel/idle") null) {})) (hd (default (object/get @entity.looks (str/concat @config.lookSet "/header/idle") null) {})) (us (default (object/get @entity.looks (str/concat @config.lookSet "/user/idle") null) {})) (ag (default (object/get @entity.looks (str/concat @config.lookSet "/agent/idle") null) {})) (mt (default (object/get @entity.looks (str/concat @config.lookSet "/meta/idle") null) (default (object/get @entity.looks (str/concat @config.lookSet "/agent/idle") null) {}))) (ip (default (object/get @entity.looks (str/concat @config.lookSet "/input/idle") null) {})) (bad (default (object/get @entity.looks (str/concat @config.lookSet "/alert/idle") null) {})) (fade { durationMs: 380, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 10 }, { at: 1, opacity: 1, offsetY: 0 }] }))
           (let ((top (+ @r.y (+ @config.headerH @config.gap))) (bottom (- (+ @r.y @r.h) (if @config.paintInput (+ @config.inputH (* 2 @config.gap)) @config.gap))) (bw (* (- @r.w (* 2 @config.padX)) @config.bubbleShare)) (n (array/len @entity.records)))
@@ -97,12 +103,13 @@ orbital RasmChatOrbital {
                       (do (set @entity.maxBack (math/max 0 (- @total (- @bottom @top)))) (emit RASM_PAINT {
                         id: @config.id,
                         z: @config.z,
-                        texts: (array/concat [{ id: (str/concat @config.id ":title"), key: @config.title, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @config.padX) (+ @r.x @config.padX)), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: (- @r.w (* 2 @config.padX)), wrap: false }]
+                        texts: (array/concat (if (= @entity.heading "") [{ id: (str/concat @config.id ":title"), key: @config.title, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @config.padX) (+ @r.x @config.padX)), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: (- @r.w (* 2 @config.padX)), wrap: false }] [])
                           (array/map (array/filter @shown (fn l (= (default (let ((m (default (array/nth @entity.records @l.i) { id: "", side: "agent", text: "" }))) @m.status) "sent") "failed"))) (fn l (let ((m (default (array/nth @entity.records @l.i) { id: "", side: "agent", text: "" }))) (let ((atEnd (if (= @entity.dir "rtl") (not (= @m.side "user")) (= @m.side "user")))) (let ((ax (if @atEnd (- (- (+ @r.x @r.w) (+ @config.padX @bw)) (+ @config.alertSize 8)) (+ (+ (+ @r.x @config.padX) @bw) 8)))) { id: (str/concat @config.id ":retry:" @l.i ":label"), key: @config.retryLabel, x: (+ @ax (/ @config.alertSize 2)), y: (+ @l.y (/ @l.h 2)), z: (+ @config.z 5), align: "center", baseline: "middle", color: "rgba(0,0,0,0)", font: @mt.font, wrap: false })))))),
                         nodes: (array/concat
                           [{ type: draw-shape, id: (str/concat @config.id ":panel"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @pn.fill, stroke: @pn.stroke, strokeWidth: @pn.strokeWidth, corners: @pn.corners, hit: false },
                            { type: draw-shape, id: (str/concat @config.id ":rule"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (+ @r.y @config.headerH), z: (+ @config.z 1) }, width: @r.w, height: (default @hd.strokeWidth 1), fill: @hd.stroke, hit: false },
                            { type: draw-shape, id: (str/concat @config.id ":list"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @top, z: (+ @config.z 2) }, width: @r.w, height: (math/max 0 (- @bottom @top)), fill: "rgba(0,0,0,0)", hit: true, wheel: true }]
+                          (if (= @entity.heading "") [] (let ((heading : [node] [{ type: draw-text, id: (str/concat @config.id ":heading"), text: @entity.heading, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @config.padX) (+ @r.x @config.padX)), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2) }, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: (- @r.w (* 2 @config.padX)), wrap: false, hit: false }])) @heading))
                           (if @config.paintInput [{ type: draw-shape, id: (str/concat @config.id ":input"), shape: rect, anchor: "top-left", position: { x: (+ @r.x @config.padX), y: (- (+ @r.y @r.h) (+ @config.gap @config.inputH)), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.padX)), height: @config.inputH, fill: @ip.fill, stroke: @ip.stroke, strokeWidth: @ip.strokeWidth, corners: @ip.corners, hit: false }] [])
                           (array/flatten (array/map @shown (fn l (let ((m (default (array/nth @entity.records @l.i) { id: "", side: "agent", text: "" })) (p (default (array/nth @parts @l.i) { i: 0, named: false, pictured: false, meta: false }))) (let ((lk (if (= @m.side "user") @us @ag)) (atEnd (if (= @entity.dir "rtl") (not (= @m.side "user")) (= @m.side "user")))) (let ((bx (if @atEnd (- (+ @r.x @r.w) (+ @config.padX @bw)) (+ @r.x @config.padX))) (tx (if (= @entity.dir "rtl") (- (+ (if @atEnd (- (+ @r.x @r.w) (+ @config.padX @bw)) (+ @r.x @config.padX)) @bw) @config.padX) (+ (if @atEnd (- (+ @r.x @r.w) (+ @config.padX @bw)) (+ @r.x @config.padX)) @config.padX))) (al (if (= @entity.dir "rtl") "right" "left")) (anim (if (= @l.i @entity.newest) @fade null)) (nameH (if @p.named @config.metaH 0)) (picH (if @p.pictured (+ @config.imageH @config.gap) 0)))
                             (array/concat
@@ -120,10 +127,11 @@ orbital RasmChatOrbital {
             (emit RASM_PAINT {
               id: @config.id,
               z: @config.z,
-              texts: [{ id: (str/concat @config.id ":title"), key: @config.title, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @config.padX) (+ @r.x @config.padX)), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: (- @r.w (* 2 @config.padX)), wrap: false }],
+              texts: (if (= @entity.heading "") [{ id: (str/concat @config.id ":title"), key: @config.title, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @config.padX) (+ @r.x @config.padX)), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: (- @r.w (* 2 @config.padX)), wrap: false }] []),
               nodes: (array/concat
                 [{ type: draw-shape, id: (str/concat @config.id ":panel"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @pn.fill, stroke: @pn.stroke, strokeWidth: @pn.strokeWidth, corners: @pn.corners, hit: false },
                  { type: draw-shape, id: (str/concat @config.id ":rule"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (+ @r.y @config.headerH), z: (+ @config.z 1) }, width: @r.w, height: (default @hd.strokeWidth 1), fill: @hd.stroke, hit: false }]
+                (if (= @entity.heading "") [] (let ((heading : [node] [{ type: draw-text, id: (str/concat @config.id ":heading"), text: @entity.heading, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @config.padX) (+ @r.x @config.padX)), y: (+ @r.y (/ @config.headerH 2)), z: (+ @config.z 2) }, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @hd.textColor, font: @hd.font, width: (- @r.w (* 2 @config.padX)), wrap: false, hit: false }])) @heading))
                 (if @config.paintInput [{ type: draw-shape, id: (str/concat @config.id ":input"), shape: rect, anchor: "top-left", position: { x: (+ @r.x @config.padX), y: (- (+ @r.y @r.h) (+ @config.gap @config.inputH)), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.padX)), height: @config.inputH, fill: @ip.fill, stroke: @ip.stroke, strokeWidth: @ip.strokeWidth, corners: @ip.corners, hit: false }] [])
                 (array/map (array/range 4) (fn i (let ((b (default (array/nth [{ mine: false, w: 0.55, h: 44, o: 0 }, { mine: true, w: 0.7, h: 64, o: 44 }, { mine: false, w: 0.45, h: 44, o: 108 }, { mine: true, w: 0.6, h: 84, o: 152 }] @i) { mine: false, w: 0.5, h: 44, o: 0 }))) (let ((atEnd (if (= @entity.dir "rtl") (not @b.mine) @b.mine))) { type: draw-shape, id: (str/concat @config.id ":skeleton:" @i), shape: rect, anchor: "top-left", position: { x: (if @atEnd (- (+ @r.x @r.w) (+ @config.padX (* @iw @b.w))) (+ @r.x @config.padX)), y: (+ (+ @top @b.o) (* @i @config.gap)), z: (+ @config.z 3) }, width: (* @iw @b.w), height: @b.h, fill: @sk.fill, corners: (if @b.mine @us.corners @ag.corners), animation: @pulse, hit: false })))))
             })))
@@ -212,9 +220,11 @@ orbital RasmChatOrbital {
       RASM_MEASURED { items : [RasmMeasureItem]! }
         @description "Canvas text measurements of this panel's bubble texts, wired from the surface; bubbles lay out again when a height changes."
       RASM_CHAT_MESSAGES { id : string!  messages : [RasmChatRecord]! }
+        @description "The live conversation for the panel `id` names, oldest first: from then on the panel paints these records (literal text, sender, time, ticks, an image) instead of the configured messages; a longer list fades its newest bubble in."
       RASM_CHAT_LOADING { id : string! }
         @description "The panel `id` names is loading a conversation: it drops its records and, with `skeleton` on, shows placeholder bubbles until RASM_CHAT_MESSAGES arrives."
-        @description "The live conversation for the panel `id` names, oldest first: from then on the panel paints these records (literal text, sender, time, ticks, an image) instead of the configured messages; a longer list fades its newest bubble in."
+      RASM_CHAT_TITLE { id : string!  title : string! }
+        @description "A literal header for the panel `id` names, such as the person a conversation is with; an empty title paints the `title` key again."
     }
 
     config {

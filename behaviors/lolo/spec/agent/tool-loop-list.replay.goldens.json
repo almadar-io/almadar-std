@@ -1,0 +1,544 @@
+{
+  "atom": "agent/atoms/std-agent-tool-loop.lolo",
+  "trait": "AgentToolLoop",
+  "orbital": "AgentToolLoopOrbital",
+  "note": "LIST_TOOLS answers, while the loop is idle, the tools it would offer the viewer on a request made now, as TOOLS_LISTED { tools: [{ tool, kind, description }] }: the same role filter and the same scope narrowing as a turn, with no model call. `tool` is the address a conversation's toolLabels name. Written before the atom change; each listing is paired with a control.",
+  "cases": [
+    {
+      "id": "a-narrowed-scope-lists-that-traits-inputs-and-the-named-entity",
+      "note": "A module's assistant: its own module, nothing else.",
+      "steps": [
+        {
+          "event": "LIST_TOOLS",
+          "from": "idle",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "LIST_INPUTS_KNOWN",
+          "from": "idle",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOOLS_LISTED",
+                "payload": {
+                  "tools": [
+                    {
+                      "tool": "Board.TaskRules.DO_CREATE",
+                      "kind": "input",
+                      "description": "Create a task"
+                    },
+                    {
+                      "tool": "Board.TaskRules.DO_COMPLETE",
+                      "kind": "input",
+                      "description": "Complete a task"
+                    },
+                    {
+                      "tool": "Task",
+                      "kind": "read",
+                      "description": "Read the Task rows you may see"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ],
+            "traits": [
+              "TaskRules"
+            ],
+            "entities": [
+              "Task"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-an-unnarrowed-scope-lists-every-declared-input-and-every-entity",
+      "note": "No narrowing: everything declared.",
+      "steps": [
+        {
+          "event": "LIST_TOOLS",
+          "from": "idle",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "LIST_INPUTS_KNOWN",
+          "from": "idle",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOOLS_LISTED",
+                "payload": {
+                  "tools": [
+                    {
+                      "tool": "Board.TaskRules.DO_CREATE",
+                      "kind": "input",
+                      "description": "Create a task"
+                    },
+                    {
+                      "tool": "Board.TaskRules.DO_COMPLETE",
+                      "kind": "input",
+                      "description": "Complete a task"
+                    },
+                    {
+                      "tool": "Board.CalendarRules.DO_SCHEDULE",
+                      "kind": "input",
+                      "description": "Schedule an event"
+                    },
+                    {
+                      "tool": "Task",
+                      "kind": "read",
+                      "description": "Read the Task rows you may see"
+                    },
+                    {
+                      "tool": "Event",
+                      "kind": "read",
+                      "description": "Read the Event rows you may see"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-a-role-the-tools-do-not-name-is-listed-nothing",
+      "note": "The role filter of a turn applies: no fallback to everything.",
+      "steps": [
+        {
+          "event": "LIST_TOOLS",
+          "from": "idle",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          },
+          "identity": {
+            "id": "u2",
+            "role": "guest"
+          }
+        },
+        {
+          "event": "LIST_INPUTS_KNOWN",
+          "from": "idle",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOOLS_LISTED",
+                "payload": {
+                  "tools": []
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u2",
+            "role": "guest"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ],
+            "traits": [
+              "TaskRules"
+            ],
+            "entities": [
+              "Task"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-named-input-and-a-named-read-are-listed-by-their-own-addresses",
+      "note": "Tools named one by one, as a turn binds them.",
+      "steps": [
+        {
+          "event": "LIST_TOOLS",
+          "from": "idle",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "LIST_INPUTS_KNOWN",
+          "from": "idle",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": [
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ]
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOOLS_LISTED",
+                "payload": {
+                  "tools": [
+                    {
+                      "tool": "Board.CalendarRules.DO_SCHEDULE",
+                      "kind": "input",
+                      "description": "Schedule an event"
+                    },
+                    {
+                      "tool": "Event",
+                      "kind": "read",
+                      "description": "Read the Event rows you may see"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "event": "Board.CalendarRules.DO_SCHEDULE",
+            "roles": [
+              "staff"
+            ]
+          },
+          {
+            "read": "Event",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-failed-reflection-is-reported-as-a-failure-not-as-an-empty-list",
+      "note": "Broken state is never read as empty.",
+      "steps": [
+        {
+          "event": "LIST_TOOLS",
+          "from": "idle",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "LIST_INPUTS_FAILED",
+          "from": "idle",
+          "payload": {
+            "error": "reflection refused"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOOLS_LIST_FAILED",
+                "payload": {
+                  "error": "reflection refused"
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    }
+  ]
+}

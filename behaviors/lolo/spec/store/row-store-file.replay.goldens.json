@@ -1331,6 +1331,72 @@
         }
       ],
       "note": "control: only a missing file is empty; a file that exists and does not fit { rows, changes } answers STORE_FAILED (bad-file-a-missing-changes-list-is-refused)"
+    },
+    {
+      "id": "a-write-saves-to-a-temporary-file-named-by-its-own-flight",
+      "note": "Two writes of one entity in flight together shared `<file>.json.tmp`; the later, shorter write landed over the earlier one and the rename published a file with the longer write's tail after the JSON (seen 2026-11-25: talkCursors.json on the local box, two sessions saving a slide position; every later save failed on the malformed file). The temporary file is named by the flight's key, so two flights never share one. Written before the atom change.",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "from": "ready",
+          "payload": {
+            "key": "k1",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "Note",
+                  "data": {
+                    "id": "a"
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "key": "k1",
+              "fileName": "Note",
+              "tmp": "Note.json.b637b17af08aced8850c18cccde915da.tmp"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-another-flight-saves-to-another-temporary-file",
+      "note": "The same write under another key names another temporary file.",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "from": "ready",
+          "payload": {
+            "key": "k2",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "Note",
+                  "data": {
+                    "id": "a"
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "key": "k2",
+              "fileName": "Note",
+              "tmp": "Note.json.61620957a1443c946a143cf99a7d24fa.tmp"
+            }
+          }
+        }
+      ]
     }
   ]
 }

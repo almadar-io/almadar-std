@@ -8,6 +8,10 @@ type AgentToolScope = {
   scope : "declared"!
   roles : [string]!
   fireAndForget : boolean
+  orbitals : [string]
+  traits : [string]
+  events : [string]
+  entities : [string]
 }
 type AgentToolField = {
   name : string!
@@ -123,6 +127,11 @@ type AgentReflection = {
   inputs : [AgentReflectedInput]!
   entities : [string]!
   selected : [AgentReflectedInput]!
+}
+type AgentToolListed = {
+  tool : string!
+  kind : "input" | "read"!
+  description : string!
 }
 type AgentGuestReflection = {
   inputs : [AgentReflectedInput]!
@@ -292,6 +301,11 @@ orbital AgentToolLoopOrbital {
         @description "No live ASSISTANT_STEP stream: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own."
         @synonyms "silent, background, no toast, suppress errors, headless run"
         @tier "policy"
+      announces : "assistant" | "delegate" = assistant
+        @label "Who hears its answer?"
+        @description "assistant: the turn is reported as ASSISTANT_REPLIED or ASSISTANT_REPLY_FAILED, the contract a conversation hears from any orbital. delegate: the turn is reported as DELEGATE_REPLIED or DELEGATE_REPLY_FAILED in their place, for a loop another assistant hands requests to (std-agent-delegate): no conversation shows or stores its answer."
+        @synonyms "delegate, sub-agent, worker, reports to"
+        @tier "policy"
     }
     initial: idle
 
@@ -302,10 +316,26 @@ orbital AgentToolLoopOrbital {
         (set @entity.guest "")
       INIT -> idle
         (set @entity.status idle)
+      LIST_TOOLS -> idle
+        (let ((mine : [AgentToolData] (let ((all : [AgentTool] @config.tools)) (array/filter @all (fn t (or (!= @config.caller "user") (and (not (= @user null)) (array/includes (object/get @t roles []) (default @user.role "")))))))))
+          (program/inputs { select: (array/flatten (array/map @mine (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: LIST_INPUTS_KNOWN, failure: LIST_INPUTS_FAILED } }))
+      LIST_INPUTS_KNOWN -> idle
+        (let ((mine : [AgentToolData] (let ((all : [AgentTool] @config.tools)) (array/filter @all (fn t (or (!= @config.caller "user") (and (not (= @user null)) (array/includes (object/get @t roles []) (default @user.role "")))))))))
+          (emit TOOLS_LISTED { tools: (array/flatten (array/flatten (array/map (array/range 0 (array/len @mine) 1) (fn i
+            (array/map (array/take (array/drop @mine @i) 1) (fn t
+              (let ((r : [AgentToolListed] (if (object/has @t scope)
+                (array/concat
+                  (array/map (array/filter @payload.result.inputs (fn y (and (or (not (object/has @t orbitals)) (array/includes (object/get @t orbitals []) @y.orbital)) (or (not (object/has @t traits)) (array/includes (object/get @t traits []) @y.trait)) (or (not (object/has @t events)) (array/includes (object/get @t events []) @y.event))))) (fn x { tool: @x.address, kind: input, description: (default @x.description @x.event) }))
+                  (array/map (array/filter @payload.result.entities (fn e (or (not (object/has @t entities)) (array/includes (object/get @t entities []) @e)))) (fn e { tool: @e, kind: read, description: (str/concat "Read the " @e " rows you may see") })))
+                (if (object/has @t read)
+                  (let ((rd : AgentToolRead @t)) [{ tool: @rd.read, kind: read, description: (str/concat "Read the " @rd.read " rows you may see") }])
+                  (let ((ev : AgentToolInputData @t)) (array/map (array/take (array/drop @payload.result.selected (array/count (array/take @mine @i) (fn y (object/has @y event)))) 1) (fn s { tool: @ev.event, kind: input, description: (default @s.description @ev.event) }))))))) @r))))))) }))
+      LIST_INPUTS_FAILED -> idle
+        (emit TOOLS_LIST_FAILED { error: ?error })
       CONVERSE -> idle when (and (!= @config.caller "process") (not (default ?ephemeral false)) (array/some @config.tools (fn t (not (object/has @t roles)))))
         (set @entity.status failed)
         (set @entity.error "An assistant tool declares no roles, so no role can be checked against it: give every tool a roles list.")
-        (emit ASSISTANT_REPLY_FAILED { error: @entity.error, ephemeral: false })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: @entity.error, ephemeral: false }) (emit ASSISTANT_REPLY_FAILED { error: @entity.error, ephemeral: false }))
       CONVERSE -> preparing when (and (!= @config.caller "identity") (not (default ?ephemeral false)))
         (set @entity.status thinking)
         (set @entity.ephemeral false)
@@ -372,21 +402,23 @@ orbital AgentToolLoopOrbital {
         (set @entity.status failed)
         (set @entity.pendingTools [])
         (set @entity.error (str/concat "The assistant's own identity could not sign in: " ?reason))
-        (emit ASSISTANT_REPLY_FAILED { error: (str/concat "The assistant's own identity could not sign in: " ?reason), ephemeral: @entity.ephemeral })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: (str/concat "The assistant's own identity could not sign in: " ?reason), ephemeral: @entity.ephemeral }) (emit ASSISTANT_REPLY_FAILED { error: (str/concat "The assistant's own identity could not sign in: " ?reason), ephemeral: @entity.ephemeral }))
       INPUTS_KNOWN -> idle when (and (!= @config.caller "process") (> @entity.offered 0) (= (array/len @entity.turnTools) 0))
         (set @entity.status failed)
         (set @entity.error (str/concat "None of the assistant's " @entity.offered " tools is granted to the role '" @entity.turnRole "': add the role to a tool's roles, or offer it no tools."))
-        (emit ASSISTANT_REPLY_FAILED { error: @entity.error, ephemeral: @entity.ephemeral })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: @entity.error, ephemeral: @entity.ephemeral }) (emit ASSISTANT_REPLY_FAILED { error: @entity.error, ephemeral: @entity.ephemeral }))
       INPUTS_KNOWN -> thinking when (and (not (and (!= @config.caller "process") (> @entity.offered 0) (= (array/len @entity.turnTools) 0))) (= (array/len @payload.result.selected) (array/count @entity.turnTools (fn y (object/has @y event)))))
         (let ((table : [AgentToolBinding] (array/flatten (array/flatten (array/map (array/range 0 (array/len @entity.turnTools) 1) (fn i
             (array/map (array/take (array/drop @entity.turnTools @i) 1) (fn t
               (let ((r : [AgentToolBinding] (if (object/has @t scope)
                 (array/concat
-                  (array/map @payload.result.inputs (fn x
+                  (array/map (array/filter @payload.result.inputs (fn y (and (or (not (object/has @t orbitals)) (array/includes (object/get @t orbitals []) @y.orbital)) (or (not (object/has @t traits)) (array/includes (object/get @t traits []) @y.trait)) (or (not (object/has @t events)) (array/includes (object/get @t events []) @y.event))))) (fn x
                     { name: (str/concat @x.event "_" (+ (array/findIndex @payload.result.inputs (fn z (= @z.address @x.address))) 1)), description: (str/concat (default @x.description @x.event) " (" @x.orbital " → " @x.trait ")"), parameters: @x.parameters, label: @x.address, kind: input, address: @x.address, readAny: false, contracted: false, fireAndForget: (object/get @t fireAndForget false) }))
-                  (if (> (array/len @payload.result.entities) 0)
-                    [{ name: "read", description: "Read the rows of an entity that you may see", parameters: { type: "object", properties: { entity: { type: "string", enum: @payload.result.entities } }, required: ["entity"] }, label: "read", kind: read, readAny: true, contracted: false, fireAndForget: false }]
-                    []))
+                  (if (object/has @t entities)
+                    (array/map (array/filter @payload.result.entities (fn e (array/includes (object/get @t entities []) @e))) (fn e { name: (str/concat "read__" @e), description: (str/concat "Read the " @e " rows you may see"), parameters: { type: "object", properties: {} }, label: @e, kind: read, entity: @e, readAny: false, contracted: false, fireAndForget: false, fields: [], projected: false }))
+                    (if (> (array/len @payload.result.entities) 0)
+                      [{ name: "read", description: "Read the rows of an entity that you may see", parameters: { type: "object", properties: { entity: { type: "string", enum: @payload.result.entities } }, required: ["entity"] }, label: "read", kind: read, readAny: true, contracted: false, fireAndForget: false }]
+                      [])))
                 (if (object/has @t read)
                   (let ((rd : AgentToolRead @t)) [{ name: (str/concat "read__" @rd.read), description: (str/concat "Read the " @rd.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @rd.read, kind: read, entity: @rd.read, readAny: false, contracted: false, fireAndForget: false, fields: (object/get @rd fields []), projected: (object/has @rd fields) }])
                   (let ((ev : AgentToolInputData @t)) (array/map (array/take (array/drop @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event)))) 1) (fn s
@@ -406,11 +438,11 @@ orbital AgentToolLoopOrbital {
       INPUTS_KNOWN -> idle when (!= (array/len @payload.result.selected) (array/count @entity.turnTools (fn y (object/has @y event))))
         (set @entity.status failed)
         (set @entity.error "The app reflected a different number of inputs than the assistant's tools name.")
-        (emit ASSISTANT_REPLY_FAILED { error: "The app reflected a different number of inputs than the assistant's tools name.", ephemeral: @entity.ephemeral })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: "The app reflected a different number of inputs than the assistant's tools name.", ephemeral: @entity.ephemeral }) (emit ASSISTANT_REPLY_FAILED { error: "The app reflected a different number of inputs than the assistant's tools name.", ephemeral: @entity.ephemeral }))
       INPUTS_FAILED -> idle
         (set @entity.status failed)
         (set @entity.error ?error)
-        (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral }) (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral }))
     }
 
     state thinking {
@@ -443,11 +475,11 @@ orbital AgentToolLoopOrbital {
       GUEST_INPUTS_FAILED -> idle when (not @entity.cancelled)
         (set @entity.status failed)
         (set @entity.error ?error)
-        (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral }) (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral }))
       GUEST_INPUTS_FAILED -> idle when @entity.cancelled
         (set @entity.cancelled false)
       CONVERSE -> thinking when @entity.cancelled
-        (emit ASSISTANT_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (default ?ephemeral false) })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (default ?ephemeral false) }) (emit ASSISTANT_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (default ?ephemeral false) }))
       ToolsStep -> thinking when (and @entity.live (not @entity.cancelled))
         (set @entity.turnSteps (array/append @entity.turnSteps ?activity))
         (emit ASSISTANT_STEP { activity: ?activity })
@@ -464,7 +496,7 @@ orbital AgentToolLoopOrbital {
       ToolsReplied -> idle when (not @entity.cancelled)
         (set @entity.status answered)
         (set @entity.reply ?reply)
-        (emit ASSISTANT_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage, ephemeral: @entity.ephemeral })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage }) (emit ASSISTANT_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage, ephemeral: @entity.ephemeral }))
       ToolsReplied -> idle when @entity.cancelled
         (set @entity.cancelled false)
       ToolsFailed -> idle when @entity.cancelled
@@ -472,7 +504,7 @@ orbital AgentToolLoopOrbital {
       ToolsFailed -> idle when (not @entity.cancelled)
         (set @entity.status failed)
         (set @entity.error ?message)
-        (emit ASSISTANT_REPLY_FAILED { error: ?message, code: (default ?code ""), steps: @entity.turnSteps, ephemeral: @entity.ephemeral })
+        (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: ?message, code: (default ?code ""), steps: @entity.turnSteps, ephemeral: @entity.ephemeral }) (emit ASSISTANT_REPLY_FAILED { error: ?message, code: (default ?code ""), steps: @entity.turnSteps, ephemeral: @entity.ephemeral }))
     }
 
     state running {
@@ -667,6 +699,32 @@ orbital AgentToolLoopOrbital {
         @description "The assistant could not answer (model unavailable, or out of steps). `code` is `output-cut` when the model's reply was cut at the output cap and `timeout` when the model call timed out; empty otherwise."
         @synonyms "failed, error, gave up"
         @tier "domain"
+      DELEGATE_REPLIED -> external {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+        @description "A loop that announces as a delegate answered; carries every tool step it took and the tokens it used."
+        @tier "domain"
+      DELEGATE_REPLY_FAILED -> external {
+        error : string!
+        code : string
+        steps : [AgentActivity]
+        ephemeral : boolean
+      }
+        @description "A loop that announces as a delegate could not answer."
+        @tier "domain"
+      TOOLS_LISTED -> external {
+        tools : [AgentToolListed]!
+      }
+        @description "The answer to LIST_TOOLS: the tools a request made now by this viewer would be offered, each by the address a conversation's toolLabels name, with the description the program declares for it."
+        @synonyms "abilities, what it can do, tool list"
+        @tier "domain"
+      TOOLS_LIST_FAILED -> external {
+        error : string!
+      }
+        @description "LIST_TOOLS could not be answered: the program could not be reflected."
+        @tier "domain"
       LLM_CALL_TOOLS -> external {
         messages : [AgentChatMessage]!
         tools : [LlmToolDef]!
@@ -725,6 +783,12 @@ orbital AgentToolLoopOrbital {
       INPUTS_FAILED {
         error : string!
       }
+      LIST_INPUTS_KNOWN {
+        result : AgentReflection!
+      }
+      LIST_INPUTS_FAILED {
+        error : string!
+      }
       GUEST_INPUTS_KNOWN {
         result : AgentGuestReflection!
       }
@@ -778,6 +842,9 @@ orbital AgentToolLoopOrbital {
         @description "A guest session opened beside the assistant (the composer wires the stage's GUEST_READY here; never a client input, since a guest id is not checked against who opened it): every turn that starts from now also operates it."
       GuestDetached { }
         @description "The attached guest closed: later turns operate only the running program."
+      LIST_TOOLS { }
+        @description "While idle, announce the tools a request made now would be offered (TOOLS_LISTED), with no model call: the configured tools under a turn's role filter and scope narrowing. A loop that is answering a request does not answer this."
+        @synonyms "abilities, what can you do, describe tools"
       CONVERSE {
         messages : [AgentChatMessage]!
         context : string

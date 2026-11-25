@@ -1,0 +1,45 @@
+{
+  "atom": "agent/atoms/std-agent-abilities.lolo",
+  "trait": "AgentAbilities",
+  "orbital": "AgentAbilitiesOrbital",
+  "note": "The list of what one assistant may do, read from its own tool loop and never written by hand: the trait asks on INIT and whenever it is told to ask again, and shows the answer. Written before the atom. Each arm is paired with a control.",
+  "cases": [
+    {
+      "id": "it asks its loop for the tools when it starts",
+      "steps": [
+        { "event": "INIT", "from": "asking", "entity": { "id": "a", "tools": [], "error": "" }, "payload": {}, "expect": { "fired": true, "state": "asking", "emits": [{ "event": "ABILITIES_ASKED", "payload": {} }] } }
+      ]
+    },
+    {
+      "id": "the loop's answer is kept and shown",
+      "steps": [
+        { "event": "TOOLS_LISTED", "from": "asking", "entity": { "id": "a", "tools": [], "error": "" }, "payload": { "tools": [{ "tool": "Board.TaskRules.DO_CREATE", "kind": "input", "description": "Create a task" }] }, "expect": { "fired": true, "state": "listed", "neverEmits": ["ABILITIES_ASKED"] } }
+      ]
+    },
+    {
+      "id": "told to ask again after an answer it asks again",
+      "steps": [
+        { "event": "ASK_AGAIN", "from": "listed", "entity": { "id": "a", "tools": [{ "tool": "Board.TaskRules.DO_CREATE", "kind": "input", "description": "Create a task" }], "error": "" }, "payload": {}, "expect": { "fired": true, "state": "listed", "emits": [{ "event": "ABILITIES_ASKED", "payload": {} }] } }
+      ]
+    },
+    {
+      "id": "a later answer replaces the list",
+      "steps": [
+        { "event": "TOOLS_LISTED", "from": "listed", "entity": { "id": "a", "tools": [{ "tool": "Board.TaskRules.DO_CREATE", "kind": "input", "description": "Create a task" }], "error": "" }, "payload": { "tools": [] }, "expect": { "fired": true, "state": "listed" } }
+      ]
+    },
+    {
+      "id": "a failed listing is shown as a failure and can be asked again",
+      "steps": [
+        { "event": "TOOLS_LIST_FAILED", "from": "asking", "entity": { "id": "a", "tools": [], "error": "" }, "payload": { "error": "reflection refused" }, "expect": { "fired": true, "state": "failed", "neverEmits": ["ABILITIES_ASKED"] } },
+        { "event": "ASK_AGAIN", "from": "failed", "payload": {}, "expect": { "fired": true, "state": "asking", "emits": [{ "event": "ABILITIES_ASKED", "payload": {} }] } }
+      ]
+    },
+    {
+      "id": "control: a failure after an answer keeps the answer on screen",
+      "steps": [
+        { "event": "TOOLS_LIST_FAILED", "from": "listed", "entity": { "id": "a", "tools": [{ "tool": "Board.TaskRules.DO_CREATE", "kind": "input", "description": "Create a task" }], "error": "" }, "payload": { "error": "reflection refused" }, "expect": { "fired": true, "state": "listed" } }
+      ]
+    }
+  ]
+}

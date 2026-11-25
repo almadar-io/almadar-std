@@ -1,0 +1,305 @@
+app std-agent-delegate [
+  version: "1.0.0",
+  description: "std-agent-delegate — one assistant a coordinating assistant delegates to: a desk and a tool loop of its own, in one orbital. The coordinator is offered this orbital's ASK { request } as a tool that waits (declared without fireAndForget; a coordinator whose tool is { scope: declared, events: [\"ASK\"] } is offered every delegate the program composes, with no list of its own), so its std-agent-tool-loop announces TOOL_PENDING { callId, tool } and stops until the result arrives. The desk hands the request to its own loop as a one-turn conversation, so the delegate sees only what the coordinator wrote; the loop works under this orbital's `instructions` and `tools` (narrow a { scope: declared } tool with `traits`, `orbitals` and `entities` to offer it one module's declared inputs) and announces as a delegate, so no conversation shows or stores its answer; the desk answers the coordinator's call with ANSWERED { callId, result } or ANSWER_FAILED { callId, error }. Compose one orbital per delegate: remap its page to a route of its own, bind the coordinator loop's TOOL_PENDING to CALL_PENDING, and bind ANSWERED and ANSWER_FAILED to the coordinator loop's TOOL_RESULT and TOOL_FAILED. The page is a route, not boot, so each viewer's session has its own desk and loop and a delegate acts as the viewer who asked (a trait mounted only on boot is program-wide and has no viewer, EXEC-DIST-9). A coordinator's tool loop runs one waiting call at a time, so the desk keeps the last call id announced; a desk that was not asked stays idle and answers nothing.",
+  net: { "api.openai.com:443": [tcp] },
+]
+
+type AgentChatMessage = {
+  role : "user" | "assistant"!
+  content : string!
+}
+type AgentChatMessages = [AgentChatMessage]
+type AgentToolScope = {
+  scope : "declared"!
+  roles : [string]!
+  fireAndForget : boolean
+  orbitals : [string]
+  traits : [string]
+  events : [string]
+  entities : [string]
+}
+type AgentToolField = {
+  name : string!
+  type : string!
+  required : boolean
+  values : [string]
+  properties : [AgentToolField]
+  description : string
+}
+type AgentToolInput = {
+  event : EventAddress!
+  roles : [string]!
+  payload : [AgentToolField]
+  fireAndForget : boolean
+  reports : [string]
+}
+type AgentToolRead = {
+  read : string!
+  roles : [string]!
+  fields : [string]
+}
+type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
+type AgentToolInputData = {
+  event : string!
+  roles : [string]!
+  payload : [AgentToolField]
+  fireAndForget : boolean
+  reports : [string]
+}
+type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : instant!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : instant!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : instant!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
+
+uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
+uses Loop from "std/behaviors/std-agent-tool-loop"
+
+orbital AgentDelegateOrbital {
+  config {
+    instructions : string = "You are one assistant among several. Do what the request asks with your tools. If you have no tool for it, say plainly that you cannot do it and why. Answer in one or two sentences with exactly what you did or found."
+      @label "How should this assistant behave?"
+      @description "The delegate's standing instructions; the coordinator's request follows them."
+      @synonyms "prompt, system prompt, role"
+      @tier "domain"
+    tools : [AgentTool] = []
+      @label "What may this assistant do?"
+      @description "The declared inputs it may fire and the entities it may read, as std-agent-tool-loop reads them. A { scope: declared } tool narrowed with `traits`, `orbitals` and `entities` offers it one module's declared inputs, with no list of actions here."
+      @synonyms "allowlist, abilities, actions, permissions"
+      @tier "domain"
+    maxSteps : number = 6
+      @label "Most steps one request may take"
+      @description "Forwarded to std-agent-tool-loop."
+      @synonyms "step limit"
+      @tier "policy"
+    caller : "user" | "process" = user
+      @label "Whose tools are these?"
+      @description "Forwarded to std-agent-tool-loop. user: the delegate acts as the viewer who asked. process: for a headless run with no signed-in user, which its composer declares."
+      @synonyms "headless, unattended, no user"
+      @tier "policy"
+  }
+
+  entity AgentDelegateCall [runtime] {
+    id : string!
+    callId : string @description "The coordinator's waiting tool call, as last announced." = ""
+  }
+
+  trait DelegateLlm = Llm.traits.LlmClient {
+    listens {
+      DelegateLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      DelegateLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      DelegateLoop.LLM_CANCEL -> LLM_CANCEL
+      DelegateChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      DelegateChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      DelegateChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      DelegateChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait DelegateChatRequest = Req.traits.HttpRequest {
+    listens {
+      DelegateChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      DelegateChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
+      DelegateLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      DelegateLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      DelegateChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      DelegateChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait DelegateChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      DelegateChatRequest.RETRY_WAIT -> START
+      DelegateChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait DelegateChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      DelegateChatRequest.TIMEOUT_START -> START
+      DelegateChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait DelegateChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      DelegateChatHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait DelegateChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      DelegateChatRequest.HTTP_SEND -> HTTP_SEND
+      DelegateChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      DelegateChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      DelegateChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      DelegateChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait DelegateLoop = Loop.traits.AgentToolLoop {
+    config {
+      quiet: true
+      announces: delegate
+      caller: @config.caller
+      instructions: @config.instructions
+      tools: @config.tools
+      maxSteps: @config.maxSteps
+    }
+    listens {
+      AgentDelegate.DELEGATED -> CONVERSE
+      DelegateLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      DelegateLlm.LLM_TOOLS_STEP -> ToolsStep
+      DelegateLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      DelegateLlm.LLM_FAILED -> ToolsFailed
+      DelegateLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [ToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
+    }
+  }
+
+  trait AgentDelegate -> AgentDelegateCall {
+    config {
+      note : string = "This assistant takes requests from a coordinating assistant."
+        @label "What its page says"
+        @description "The one line this delegate's own page shows; the delegate is reached through its coordinator, not through this page."
+        @tier "presentation"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: typography, variant: body, content: @config.note })
+      CALL_PENDING -> idle
+        (set @entity.callId ?callId)
+      ASK -> waiting
+        (emit DELEGATED { messages: [{ role: user, content: ?request }] })
+      DELEGATE_REPLIED -> idle
+      DELEGATE_FAILED -> idle
+    }
+
+    state waiting {
+      INIT -> idle
+      CALL_PENDING -> waiting
+        (set @entity.callId ?callId)
+      ASK -> waiting
+      DELEGATE_REPLIED -> idle
+        (emit ANSWERED { callId: @entity.callId, result: ?reply })
+      DELEGATE_FAILED -> idle
+        (emit ANSWER_FAILED { callId: @entity.callId, error: ?error })
+    }
+
+    emits {
+      DELEGATED -> internal {
+        messages : [AgentChatMessage]!
+      }
+        @description "The request, as a one-turn conversation for this delegate's own loop."
+        @tier "domain"
+      ANSWERED -> external {
+        callId : string!
+        result : string!
+      }
+        @description "The delegate's answer, returned to the coordinator's waiting tool call."
+        @tier "domain"
+      ANSWER_FAILED -> external {
+        callId : string!
+        error : string!
+      }
+        @description "The delegate failed; the coordinator's waiting tool call fails with this error."
+        @tier "domain"
+    }
+
+    listens {
+      ASK -> input {
+        request : string!
+      }
+        @description "Hand this request to this assistant and wait for its answer. It sees only what you write here, so write everything it needs."
+        @tier "domain"
+      CALL_PENDING { callId : string!  tool : string! }
+        @description "The coordinator started a tool call that waits: keep its id."
+      DELEGATE_REPLIED { reply : string! }
+        @description "This delegate's loop answered."
+      DELEGATE_FAILED { error : string! }
+        @description "This delegate's loop failed."
+      DelegateLoop.DELEGATE_REPLIED -> DELEGATE_REPLIED
+      DelegateLoop.DELEGATE_REPLY_FAILED -> DELEGATE_FAILED
+    }
+  }
+
+  page "/agent-delegate" as AgentDelegatePage -> AgentDelegate, DelegateLoop, DelegateLlm, DelegateChatRequest, DelegateChatRequestDelay, DelegateChatRequestDeadline, DelegateChatHttp, DelegateChatHttpFrame
+}

@@ -1,0 +1,955 @@
+{
+  "atom": "agent/atoms/std-agent-tool-loop.lolo",
+  "trait": "AgentToolLoop",
+  "orbital": "AgentToolLoopOrbital",
+  "note": "A `scope: declared` tool may be narrowed so one assistant is offered one part of the program: `orbitals`, `traits` and `events` each keep only the declared inputs they name, `entities` offers one read per named entity in place of the read over every entity (an empty list offers no read). A field left out narrows nothing. Written before the atom change; each narrowing is paired with the unnarrowed control.",
+  "cases": [
+    {
+      "id": "control-an-unnarrowed-scope-offers-every-declared-input-and-every-entity",
+      "note": "The existing behaviour, unchanged.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hello"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "TasksDesk",
+                  "trait": "TasksDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "TasksDesk.TasksDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "CalendarDesk",
+                  "trait": "CalendarDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "CalendarDesk.CalendarDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "DO_CREATE_1",
+                      "description": "Create a task (Board → TaskRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "DO_COMPLETE_2",
+                      "description": "Complete a task (Board → TaskRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "DO_SCHEDULE_3",
+                      "description": "Schedule an event (Board → CalendarRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "ASK_4",
+                      "description": "Hand over (TasksDesk → TasksDeskAgentDelegate)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "ASK_5",
+                      "description": "Hand over (CalendarDesk → CalendarDeskAgentDelegate)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "read",
+                      "description": "Read the rows of an entity that you may see",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {
+                          "entity": {
+                            "type": "string",
+                            "enum": [
+                              "Task",
+                              "Event"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "entity"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "events-keeps-only-the-inputs-with-that-event-and-an-empty-entities-offers-no-read",
+      "note": "A coordinator offered every desk: each desk declares ASK.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hello"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "TasksDesk",
+                  "trait": "TasksDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "TasksDesk.TasksDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "CalendarDesk",
+                  "trait": "CalendarDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "CalendarDesk.CalendarDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "ASK_4",
+                      "description": "Hand over (TasksDesk → TasksDeskAgentDelegate)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "ASK_5",
+                      "description": "Hand over (CalendarDesk → CalendarDeskAgentDelegate)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ],
+            "events": [
+              "ASK"
+            ],
+            "entities": []
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "traits-keeps-only-that-traits-inputs-and-entities-keeps-only-the-named-entity",
+      "note": "A module's assistant offered its own module.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hello"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "TasksDesk",
+                  "trait": "TasksDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "TasksDesk.TasksDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "CalendarDesk",
+                  "trait": "CalendarDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "CalendarDesk.CalendarDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "DO_CREATE_1",
+                      "description": "Create a task (Board → TaskRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "DO_COMPLETE_2",
+                      "description": "Complete a task (Board → TaskRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "read__Task",
+                      "description": "Read the Task rows you may see",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ],
+            "traits": [
+              "TaskRules"
+            ],
+            "entities": [
+              "Task"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "orbitals-keeps-only-that-orbitals-inputs",
+      "note": "Narrowing by orbital leaves reading unnarrowed when entities is left out.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hello"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "TasksDesk",
+                  "trait": "TasksDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "TasksDesk.TasksDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "CalendarDesk",
+                  "trait": "CalendarDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "CalendarDesk.CalendarDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "DO_CREATE_1",
+                      "description": "Create a task (Board → TaskRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "DO_COMPLETE_2",
+                      "description": "Complete a task (Board → TaskRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "DO_SCHEDULE_3",
+                      "description": "Schedule an event (Board → CalendarRules)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "read",
+                      "description": "Read the rows of an entity that you may see",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {
+                          "entity": {
+                            "type": "string",
+                            "enum": [
+                              "Task",
+                              "Event"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "entity"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ],
+            "orbitals": [
+              "Board"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "narrowings-combine-an-input-must-pass-each-one-given",
+      "note": "Orbital and event together.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hello"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "TasksDesk",
+                  "trait": "TasksDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "TasksDesk.TasksDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "CalendarDesk",
+                  "trait": "CalendarDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "CalendarDesk.CalendarDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "ASK_5",
+                      "description": "Hand over (CalendarDesk → CalendarDeskAgentDelegate)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ],
+            "orbitals": [
+              "CalendarDesk"
+            ],
+            "events": [
+              "ASK"
+            ],
+            "entities": []
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-a-narrowing-that-names-nothing-declared-offers-no-input",
+      "note": "No fallback to everything.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hello"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_CREATE",
+                  "address": "Board.TaskRules.DO_CREATE",
+                  "description": "Create a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "TaskRules",
+                  "event": "DO_COMPLETE",
+                  "address": "Board.TaskRules.DO_COMPLETE",
+                  "description": "Complete a task",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "Board",
+                  "trait": "CalendarRules",
+                  "event": "DO_SCHEDULE",
+                  "address": "Board.CalendarRules.DO_SCHEDULE",
+                  "description": "Schedule an event",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "TasksDesk",
+                  "trait": "TasksDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "TasksDesk.TasksDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                },
+                {
+                  "orbital": "CalendarDesk",
+                  "trait": "CalendarDeskAgentDelegate",
+                  "event": "ASK",
+                  "address": "CalendarDesk.CalendarDeskAgentDelegate.ASK",
+                  "description": "Hand over",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [
+                "Task",
+                "Event"
+              ],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": []
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "scope": "declared",
+            "roles": [
+              "staff"
+            ],
+            "traits": [
+              "Nobody"
+            ],
+            "entities": []
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    }
+  ]
+}

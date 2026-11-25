@@ -68,6 +68,7 @@ orbital RowStoreFileOrbital {
     key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
     entityType : string @description "The entity type whose file the ask reads or writes" = ""
     fileName : string @description "The file the ask reads or writes (without .json): the verb's declared collection, else the entity type" = ""
+    tmp : string @description "The temporary file a write saves to before the rename (without the directory): named by the flight's key, so two writes in flight never share one" = ""
     op : string @description "The ask in flight: read, list, query or write" = ""
     project : string @description "What a query answers: rows or ids" = ""
     rowId : string @description "The id a read asks for" = ""
@@ -157,6 +158,7 @@ orbital RowStoreFileOrbital {
         (set @entity.key @payload.key)
         (set @entity.entityType (object/get (array/first @payload.batch.ops) "entityType" ""))
         (set @entity.fileName (let ((wc (object/get (default @payload.collections {}) @entity.entityType ""))) (if (!= @wc "") @wc @entity.entityType)))
+        (set @entity.tmp (str/concat @entity.fileName ".json." (default (hash/md5 (base64/encode @payload.key) "hex") "") ".tmp"))
         (set @entity.batch @payload.batch)
         (set @entity.op "write")
         (os/read-file { anchor: "cwd" path: (str/concat @config.dir @entity.fileName ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
@@ -207,7 +209,7 @@ orbital RowStoreFileOrbital {
       INIT -> ready
 
       DIR_READY -> saving
-        (os/write-file { anchor: "cwd" path: (str/concat @config.dir @entity.fileName ".json.tmp") } (bytes/from-string (json/stringify { rows: @entity.run.rows, changes: (array/concat (array/map @entity.changes (fn c { op: @c.op, entityType: @c.entityType, id: @c.id, at: @c.at })) @entity.logged) })) { emit: { success: ROWS_SAVED, failure: WRITE_FAILED } })
+        (os/write-file { anchor: "cwd" path: (str/concat @config.dir @entity.tmp) } (bytes/from-string (json/stringify { rows: @entity.run.rows, changes: (array/concat (array/map @entity.changes (fn c { op: @c.op, entityType: @c.entityType, id: @c.id, at: @c.at })) @entity.logged) })) { emit: { success: ROWS_SAVED, failure: WRITE_FAILED } })
       WRITE_FAILED -> ready
         (emit STORE_FAILED { key: @entity.key, message: @payload.error })
     }
@@ -216,7 +218,7 @@ orbital RowStoreFileOrbital {
       INIT -> ready
 
       ROWS_SAVED -> moving
-        (os/rename { anchor: "cwd" path: (str/concat @config.dir @entity.fileName ".json.tmp") } { anchor: "cwd" path: (str/concat @config.dir @entity.fileName ".json") } { emit: { success: ROWS_MOVED, failure: WRITE_FAILED } })
+        (os/rename { anchor: "cwd" path: (str/concat @config.dir @entity.tmp) } { anchor: "cwd" path: (str/concat @config.dir @entity.fileName ".json") } { emit: { success: ROWS_MOVED, failure: WRITE_FAILED } })
       WRITE_FAILED -> ready
         (emit STORE_FAILED { key: @entity.key, message: @payload.error })
     }
