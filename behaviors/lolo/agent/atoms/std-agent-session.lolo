@@ -1129,6 +1129,7 @@ orbital AgentSessionOrbital {
   entity AgentMessage [persistent: agentMessages] {
     @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
+    @index { fields: ["chatId", "ownerId"] }
     id : string!
     ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
@@ -1346,6 +1347,7 @@ orbital AgentChatsOrbital {
   entity AgentChat [persistent: agentChats] {
     @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
+    @index { fields: ["ownerId"], orderBy: "lastActiveAt:desc" }
     id : string!
     ownerId : string! @description "Whose conversation this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     title : string @description "The conversation's first request, shown in the conversation list; empty until the first message." @synonyms "name, subject, topic" = ""

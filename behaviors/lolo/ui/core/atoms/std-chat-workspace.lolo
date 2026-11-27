@@ -64,6 +64,8 @@ orbital ChatWorkspaceOrbital {
     channelRows : [WorkspaceMembership] @intrinsic @description "The viewer's channel memberships, kept while the people load." = []
     panelChannel : string @intrinsic @description "The conversation whose members the panel shows." = ""
     panelName : string @intrinsic @description "The name of the conversation whose members the panel shows." = ""
+    lastReadAt : datetime @description "When the member last read the conversation; the rail opens the one read last." @synonyms "read at, last seen"
+    entryOpened : boolean @intrinsic @description "Whether the rail already opened a conversation on entry, so later reloads keep the open one." = false
   }
 
   entity WorkspacePerson [runtime] {
@@ -267,6 +269,14 @@ orbital ChatWorkspaceOrbital {
         })
       RailMembershipsLoaded -> listing
         (set @entity.channelRows (array/filter ?data (fn row (not (default @row.isDirect false)))))
+        (when (and (not @entity.entryOpened) (= (default @entity.openChannel "") ""))
+          (let ((chans (array/filter ?data (fn row (not (default @row.isDirect false))))))
+            (let ((read (array/filter @chans (fn row (!= @row.lastReadAt null)))))
+              (let ((pick (if (> (array/len @read) 0) (array/first (array/sort @read "lastReadAt" "desc")) (array/find @chans (fn row (and (!= @config.defaultChannel "") (= (default @row.channelName "") @config.defaultChannel)))))))
+                (do
+                  (set @entity.entryOpened true)
+                  (when (!= @pick null)
+                    (emit CHANNEL_PICKED { channel: (default @pick.channel ""), name: (default @pick.channelName ""), isDirect: false })))))))
         (emit MY_CHANNELS { channels: (array/map ?data (fn row (default @row.channel ""))) })
         (emit DIRECT_UNREAD { rows: (array/map (array/filter ?data (fn row (default @row.isDirect false))) (fn row { channel: (default @row.channel ""), unread: (default @row.unreadCount 0) })) })
         (render-ui main {
@@ -360,6 +370,10 @@ orbital ChatWorkspaceOrbital {
     }
 
     config {
+      defaultChannel : string = ""
+        @label "Channel opened on entry"
+        @description "The channel name the rail opens on the first visit when the viewer has read none yet; afterwards it opens the channel read last. Empty opens nothing."
+        @tier "presentation"
       channelsTitle : string = "Channels"
         @label "Title over the channels"
         @tier "presentation"
@@ -616,7 +630,7 @@ orbital ChatWorkspaceOrbital {
             direction: horizontal
             gap: xs
             align: center
-            children: [{ type: button, variant: ghost, size: sm, icon: users, label: (if (> (array/len ?data) 0) (str/concat "" (default (object/get (default (array/first ?data) {}) memberCount) 0)) ""), "aria-label": @config.membersLabel, action: MEMBERS_OPEN, actionPayload: { channel: @entity.shownChannel, name: @entity.shownName } }, { type: button, variant: ghost, size: sm, icon: pin, label: "", "aria-label": @config.pinnedLabel, action: PINNED_OPEN, actionPayload: { channel: @entity.shownChannel } }]
+            children: [{ type: button, variant: ghost, size: sm, icon: users, label: (if (> (array/len ?data) 0) (str/concat "" (default (object/get (default (array/first ?data) {}) memberCount) 0)) ""), "aria-label": @config.membersLabel, title: @config.membersLabel, action: MEMBERS_OPEN, actionPayload: { channel: @entity.shownChannel, name: @entity.shownName } }, { type: button, variant: ghost, size: sm, icon: pin, label: "", "aria-label": @config.pinnedLabel, title: @config.pinnedLabel, action: PINNED_OPEN, actionPayload: { channel: @entity.shownChannel } }]
           }]
         })
       HeaderLoadFailed -> idle
@@ -799,7 +813,7 @@ orbital ChatWorkspaceOrbital {
               direction: horizontal
               gap: none
               align: center
-              children: (array/concat [{ type: emoji-picker, pickEvent: EMOJI_PICKED, position: top, triggerLabel: @config.emojiLabel }] (array/map @config.tools (fn tool { type: button, variant: ghost, size: sm, icon: @tool.icon, label: "", "aria-label": @tool.label, action: @tool.event })))
+              children: (array/concat [{ type: emoji-picker, pickEvent: EMOJI_PICKED, position: top, triggerLabel: @config.emojiLabel }] (array/map @config.tools (fn tool { type: button, variant: ghost, size: sm, icon: @tool.icon, label: "", "aria-label": @tool.label, title: @tool.label, action: TOOL_PRESSED, actionPayload: { tool: @tool.event } })))
             }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: SEND }]
           }]
         })
@@ -824,10 +838,12 @@ orbital ChatWorkspaceOrbital {
               direction: horizontal
               gap: none
               align: center
-              children: (array/concat [{ type: emoji-picker, pickEvent: EMOJI_PICKED, position: top, triggerLabel: @config.emojiLabel }] (array/map @config.tools (fn tool { type: button, variant: ghost, size: sm, icon: @tool.icon, label: "", "aria-label": @tool.label, action: @tool.event })))
+              children: (array/concat [{ type: emoji-picker, pickEvent: EMOJI_PICKED, position: top, triggerLabel: @config.emojiLabel }] (array/map @config.tools (fn tool { type: button, variant: ghost, size: sm, icon: @tool.icon, label: "", "aria-label": @tool.label, title: @tool.label, action: TOOL_PRESSED, actionPayload: { tool: @tool.event } })))
             }, { type: button, variant: primary, size: sm, icon: send, label: "", "aria-label": @config.sendLabel, action: SEND }]
           }]
         })
+      TOOL_PRESSED -> ready
+        (emit TOOL_USED { tool: ?tool })
       DRAFT_CHANGED -> ready
         (set @entity.draft ?value)
       EMOJI_PICKED -> ready
@@ -847,6 +863,12 @@ orbital ChatWorkspaceOrbital {
         @description "A message is ready to save in the open conversation."
         @synonyms "send, post"
         @tier "domain"
+      TOOL_USED -> external {
+        tool : string!
+      }
+        @description "A composer tool was pressed; `tool` is the event its config entry names, for a consumer's filtered listen."
+        @synonyms "mention, link, attach"
+        @tier "presentation"
     }
 
     listens {
@@ -875,6 +897,11 @@ orbital ChatWorkspaceOrbital {
         value : string
       }
         @tier "presentation"
+      TOOL_PRESSED {
+        tool : string!
+      }
+        @description "A composer tool button was pressed."
+        @tier "presentation"
     }
 
     config {
@@ -884,7 +911,7 @@ orbital ChatWorkspaceOrbital {
         @tier "presentation"
       tools : [ChatTool] = []
         @label "Composer tools"
-        @description "Icon buttons beside the emoji picker (mention, link a record, attach); each fires its event."
+        @description "Icon buttons beside the emoji picker (mention, link a record, attach); pressing one emits TOOL_USED { tool } with the entry's event, which the consumer routes with a filtered listen (`Composer.TOOL_USED -> OPEN when (= ?tool \"X\")`)."
         @tier "presentation"
       emojiLabel : string = "Add emoji"
         @tier "presentation"
@@ -1316,8 +1343,22 @@ orbital ChatWorkspaceOrbital {
         (emit MEMBER_PICKED { channel: @entity.pickChannel, channelName: @entity.pickName, id: ?row.id, name: ?row.name })
       HIDE -> closed
         (render-ui main null)
+      PICK -> open
+        (render-ui main { type: skeleton, spec: list, rows: 4 })
+        (set @entity.pickChannel ?channel)
+        (set @entity.pickName (default ?name ""))
+        (fetch WorkspacePerson {
+          limit: @config.maxRows
+          emit: { failure: PickLoadFailed, success: PickPeopleLoaded }
+        })
       PickLoadFailed -> open
-        (notify error (if (validate/required ?error) (str/concat "Couldn't load the people — " ?error) "Couldn't load the people"))
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: sm
+          className: "w-full max-w-sm shrink-0 min-h-0 bg-card border-s border-border p-4"
+          children: [{ type: typography, variant: h4, weight: semibold, content: @config.title }, { type: typography, variant: body, color: error, content: (if (validate/required ?error) (str/concat "Couldn't load the people — " ?error) "Couldn't load the people") }, { type: stack, direction: horizontal, gap: sm, children: [{ type: button, variant: secondary, size: sm, label: @config.retryLabel, action: PICK, actionPayload: { channel: @entity.pickChannel, name: @entity.pickName } }, { type: button, variant: ghost, size: sm, label: @config.closeLabel, action: HIDE }] }]
+        })
     }
 
     emits {
@@ -1362,6 +1403,8 @@ orbital ChatWorkspaceOrbital {
       title : string = "Add people"
         @tier "presentation"
       closeLabel : string = "Close"
+        @tier "presentation"
+      retryLabel : string = "Try again"
         @tier "presentation"
       maxRows : number = 500
         @tier "policy"

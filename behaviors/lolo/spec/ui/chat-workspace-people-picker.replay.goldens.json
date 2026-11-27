@@ -1,0 +1,134 @@
+{
+  "atom": "ui/core/atoms/std-chat-workspace.lolo",
+  "trait": "PeoplePicker",
+  "note": "Add people never left its loading skeleton: a failed load only raised a notice, and a second Add people press was not heard while the picker was open.",
+  "cases": [
+    {
+      "id": "a-failed-load-replaces-the-skeleton-with-the-error-and-a-retry",
+      "entity": {
+        "id": "x",
+        "pickChannel": "c1",
+        "pickName": "general"
+      },
+      "steps": [
+        {
+          "from": "open",
+          "event": "PickLoadFailed",
+          "payload": {
+            "error": "denied"
+          },
+          "expect": {
+            "state": "open",
+            "effects": [
+              {
+                "type": "render-ui",
+                "arg0": "main"
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "add-people-while-open-retargets-and-reloads",
+      "entity": {
+        "id": "x",
+        "pickChannel": "c1",
+        "pickName": "general"
+      },
+      "steps": [
+        {
+          "from": "open",
+          "event": "PICK",
+          "payload": {
+            "channel": "c2",
+            "name": "design"
+          },
+          "expect": {
+            "state": "open",
+            "entity": {
+              "pickChannel": "c2",
+              "pickName": "design"
+            },
+            "effects": [
+              {
+                "type": "render-ui"
+              },
+              {
+                "type": "fetch",
+                "arg0": "WorkspacePerson"
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-a-closed-picker-opens-on-add-people",
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "closed",
+          "event": "PICK",
+          "payload": {
+            "channel": "c1",
+            "name": "general"
+          },
+          "expect": {
+            "state": "open",
+            "effects": [
+              {
+                "type": "render-ui"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "fetch",
+                "arg0": "WorkspacePerson"
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    }
+  ]
+}

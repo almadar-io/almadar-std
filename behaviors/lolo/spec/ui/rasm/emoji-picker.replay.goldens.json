@@ -1,0 +1,408 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-emoji-picker.lolo",
+ "trait": "RasmEmojiPicker",
+ "cases": [
+  {
+   "id": "a-placed-picker-paints-once",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 344,
+     "h": 188
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "EMOJI_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unplaced-picker-paints-nothing",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "EMOJI_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emitCounts": {
+       "RASM_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "placing-the-picker-stores-its-rect-and-paints",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "emoji",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 344,
+         "h": 188
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 344,
+        "h": 188
+       }
+      },
+      "emitCounts": {
+       "EMOJI_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-rect-for-another-node-is-ignored",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "other",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 344,
+         "h": 188
+        }
+       }
+      ]
+     },
+     "expect": {
+      "emitCounts": {
+       "EMOJI_PAINT": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-target-for-this-picker-is-kept-for-the-next-pick",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_EMOJI_TARGET",
+     "payload": {
+      "id": "emoji",
+      "target": "m7"
+     },
+     "expect": {
+      "entity": {
+       "target": "m7"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-target-for-another-picker-is-ignored",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x",
+    "target": "m1"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_EMOJI_TARGET",
+     "payload": {
+      "id": "other",
+      "target": "m7"
+     },
+     "expect": {
+      "entity": {
+       "target": "m1"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-tap-on-a-cell-picks-its-emoji-for-the-target",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 344,
+     "h": 188
+    },
+    "target": "m7"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "emoji:cell:1",
+      "x": 60,
+      "y": 20
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "EMOJI_PICKED",
+        "payload": {
+         "id": "emoji",
+         "emoji": "❤️",
+         "target": "m7"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-press-down-on-a-cell-picks-nothing",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 344,
+     "h": 188
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "emoji:cell:1",
+      "x": 60,
+      "y": 20
+     },
+     "expect": {
+      "neverEmits": [
+       "EMOJI_PICKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-tap-past-the-last-cell-picks-nothing",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 344,
+     "h": 188
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "emoji:cell:99",
+      "x": 60,
+      "y": 20
+     },
+     "expect": {
+      "neverEmits": [
+       "EMOJI_PICKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "keyboard-activation-of-a-cell-picks-its-emoji-for-the-composer",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 344,
+     "h": 188
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ACTIVATE",
+     "payload": {
+      "id": "emoji:cell:0"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "EMOJI_PICKED",
+        "payload": {
+         "id": "emoji",
+         "emoji": "👍",
+         "target": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-activating-another-control-picks-nothing",
+   "config": {
+    "id": "emoji"
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 344,
+     "h": 188
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ACTIVATE",
+     "payload": {
+      "id": "send"
+     },
+     "expect": {
+      "neverEmits": [
+       "EMOJI_PICKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-declared-emoji-replace-the-default-set",
+   "config": {
+    "id": "emoji",
+    "emojis": [
+     "🦉",
+     "🌵"
+    ]
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 344,
+     "h": 188
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "emoji:cell:1",
+      "x": 60,
+      "y": 20
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "EMOJI_PICKED",
+        "payload": {
+         "id": "emoji",
+         "emoji": "🌵",
+         "target": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "emoji:cell:2",
+      "x": 60,
+      "y": 20
+     },
+     "expect": {
+      "neverEmits": [
+       "EMOJI_PICKED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

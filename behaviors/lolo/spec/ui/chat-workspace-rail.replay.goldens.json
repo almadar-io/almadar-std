@@ -92,6 +92,353 @@
         "MembersPanel",
         "PeoplePicker"
       ]
+    },
+    {
+      "id": "the-first-load-opens-the-channel-read-last",
+      "config": {
+        "defaultChannel": "general"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "listing",
+          "event": "RailMembershipsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "general:u1",
+                "channel": "c-gen",
+                "channelName": "general",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "design:u1",
+                "channel": "c-des",
+                "channelName": "design",
+                "member": "u1",
+                "isDirect": false,
+                "lastReadAt": "2026-11-26T09:00:00.000Z"
+              },
+              {
+                "id": "ads:u1",
+                "channel": "c-ads",
+                "channelName": "ads",
+                "member": "u1",
+                "isDirect": false,
+                "lastReadAt": "2026-11-25T09:00:00.000Z"
+              },
+              {
+                "id": "dm:u1",
+                "channel": "dm-1",
+                "channelName": "Ana",
+                "member": "u1",
+                "isDirect": true,
+                "lastReadAt": "2026-11-27T09:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "state": "listing",
+            "emits": [
+              {
+                "event": "CHANNEL_PICKED",
+                "payload": {
+                  "channel": "c-des",
+                  "name": "design",
+                  "isDirect": false
+                }
+              }
+            ],
+            "entity": {
+              "entryOpened": true
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "with-nothing-read-the-first-load-opens-the-default-channel",
+      "config": {
+        "defaultChannel": "general"
+      },
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "listing",
+          "event": "RailMembershipsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "general:u1",
+                "channel": "c-gen",
+                "channelName": "general",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "design:u1",
+                "channel": "c-des",
+                "channelName": "design",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "ads:u1",
+                "channel": "c-ads",
+                "channelName": "ads",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "dm:u1",
+                "channel": "dm-1",
+                "channelName": "Ana",
+                "member": "u1",
+                "isDirect": true,
+                "lastReadAt": "2026-11-27T09:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "state": "listing",
+            "emits": [
+              {
+                "event": "CHANNEL_PICKED",
+                "payload": {
+                  "channel": "c-gen",
+                  "name": "general",
+                  "isDirect": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-a-later-load-opens-nothing",
+      "config": {
+        "defaultChannel": "general"
+      },
+      "entity": {
+        "id": "x",
+        "entryOpened": true
+      },
+      "steps": [
+        {
+          "from": "listing",
+          "event": "RailMembershipsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "general:u1",
+                "channel": "c-gen",
+                "channelName": "general",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "design:u1",
+                "channel": "c-des",
+                "channelName": "design",
+                "member": "u1",
+                "isDirect": false,
+                "lastReadAt": "2026-11-26T09:00:00.000Z"
+              },
+              {
+                "id": "ads:u1",
+                "channel": "c-ads",
+                "channelName": "ads",
+                "member": "u1",
+                "isDirect": false,
+                "lastReadAt": "2026-11-25T09:00:00.000Z"
+              },
+              {
+                "id": "dm:u1",
+                "channel": "dm-1",
+                "channelName": "Ana",
+                "member": "u1",
+                "isDirect": true,
+                "lastReadAt": "2026-11-27T09:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "state": "listing",
+            "neverEmits": [
+              "CHANNEL_PICKED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-an-open-conversation-is-kept",
+      "config": {
+        "defaultChannel": "general"
+      },
+      "entity": {
+        "id": "x",
+        "openChannel": "c-ads"
+      },
+      "steps": [
+        {
+          "from": "listing",
+          "event": "RailMembershipsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "general:u1",
+                "channel": "c-gen",
+                "channelName": "general",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "design:u1",
+                "channel": "c-des",
+                "channelName": "design",
+                "member": "u1",
+                "isDirect": false,
+                "lastReadAt": "2026-11-26T09:00:00.000Z"
+              },
+              {
+                "id": "ads:u1",
+                "channel": "c-ads",
+                "channelName": "ads",
+                "member": "u1",
+                "isDirect": false,
+                "lastReadAt": "2026-11-25T09:00:00.000Z"
+              },
+              {
+                "id": "dm:u1",
+                "channel": "dm-1",
+                "channelName": "Ana",
+                "member": "u1",
+                "isDirect": true,
+                "lastReadAt": "2026-11-27T09:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "state": "listing",
+            "neverEmits": [
+              "CHANNEL_PICKED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "edge-no-default-and-nothing-read-opens-nothing",
+      "entity": {
+        "id": "x"
+      },
+      "steps": [
+        {
+          "from": "listing",
+          "event": "RailMembershipsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "general:u1",
+                "channel": "c-gen",
+                "channelName": "general",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "design:u1",
+                "channel": "c-des",
+                "channelName": "design",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "ads:u1",
+                "channel": "c-ads",
+                "channelName": "ads",
+                "member": "u1",
+                "isDirect": false
+              },
+              {
+                "id": "dm:u1",
+                "channel": "dm-1",
+                "channelName": "Ana",
+                "member": "u1",
+                "isDirect": true,
+                "lastReadAt": "2026-11-27T09:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "state": "listing",
+            "neverEmits": [
+              "CHANNEL_PICKED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
     }
   ]
 }

@@ -2248,7 +2248,7 @@
    ]
   },
   {
-   "id": "silent-for-wildcard-and-sourceless-listens",
+   "id": "a-wildcard-route-on-a-declared-unproduced-event-fires-and-a-sourceless-listen-stays-silent",
    "steps": [
     {
      "trait": "OrbLintListenSourceNeverProduces",
@@ -2409,14 +2409,23 @@
         "event": "LINT_FOUND",
         "payload": {
          "rule": "listen-source-never-produces",
-         "findings": [],
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES",
+           "path": "orbitals.O.traits.Subscriber.listens",
+           "message": "listens route *.ROW_CHANGED -> REFRESH: Publisher declares ROW_CHANGED in its emits contract, but no trait in the program produces it by an effect, a rendered affordance or a config item action, so the route never fires",
+           "suggestion": "fire ROW_CHANGED from the trait that owns it and name that trait as the route's source, or drop the Subscriber route",
+           "severity": "error"
+          }
+         ],
          "scope": ""
         }
        }
       ]
      }
     }
-   ]
+   ],
+   "note": "A wildcard route is checked against every trait: Publisher declares ROW_CHANGED and nothing produces it, so the route never fires. The sourceless declaration is not a route."
   },
   {
    "id": "a-per-edge-sources-delivery-rejected-from-the-kernel",
@@ -2924,6 +2933,554 @@
            "severity": "error"
           }
          ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "fires-on-a-wildcard-route-whose-declared-event-no-trait-produces",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "EDIT_ROW",
+             "scope": "internal"
+            }
+           ],
+           "config": {
+            "itemActions": {
+             "type": "array",
+             "default": [
+              {
+               "event": "VIEW",
+               "label": "View"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "name": "EditModal",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OPEN_EDIT",
+              "effects": []
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "EDIT_ROW",
+             "triggers": "OPEN_EDIT",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "Browse": [],
+        "EditModal": []
+       }
+      ],
+      "missing": false
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Browse": [
+        "VIEW"
+       ],
+       "EditModal": []
+      },
+      "byEffect": {
+       "Browse": [],
+       "EditModal": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-never-produces",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES",
+           "path": "orbitals.O.traits.EditModal.listens",
+           "message": "listens route *.EDIT_ROW -> OPEN_EDIT: Browse declares EDIT_ROW in its emits contract, but no trait in the program produces it by an effect, a rendered affordance or a config item action, so the route never fires",
+           "suggestion": "fire EDIT_ROW from the trait that owns it and name that trait as the route's source, or drop the EditModal route",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-wildcard-route-another-trait-produces-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "EDIT_ROW",
+             "scope": "internal"
+            }
+           ],
+           "config": {
+            "itemActions": {
+             "type": "array",
+             "default": [
+              {
+               "event": "VIEW",
+               "label": "View"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "name": "EditModal",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OPEN_EDIT",
+              "effects": []
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "EDIT_ROW",
+             "triggers": "OPEN_EDIT",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "Browse": [],
+        "EditModal": []
+       }
+      ],
+      "missing": false
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Browse": [
+        "VIEW"
+       ],
+       "EditModal": [
+        "EDIT_ROW"
+       ]
+      },
+      "byEffect": {
+       "Browse": [],
+       "EditModal": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-never-produces",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-a-wildcard-route-on-an-event-no-trait-declares-is-an-open-port",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "emits": [],
+           "config": {
+            "itemActions": {
+             "type": "array",
+             "default": [
+              {
+               "event": "VIEW",
+               "label": "View"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "name": "EditModal",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OPEN_EDIT",
+              "effects": []
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "EDIT_ROW",
+             "triggers": "OPEN_EDIT",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "Browse": [],
+        "EditModal": []
+       }
+      ],
+      "missing": false
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Browse": [
+        "VIEW"
+       ],
+       "EditModal": []
+      },
+      "byEffect": {
+       "Browse": [],
+       "EditModal": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-never-produces",
+         "findings": [],
          "scope": ""
         }
        }

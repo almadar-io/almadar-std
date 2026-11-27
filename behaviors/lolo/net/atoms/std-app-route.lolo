@@ -28,7 +28,7 @@ orbital AppRouteOrbital {
         @tier "infra"
       identityTimeoutMs : number = 30000
         @label "Sign-in wait"
-        @description "How long a request carrying a bearer waits for the app's sign-in outcome (IDENTITY_BOUND, IDENTITY_ANONYMOUS, IDENTITY_REFUSED or IDENTITY_SESSION_ENDED for its requestId) before it is sent anyway; the app decides what the request may do once it has one."
+        @description "How long a request carrying a bearer waits for the app's sign-in outcome (IDENTITY_BOUND, IDENTITY_ANONYMOUS or IDENTITY_REFUSED for its requestId) before it is sent anyway; the app decides what the request may do once it has one."
         @tier "infra"
     }
 
@@ -86,7 +86,7 @@ orbital AppRouteOrbital {
                   (let ((r (array/find @entity.pending (fn q (= @q.requestId @payload.requestId)))))
                     (when (!= @r null)
                       (if @r.awaitingAuth
-                        (emit APP_REQUEST { key: (str/concat @r.key "-auth"), app: @r.app, address: "BEARER_PRESENT", mounting: @r.request.mounting, clientId: (object/get @b "clientId" ""), payload: { requestId: @r.requestId, authorization: @r.authorization, clientId: (object/get @b "clientId" "") }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })
+                        (emit APP_REQUEST { key: (str/concat @r.key "-auth"), app: @r.app, address: "BEARER_PRESENT", mounting: @r.request.mounting, clientId: (object/get @b "clientId" ""), payload: { requestId: @r.requestId, authorization: @r.authorization, clientId: (object/get @b "clientId" "") }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })
                         (emit APP_REQUEST { key: @r.request.key, app: @r.request.app, clientId: (default @r.request.clientId ""), mounting: @r.request.mounting, address: @r.request.address, payload: (object/get @r.request "payload" {}), options: (object/get @r.request "options" {}) }))))))))))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "mint") (= @p.authorization ""))))
@@ -95,7 +95,7 @@ orbital AppRouteOrbital {
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "mint") (!= @p.authorization ""))))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
-        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (when (!= @p null) (emit APP_REQUEST { key: (str/concat @p.key "-mintauth"), app: @p.app, address: "BEARER_PRESENT", mounting: false, clientId: @p.clientId, payload: { requestId: @p.requestId, authorization: @p.authorization, clientId: @p.clientId }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED", "IDENTITY_SESSION_ENDED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })))
+        (let ((p (array/find @entity.pending (fn q (= @q.requestId @payload.requestId))))) (when (!= @p null) (emit APP_REQUEST { key: (str/concat @p.key "-mintauth"), app: @p.app, address: "BEARER_PRESENT", mounting: false, clientId: @p.clientId, payload: { requestId: @p.requestId, authorization: @p.authorization, clientId: @p.clientId }, options: { reply: { events: ["IDENTITY_BOUND", "IDENTITY_ANONYMOUS", "IDENTITY_REFUSED"], match: "requestId", timeoutMs: @config.identityTimeoutMs } } })))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= (default (object/get @p "kind") "") "stream") (= @p.ticket ""))))
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })

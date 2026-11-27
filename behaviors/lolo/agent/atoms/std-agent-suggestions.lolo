@@ -1037,6 +1037,8 @@ orbital AgentSuggestionRecordsOrbital {
   entity AgentSuggestion [persistent: agentSuggestions] {
     @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
+    @index { fields: ["ownerId", "status"], orderBy: "createdAt:desc" }
+    @index { fields: ["ownerId"], orderBy: "createdAt:desc" }
     id : string!
     ownerId : string! @description "Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it." @synonyms "user, owner, account"
     kind : string @description "What sort of suggestion this is; the app's own vocabulary." @synonyms "type, category" = ""

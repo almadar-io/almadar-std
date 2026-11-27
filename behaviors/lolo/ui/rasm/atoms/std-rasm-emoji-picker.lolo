@@ -1,0 +1,140 @@
+app std-rasm-emoji-picker [
+  version: "0.1.0",
+  description: "std-rasm-emoji-picker — a grid of emoji on the Rasm canvas, painted inside the rect RASM_PLACE gives it (usually a std-rasm-overlay's content). The emoji are the declared `emojis`, laid out in rows of square cells of `cell` px from the reading start, as many rows as the rect holds. Each cell is a focusable button named by its emoji for assistive technology; a press released on a cell, or RASM_ACTIVATE for it from the keyboard, emits the configured pick event { id, emoji, target }. RASM_EMOJI_TARGET { id, target } for its id sets what the next pick is for (a message id, or empty for the composer), so one picker serves several callers. Looks are emoji/cell/idle (the cell, transparent when absent) and emoji/glyph/idle (the glyph's colour)."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string? }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmEmojiPickerOrbital {
+  entity RasmEmojiPickerRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the picker, null until placed." = null
+    dir : "ltr" | "rtl" @description "The reading direction the surface announced: the cells run from its start." = "ltr"
+    target : string @description "What the next pick is for, from RASM_EMOJI_TARGET; empty for the composer." = ""
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmEmojiPicker -> RasmEmojiPickerRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit EMOJI_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit EMOJI_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit EMOJI_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_EMOJI_TARGET -> ready when (= ?id @config.id)
+        (set @entity.target ?target)
+      RASM_EMOJI_TARGET -> ready when (!= ?id @config.id)
+      RASM_POINTER -> ready when (and (= ?kind "up") (str/startsWith ?id (str/concat @config.id ":cell:")) (>= (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) 0) (< (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) (array/len @config.emojis)))
+        (emit @config.pickAction { id: @config.id, emoji: (default (array/nth @config.emojis (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) 0)) ""), target: @entity.target })
+      RASM_POINTER -> ready when (not (and (= ?kind "up") (str/startsWith ?id (str/concat @config.id ":cell:")) (>= (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) 0) (< (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) (array/len @config.emojis))))
+      RASM_ACTIVATE -> ready when (and (str/startsWith ?id (str/concat @config.id ":cell:")) (>= (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) 0) (< (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) (array/len @config.emojis)))
+        (emit @config.pickAction { id: @config.id, emoji: (default (array/nth @config.emojis (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) 0)) ""), target: @entity.target })
+      RASM_ACTIVATE -> ready when (not (and (str/startsWith ?id (str/concat @config.id ":cell:")) (>= (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) 0) (< (default (str/to-number (str/slice ?id (str/len (str/concat @config.id ":cell:")))) -1) (array/len @config.emojis))))
+      EMOJI_PAINT -> ready when (= @entity.rect null)
+      EMOJI_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (cl (default (object/get @entity.looks "emoji/cell/idle" null) {})) (gl (default (object/get @entity.looks "emoji/glyph/idle" null) (default (object/get @entity.looks "text/body/idle" null) {}))) (c @config.cell) (g @config.gap))
+          (let ((cols (math/max 1 (math/floor (/ (+ @r.w @g) (+ @c @g))))) (rows (math/max 0 (math/floor (/ (+ @r.h @g) (+ @c @g))))))
+            (let ((shown (array/filter (array/range (array/len @config.emojis)) (fn i (< @i (* @cols @rows))))))
+              (emit RASM_PAINT {
+                id: @config.id,
+                z: @config.z,
+                texts: [],
+                nodes: (array/flatten (array/map @shown (fn i (let ((col (math/mod @i @cols)) (row (math/floor (/ @i @cols)))) (let ((x (if (= @entity.dir "rtl") (- (+ @r.x @r.w) (+ (* @col (+ @c @g)) @c)) (+ @r.x (* @col (+ @c @g))))) (y (+ @r.y (* @row (+ @c @g))))) (let ((cellNodes : [node] [{ type: draw-shape, id: (str/concat @config.id ":cell:" @i), shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: (+ @config.z 1) }, width: @c, height: @c, fill: (default @cl.fill "rgba(0,0,0,0)"), stroke: @cl.stroke, strokeWidth: @cl.strokeWidth, corners: (default @cl.corners { radius: [10, 10, 10, 10], kind: "round" }), hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":glyph:" @i), disabled: false, order: (+ @config.order @i), focused: false } }, { type: draw-text, id: (str/concat @config.id ":glyph:" @i), text: (default (array/nth @config.emojis @i) ""), anchor: "top-left", position: { x: (+ @x (/ @c 2)), y: (+ @y (/ @c 2)), z: (+ @config.z 2) }, align: "center", baseline: "middle", color: @gl.textColor, font: (str/concat @config.glyphSize "px system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Noto Color Emoji\", sans-serif"), wrap: false, hit: false }])) @cellNodes))))))
+              }))))
+    }
+
+    emits {
+      EMOJI_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the grid from the stored rect, looks and reading direction."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The emoji cells and their glyphs for the surface to collect."
+        @tier "primary"
+      @config.pickAction -> external {
+        id : string!
+        emoji : string!
+        target : string!
+      }
+        @description "An emoji was picked: the picker's id, the emoji, and what RASM_EMOJI_TARGET last said it is for."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction: the cells run from its start."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the picker's rect when it is placed."
+      RASM_EMOJI_TARGET { id : string!  target : string! }
+        @description "What the next pick from the picker `id` names is for: a message id, or empty for the composer."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A press released on a cell picks its emoji."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of a focused cell picks its emoji."
+    }
+
+    config {
+      id : string = "emoji"
+        @label "Id"
+        @description "The picker's RASM_PLACE key, paint id and the id RASM_EMOJI_TARGET names."
+        @tier "presentation"
+      z : number = 42
+        @label "Z"
+        @description "Paint order on the surface; the glyphs paint above their cells."
+        @tier "presentation"
+      emojis : [string] = ["👍", "❤️", "😂", "😮", "😢", "🙏", "😀", "😍", "🥰", "😘", "😊", "😉", "😎", "🤔", "😅", "🤣", "😭", "😡", "🥳", "😴", "🤗", "👏", "🙌", "💪", "👌", "✌️", "👋", "🎉", "🔥", "✨", "⭐", "🌹", "☀️", "🌙", "🎂", "☕"]
+        @label "Emoji"
+        @description "The emoji offered, in order."
+        @tier "domain"
+      cell : number = 44
+        @label "Cell size"
+        @description "The side in px of one emoji's cell, at least the 44 px touch target."
+        @tier "presentation"
+      gap : number = 4
+        @label "Gap"
+        @description "Space in px between cells."
+        @tier "presentation"
+      glyphSize : number = 26
+        @label "Glyph size"
+        @description "The emoji's font size in px."
+        @tier "presentation"
+      order : number = 100
+        @label "Focus order"
+        @description "The focus order of the first cell; each next cell follows it."
+        @tier "presentation"
+      pickAction : event = EMOJI_PICKED
+        @label "Pick event"
+        @description "What a pick emits, for the program to insert or react with the emoji."
+        @tier "domain"
+    }
+  }
+
+  page boot as RasmEmojiPickerStart -> RasmEmojiPicker
+}

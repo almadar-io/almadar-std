@@ -5,39 +5,82 @@
     {
       "id": "a-saved-reply-recounts-its-thread",
       "config": {},
-      "entity": { "id": "x" },
+      "entity": {
+        "id": "x"
+      },
       "steps": [
         {
           "from": "idle",
           "event": "REPLY_SAVED",
-          "payload": { "threadRootId": "m1" },
-          "expect": { "state": "idle", "effects": [{ "type": "fetch", "arg0": "ConversationMessage" }] }
+          "payload": {
+            "threadRootId": "m1"
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "fetch",
+                "arg0": "ConversationMessage",
+                "arg1": {
+                  "limit": 1000,
+                  "emit": {
+                    "failure": "THREAD_ROLLUP_FAILED",
+                    "success": "ThreadRepliesLoaded"
+                  },
+                  "filter": [
+                    "=",
+                    [
+                      "object/get",
+                      "@entity",
+                      "threadRootId"
+                    ],
+                    "@payload.threadRootId"
+                  ]
+                }
+              }
+            ]
+          }
         }
-      ]
+      ],
+      "note": "The recount reads the replies whose row threadRootId is the saved reply's root; `@entity.threadRootId` in a filter is the trait's own value, which matched nothing."
     },
     {
       "id": "control-a-channel-message-recounts-nothing",
       "config": {},
-      "entity": { "id": "x" },
+      "entity": {
+        "id": "x"
+      },
       "steps": [
         {
           "from": "idle",
           "event": "REPLY_SAVED",
-          "payload": { "threadRootId": "" },
-          "expect": { "state": "idle", "effects": [] }
+          "payload": {
+            "threadRootId": ""
+          },
+          "expect": {
+            "state": "idle",
+            "effects": []
+          }
         }
       ]
     },
     {
       "id": "control-an-empty-recount-writes-nothing",
       "config": {},
-      "entity": { "id": "x" },
+      "entity": {
+        "id": "x"
+      },
       "steps": [
         {
           "from": "idle",
           "event": "ThreadRepliesLoaded",
-          "payload": { "data": [] },
-          "expect": { "state": "idle", "effects": [] }
+          "payload": {
+            "data": []
+          },
+          "expect": {
+            "state": "idle",
+            "effects": []
+          }
         }
       ]
     }

@@ -143,116 +143,6 @@
    ]
   },
   {
-   "id": "a picture short of the frame count advances the deck one build",
-   "steps": [
-    {
-     "event": "PAGE_SHOT",
-     "from": "running",
-     "entity": {
-      "id": "r",
-      "url": "http://deck",
-      "out": "deck.pptx",
-      "frames": 2,
-      "width": 1920,
-      "height": 1080,
-      "waitMs": 8000,
-      "settleMs": 1700,
-      "notesPath": "",
-      "notes": [
-       "first note"
-      ],
-      "shots": [],
-      "started": true,
-      "status": 200,
-      "body": ""
-     },
-     "payload": {
-      "key": "slides",
-      "png": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "SLIDES_NEXT"
-       },
-       {
-        "event": "SLIDES_KEY",
-        "payload": {
-         "key": "slides",
-         "keyName": "ArrowRight",
-         "shift": false
-        }
-       }
-      ],
-      "neverEmits": [
-       "SLIDES_PPTX"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the last picture hands every frame with its note to the file writer",
-   "steps": [
-    {
-     "event": "PAGE_SHOT",
-     "from": "running",
-     "entity": {
-      "id": "r",
-      "url": "http://deck",
-      "out": "deck.pptx",
-      "frames": 2,
-      "width": 1920,
-      "height": 1080,
-      "waitMs": 8000,
-      "settleMs": 1700,
-      "notesPath": "",
-      "notes": [
-       "first note"
-      ],
-      "shots": [
-       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-      ],
-      "started": true,
-      "status": 200,
-      "body": ""
-     },
-     "payload": {
-      "key": "slides",
-      "png": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "SLIDES_NEXT"
-       },
-       {
-        "event": "SLIDES_PPTX",
-        "payload": {
-         "key": "slides",
-         "slides": [
-          {
-           "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-           "notes": "first note"
-          },
-          {
-           "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-           "notes": ""
-          }
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "SLIDES_KEY"
-      ]
-     }
-    }
-   ]
-  },
-  {
    "id": "a page failure stops the browser before the command answers",
    "steps": [
     {
@@ -323,6 +213,243 @@
    "defaults": [
     "SlidesWait",
     "SlidesChromeChrome"
+   ]
+  },
+  {
+   "id": "a picture is followed by reading the links the frame shows",
+   "steps": [
+    {
+     "event": "PAGE_SHOT",
+     "from": "running",
+     "entity": {
+      "id": "r",
+      "url": "http://deck",
+      "out": "deck.pptx",
+      "frames": 2,
+      "width": 1920,
+      "height": 1080,
+      "waitMs": 8000,
+      "settleMs": 1700,
+      "notesPath": "",
+      "notes": [
+       "first note"
+      ],
+      "shots": [],
+      "started": true,
+      "status": 200,
+      "body": "",
+      "links": []
+     },
+     "payload": {
+      "key": "slides",
+      "png": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "SLIDES_MEASURE",
+        "payload": {
+         "key": "slides"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_KEY",
+       "SLIDES_PPTX"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the links of a frame short of the count are kept and the deck advances",
+   "steps": [
+    {
+     "event": "PAGE_MEASURED",
+     "from": "running",
+     "entity": {
+      "id": "r",
+      "url": "http://deck",
+      "out": "deck.pptx",
+      "frames": 2,
+      "width": 1920,
+      "height": 1080,
+      "waitMs": 8000,
+      "settleMs": 1700,
+      "notesPath": "",
+      "notes": [
+       "first note"
+      ],
+      "shots": [
+       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      ],
+      "started": true,
+      "status": 200,
+      "body": "",
+      "links": []
+     },
+     "payload": {
+      "key": "slides",
+      "json": "[{\"url\":\"mailto:a@b.c\",\"x\":0.6,\"y\":0.5,\"w\":0.2,\"h\":0.1}]"
+     },
+     "expect": {
+      "state": "running",
+      "entity": {
+       "links": [
+        [
+         {
+          "url": "mailto:a@b.c",
+          "x": 0.6,
+          "y": 0.5,
+          "w": 0.2,
+          "h": 0.1
+         }
+        ]
+       ]
+      },
+      "emits": [
+       {
+        "event": "SLIDES_NEXT"
+       },
+       {
+        "event": "SLIDES_KEY",
+        "payload": {
+         "key": "slides",
+         "keyName": "ArrowRight",
+         "shift": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_PPTX"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the last frame hands every picture with its note and its links to the file writer",
+   "steps": [
+    {
+     "event": "PAGE_MEASURED",
+     "from": "running",
+     "entity": {
+      "id": "r",
+      "url": "http://deck",
+      "out": "deck.pptx",
+      "frames": 2,
+      "width": 1920,
+      "height": 1080,
+      "waitMs": 8000,
+      "settleMs": 1700,
+      "notesPath": "",
+      "notes": [
+       "first note"
+      ],
+      "shots": [
+       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      ],
+      "started": true,
+      "status": 200,
+      "body": "",
+      "links": [
+       []
+      ]
+     },
+     "payload": {
+      "key": "slides",
+      "json": "[{\"url\":\"mailto:a@b.c\",\"x\":0.6,\"y\":0.5,\"w\":0.2,\"h\":0.1}]"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "SLIDES_NEXT"
+       },
+       {
+        "event": "SLIDES_PPTX",
+        "payload": {
+         "key": "slides",
+         "slides": [
+          {
+           "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+           "notes": "first note",
+           "links": []
+          },
+          {
+           "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+           "notes": "",
+           "links": [
+            {
+             "url": "mailto:a@b.c",
+             "x": 0.6,
+             "y": 0.5,
+             "w": 0.2,
+             "h": 0.1
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_KEY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an answer that is not a list of links stops the export with an error",
+   "steps": [
+    {
+     "event": "PAGE_MEASURED",
+     "from": "running",
+     "entity": {
+      "id": "r",
+      "url": "http://deck",
+      "out": "deck.pptx",
+      "frames": 2,
+      "width": 1920,
+      "height": 1080,
+      "waitMs": 8000,
+      "settleMs": 1700,
+      "notesPath": "",
+      "notes": [
+       "first note"
+      ],
+      "shots": [
+       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      ],
+      "started": true,
+      "status": 200,
+      "body": "",
+      "links": []
+     },
+     "payload": {
+      "key": "slides",
+      "json": "{\"nope\":1}"
+     },
+     "expect": {
+      "state": "stopping",
+      "emits": [
+       {
+        "event": "SLIDES_WAIT",
+        "payload": {
+         "key": "stop",
+         "delayMs": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "SLIDES_NEXT",
+       "SLIDES_PPTX"
+      ]
+     }
+    }
    ]
   }
  ]

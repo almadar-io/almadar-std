@@ -761,7 +761,7 @@
       ]
     },
     {
-      "id": "firestore-two-equalities-without-a-path-need-a-composite-index",
+      "id": "control-firestore-two-equalities-alone-need-no-composite-index",
       "steps": [
         {
           "event": "LINT_INPUT",
@@ -933,15 +933,446 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "query-index",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintQueryIndex"
+        }
+      ],
+      "note": "Firestore serves equality filters alone from its single-field indexes; only a range or an order on another field needs a composite path."
+    },
+    {
+      "id": "a-driver-declaring-its-capabilities-on-its-row-trait-is-read-there",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Graph",
+                  "entity": {
+                    "name": "Edge",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "graphId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "relation",
+                        "type": "string"
+                      },
+                      {
+                        "name": "weight",
+                        "type": "number"
+                      },
+                      {
+                        "name": "tags",
+                        "type": "array"
+                      },
+                      {
+                        "name": "at",
+                        "type": "datetime"
+                      }
+                    ],
+                    "collection": "edges",
+                    "store": "FireDriver"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "linkedEntity": "Edge",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Edge",
+                                {
+                                  "filter": [
+                                    "and",
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@entity",
+                                        "graphId"
+                                      ],
+                                      "x"
+                                    ],
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@entity",
+                                        "relation"
+                                      ],
+                                      "x"
+                                    ]
+                                  ],
+                                  "limit": 10,
+                                  "orderBy": "weight:desc"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "FireDriver",
+                  "pages": [],
+                  "entity": {
+                    "name": "FireDriverRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowVerbs",
+                      "linkedEntity": "FireDriverRow",
+                      "config": {
+                        "queryCapabilities": {
+                          "type": "QueryCapabilities",
+                          "default": {
+                            "leaves": [
+                              "compare",
+                              "member",
+                              "hasElement",
+                              "contains",
+                              "isNull"
+                            ],
+                            "combinators": [
+                              "all",
+                              "any",
+                              "not"
+                            ],
+                            "compareOps": [
+                              "==",
+                              "!=",
+                              "<",
+                              "<=",
+                              ">",
+                              ">="
+                            ],
+                            "orderableFields": {
+                              "kind": "every-field"
+                            },
+                            "window": true,
+                            "exactTotal": true,
+                            "indexes": "deploy"
+                          }
+                        }
+                      },
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintQueryIndex"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "query-index",
                   "findings": [
                     {
                       "code": "ORB_FETCH_NEEDS_COMPOSITE_INDEX",
                       "path": "orbitals[0 (Graph)].traits[0 (Browse)].stateMachine.transitions[0].effects",
-                      "message": "fetch of Edge filters on graphId, relation, and its store driver FireDriver creates no index at runtime; no `@index` of Edge covers it",
-                      "suggestion": "Declare @index { fields: [\"graphId\", \"relation\"] } on Edge",
+                      "message": "fetch of Edge filters on graphId, relation ordered by weight:desc, and its store driver FireDriver creates no index at runtime; no `@index` of Edge covers it",
+                      "suggestion": "Declare @index { fields: [\"graphId\", \"relation\"], orderBy: \"weight:desc\" } on Edge",
                       "severity": "error"
                     }
                   ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintQueryIndex"
+        }
+      ],
+      "note": "EXEC-STORE-4: the kernel reads a driver orbital config, then the configs of its traits; std-firestore declares queryCapabilities on its row trait."
+    },
+    {
+      "id": "control-a-driver-orbital-config-wins-over-its-trait-config",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Graph",
+                  "entity": {
+                    "name": "Edge",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "graphId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "relation",
+                        "type": "string"
+                      },
+                      {
+                        "name": "weight",
+                        "type": "number"
+                      },
+                      {
+                        "name": "tags",
+                        "type": "array"
+                      },
+                      {
+                        "name": "at",
+                        "type": "datetime"
+                      }
+                    ],
+                    "collection": "edges",
+                    "store": "FireDriver"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "linkedEntity": "Edge",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Edge",
+                                {
+                                  "filter": [
+                                    "and",
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@entity",
+                                        "graphId"
+                                      ],
+                                      "x"
+                                    ],
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@entity",
+                                        "relation"
+                                      ],
+                                      "x"
+                                    ]
+                                  ],
+                                  "limit": 10,
+                                  "orderBy": "weight:desc"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "FireDriver",
+                  "pages": [],
+                  "entity": {
+                    "name": "FireDriverRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowVerbs",
+                      "linkedEntity": "FireDriverRow",
+                      "config": {
+                        "queryCapabilities": {
+                          "type": "QueryCapabilities",
+                          "default": {
+                            "leaves": [
+                              "compare",
+                              "member",
+                              "hasElement",
+                              "contains",
+                              "isNull"
+                            ],
+                            "combinators": [
+                              "all",
+                              "any",
+                              "not"
+                            ],
+                            "compareOps": [
+                              "==",
+                              "!=",
+                              "<",
+                              "<=",
+                              ">",
+                              ">="
+                            ],
+                            "orderableFields": {
+                              "kind": "every-field"
+                            },
+                            "window": true,
+                            "exactTotal": true,
+                            "indexes": "deploy"
+                          }
+                        }
+                      },
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ],
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {
+                        "leaves": [
+                          "compare",
+                          "member",
+                          "hasElement",
+                          "contains",
+                          "isNull"
+                        ],
+                        "combinators": [
+                          "all",
+                          "any",
+                          "not"
+                        ],
+                        "compareOps": [
+                          "==",
+                          "!=",
+                          "<",
+                          "<=",
+                          ">",
+                          ">="
+                        ],
+                        "orderableFields": {
+                          "kind": "every-field"
+                        },
+                        "window": true,
+                        "exactTotal": true,
+                        "indexes": "runtime"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintQueryIndex"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "query-index",
+                  "findings": [],
                   "scope": ""
                 }
               }
@@ -3293,7 +3724,8 @@
                                       "x"
                                     ]
                                   ],
-                                  "limit": 10
+                                  "limit": 10,
+                                  "orderBy": "weight:desc"
                                 }
                               ]
                             ]
@@ -3382,8 +3814,8 @@
                     {
                       "code": "ORB_FETCH_NEEDS_COMPOSITE_INDEX",
                       "path": "orbitals[0 (Graph)].traits[0 (Browse)].stateMachine.transitions[0].effects",
-                      "message": "fetch of Edge filters on graphId, relation, and its store driver FireDriver creates no index at runtime; no `@index` of Edge covers it",
-                      "suggestion": "Declare @index { fields: [\"graphId\", \"relation\"] } on Edge",
+                      "message": "fetch of Edge filters on graphId, relation ordered by weight:desc, and its store driver FireDriver creates no index at runtime; no `@index` of Edge covers it",
+                      "suggestion": "Declare @index { fields: [\"graphId\", \"relation\"], orderBy: \"weight:desc\" } on Edge",
                       "severity": "error"
                     }
                   ],
@@ -3558,6 +3990,174 @@
           "trait": "OrbLintQueryIndex"
         }
       ]
+    },
+    {
+      "id": "a-fetch-pinned-by-id-reads-one-row-and-needs-no-path",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Graph",
+                  "entity": {
+                    "name": "Edge",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "graphId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "relation",
+                        "type": "string"
+                      },
+                      {
+                        "name": "weight",
+                        "type": "number"
+                      },
+                      {
+                        "name": "tags",
+                        "type": "array"
+                      },
+                      {
+                        "name": "at",
+                        "type": "datetime"
+                      }
+                    ],
+                    "collection": "edges",
+                    "store": "FileDriver"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "linkedEntity": "Edge",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Edge",
+                                {
+                                  "filter": [
+                                    "and",
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@entity",
+                                        "id"
+                                      ],
+                                      "x"
+                                    ],
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@entity",
+                                        "graphId"
+                                      ],
+                                      "x"
+                                    ]
+                                  ],
+                                  "limit": 10
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "FileDriver",
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {
+                        "leaves": [],
+                        "combinators": [],
+                        "compareOps": [],
+                        "orderableFields": {
+                          "kind": "listed",
+                          "fields": []
+                        },
+                        "window": false,
+                        "exactTotal": false,
+                        "indexes": "none"
+                      }
+                    }
+                  },
+                  "pages": [],
+                  "entity": {
+                    "name": "FileDriverRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintQueryIndex"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "query-index",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintQueryIndex"
+        }
+      ],
+      "note": "An equality on id matches at most one row, so no access path changes its cost."
     },
     {
       "id": "a-driver-that-pushes-nothing-down-accepts-a-covering-path",

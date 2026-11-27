@@ -216,6 +216,81 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-pressed-tool-is-announced-with-the-tool-it-names",
+      "note": "Each composer tool fires TOOL_PRESSED with its event name; the composer emits TOOL_USED so a consumer routes it with a filtered listen.",
+      "entity": {
+        "id": "x",
+        "draft": "hi"
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "TOOL_PRESSED",
+          "payload": {
+            "tool": "MENTION_REQUESTED"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TOOL_USED",
+                "payload": {
+                  "tool": "MENTION_REQUESTED"
+                }
+              }
+            ],
+            "entity": {
+              "draft": "hi"
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
+    },
+    {
+      "id": "control-an-emoji-pick-announces-no-tool",
+      "entity": {
+        "id": "x",
+        "draft": "nice "
+      },
+      "steps": [
+        {
+          "from": "ready",
+          "event": "EMOJI_PICKED",
+          "payload": {
+            "emoji": "x"
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "TOOL_USED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WorkspaceShell",
+        "ChannelRail",
+        "PeopleRail",
+        "ConversationHeader",
+        "MessageFeed",
+        "MessageComposer",
+        "ThreadPanel",
+        "MembersPanel",
+        "PeoplePicker"
+      ]
     }
   ]
 }

@@ -5,7 +5,7 @@ app std-orb-slides [
   env: ["ORB_CHROME", "PATH", "HOME"],
   net: { "127.0.0.1:9334": [tcp] },
   fs: { cwd: "**/*.json": [read], cwd: "**/*.pptx": [write, create], env HOME: ".almadar/slides/**": [read, write, create], env HOME: ".almadar": [create], env HOME: ".almadar/slides": [create] },
-  description: "std-orb-slides — the `orb slides export --url <deck> --frames <n> --out <file.pptx> [--notes <file.json>] [--width <px>] [--height <px>] [--wait <ms>] [--settle <ms>]` command. It keeps a copy of a running slide deck as a presentation file that Google Slides, Keynote and PowerPoint open, for the day the live deck cannot be shown. It opens the deck in a headless Chrome (std-chrome, the browser named by ORB_CHROME) at width by height (1920 by 1080 unless said), waits `wait` ms (8000) for the first paint, takes a picture, then presses the advance key (ArrowRight) and takes the next picture after `settle` ms (1700), until it holds `frames` pictures: one slide of the file per build of the deck, in order. `frames` is stated, never guessed: it is the deck's slides plus all their builds. `--out` and `--notes` are paths under the working directory. `--notes` names a JSON array of strings, the speaker notes of each frame in order (a frame past the end of the list has none). std-pptx writes the file; this command holds no file format of its own. It answers `wrote <n> slides to <file>` (status 200), usage (400) for a missing or malformed word, or the failing step's code and message (500); Chrome is stopped before any answer after it started."
+  description: "std-orb-slides — the `orb slides export --url <deck> --frames <n> --out <file.pptx> [--notes <file.json>] [--width <px>] [--height <px>] [--wait <ms>] [--settle <ms>]` command. It keeps a copy of a running slide deck as a presentation file that Google Slides, Keynote and PowerPoint open, for the day the live deck cannot be shown. It opens the deck in a headless Chrome (std-chrome, the browser named by ORB_CHROME) at width by height (1920 by 1080 unless said), waits `wait` ms (8000) for the first paint, takes a picture, then presses the advance key (ArrowRight) and takes the next picture after `settle` ms (1700), until it holds `frames` pictures: one slide of the file per build of the deck, in order. With each picture it reads the links the frame shows (`linksScript`: every a[href] with an area, by default) and gives them to the slide as clickable areas, so a link button of the deck opens from the file too. `frames` is stated, never guessed: it is the deck's slides plus all their builds. `--out` and `--notes` are paths under the working directory. `--notes` names a JSON array of strings, the speaker notes of each frame in order (a frame past the end of the list has none). std-pptx writes the file; this command holds no file format of its own. It answers `wrote <n> slides to <file>` (status 200), usage (400) for a missing or malformed word, or the failing step's code and message (500); Chrome is stopped before any answer after it started."
 ]
 ;; @capabilities "export a running slide deck as a PowerPoint or Google Slides file"
 
@@ -15,7 +15,9 @@ uses PptxA from "std/behaviors/std-pptx"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgsFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type SlideNotes = [string]
-type PptxSlide = { image : bytes!, notes : string }
+type PptxLink = { url : string!, x : number!, y : number!, w : number!, h : number! }
+type SlideLinks = [PptxLink]
+type PptxSlide = { image : bytes!, notes : string, links : [PptxLink] }
 
 orbital OrbSlidesOrbital {
   uses Args from "std/behaviors/std-args"
@@ -33,6 +35,7 @@ orbital OrbSlidesOrbital {
     notesPath : string = ""
     notes : [string] = []
     shots : [bytes] = []
+    links : [SlideLinks] @description "The links each frame shows, in fractions of the page." = []
     started : boolean @description "Chrome was started by this run and is not stopped yet." = false
     status : number = 200
     body : string = ""
@@ -58,6 +61,10 @@ orbital OrbSlidesOrbital {
       usage : string = "usage: orb slides export --url <deck> --frames <n> --out <file.pptx> [--notes <file.json>] [--width <px>] [--height <px>] [--wait <ms>] [--settle <ms>]"
         @label "Usage line"
         @tier "presentation"
+      linksScript : string = "JSON.stringify([...document.querySelectorAll(\"a[href]\")].map((a) => { const r = a.getBoundingClientRect(); return { url: a.href, x: r.x / innerWidth, y: r.y / innerHeight, w: r.width / innerWidth, h: r.height / innerHeight, pw: r.width, ph: r.height }; }).filter((l) => l.pw > 1 && l.ph > 1).map((l) => ({ url: l.url, x: l.x, y: l.y, w: l.w, h: l.h })))"
+        @label "How a frame's links are read"
+        @description "A page expression answering the JSON list of the links the frame shows, each { url, x, y, w, h } in fractions of the page: by default every a[href] element with an area of more than one pixel, so a link the deck hides on other slides is left out."
+        @tier "presentation"
     }
     initial: ready
 
@@ -80,6 +87,7 @@ orbital OrbSlidesOrbital {
         (set @entity.notesPath (default (array/nth (default (object/get @payload.flags "notes" null) []) 0) ""))
         (set @entity.notes [])
         (set @entity.shots [])
+        (set @entity.links [])
         (set @entity.started false)
         (if (= @entity.notesPath "")
           (emit SLIDES_CHROME_START {})
@@ -96,6 +104,7 @@ orbital OrbSlidesOrbital {
       PAGE_OPENED -> ready
       PAGE_KEYED -> ready
       PAGE_SHOT -> ready
+      PAGE_MEASURED -> ready
       PAGE_BROKE -> ready
       WAITED -> ready
       FILE_BUILT -> ready
@@ -125,11 +134,18 @@ orbital OrbSlidesOrbital {
         (emit SLIDES_SHOT { key: "slides", fullPage: false })
       PAGE_SHOT -> running
         (set @entity.shots (array/concat @entity.shots [@payload.png]))
+        (emit SLIDES_MEASURE { key: "slides", expression: @config.linksScript })
+      PAGE_MEASURED -> running when (!= (json/parse @payload.json SlideLinks) null)
+        (set @entity.links (array/concat @entity.links [(default (json/parse @payload.json SlideLinks) [])]))
         (emit SLIDES_NEXT {})
+      PAGE_MEASURED -> stopping when (= (json/parse @payload.json SlideLinks) null)
+        (set @entity.status 500)
+        (set @entity.body (str/concat "links: the page did not answer a list of { url, x, y, w, h }: " @payload.json))
+        (emit SLIDES_WAIT { key: "stop", delayMs: 1 })
       SLIDES_NEXT -> running when (< (array/len @entity.shots) @entity.frames)
         (emit SLIDES_KEY { key: "slides", keyName: @config.advanceKey, shift: false })
       SLIDES_NEXT -> running when (>= (array/len @entity.shots) @entity.frames)
-        (emit SLIDES_PPTX { key: "slides", slides: (array/map (array/range 0 (array/len @entity.shots) 1) (fn i { image: (default (array/nth @entity.shots @i) (bytes/from-string "")), notes: (default (array/nth @entity.notes @i) "") })) })
+        (emit SLIDES_PPTX { key: "slides", slides: (array/map (array/range 0 (array/len @entity.shots) 1) (fn i { image: (default (array/nth @entity.shots @i) (bytes/from-string "")), notes: (default (array/nth @entity.notes @i) ""), links: (default (array/nth @entity.links @i) []) })) })
       PAGE_KEYED -> running
         (emit SLIDES_WAIT { key: "frame", delayMs: @entity.settleMs })
       FILE_BUILT -> running
@@ -171,6 +187,7 @@ orbital OrbSlidesOrbital {
         (emit SLIDES_ANSWERED { status: @entity.status, body: @entity.body })
       PAGE_BROKE -> stopping
       PAGE_SHOT -> stopping
+      PAGE_MEASURED -> stopping
       PAGE_KEYED -> stopping
       PAGE_OPENED -> stopping
       PAGE_SIZED -> stopping
@@ -234,6 +251,12 @@ orbital OrbSlidesOrbital {
       }
         @description "Advance the deck one build."
         @tier "internal"
+      SLIDES_MEASURE -> external {
+        key : string!
+        expression : string!
+      }
+        @description "Read the links the frame shows."
+        @tier "internal"
       SLIDES_SHOT -> external {
         key : string!
         fullPage : boolean!
@@ -285,6 +308,8 @@ orbital OrbSlidesOrbital {
         @description "std-chrome's PAGE_KEY_SENT."
       PAGE_SHOT { key : string!  png : bytes! }
         @description "std-chrome's PAGE_SCREENSHOT_TAKEN."
+      PAGE_MEASURED { key : string!  json : string! }
+        @description "std-chrome's PAGE_MEASURED: the frame's links as JSON text."
       PAGE_BROKE { key : string!  error : string!  code : string! }
         @description "std-chrome's PAGE_FAILED."
       WAITED { waitedMs : number!  key : string }
@@ -303,6 +328,7 @@ orbital OrbSlidesOrbital {
       SlidesChrome.Chrome.PAGE_KEY_SENT -> PAGE_KEYED
       SlidesChrome.Chrome.PAGE_SCREENSHOT_TAKEN -> PAGE_SHOT
       SlidesChrome.Chrome.PAGE_FAILED -> PAGE_BROKE
+      SlidesChrome.Chrome.PAGE_MEASURED -> PAGE_MEASURED
       SlidesFile.Pptx.PPTX_ANSWERED -> FILE_BUILT
       SlidesFile.Pptx.PPTX_REFUSED -> FILE_REFUSED
     }
@@ -344,6 +370,7 @@ orbital SlidesChrome = ChromeA.orbitals.ChromeOrbital {
     OrbSlidesOrbital.OrbSlides.SLIDES_NAVIGATE -> Chrome.PAGE_NAVIGATE
     OrbSlidesOrbital.OrbSlides.SLIDES_KEY -> Chrome.PAGE_KEY
     OrbSlidesOrbital.OrbSlides.SLIDES_SHOT -> Chrome.PAGE_SCREENSHOT
+    OrbSlidesOrbital.OrbSlides.SLIDES_MEASURE -> Chrome.PAGE_MEASURE
   }
 }
 

@@ -1124,10 +1124,26 @@
      "from": "ready",
      "event": "RASM_POINTER",
      "payload": {
-      "kind": "up",
+      "kind": "down",
       "id": "ch:bubble:1",
       "x": 10,
       "y": 100
+     },
+     "expect": {
+      "entity": {
+       "pressBubble": "ch:bubble:1",
+       "dragging": true
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:bubble:1",
+      "x": 10,
+      "y": 102
      },
      "expect": {
       "emits": [
@@ -1138,7 +1154,14 @@
          "url": "https://orb.test/s3/family-media/voice/a.wav"
         }
        }
-      ]
+      ],
+      "neverEmits": [
+       "CHAT_MESSAGE_PRESSED"
+      ],
+      "entity": {
+       "pressBubble": "",
+       "dragging": false
+      }
      }
     }
    ]
@@ -2130,6 +2153,370 @@
      "expect": {
       "emitCounts": {
        "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-tap-on-a-text-bubble-presses-that-message",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true,
+    "pressMessages": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Hi",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": ""
+     },
+     {
+      "id": "m2",
+      "side": "agent",
+      "text": "▶ Voice note 0:04",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": "https://orb.test/s3/family-media/voice/a.wav"
+     }
+    ],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "ch:bubble:0",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {}
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:bubble:0",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHAT_MESSAGE_PRESSED",
+        "payload": {
+         "id": "m1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CHAT_AUDIO"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a drag that starts on a bubble scrolls the conversation and presses nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true,
+    "pressMessages": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Hi",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": ""
+     },
+     {
+      "id": "m2",
+      "side": "agent",
+      "text": "▶ Voice note 0:04",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": "https://orb.test/s3/family-media/voice/a.wav"
+     }
+    ],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "ch:bubble:0",
+      "x": 10,
+      "y": 100
+     },
+     "expect": {}
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "ch:bubble:0",
+      "x": 10,
+      "y": 160
+     },
+     "expect": {
+      "entity": {
+       "back": 60
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "ch:bubble:0",
+      "x": 10,
+      "y": 160
+     },
+     "expect": {
+      "emitCounts": {
+       "CHAT_MESSAGE_PRESSED": 0,
+       "CHAT_AUDIO": 0
+      },
+      "entity": {
+       "pressBubble": "",
+       "dragging": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-message-with-reactions-paints-once",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true,
+    "pressMessages": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [
+     {
+      "id": "m1",
+      "side": "agent",
+      "text": "Hi",
+      "sender": "Mama",
+      "at": "",
+      "image": "",
+      "ticks": "",
+      "audio": "",
+      "reactionSummary": "😀 2  ❤️ 1",
+      "status": "sent",
+      "batch": ""
+     }
+    ],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "CHAT_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emitCounts": {
+       "RASM_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-wheel-over-a-bubble-scrolls-the-conversation",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true,
+    "pressMessages": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "ch:bubble:2",
+      "x": 10,
+      "y": 200,
+      "dx": 0,
+      "dy": -100
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "back": 100
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-wheel-over-a-photo-scrolls-the-conversation",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true,
+    "pressMessages": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "ch:image:0",
+      "x": 10,
+      "y": 200,
+      "dx": 0,
+      "dy": -100
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "back": 100
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the wheel over the retry alert scrolls nothing",
+   "config": {
+    "id": "ch",
+    "title": "chat.title",
+    "placeholder": "chat.placeholder",
+    "messages": [],
+    "showSender": true,
+    "pressMessages": true
+   },
+   "entity": {
+    "id": "x",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 600
+    },
+    "live": true,
+    "records": [],
+    "maxBack": 300,
+    "back": 0
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "ch:retry:0",
+      "x": 10,
+      "y": 200,
+      "dx": 0,
+      "dy": -100
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "back": 0
+      },
+      "emitCounts": {
+       "CHAT_PAINT": 0
       }
      }
     }

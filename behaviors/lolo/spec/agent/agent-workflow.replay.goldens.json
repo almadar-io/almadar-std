@@ -74,7 +74,7 @@
                       "tools": []
                     },
                     {
-                      "instruction": "Write the letter: Write the decision letter.",
+                      "instruction": "A person read the result of the step before this one and approved it.\nWrite the letter: Write the decision letter.",
                       "hold": true,
                       "limited": true,
                       "tools": []
@@ -764,7 +764,7 @@
                       "tools": []
                     },
                     {
-                      "instruction": "Write the order: Write.",
+                      "instruction": "A person read the result of the step before this one and approved it.\nWrite the order: Write.",
                       "hold": true,
                       "limited": true,
                       "tools": []
@@ -826,6 +826,136 @@
                 "event": "WORKFLOW_FAILED",
                 "payload": {
                   "runId": "run-e",
+                  "index": -1,
+                  "error": "the workflow declares no steps"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TASK_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-run-that-carries-a-stored-workflow-runs-that-workflows-steps-not-the-configured-ones",
+      "config": {
+        "name": "Configured",
+        "instructions": "The configured process.",
+        "steps": [
+          {
+            "title": "Configured step",
+            "instructions": "Never run.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-s",
+            "input": {
+              "request": "Ten laptops for the new office"
+            },
+            "workflow": {
+              "id": "wf-7",
+              "name": "Purchase request",
+              "instructions": "Check one purchase request.",
+              "steps": [
+                {
+                  "title": "Read the request",
+                  "instructions": "List what is asked for.",
+                  "kind": "agent"
+                },
+                {
+                  "title": "Manager approval",
+                  "kind": "approval"
+                },
+                {
+                  "title": "Write the order",
+                  "instructions": "Write the order.",
+                  "kind": "agent"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "TASK_START",
+                "payload": {
+                  "taskId": "run-s",
+                  "task": "Purchase request\nCheck one purchase request.\n\nrequest: Ten laptops for the new office",
+                  "steps": [
+                    {
+                      "instruction": "Read the request: List what is asked for.",
+                      "hold": false,
+                      "limited": true,
+                      "tools": []
+                    },
+                    {
+                      "instruction": "A person read the result of the step before this one and approved it.\nWrite the order: Write the order.",
+                      "hold": true,
+                      "limited": true,
+                      "tools": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "WORKFLOW_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-carried-workflow-with-no-agent-step-is-refused-even-when-the-configured-one-has-steps",
+      "config": {
+        "name": "Configured",
+        "steps": [
+          {
+            "title": "Configured step",
+            "instructions": "Never run.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-n",
+            "input": {},
+            "workflow": {
+              "id": "wf-8",
+              "name": "Only a sign-off",
+              "instructions": "",
+              "steps": [
+                {
+                  "title": "Manager approval",
+                  "kind": "approval"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_FAILED",
+                "payload": {
+                  "runId": "run-n",
                   "index": -1,
                   "error": "the workflow declares no steps"
                 }

@@ -1,0 +1,40 @@
+{
+ "atom": "../ui/core/atoms/std-vote.lolo",
+ "trait": "VoteCast",
+ "note": "A retarget reads the votes whose row targetId is the new target; `@entity.targetId` in a fetch filter is the trait's own value (just set to the same target), which matched every vote.",
+ "cases": [
+  {
+   "id": "a-retarget-reads-only-the-new-targets-votes",
+   "steps": [
+    {
+     "trait": "VoteCast",
+     "from": "idle",
+     "entity": { "id": "v", "targetId": "t1" },
+     "event": "SET_VOTE_TARGET",
+     "payload": { "targetId": "t2" },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": { "targetId": "t2" },
+      "effects": [
+       { "type": "fetch", "arg0": "Vote", "arg1": { "emit": { "failure": "VoteLoadFailed", "success": "VoteLoaded" }, "filter": ["=", ["object/get", "@entity", "targetId"], "@payload.targetId"], "limit": 1 } }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-reads-without-a-target-filter",
+   "steps": [
+    {
+     "trait": "VoteCast",
+     "from": "loading",
+     "entity": { "id": "v" },
+     "event": "INIT",
+     "payload": {},
+     "expect": { "fired": true, "state": "loading", "effects": [{ "type": "fetch", "arg0": "Vote" }] }
+    }
+   ]
+  }
+ ]
+}

@@ -6,7 +6,8 @@ app std-kernel-dispatch [
 ;; @capabilities "lolo kernel, dispatch worklist, kernel step fold, parallel kernel"
 
 type KFrame = { row : SExpr? }
-type KItem = { trait : string!, event : string!, payload : SExpr, at : number!, seed : boolean!, row : string!, completion : boolean!, src : string!, run : string?, runRow : string? }
+type KItem = { trait : string!, event : string!, payload : SExpr, at : number!, seed : boolean!, row : string!, completion : boolean!, src : string!, run : string?, runRow : string?, seen : SExpr }
+type KCollapsed = { trait : string!, event : string!, payload : SExpr }
 type KSettledRun = { run : string!, trait : string!, event : string!, payload : SExpr, entityId : string! }
 type KSettled = { runs : [KSettledRun]! }
 type KOutcome = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
@@ -34,7 +35,7 @@ type KHeldProgram = { orbitals : [orbital] }
 type KLoloOpen = { guest : string!, seeds : [KSeed]!, route : string? }
 type KLegRun = { kind : "targeted" | "mount" | "discover" | "completion" | "tick", trait : string?, event : string?, payload : SExpr?, entityId : string!, seeds : [KSeed]?, route : string?, traits : [string]?, failure : string?, key : string?, tick : string?, rows : [string]? }
 type KOpenAnswer = { guest : string!, outcomes : [KNativeOutcome]! }
-type KRun = { q : [KItem]!, states : Map string string!, frames : Map string KFrame!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KItem]!, seen : [string]!, pending : [string]!, later : [KItem]!, scopes : [string]!, refused : string!, next : [KItem]!, nextPending : [string]!, held : [KItem]!, paints : [KPaint]!, navs : [KNav]!, directives : [KDirective]! }
+type KRun = { q : [KItem]!, states : Map string string!, frames : Map string KFrame!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KCollapsed]!, seen : [string]!, pending : [string]!, later : [KItem]!, scopes : [string]!, refused : string!, next : [KItem]!, nextPending : [string]!, held : [KItem]!, paints : [KPaint]!, navs : [KNav]!, directives : [KDirective]! }
 type KStepEmit = { event : string!, payload : SExpr?, completion : boolean?, seen : SExpr? }
 type KScriptStep = { trait : string!, event : string!, payload : SExpr, tickPass : boolean? }
 type KTickRan = { trait : string!, tick : string!, rows : [string]! }
@@ -187,22 +188,22 @@ orbital KernelDispatchOrbital {
           (emit KERNEL_RUN {
             items: (if (= ?route "boot") []
                      (array/map (array/filter @entity.routes (fn rt (and (= (object/get @rt "event") "$MOUNT") (= (object/get @rt "sourceKind") "any"))))
-                       (fn rt { trait: (object/get @rt "trait"), event: "$MOUNT", payload: { route: ?route }, at: (object/get @rt "at"), seed: false, row: "", completion: false, src: "" }))),
-            next: (array/map @seeds (fn n { trait: @n, event: (default (array/find ["INIT", "LOAD", "$MOUNT"] (fn ev (array/some @entity.rows (fn r (and (= (object/get @r "trait") @n) (= (object/get @r "event") @ev) (= (object/get @r "from") (object/get @entity.states @n ""))))))) "INIT"), payload: {}, at: -1, seed: false, row: "", completion: false, src: "" })),
+                       (fn rt { trait: (object/get @rt "trait"), event: "$MOUNT", payload: { route: ?route }, seen: { route: ?route }, at: (object/get @rt "at"), seed: false, row: "", completion: false, src: "" }))),
+            next: (array/map @seeds (fn n { trait: @n, event: (default (array/find ["INIT", "LOAD", "$MOUNT"] (fn ev (array/some @entity.rows (fn r (and (= (object/get @r "trait") @n) (= (object/get @r "event") @ev) (= (object/get @r "from") (object/get @entity.states @n ""))))))) "INIT"), payload: {}, seen: {}, at: -1, seed: false, row: "", completion: false, src: "" })),
             pending: @seeds }))
       KERNEL_MOUNT_SEEDS -> ready
         (set @entity.runs (+ @entity.runs 1))
         (emit KERNEL_RUN {
           items: (if (= (default ?route "") "") []
                    (array/map (array/filter @entity.routes (fn rt (and (= (object/get @rt "event") "$MOUNT") (= (object/get @rt "sourceKind") "any"))))
-                     (fn rt { trait: (object/get @rt "trait"), event: "$MOUNT", payload: { route: (default ?route "") }, at: (object/get @rt "at"), seed: false, row: "", completion: false, src: "" }))),
-          next: (array/map ?seeds (fn n { trait: @n.trait, event: @n.event, payload: {}, at: -1, seed: false, row: "", completion: false, src: "" })),
+                     (fn rt { trait: (object/get @rt "trait"), event: "$MOUNT", payload: { route: (default ?route "") }, seen: { route: (default ?route "") }, at: (object/get @rt "at"), seed: false, row: "", completion: false, src: "" }))),
+          next: (array/map ?seeds (fn n { trait: @n.trait, event: @n.event, payload: {}, seen: {}, at: -1, seed: false, row: "", completion: false, src: "" })),
           pending: (array/map ?seeds (fn n @n.trait)) })
       KERNEL_TICK -> ready
         (set @entity.runs (+ @entity.runs 1))
         (emit KERNEL_RUN { items: [], pending: [],
           next: (array/flatten (array/map ?ticks (fn t
-                  (array/map @t.rows (fn row { trait: @t.trait, event: @t.tick, payload: {}, at: -2, seed: false, row: @row, completion: false, src: "" }))))) })
+                  (array/map @t.rows (fn row { trait: @t.trait, event: @t.tick, payload: {}, seen: {}, at: -2, seed: false, row: @row, completion: false, src: "" }))))) })
       KERNEL_LEG -> ready
         (set @entity.runs (+ @entity.runs 1))
         (set @entity.leg ?leg)
@@ -217,21 +218,21 @@ orbital KernelDispatchOrbital {
           items: (if (= ?run.kind "mount")
                    (if (= (default ?run.route "") "") []
                      (array/map (array/filter @entity.routes (fn rt (and (= (object/get @rt "event") "$MOUNT") (= (object/get @rt "sourceKind") "any"))))
-                       (fn rt { trait: (object/get @rt "trait"), event: "$MOUNT", payload: { route: (default ?run.route "") }, at: (object/get @rt "at"), seed: false, row: "", completion: false, src: "" })))
+                       (fn rt { trait: (object/get @rt "trait"), event: "$MOUNT", payload: { route: (default ?run.route "") }, seen: { route: (default ?run.route "") }, at: (object/get @rt "at"), seed: false, row: "", completion: false, src: "" })))
                  (if (= ?run.kind "completion")
-                   [{ trait: (default ?run.trait ""), event: (default ?run.event ""), payload: (default ?run.payload {}), at: -1, seed: true, row: "", completion: true, src: "" }]
+                   [{ trait: (default ?run.trait ""), event: (default ?run.event ""), payload: (default ?run.payload {}), seen: (default ?run.payload {}), at: -1, seed: true, row: "", completion: true, src: "" }]
                  (if (= ?run.kind "targeted")
                    (array/map (array/concat [(default ?run.trait "")] (if (array/includes ["INIT", "LOAD", "$MOUNT"] (default ?run.event "")) [] (object/get (default (array/find @entity.hosts (fn h (= @h.trait (default ?run.trait "")))) { trait: (default ?run.trait ""), chain: [] }) "chain")))
-                     (fn n { trait: @n, event: (default ?run.event ""), payload: (default ?run.payload {}), at: -1, seed: true, row: "", completion: false, src: "" }))
+                     (fn n { trait: @n, event: (default ?run.event ""), payload: (default ?run.payload {}), seen: (default ?run.payload {}), at: -1, seed: true, row: "", completion: false, src: "" }))
                    (array/map (default ?run.traits [])
-                     (fn n { trait: @n, event: (default ?run.event ""), payload: (default ?run.payload {}), at: -1, seed: true, row: "", completion: false, src: "" }))))),
-          next: (if (= ?run.kind "mount") (array/map (default ?run.seeds []) (fn n { trait: @n.trait, event: @n.event, payload: (default ?run.payload {}), at: -1, seed: false, row: "", completion: false, src: "" }))
-                  (if (= ?run.kind "tick") (array/map (default ?run.rows []) (fn row { trait: (default ?run.trait ""), event: (default ?run.tick ""), payload: {}, at: -2, seed: false, row: @row, completion: false, src: "" })) [])),
+                     (fn n { trait: @n, event: (default ?run.event ""), payload: (default ?run.payload {}), seen: (default ?run.payload {}), at: -1, seed: true, row: "", completion: false, src: "" }))))),
+          next: (if (= ?run.kind "mount") (array/map (default ?run.seeds []) (fn n { trait: @n.trait, event: @n.event, payload: (default ?run.payload {}), seen: (default ?run.payload {}), at: -1, seed: false, row: "", completion: false, src: "" }))
+                  (if (= ?run.kind "tick") (array/map (default ?run.rows []) (fn row { trait: (default ?run.trait ""), event: (default ?run.tick ""), payload: {}, seen: {}, at: -2, seed: false, row: @row, completion: false, src: "" })) [])),
           pending: (if (= ?run.kind "mount") (array/map (default ?run.seeds []) (fn n @n.trait)) []) })
       KERNEL_DISPATCH -> ready
         (set @entity.runs (+ @entity.runs 1))
         (emit KERNEL_RUN { next: [], items: (array/map (array/concat [?trait] (if (array/includes ["INIT", "LOAD", "$MOUNT"] ?event) [] (object/get (default (array/find @entity.hosts (fn h (= @h.trait ?trait))) { trait: ?trait, chain: [] }) "chain")))
-                                   (fn n { trait: @n, event: ?event, payload: ?payload, at: -1, seed: true, row: "", completion: false, src: "" })), pending: [] })
+                                   (fn n { trait: @n, event: ?event, payload: ?payload, seen: ?payload, at: -1, seed: true, row: "", completion: false, src: "" })), pending: [] })
       KERNEL_FRAMES_READ -> ready
         (emit KERNEL_FRAMES { rows: (array/flatten (array/map (object/keys @entity.states) (fn slot
           (let ((parts : [string] (str/split @slot "#")))
@@ -254,7 +255,7 @@ orbital KernelDispatchOrbital {
         (set @entity.frames @entity.last.frames)
         (if (and (!= @entity.legFallback "") (!= @entity.last.refused ""))
           (do
-            (emit KERNEL_RUN { next: [], pending: [], items: [{ trait: @entity.legTrait, event: @entity.legFallback, payload: { error: (str/concat @entity.legEvent " was refused: " @entity.last.refused), kind: "invalid", key: @entity.legKey }, at: -1, seed: true, row: "", completion: true, src: "" }] })
+            (emit KERNEL_RUN { next: [], pending: [], items: [{ trait: @entity.legTrait, event: @entity.legFallback, payload: { error: (str/concat @entity.legEvent " was refused: " @entity.last.refused), kind: "invalid", key: @entity.legKey }, seen: {}, at: -1, seed: true, row: "", completion: true, src: "" }] })
             (set @entity.legFallback ""))
           (do
             (set @entity.leg "")
@@ -269,7 +270,7 @@ orbital KernelDispatchOrbital {
         (emit KERNEL_NEXT { left: @entity.runLeft })
       KERNEL_SETTLED -> ready when (> (array/len (object/get (default (as ?result KSettled) { runs: [] }) "runs")) 0)
         (let ((settled : KSettled (default (as ?result KSettled) { runs: [] })))
-          (set @entity.last (object/set @entity.last "q" (array/map @settled.runs (fn r { trait: @r.trait, event: @r.event, payload: (default @r.payload {}), at: -1, seed: false, row: "", completion: true, src: "", run: @r.run, runRow: @r.entityId })))))
+          (set @entity.last (object/set @entity.last "q" (array/map @settled.runs (fn r { trait: @r.trait, event: @r.event, payload: (default @r.payload {}), seen: (default @r.payload {}), at: -1, seed: false, row: "", completion: true, src: "", run: @r.run, runRow: @r.entityId })))))
         (emit KERNEL_NEXT { left: @entity.runLeft })
       KERNEL_SETTLE_FAILED -> ready
         (set @entity.legSettle false)
@@ -284,7 +285,7 @@ orbital KernelDispatchOrbital {
                   { wait: false, request: { trait: "" }, acc: { q: (array/take @acc.next 1), states: @acc.states, frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: @acc.collapsed, seen: [], pending: (array/concat @acc.pending @acc.nextPending), later: @acc.later, scopes: @acc.scopes, refused: @acc.refused, next: (array/drop @acc.next 1), nextPending: [], held: @acc.held, paints: @acc.paints, navs: @acc.navs, directives: @acc.directives } }
                 (if (= (array/len @acc.q) 0)
                   { wait: false, request: { trait: "" }, acc: { q: @acc.q, states: @acc.states, frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: @acc.collapsed, seen: @acc.seen, pending: @acc.pending, later: @acc.later, scopes: @acc.scopes, refused: @acc.refused, next: @acc.next, nextPending: @acc.nextPending, held: @acc.held, paints: @acc.paints, navs: @acc.navs, directives: @acc.directives } }
-                  (let ((it : KItem (default (array/first @acc.q) { trait: "", event: "", payload: {}, at: -1, seed: false, row: "", completion: false, src: "" }))
+                  (let ((it : KItem (default (array/first @acc.q) { trait: "", event: "", payload: {}, seen: {}, at: -1, seed: false, row: "", completion: false, src: "" }))
                         (rest : [KItem] (array/drop @acc.q 1)))
                     (if (and (>= @it.at 0) (array/includes @entity.browser @it.trait)) { wait: false, request: { trait: "" }, acc: { q: @rest, states: @acc.states, frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: @acc.collapsed, seen: @acc.seen, pending: @acc.pending, later: @acc.later, scopes: @acc.scopes, refused: @acc.refused, next: @acc.next, nextPending: @acc.nextPending, held: @acc.held, paints: @acc.paints, navs: @acc.navs, directives: @acc.directives } } (if (and (array/includes @acc.pending @it.trait) (not (and (< @it.at 0) (array/includes ["INIT", "LOAD", "$MOUNT"] @it.event))))
                       { wait: false, request: { trait: "" }, acc: { q: @rest, states: @acc.states, frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: @acc.collapsed, seen: @acc.seen, pending: @acc.pending, later: @acc.later, scopes: @acc.scopes, refused: @acc.refused, next: @acc.next, nextPending: @acc.nextPending, held: (array/concat @acc.held [@it]), paints: @acc.paints, navs: @acc.navs, directives: @acc.directives } }
@@ -300,7 +301,7 @@ orbital KernelDispatchOrbital {
                                               (object/merge (default (as (object/get (object/get @acc.frames @fslot { row: {} }) "row") KRowMap) {}) (default (as (object/get (object/get @acc.frames @oslot { row: {} }) "row") KRowMap) {})))))
                         (if (and (not @it.completion) (array/includes @acc.seen (if @framed (value/key [@slot @it.event @from @it.payload @frame]) (value/key [@slot @it.event @from @it.payload "!unframed"]))))
                           (let ((flush : boolean (and @it.seed (not (array/some @rest (fn x @x.seed))))))
-                            { wait: false, request: { trait: "" }, acc: { q: (let ((q0 : [KItem] (if @flush (array/concat @rest @acc.later) @rest)) (ds : [KDirective] (if @flush @acc.directives []))) (array/reduce @ds @q0 (fn (moved d) (if @d.front (array/concat (array/filter @moved (fn x (= @x.event @d.event))) (array/filter @moved (fn x (!= @x.event @d.event)))) (array/concat (array/filter @moved (fn x (!= @x.event @d.event))) (array/filter @moved (fn x (= @x.event @d.event)))))))), states: @acc.states, frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: (array/concat @acc.collapsed [@it]), seen: @acc.seen, pending: @acc.pending, later: (if @flush [] @acc.later), scopes: @acc.scopes, refused: @acc.refused, next: @acc.next, nextPending: @acc.nextPending, held: @acc.held, paints: @acc.paints, navs: @acc.navs, directives: (if @flush [] @acc.directives) } })
+                            { wait: false, request: { trait: "" }, acc: { q: (let ((q0 : [KItem] (if @flush (array/concat @rest @acc.later) @rest)) (ds : [KDirective] (if @flush @acc.directives []))) (array/reduce @ds @q0 (fn (moved d) (if @d.front (array/concat (array/filter @moved (fn x (= @x.event @d.event))) (array/filter @moved (fn x (!= @x.event @d.event)))) (array/concat (array/filter @moved (fn x (!= @x.event @d.event))) (array/filter @moved (fn x (= @x.event @d.event)))))))), states: @acc.states, frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: (array/concat @acc.collapsed [{ trait: @it.trait, event: @it.event, payload: (default @it.seen {}) }]), seen: @acc.seen, pending: @acc.pending, later: (if @flush [] @acc.later), scopes: @acc.scopes, refused: @acc.refused, next: @acc.next, nextPending: @acc.nextPending, held: @acc.held, paints: @acc.paints, navs: @acc.navs, directives: (if @flush [] @acc.directives) } })
                           { wait: true, request: (object/merge (if (= @it.at -2) (if @framed (if (= @it.row "") { trait: @it.trait, from: @from, tick: @it.event, entity: @frame } { trait: @it.trait, from: @from, tick: @it.event, entity: @frame, entityId: @it.row }) (if (= @it.row "") { trait: @it.trait, from: @from, tick: @it.event } { trait: @it.trait, from: @from, tick: @it.event, entityId: @it.row })) (if @framed
                                                   (if (< @it.at 0)
                                                     (if (= @it.row "")
@@ -349,7 +350,7 @@ orbital KernelDispatchOrbital {
            (set @entity.legRow "")
            (set @entity.legFallback "")
            (emit KERNEL_FAILED { error: (str/concat "A step was refused: " (default @r.failure "")) }))
-         (let ((it : KItem (default (array/first @acc.q) { trait: "", event: "", payload: {}, at: -1, seed: false, row: "", completion: false, src: "" }))
+         (let ((it : KItem (default (array/first @acc.q) { trait: "", event: "", payload: {}, seen: {}, at: -1, seed: false, row: "", completion: false, src: "" }))
                (rest : [KItem] (array/drop @acc.q 1)))
                       (let ((slot : string (if (or (= @it.row "") (and (= @it.at -2) (not (array/some @entity.routes (fn rt (and (= @rt.trait @it.trait) @rt.keyed)))))) @it.trait (str/concat @it.trait "#" @it.row))))
                        (let ((from : string (object/get @acc.states @slot (object/get @entity.initial @it.trait "")))
@@ -364,34 +365,34 @@ orbital KernelDispatchOrbital {
                                     (fresh : boolean (not (object/has @acc.states (str/concat @it.trait "#" (default @r.key ""))))))
                                 { q: (array/concat
                                        (if (and @fresh (array/some @entity.rows (fn w (and (= (object/get @w "trait") @it.trait) (= (object/get @w "event") "INIT") (= (object/get @w "from") (object/get @entity.initial @it.trait ""))))))
-                                         [{ trait: @it.trait, event: "INIT", payload: {}, at: -1, seed: false, row: @row, completion: false, src: "" }]
+                                         [{ trait: @it.trait, event: "INIT", payload: {}, seen: {}, at: -1, seed: false, row: @row, completion: false, src: "" }]
                                          [])
-                                       [{ trait: @it.trait, event: @it.event, payload: @it.payload, at: @it.at, seed: false, row: @row, completion: @it.completion, src: @it.src }]
+                                       [{ trait: @it.trait, event: @it.event, payload: @it.payload, seen: @it.seen, at: @it.at, seed: false, row: @row, completion: @it.completion, src: @it.src }]
                                        @rest),
                                   states: (if @fresh (object/set @acc.states (str/concat @it.trait "#" @row) (object/get @entity.initial @it.trait "")) @acc.states),
                                   frames: @acc.frames, outcomes: @acc.outcomes, emitted: @acc.emitted, collapsed: @acc.collapsed, seen: @acc.seen, pending: @acc.pending, later: @acc.later, scopes: @acc.scopes, refused: @acc.refused, next: @acc.next, nextPending: @acc.nextPending, held: @acc.held, paints: @acc.paints, navs: @acc.navs, directives: @acc.directives })
                               (let ((heard : [KStepEmit] @r.emits)
                                     (more : boolean (and @it.seed (array/some @rest (fn x @x.seed)))))
                                (let ((own : [KItem] (array/map (array/filter @r.emits (fn e (array/some @entity.rows (fn w (and (= (object/get @w "trait") @it.trait) (= (object/get @w "from") @r.to) (= (object/get @w "event") @e.event))))))
-                                                      (fn e { trait: @it.trait, event: @e.event, payload: (default @e.payload {}), at: -1, seed: false, row: @it.row, completion: (default @e.completion false), src: "" })))
+                                                      (fn e { trait: @it.trait, event: @e.event, payload: (default @e.payload {}), seen: (default @e.seen {}), at: -1, seed: false, row: @it.row, completion: (default @e.completion false), src: "" })))
                                      (seedFan : [KItem]
                                          (array/map (array/filter @entity.routes (fn rt (and @it.seed (= (object/get @rt "event") @it.event)
                                                                                            (or (!= (object/get @rt "trigger") @it.event) (not (array/includes @acc.scopes (object/get @rt "trait"))))
                                                                                            (or (= (object/get @rt "sourceKind") "any")
                                                                                                (and (= (object/get @rt "sourceTrait") @it.trait) (= (object/get @rt "sourceOrbital") @orbital))))))
-                                           (fn rt { trait: (object/get @rt "trait"), event: (object/get @rt "trigger"), payload: (default @it.payload {}), at: (object/get @rt "at"), seed: false, row: "", completion: false, src: @it.trait })))
+                                           (fn rt { trait: (object/get @rt "trait"), event: (object/get @rt "trigger"), payload: (default @it.payload {}), seen: (default @it.seen {}), at: (object/get @rt "at"), seed: false, row: "", completion: false, src: @it.trait })))
                                      (emitFan : [KItem]
                                        (array/flatten (array/map @heard (fn e
                                          (array/map (array/filter @entity.routes (fn rt (and (= (object/get @rt "event") @e.event)
                                                                                            (or (= (object/get @rt "sourceKind") "any")
                                                                                                (and (= (object/get @rt "sourceTrait") @it.trait) (= (object/get @rt "sourceOrbital") @orbital))))))
-                                           (fn rt { trait: (object/get @rt "trait"), event: (object/get @rt "trigger"), payload: (default @e.payload {}), at: (object/get @rt "at"), seed: false, row: "", completion: (default @e.completion false), src: @it.trait })))))))
+                                           (fn rt { trait: (object/get @rt "trait"), event: (object/get @rt "trigger"), payload: (default @e.payload {}), seen: (default @e.seen {}), at: (object/get @rt "at"), seed: false, row: "", completion: (default @e.completion false), src: @it.trait })))))))
                                (let ((lifecycle : boolean (and (< @it.at 0) (array/includes @acc.pending @it.trait) (array/includes ["INIT", "LOAD", "$MOUNT"] @it.event))))
                                (let ((rejectFan : [KItem]
                                        (array/map (array/filter @entity.routes (fn rt (and (!= (default @r.deliveryRejected null) null) (= (object/get @rt "event") "DELIVERY_REJECTED")
                                                                                          (or (= (object/get @rt "sourceKind") "any")
                                                                                              (and (= (object/get @rt "sourceTrait") @it.src) (= (object/get @rt "sourceOrbital") (object/get @entity.orbitals @it.src "")))))))
-                                         (fn rt { trait: (object/get @rt "trait"), event: (object/get @rt "trigger"), payload: (default @r.deliveryRejected {}), at: (object/get @rt "at"), seed: false, row: "", completion: false, src: @it.src }))))
+                                         (fn rt { trait: (object/get @rt "trait"), event: (object/get @rt "trigger"), payload: (default @r.deliveryRejected {}), seen: (default @r.deliveryRejected {}), at: (object/get @rt "at"), seed: false, row: "", completion: false, src: @it.src }))))
                                (let ((fanned : [KItem] (array/concat (if @lifecycle (array/filter @acc.held (fn h (= @h.trait @it.trait))) []) @seedFan @emitFan @rejectFan)))
                                (let ((dropRow : boolean (and (default @r.quiet false) (!= @it.row "")
                                                              (not (array/some (array/concat @own @rest @fanned @acc.later @acc.held) (fn x (and (= @x.trait @it.trait) (= @x.row @it.row))))))))
@@ -444,7 +445,7 @@ orbital KernelDispatchOrbital {
       KERNEL_FAILED -> external { error : string! }
         @description "The program could not be read, opened or read as a machine."
         @tier "domain"
-      KERNEL_DISPATCHED -> external { states : Map string string!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KItem]!, cut : boolean!, refused : string!, rendered : [KPaint]!, navigations : [KNav]! }
+      KERNEL_DISPATCHED -> external { states : Map string string!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KCollapsed]!, cut : boolean!, refused : string!, rendered : [KPaint]!, navigations : [KNav]! }
         @description "One dispatch ran: every delivery considered in order, what was emitted, what was collapsed, whether the cap cut it, and the refusal that stopped it (empty when none): an entry payload that breaks its declared event, or an emit that breaks its emitter's declaration."
         @tier "domain"
     }
@@ -708,7 +709,7 @@ orbital KernelDispatchOrbital {
       PARITY_NATIVE_TICKED { result : KNativeTick! }
       PARITY_NATIVE_ROWS { result : SExpr }
       PARITY_LOADED { initial : Map string string! }
-      PARITY_KERNEL_DONE { states : Map string string!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KItem]!, cut : boolean!, refused : string!, rendered : [KPaint]!, navigations : [KNav]! }
+      PARITY_KERNEL_DONE { states : Map string string!, outcomes : [KOutcome]!, emitted : [KEmit]!, collapsed : [KCollapsed]!, cut : boolean!, refused : string!, rendered : [KPaint]!, navigations : [KNav]! }
       PARITY_LOLO_ROWS { rows : [KRowOut]! }
       KernelDispatch.KERNEL_OPENED -> PARITY_LOADED
       KernelDispatch.KERNEL_DISPATCHED -> PARITY_KERNEL_DONE

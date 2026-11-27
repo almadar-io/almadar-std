@@ -11141,6 +11141,9 @@
           "payload": {
            "ok": true
           },
+          "seen": {
+           "ok": true
+          },
           "at": -1,
           "seed": false,
           "row": "",
@@ -13606,6 +13609,162 @@
         "event": "PARITY_ANSWERED",
         "payload": {
          "equal": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-collapsed-delivery-is-reported-as-a-host-may-see-it-never-as-the-step-read-it",
+   "note": "G-CROSS-840: a repeat delivery whose payload carries a sealed value is collapsed; the published list carries the delivery's seen payload (the stub), never the opened value its step would have read.",
+   "steps": [
+    {
+     "trait": "KernelDispatch",
+     "from": "ready",
+     "event": "KERNEL_NEXT",
+     "payload": {
+      "left": 5
+     },
+     "entity": {
+      "id": "k",
+      "guest": "guest-1",
+      "runLeft": 5,
+      "last": {
+       "q": [
+        {
+         "trait": "Sink",
+         "event": "PING",
+         "payload": {
+          "token": "secret"
+         },
+         "at": 3,
+         "seed": false,
+         "row": "",
+         "completion": false,
+         "src": "Main.Src",
+         "seen": {
+          "token": {
+           "sealed": "Verified"
+          }
+         }
+        }
+       ],
+       "states": {},
+       "frames": {},
+       "outcomes": [],
+       "emitted": [],
+       "collapsed": [],
+       "seen": [
+        "[s4:Sinks4:PINGs0:{5:tokens6:secret}s9:!unframed]"
+       ],
+       "pending": [],
+       "later": [],
+       "scopes": [],
+       "refused": "",
+       "next": [],
+       "nextPending": [],
+       "held": [],
+       "paints": [],
+       "navs": [],
+       "directives": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "KERNEL_DISPATCHED",
+        "payload": {
+         "collapsed": [
+          {
+           "trait": "Sink",
+           "event": "PING",
+           "payload": {
+            "token": {
+             "sealed": "Verified"
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-collapsed-delivery-with-nothing-sealed-is-reported-with-its-payload",
+   "note": "Control: with no sealed field the seen payload is the payload.",
+   "steps": [
+    {
+     "trait": "KernelDispatch",
+     "from": "ready",
+     "event": "KERNEL_NEXT",
+     "payload": {
+      "left": 5
+     },
+     "entity": {
+      "id": "k",
+      "guest": "guest-1",
+      "runLeft": 5,
+      "last": {
+       "q": [
+        {
+         "trait": "Sink",
+         "event": "PING",
+         "payload": {
+          "token": "secret"
+         },
+         "at": 3,
+         "seed": false,
+         "row": "",
+         "completion": false,
+         "src": "Main.Src",
+         "seen": {
+          "token": "secret"
+         }
+        }
+       ],
+       "states": {},
+       "frames": {},
+       "outcomes": [],
+       "emitted": [],
+       "collapsed": [],
+       "seen": [
+        "[s4:Sinks4:PINGs0:{5:tokens6:secret}s9:!unframed]"
+       ],
+       "pending": [],
+       "later": [],
+       "scopes": [],
+       "refused": "",
+       "next": [],
+       "nextPending": [],
+       "held": [],
+       "paints": [],
+       "navs": [],
+       "directives": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "KERNEL_DISPATCHED",
+        "payload": {
+         "collapsed": [
+          {
+           "trait": "Sink",
+           "event": "PING",
+           "payload": {
+            "token": "secret"
+           }
+          }
+         ]
         }
        }
       ]

@@ -1,6 +1,6 @@
 app std-agent-workflow [
   version: "1.0.0",
-  description: "std-agent-workflow — one business process as declared data, run step by step by an agent through a composed std-agent-coordinator. The knobs name the process (name, instructions), the fields a run asks for (inputFields, each with a name, a label and whether it is required) and the ordered steps: each step has a title, its instructions, the configured tools it may use (event addresses and entity names of the coordinator's tools; an empty list is a step that only reasons and writes its result), and whether a person must approve its result before the run goes on. WORKFLOW_RUN { runId, input } refuses a workflow with no steps and a run whose required field is missing (WORKFLOW_FAILED, index -1, naming the fields), otherwise stores a WorkflowRun row and emits TASK_START { taskId = runId, task, steps } for the coordinator: the task is the name, the instructions and the input, and the steps are the declared ones, each limited to its tools, the step after an approval step held. The plan is never a model's. The coordinator's TASK_PROGRESS is reported as WORKFLOW_STEP { runId, index, total, title, status started | done }. When the coordinator stops before a held step (TASK_HELD), the run waits in awaitingApproval and emits WORKFLOW_APPROVAL_NEEDED { runId, index, title, result } for the step before; WORKFLOW_APPROVED { runId } releases the held step (TASK_RELEASE, then TASK_START again once TASK_RELEASED answers) and WORKFLOW_DENIED { runId, reason } ends the run denied (WORKFLOW_FAILED with the step's index and `denied:` and the reason). A last step marked approval waits the same way on the coordinator's answer before the run is done. TASK_DONE ends the run with WORKFLOW_DONE { runId, answer }; TASK_FAILED with WORKFLOW_FAILED { runId, index, error }. WORKFLOW_CANCEL { runId } ends the run cancelled; the coordinator finishes the step it is on and its later answers are ignored. One run at a time: a WORKFLOW_RUN while another runs or waits is refused by name, never queued. The WorkflowRun row keeps the run's status, input, step, answer and error. Headless: the composer wires TASK_START and TASK_RELEASE to its coordinator and the coordinator's TASK_PROGRESS, TASK_HELD, TASK_RELEASED, TASK_DONE and TASK_FAILED back (TaskProgress, TaskHeld, TaskReleased, TaskDone, TaskFailed), gives the coordinator the tools the steps name, and decides who may approve (std-approval-gate); a workflow is composed into the program whose records it works on, so its tools are that program's own declared inputs."
+  description: "std-agent-workflow — one business process as declared data, run step by step by an agent through a composed std-agent-coordinator. The knobs name the process (name, instructions), the fields a run asks for (inputFields, each with a name, a label and whether it is required) and the ordered steps: each step has a title, its instructions, the configured tools it may use (event addresses and entity names of the coordinator's tools; an empty list is a step that only reasons and writes its result), and whether a person must approve its result before the run goes on. WORKFLOW_RUN { runId, input } refuses a workflow with no steps and a run whose required field is missing (WORKFLOW_FAILED, index -1, naming the fields), otherwise stores a WorkflowRun row and emits TASK_START { taskId = runId, task, steps } for the coordinator: the task is the name, the instructions and the input, and the steps are the declared ones, each limited to its tools, the step after an approval step held. The plan is never a model's. A run may carry the workflow itself, WORKFLOW_RUN { runId, input, workflow: { id, name, instructions, steps } }: a composer that keeps workflows as rows runs the carried one in place of the configured one, under the same checks, and the run row keeps its id (workflowId). A step that runs after an approval is told so: the approvedNote knob is put before its instruction. The coordinator's TASK_PROGRESS is reported as WORKFLOW_STEP { runId, index, total, title, status started | done }. When the coordinator stops before a held step (TASK_HELD), the run waits in awaitingApproval and emits WORKFLOW_APPROVAL_NEEDED { runId, index, title, result } for the step before; WORKFLOW_APPROVED { runId } releases the held step (TASK_RELEASE, then TASK_START again once TASK_RELEASED answers) and WORKFLOW_DENIED { runId, reason } ends the run denied (WORKFLOW_FAILED with the step's index and `denied:` and the reason). A last step marked approval waits the same way on the coordinator's answer before the run is done. TASK_DONE ends the run with WORKFLOW_DONE { runId, answer }; TASK_FAILED with WORKFLOW_FAILED { runId, index, error }. WORKFLOW_CANCEL { runId } ends the run cancelled; the coordinator finishes the step it is on and its later answers are ignored. One run at a time: a WORKFLOW_RUN while another runs or waits is refused by name, never queued. The WorkflowRun row keeps the run's status, input, step, answer and error. Headless: the composer wires TASK_START and TASK_RELEASE to its coordinator and the coordinator's TASK_PROGRESS, TASK_HELD, TASK_RELEASED, TASK_DONE and TASK_FAILED back (TaskProgress, TaskHeld, TaskReleased, TaskDone, TaskFailed), gives the coordinator the tools the steps name, and decides who may approve (std-approval-gate); a workflow is composed into the program whose records it works on, so its tools are that program's own declared inputs."
 ]
 ;; @capabilities "run a declared business process step by step with an agent, limit each step to named tools, stop for a person's approval, resume, record each run"
 uses Spec from "almadar-std/agent-workflow"
@@ -10,13 +10,16 @@ type WorkflowStep = { title : string!, instructions : string, tools : [string], 
 type WorkflowPlanned = { title : string!, instruction : string!, tools : [string]!, approval : boolean! }
 type WorkflowDeclared = { instruction : string!, hold : boolean, limited : boolean, tools : [string] }
 type WorkflowInput = Map string string
+type WorkflowStored = { id : string, name : string, instructions : string, steps : [WorkflowStep] }
 
 orbital AgentWorkflowOrbital {
   entity WorkflowRun [persistent: workflowRuns] {
     @read none "A binding stub: the app that binds its own entity here states the @read policy; this atom is headless and writes these rows as the program."
     @create none "A binding stub: the app that binds its own entity here states the @create policy; this headless atom writes these rows as the program."
+    @index { fields: ["workflowId"], orderBy: "startedAt:desc" }
     id : string! @description "The run id the caller chose (WORKFLOW_RUN runId)."
     workflow : string @description "The workflow's name." = ""
+    workflowId : string @description "The id of the stored workflow the run carried; empty for the configured one." = ""
     status : "running" | "awaitingApproval" | "done" | "denied" | "failed" | "cancelled" @description "Where the run is." = running
     input : WorkflowInput @description "The fields the run was started with." = {}
     stepIndex : number @description "The step the run is on, from 0." = 0
@@ -51,6 +54,10 @@ orbital AgentWorkflowOrbital {
         @label "What does a run need to be told?"
         @description "The fields a run is started with; a run missing a required one is refused."
         @tier "domain"
+      approvedNote : string = "A person read the result of the step before this one and approved it."
+        @label "What is a step told after an approval?"
+        @description "Put before the instruction of a step that runs only after a person approved the step before it, so the agent knows the approval was given."
+        @tier "domain"
       steps : [WorkflowStep] = []
         @label "The steps, in order"
         @description "Each step's title, its instructions, the configured tools it may use and whether a person approves its result before the run goes on."
@@ -60,24 +67,24 @@ orbital AgentWorkflowOrbital {
 
     state idle {
       INIT -> idle
-      WORKFLOW_RUN -> idle when (= (array/len (array/filter @config.steps (fn s (!= (default @s.kind "agent") "approval")))) 0)
+      WORKFLOW_RUN -> idle when (= (array/len (array/filter (default ?workflow.steps @config.steps) (fn s (!= (default @s.kind "agent") "approval")))) 0)
         (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "the workflow declares no steps" })
-      WORKFLOW_RUN -> idle when (and (> (array/len (array/filter @config.steps (fn s (!= (default @s.kind "agent") "approval")))) 0) (> (array/len (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") ""))))) 0))
+      WORKFLOW_RUN -> idle when (and (> (array/len (array/filter (default ?workflow.steps @config.steps) (fn s (!= (default @s.kind "agent") "approval")))) 0) (> (array/len (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") ""))))) 0))
         (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: (str/concat "a required field is missing: " (str/join (array/map (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") "")))) (fn f @f.label)) ", ")) })
-      WORKFLOW_RUN -> running when (and (> (array/len (array/filter @config.steps (fn s (!= (default @s.kind "agent") "approval")))) 0) (= (array/len (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") ""))))) 0))
+      WORKFLOW_RUN -> running when (and (> (array/len (array/filter (default ?workflow.steps @config.steps) (fn s (!= (default @s.kind "agent") "approval")))) 0) (= (array/len (array/filter @config.inputFields (fn f (and @f.required (= (default (object/get ?input @f.name) "") ""))))) 0))
         (set @entity.runId ?runId)
         (set @entity.heldIndex -1)
         (set @entity.awaitingFinal false)
         (set @entity.finalAnswer "")
-        (set @entity.plan (array/map (array/filter (array/range 0 (array/len @config.steps) 1) (fn i (let ((s : WorkflowStep (default (array/nth @config.steps @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (!= (default @s.kind "agent") "approval")))) (fn i (let ((s : WorkflowStep (default (array/nth @config.steps @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) { title: @s.title, instruction: (str/concat @s.title ": " (default @s.instructions "")), tools: (default @s.tools []), approval: (or (default @s.approval false) (if (< (+ @i 1) (array/len @config.steps)) (let ((n : WorkflowStep (default (array/nth @config.steps (+ @i 1)) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (= (default @n.kind "agent") "approval")) false)) }))))
-        (set @entity.task (str/concat @config.name "\n" @config.instructions "\n\n" (str/join (array/map (object/entries ?input) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "")))) "\n")))
-        (persist create WorkflowRun { id: ?runId, workflow: @config.name, status: "running", input: ?input, stepIndex: 0, stepTotal: (array/len @entity.plan), answer: "", error: "", startedAt: (time/now) } {
+        (set @entity.plan (array/map (array/filter (array/range 0 (array/len (default ?workflow.steps @config.steps)) 1) (fn i (let ((s : WorkflowStep (default (array/nth (default ?workflow.steps @config.steps) @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (!= (default @s.kind "agent") "approval")))) (fn i (let ((s : WorkflowStep (default (array/nth (default ?workflow.steps @config.steps) @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) { title: @s.title, instruction: (str/concat @s.title ": " (default @s.instructions "")), tools: (default @s.tools []), approval: (or (default @s.approval false) (if (< (+ @i 1) (array/len (default ?workflow.steps @config.steps))) (let ((n : WorkflowStep (default (array/nth (default ?workflow.steps @config.steps) (+ @i 1)) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (= (default @n.kind "agent") "approval")) false)) }))))
+        (set @entity.task (str/concat (default ?workflow.name @config.name) "\n" (default ?workflow.instructions @config.instructions) "\n\n" (str/join (array/map (object/entries ?input) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "")))) "\n")))
+        (persist create WorkflowRun { id: ?runId, workflow: (default ?workflow.name @config.name), workflowId: (default ?workflow.id ""), status: "running", input: ?input, stepIndex: 0, stepTotal: (array/len @entity.plan), answer: "", error: "", startedAt: (time/now) } {
           emit: { success: RunSaved, failure: RunSaveFailed }
         })
         (emit TASK_START {
           taskId: ?runId
-          task: (str/concat @config.name "\n" @config.instructions "\n\n" (str/join (array/map (object/entries ?input) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "")))) "\n"))
-          steps: (array/map (array/range 0 (array/len @entity.plan) 1) (fn i (let ((p : WorkflowPlanned (default (array/nth @entity.plan @i) { title: "", instruction: "", tools: [], approval: false }))) { instruction: @p.instruction, hold: (if (> @i 0) (let ((q : WorkflowPlanned (default (array/nth @entity.plan (- @i 1)) { title: "", instruction: "", tools: [], approval: false }))) @q.approval) false), limited: true, tools: @p.tools })))
+          task: (str/concat (default ?workflow.name @config.name) "\n" (default ?workflow.instructions @config.instructions) "\n\n" (str/join (array/map (object/entries ?input) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "")))) "\n"))
+          steps: (array/map (array/range 0 (array/len @entity.plan) 1) (fn i (let ((p : WorkflowPlanned (default (array/nth @entity.plan @i) { title: "", instruction: "", tools: [], approval: false }))) { instruction: (if (if (> @i 0) (let ((q : WorkflowPlanned (default (array/nth @entity.plan (- @i 1)) { title: "", instruction: "", tools: [], approval: false }))) @q.approval) false) (str/concat @config.approvedNote "\n" @p.instruction) @p.instruction), hold: (if (> @i 0) (let ((q : WorkflowPlanned (default (array/nth @entity.plan (- @i 1)) { title: "", instruction: "", tools: [], approval: false }))) @q.approval) false), limited: true, tools: @p.tools })))
         })
       WORKFLOW_APPROVED -> idle
         (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "no run is waiting for approval" })
@@ -234,6 +241,7 @@ orbital AgentWorkflowOrbital {
       WORKFLOW_RUN -> input {
         runId : string! @description "A new id for this run"
         input : WorkflowInput! @description "The fields the workflow asks for, by name"
+        workflow : WorkflowStored? @description "A workflow the composer keeps as data (its id, name, instructions and steps), run in place of the configured one; left out, the configured workflow runs"
       }
         @description "Start one run of the workflow with the fields it asks for. The steps are the declared ones; the run stops and asks for approval where a step says so."
         @synonyms "run the workflow, start the process, do the intake"

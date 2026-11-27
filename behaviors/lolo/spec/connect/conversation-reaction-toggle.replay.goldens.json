@@ -1,0 +1,171 @@
+{
+ "atom": "connect/atoms/std-conversation.lolo",
+ "trait": "ReactionToggle",
+ "cases": [
+  {
+   "id": "a-first-reaction-is-added-with-its-roll-up",
+   "config": {},
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "REACT",
+     "payload": {
+      "id": "m1",
+      "emoji": "😀",
+      "reactions": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "REACT_REQUESTED",
+        "payload": {
+         "id": "m1",
+         "emoji": "😀",
+         "reactions": [
+          "😀:u1"
+         ],
+         "reactionSummary": "😀 1"
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reaction-joins-anothers-and-the-roll-up-counts-both",
+   "config": {},
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "REACT",
+     "payload": {
+      "id": "m1",
+      "emoji": "😀",
+      "reactions": [
+       "😀:u2",
+       "❤️:u3"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REACT_REQUESTED",
+        "payload": {
+         "id": "m1",
+         "emoji": "😀",
+         "reactions": [
+          "😀:u2",
+          "❤️:u3",
+          "😀:u1"
+         ],
+         "reactionSummary": "😀 2  ❤️ 1"
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
+    }
+   ]
+  },
+  {
+   "id": "picking-the-same-emoji-again-takes-the-reaction-back",
+   "config": {},
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "REACT",
+     "payload": {
+      "id": "m1",
+      "emoji": "😀",
+      "reactions": [
+       "😀:u1",
+       "❤️:u3"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REACT_REQUESTED",
+        "payload": {
+         "id": "m1",
+         "emoji": "😀",
+         "reactions": [
+          "❤️:u3"
+         ],
+         "reactionSummary": "❤️ 1"
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-taking-back-the-last-reaction-leaves-an-empty-roll-up",
+   "config": {},
+   "entity": {
+    "id": "x"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "REACT",
+     "payload": {
+      "id": "m1",
+      "emoji": "😀",
+      "reactions": [
+       "😀:u1"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REACT_REQUESTED",
+        "payload": {
+         "id": "m1",
+         "emoji": "😀",
+         "reactions": [],
+         "reactionSummary": ""
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "name": "Mama",
+      "email": "m@x.si",
+      "role": "member"
+     }
+    }
+   ]
+  }
+ ]
+}

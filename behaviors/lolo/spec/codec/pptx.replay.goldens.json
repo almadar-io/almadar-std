@@ -108,6 +108,63 @@
      }
     }
    ]
+  },
+  {
+   "id": "a slide with links is written with a clickable area per link",
+   "note": "The XML of this case was checked with xmllint and unzip: one invisible rectangle with a hlinkClick per link, and an external hyperlink relationship whose URL is escaped (& becomes &amp;).",
+   "defaults": [
+    "Archive",
+    "Deflate"
+   ],
+   "steps": [
+    {
+     "event": "PPTX",
+     "from": "idle",
+     "payload": {
+      "key": "k",
+      "slides": [
+       {
+        "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+        "notes": "",
+        "links": [
+         {
+          "url": "mailto:a@b.c",
+          "x": 0.6,
+          "y": 0.5,
+          "w": 0.2,
+          "h": 0.1
+         },
+         {
+          "url": "https://e.com/?a=1&b=2",
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.1,
+          "h": 0.1
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PPTX_PACK"
+       },
+       {
+        "event": "PPTX_ANSWERED",
+        "payload": {
+         "key": "k",
+         "slides": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "PPTX_REFUSED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

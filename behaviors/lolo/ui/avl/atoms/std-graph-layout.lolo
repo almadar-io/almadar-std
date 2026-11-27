@@ -5,6 +5,7 @@ app std-graph-layout [
 uses Spec from "almadar-std/graph-layout"
 ;; @capabilities "directed graph layout, measured nodes, orthogonal routes, cycles, parallel edges"
 
+type LayoutDirection = "down" | "up" | "right" | "left"
 type LayoutPoint = { x : number!, y : number! }
 type LayoutNode = { id : string!, label : string!, width : number!, height : number! }
 type LayoutEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number! }
@@ -38,6 +39,7 @@ orbital GraphLayoutOrbital {
     width : number = 0
     height : number = 0
     spine : LayoutSpine = { placed: [], routed: [], width: 0, height: 0 }
+    mode : string @description "The mode last announced with LAYOUT_MODE, empty before any." = ""
   }
 
   trait GraphLayout -> LayoutRun [client] {
@@ -45,6 +47,8 @@ orbital GraphLayoutOrbital {
 
     state ready {
       INIT -> ready
+      LAYOUT_MODE -> ready
+        (set @entity.mode ?name)
       LAYOUT_REQUEST -> ready when (or
           (array/some ?nodes (fn n (or (= @n.id "") (<= @n.width 0) (<= @n.height 0))))
           (array/some ?edges (fn e (or (= @e.id "") (< @e.labelWidth 0) (< @e.labelHeight 0))))
@@ -155,8 +159,8 @@ orbital GraphLayoutOrbital {
           (= (array/len ?nodes) (array/len (array/unique (array/map ?nodes (fn n @n.id)))))
           (= (array/len ?edges) (array/len (array/unique (array/map ?edges (fn e @e.id)))))
           (array/every ?edges (fn e (and (array/some ?nodes (fn n (= @n.id @e.source))) (array/some ?nodes (fn n (= @n.id @e.target)))))))
-        (set @entity.nodes (array/map ?nodes (fn n { id: @n.id, label: @n.label, width: (if (array/includes ["right", "left"] @config.direction) @n.height @n.width), height: (if (array/includes ["right", "left"] @config.direction) @n.width @n.height) })))
-        (set @entity.edges (array/map ?edges (fn e { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: (if (array/includes ["right", "left"] @config.direction) @e.labelHeight @e.labelWidth), labelHeight: (if (array/includes ["right", "left"] @config.direction) @e.labelWidth @e.labelHeight) })))
+        (set @entity.nodes (array/map ?nodes (fn n { id: @n.id, label: @n.label, width: (if (array/includes ["right", "left"] (default (object/get @config.directionIn @entity.mode null) @config.direction)) @n.height @n.width), height: (if (array/includes ["right", "left"] (default (object/get @config.directionIn @entity.mode null) @config.direction)) @n.width @n.height) })))
+        (set @entity.edges (array/map ?edges (fn e { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: (if (array/includes ["right", "left"] (default (object/get @config.directionIn @entity.mode null) @config.direction)) @e.labelHeight @e.labelWidth), labelHeight: (if (array/includes ["right", "left"] (default (object/get @config.directionIn @entity.mode null) @config.direction)) @e.labelWidth @e.labelHeight) })))
         (let ((indices (let ((e0 : LayoutNumbers {})) (array/reduce ?nodes @e0 (fn (a n) (object/set @a @n.id (array/len (object/keys @a)))))))
               (reach (array/reduce (array/range 0 (array/len ?nodes))
                 (let ((e0 : LayoutReach {})) (array/reduce ?nodes @e0 (fn (a n) (object/set @a @n.id [@n.id]))))
@@ -256,14 +260,14 @@ orbital GraphLayoutOrbital {
         (emit LAYOUT_TRANSFORM { })
 
       LAYOUT_TRANSFORM -> ready
-        (when (array/includes ["right", "left"] @config.direction) (do
+        (when (array/includes ["right", "left"] (default (object/get @config.directionIn @entity.mode null) @config.direction)) (do
           (set @entity.placed (array/map @entity.placed (fn n { id: @n.id, label: @n.label, width: @n.height, height: @n.width, x: @n.y, y: @n.x, rank: @n.rank })))
           (set @entity.routed (array/map @entity.routed (fn e { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @e.labelHeight, labelHeight: @e.labelWidth, points: (array/map @e.points (fn p { x: @p.y, y: @p.x })), labelX: @e.labelY, labelY: @e.labelX, reversed: @e.reversed })))
           (let ((oldWidth @entity.width)) (do (set @entity.width @entity.height) (set @entity.height @oldWidth)))))
-        (when (= @config.direction "up") (do
+        (when (= (default (object/get @config.directionIn @entity.mode null) @config.direction) "up") (do
           (set @entity.placed (array/map @entity.placed (fn n (object/set @n "y" (- (- @entity.height @n.y) @n.height)))))
           (set @entity.routed (array/map @entity.routed (fn e (object/set (object/set @e "labelY" (- (- @entity.height @e.labelY) @e.labelHeight)) "points" (array/map @e.points (fn p { x: @p.x, y: (- @entity.height @p.y) }))))))))
-        (when (= @config.direction "left") (do
+        (when (= (default (object/get @config.directionIn @entity.mode null) @config.direction) "left") (do
           (set @entity.placed (array/map @entity.placed (fn n (object/set @n "x" (- (- @entity.width @n.x) @n.width)))))
           (set @entity.routed (array/map @entity.routed (fn e (object/set (object/set @e "labelX" (- (- @entity.width @e.labelX) @e.labelWidth)) "points" (array/map @e.points (fn p { x: (- @entity.width @p.x), y: @p.y }))))))))
         (emit LAYOUT_READY { nodes: @entity.placed, edges: @entity.routed, width: @entity.width, height: @entity.height })
@@ -271,6 +275,8 @@ orbital GraphLayoutOrbital {
 
     config {
       direction : "down" | "up" | "right" | "left" = down
+      directionIn : Map string LayoutDirection = {}
+        @description "The direction to lay out in while the mode named is the one last announced with LAYOUT_MODE (a narrow screen's breakpoint, say); any other mode, or none, uses direction. A mode announced after a request applies to the next request."
       nodeGap : number = 4
       rankGap : number = 4
       edgeGap : number = 2
@@ -283,6 +289,8 @@ orbital GraphLayoutOrbital {
     }
 
     listens {
+      LAYOUT_MODE { name : string! }
+        @description "The mode the layout is asked in from now on (see directionIn)."
       LAYOUT_REQUEST -> input { nodes : [LayoutNode]!, edges : [LayoutEdge]! }
         @description "Lay out measured nodes and directed labeled edges."
       LAYOUT_ORDER { }

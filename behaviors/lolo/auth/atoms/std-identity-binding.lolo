@@ -1,6 +1,6 @@
 app std-identity-binding [
   version: "3.0.0",
-  description: "std-identity-binding — the one owner of a sign-in (docs/Almadar_Orbital_Core.md §11). It runs in the program session only. BEARER_PRESENT { requestId, authorization, clientId, self? } is the ask every consumer makes (the dispatch route, the ticket mint, a guest session, a persona); it answers exactly one outcome per ask: IDENTITY_BOUND { requestId }, IDENTITY_ANONYMOUS { requestId }, IDENTITY_REFUSED { requestId, reason } or IDENTITY_SESSION_ENDED { requestId }. It asks its composed std-bearer-verify once (BEARER_VERIFY), in the program session, so one key cache serves the whole program; the verdict arrives as BEARER_VERIFIED { verified } or as ANONYMOUS_SEEN, REFUSED_SEEN or KEY_SEEN (an API key makes no Verified). A verified credential is bound to the named viewer's session with (identity/sign-in verified clientId) and every other verdict signs that session out with (identity/sign-out clientId), so the session the request runs in is signed in or out again on every request (a bearer header is stateless); with self true the ask binds the session the step runs in instead (no session named). The outcome of a sign-in or sign-out is matched to its ask by the session it names. An ask naming no client session is anonymous when it carries no header and refused no-client-session when it does. A sign-in that answers no-identity with createIdentity on persists a row of identityEntity (id the subject, email and name from the claims, createRole when set) and verifies again once; a create that fails (a parallel ask of the same subject may have written the row) verifies every ask waiting on a row once more, and an ask that again finds no row is refused identity-no-identity, never creating twice; any other sign-in failure is refused identity-<kind>; an API key is refused api-key-identity; an ended session answers IDENTITY_SESSION_ENDED. The role is only ever the identity row's."
+  description: "std-identity-binding — the one owner of a sign-in (docs/Almadar_Orbital_Core.md §11). It runs in the program session only. BEARER_PRESENT { requestId, authorization, clientId, self? } is the ask every consumer makes (the dispatch route, the ticket mint, a guest session, a persona); it answers exactly one outcome per ask: IDENTITY_BOUND { requestId }, IDENTITY_ANONYMOUS { requestId } or IDENTITY_REFUSED { requestId, reason }. It asks its composed std-bearer-verify once (BEARER_VERIFY), in the program session, so one key cache serves the whole program; the verdict arrives as BEARER_VERIFIED { verified } or as ANONYMOUS_SEEN, REFUSED_SEEN or KEY_SEEN (an API key makes no Verified). A verified credential is bound to the named viewer's session with (identity/sign-in verified clientId) and every other verdict signs that session out with (identity/sign-out clientId), so the session the request runs in is signed in or out again on every request (a bearer header is stateless); with self true the ask binds the session the step runs in instead (no session named). The outcome of a sign-in or sign-out is matched to its ask by the session it names. An ask naming no client session is anonymous when it carries no header and refused no-client-session when it does. A sign-in that answers no-identity with createIdentity on persists a row of identityEntity (id the subject, email and name from the claims, createRole when set) and verifies again once; a create that fails (a parallel ask of the same subject may have written the row) verifies every ask waiting on a row once more, and an ask that again finds no row is refused identity-no-identity, never creating twice; any other sign-in failure is refused identity-<kind>; an API key is refused api-key-identity. A session that has ended is bound like any other, so the mount that revives it runs as the credential its request carried (EXEC-IDENTITY-3). The role is only ever the identity row's."
 ]
 type CreateRoleRule = { domain : string!, role : string! }
 type SignInStage = "verifying" | "signing" | "signing-out" | "creating" | "created"
@@ -72,17 +72,12 @@ orbital IdentityBindingOrbital {
             (emit IDENTITY_BOUND { requestId: @a.requestId, subject: (default @payload.subject "") })))
       IDENTITY_SIGNED_IN -> idle when (not (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
 
-      IDENTITY_SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "session-ended") (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
-        (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
-          (do
-            (set @entity.asks (array/filter @entity.asks (fn x (!= @x.requestId @a.requestId))))
-            (emit IDENTITY_SESSION_ENDED { requestId: @a.requestId })))
       IDENTITY_SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "no-identity") @config.createIdentity (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing") (not @a.created) (or (= (array/len @config.createRoles) 0) (and @a.emailVerified (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (and (!= @config.createRole "") (not (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain))))))))))))
         (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/map @entity.asks (fn x (if (= @x.requestId @a.requestId) (object/merge @x { stage: "creating" }) @x))))
             (emit CREATE_ROW { subject: @a.subject, email: @a.email, name: @a.name, role: (let ((rule (array/find @config.createRoles (fn r (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (if (= @rule null) @config.createRole @rule.role)) })))
-      IDENTITY_SIGN_IN_FAILED -> idle when (and (not (= (default @payload.kind "") "session-ended")) (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing") (not @a.created) (or (= (array/len @config.createRoles) 0) (and @a.emailVerified (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (and (!= @config.createRole "") (not (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain))))))))))))) (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
+      IDENTITY_SIGN_IN_FAILED -> idle when (and (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing") (not @a.created) (or (= (array/len @config.createRoles) 0) (and @a.emailVerified (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (and (!= @config.createRole "") (not (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain))))))))))))) (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
         (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (emit SIGN_OUT_ASKED { requestId: @a.requestId, reason: (if (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @a.created) (not (or (= (array/len @config.createRoles) 0) (and @a.emailVerified (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) (and (!= @config.createRole "") (not (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))))))) (if (and (> (array/len @config.createRoles) 0) (not @a.emailVerified) (array/some @config.createRoles (fn r (and (str/includes @a.email (quote "@")) (= (str/lower (default (array/last (str/split @a.email (quote "@"))) "")) (str/lower @r.domain)))))) "identity-unverified-email" "identity-domain") (str/concat "identity-" (default @payload.kind ""))) }))
       IDENTITY_SIGN_IN_FAILED -> idle when (not (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing")))))
@@ -99,9 +94,7 @@ orbital IdentityBindingOrbital {
         (let ((a (default (array/find @entity.asks (fn x (and (= @x.session (default @payload.session "")) (= @x.stage "signing-out")))) { requestId: 0, session: "", self: false, authorization: "", stage: "signing-out", reason: "", subject: "", email: "", name: "", created: false, emailVerified: false })))
           (do
             (set @entity.asks (array/filter @entity.asks (fn x (!= @x.requestId @a.requestId))))
-            (if (= (default @payload.kind "") "session-ended")
-              (emit IDENTITY_SESSION_ENDED { requestId: @a.requestId })
-              (emit IDENTITY_REFUSED { requestId: @a.requestId, reason: (if (= @a.reason "") (str/concat "identity-" (default @payload.kind "")) @a.reason) }))))
+            (emit IDENTITY_REFUSED { requestId: @a.requestId, reason: (if (= @a.reason "") (str/concat "identity-" (default @payload.kind "")) @a.reason) })))
       IDENTITY_SIGN_OUT_FAILED -> idle when (not (array/some @entity.asks (fn a (and (= @a.session (default @payload.session "")) (= @a.stage "signing-out")))))
 
       CREATE_ROW -> idle
@@ -145,12 +138,6 @@ orbital IdentityBindingOrbital {
         @description "The ask's credential was refused (by the verifier, or no-client-session, identity-<kind>, identity-store, api-key-identity); its session is signed out when it has one."
         @synonyms "bearer refused, sign-in refused"
         @tier "primary"
-      IDENTITY_SESSION_ENDED -> external {
-        requestId : number
-      }
-        @description "The ask's client session has ended (EXEC-DIST-9: its live stream dropped and it went quiet), so nothing was bound; only a mount revives it."
-        @synonyms "session ended, reconnect"
-        @tier "primary"
       BEARER_VERIFY -> external {
         requestId : number
         authorization : string
@@ -169,7 +156,7 @@ orbital IdentityBindingOrbital {
         kind : string
         session : string
       }
-        @description "Internal: identity/sign-in refused (unsealed, no-identity, store, session-ended, invalid, not-program-session)."
+        @description "Internal: identity/sign-in refused (unsealed, no-identity, store, invalid, not-program-session)."
         @tier "internal"
       IDENTITY_SIGNED_OUT {
         subject : string
@@ -182,7 +169,7 @@ orbital IdentityBindingOrbital {
         kind : string
         session : string
       }
-        @description "Internal: identity/sign-out refused (session-ended, invalid, not-program-session)."
+        @description "Internal: identity/sign-out refused (invalid, not-program-session)."
         @tier "internal"
       SIGN_OUT_ASKED {
         requestId : number!

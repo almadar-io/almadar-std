@@ -4,7 +4,7 @@ app std-orb-lint-query-index [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-query-index — the `orb lint query-index <file>` command, the check of declared `@index` access paths against the fetches that use them. It lowers the file with program/read. A path naming a field the entity does not declare (id, createdAt and updatedAt always are) or a non-scalar field (array, object, file) is [ORB_INDEX_PATH_INVALID]; a path repeating an earlier one (field and field:asc are one order) is [ORB_INDEX_PATH_DUPLICATE]. A conjunctive fetch of a persistent entity whose store driver creates no index at runtime (a driver config with an orderableFields knob) and that needs a composite index (two or more equality fields, or an equality with a range or an order on another field) is [ORB_FETCH_NEEDS_COMPOSITE_INDEX] unless a path covers it. A fetch with an equality or a range that a bound driver declines (no compare leaf, or an order outside a listed orderableFields) and that no path covers is the warning [ORB_FETCH_UNINDEXED]. A path covers a fetch when its leading fields are the fetch's equality fields in any order, a range is on the next field, and its orderBy is the fetch's orderBy. A fetch effect (in a transition or a tick, nested or not) of a literal persistent entity whose options carry none of limit, id or nearest reads every row and is [ORB_FETCH_UNBOUNDED]. Clean answers `lint query-index: clean` (status 200, exit 0); findings answer status 500 (exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-query-index — the `orb lint query-index <file>` command, the check of declared `@index` access paths against the fetches that use them. It lowers the file with program/read. A path naming a field the entity does not declare (id, createdAt and updatedAt always are) or a non-scalar field (array, object, file) is [ORB_INDEX_PATH_INVALID]; a path repeating an earlier one (field and field:asc are one order) is [ORB_INDEX_PATH_DUPLICATE]. A conjunctive fetch of a persistent entity whose store driver creates no index at runtime (a driver config with an orderableFields knob) and that needs a composite index (an equality with a range or with an order on a field that is not one of its equalities, or a range ordered by another field; equalities alone need none) is [ORB_FETCH_NEEDS_COMPOSITE_INDEX] unless a path covers it. A fetch with an equality or a range that a bound driver declines (no compare leaf, or an order outside a listed orderableFields) and that no path covers is the warning [ORB_FETCH_UNINDEXED]. A fetch with an equality on id matches at most one row and needs no path. A path covers a fetch when its leading fields are the fetch's equality fields in any order, a range is on the next field, and its orderBy is the fetch's orderBy. A fetch effect (in a transition or a tick, nested or not) of a literal persistent entity whose options carry none of limit, id or nearest reads every row and is [ORB_FETCH_UNBOUNDED]. Clean answers `lint query-index: clean` (status 200, exit 0); findings answer status 500 (exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-query-index"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -23,7 +23,7 @@ type IxPath = { fields : [string], orderBy : string }
 type IxEntity = { name : string, persistence : string, browser : boolean, store : string, fields : [IxField], indexes : [IxPath] }
 type IxArm = { effects : [IxVal] }
 type IxMachine = { transitions : [IxArm] }
-type IxTrait = { name : string, linkedEntity : string, stateMachine : IxMachine, ticks : [IxArm] }
+type IxTrait = { name : string, linkedEntity : string, stateMachine : IxMachine, ticks : [IxArm], config : IxConfig }
 type IxCaps = { indexes : string }
 type IxKnob = { default : IxCaps }
 type IxConfig = { queryCapabilities : IxKnob }
@@ -52,7 +52,7 @@ orbital OrbLintQueryIndexOrbital {
         (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
  (let ((ents (array/filter (array/flatten (array/map @orbs (fn o (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))))) (fn e (!= (object/get @e "name" "") ""))))
        (appStore (object/get @payload.program "store" ""))
-       (anyDrv (array/some (object/get @payload.program "orbitals" []) (fn d (array/includes ["deploy", "none"] (object/get (object/get (object/get (object/get @d "config" {}) "queryCapabilities" {}) "default" {}) "indexes" ""))))))
+       (anyDrv (array/some (object/get @payload.program "orbitals" []) (fn d (array/includes ["deploy", "none"] (object/get (object/get (object/get (default (array/find (array/concat [(object/get @d "config" {})] (array/map (object/get @d "traits" []) (fn t (object/get @t "config" {})))) (fn c (object/has @c "queryCapabilities"))) {}) "queryCapabilities" {}) "default" {}) "indexes" ""))))))
   (let ((defs (object/fromEntries (array/map @ents (fn e [(object/get @e "name"), @e])))))
    (array/concat
     (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
@@ -118,7 +118,7 @@ orbital OrbLintQueryIndexOrbital {
                  (let ((drv (array/find @orbs (fn d (= (object/get @d "name" "") @drvName)))))
                   (if (or (= @drvName "") (= @drv null))
                    []
-                   (let ((mode (object/get (object/get (object/get (object/get @drv "config" {}) "queryCapabilities" {}) "default" {}) "indexes" "")))
+                   (let ((mode (object/get (object/get (object/get (default (array/find (array/concat [(object/get @drv "config" {})] (array/map (object/get @drv "traits" []) (fn t (object/get @t "config" {})))) (fn c (object/has @c "queryCapabilities"))) {}) "queryCapabilities" {}) "default" {}) "indexes" "")))
                     (if (not (array/includes ["deploy", "none"] @mode))
                      []
                      (let ((leaves (let ((fs (object/get @opts "filter" null))) (if (= @fs null) [] (default (as (default (tree/fold @fs (fn (n k)
@@ -147,7 +147,7 @@ orbital OrbLintQueryIndexOrbital {
                                (nR (array/len @R))
                                (e1 (if (> (array/len @E) 0) (array/first @E) ""))
                                (r1 (if (> (array/len @R) 0) (array/first @R) "")))
-                          (if (or (array/some @leaves (fn l (= (object/get @l "k" "") "complex"))) (and (= @nE 0) (= @nR 0)))
+                          (if (or (array/some @leaves (fn l (= (object/get @l "k" "") "complex"))) (and (= @nE 0) (= @nR 0)) (array/includes @E "id"))
                            []
                            (let ((covered (array/some (object/get @ent "indexes" []) (fn p
                                   (let ((pf (object/get @p "fields" []))
@@ -164,7 +164,7 @@ orbital OrbLintQueryIndexOrbital {
                                     (sug (str/concat "Declare @index { fields: [" (str/join (array/map @cols (fn c (str/concat "\"" @c "\""))) ", ") "]" (if (= @ord "") "" (str/concat ", orderBy: \"" @ord "\"")) " } on " @ename))
                                     (fpath (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @ni "].effects")))
                                (if (= @mode "deploy")
-                                (if (or (>= @nE 2) (and (= @nE 1) (or (> @nR 0) (and (!= @of "") (!= @of @e1)))) (and (= @nE 0) (> @nR 0) (!= @of "") (!= @of @r1)))
+                                (if (or (and (>= @nE 1) (or (> @nR 0) (and (!= @of "") (not (array/includes @E @of))))) (and (= @nE 0) (> @nR 0) (!= @of "") (!= @of @r1)))
                                  [{ code: @config.codes.fetchNeedsCompositeIndex.code, path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " creates no index at runtime; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "error" }]
                                  [])
                                 [{ code: @config.codes.fetchUnindexed.code, path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " cannot push it down, so the kernel scans every row; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "warning" }]))))))))))))))))))))))))))))))))))))))))))

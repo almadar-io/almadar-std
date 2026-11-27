@@ -1,6 +1,6 @@
 app std-conversation [
   version: "0.1.0",
-  description: "std-conversation — the generic data mechanism of a chat conversation: the persisted message row and the coordinator that writes it. MessagePersistor owns every write to a conversation's messages: DO_CREATE persists a message stamped with the viewer's id and name and announces MESSAGE_SAVED, then MEMBERS_MENTIONED when the message mentions people; DO_DELETE removes a message (MESSAGE_DELETED); DO_PIN persists the pinned flag (MESSAGE_PINNED); DO_REACT persists the reaction set and its display roll-up and announces MESSAGE_REACTED with the reactor's emoji. Each persist failure surfaces as an error notification and its own failure event. The atom renders nothing and never reads: a consumer rebinds MessagePersistor onto its own message entity (the field names here are the contract) and listens its composer, viewer and reactor events into the DO_* inputs. With `stampTime` on, a created message also carries the dispatch's time in `timestamp`, so a conversation can be ordered and timed by it. ReadMarker owns the read state: MARK_READ { channel, channelName?, isDirect? } upserts the signed-in viewer's own ConversationMember row (id `<channel>:<viewer>`) with `lastReadAt` now and `unreadCount` 0 (and, when given, the conversation's name and kind, so a first read creates a complete membership) and announces READ_MARKED, which reaches every open window as a persist; a message is unread for a member when it is newer than their `lastReadAt` and someone else sent it, and read by everyone once every other member's `lastReadAt` has passed it, so unread counts and read receipts are derived from one fact and no write fans out per message. An anonymous viewer marks nothing. DirectMessageOpener: OPEN_DM { id, name } opens the direct message with a person, a conversation whose id is derived from its two people (dm-<lower id>-<higher id>, the same from either side), by upserting both memberships (each named for the other person, isDirect) and announcing DM_OPENED { channel, name, peer } once both are written. MemberAdder: ADD_MEMBER { channel, channelName, id, name } upserts that person's membership (MEMBER_ADDED). TokenMessagePersistor posts for a person with no account who holds a token: POST_BY_TOKEN { token, content, channel, threadRootId, once } asks the composed std-opaque-token resolver for the token's holder (TOKEN_POST_RESOLVE out, TOKEN_POST_HOLDER or TOKEN_POST_NO_HOLDER back), and writes the message with that holder's id and name as its sender and announces TOKEN_POST_SAVED, so a caller can never name the sender; with once the row's id is the thread and the holder, so a holder posts at most one message under a thread (a vote), and a second is refused as repeat (TOKEN_POST_REFUSED). ThreadRollup: REPLY_SAVED { threadRootId } (wire MESSAGE_SAVED) recounts the thread's replies and writes replyCount and repliers (each name once) on its first message (THREAD_UPDATED); a channel message recounts nothing.",
+  description: "std-conversation — the generic data mechanism of a chat conversation: the persisted message row and the coordinator that writes it. MessagePersistor owns every write to a conversation's messages: DO_CREATE persists a message stamped with the viewer's id and name and announces MESSAGE_SAVED, then MEMBERS_MENTIONED when the message mentions people; DO_DELETE removes a message (MESSAGE_DELETED); DO_PIN persists the pinned flag (MESSAGE_PINNED); DO_REACT persists the reaction set and its display roll-up and announces MESSAGE_REACTED with the reactor's emoji. Each persist failure surfaces as an error notification and its own failure event. The atom renders nothing and never reads: a consumer rebinds MessagePersistor onto its own message entity (the field names here are the contract) and listens its composer, viewer and reactor events into the DO_* inputs. With `stampTime` on, a created message also carries the dispatch's time in `timestamp`, so a conversation can be ordered and timed by it. ReadMarker owns the read state: MARK_READ { channel, channelName?, isDirect? } upserts the signed-in viewer's own ConversationMember row (id `<channel>:<viewer>`) with `lastReadAt` now and `unreadCount` 0 (and, when given, the conversation's name and kind, so a first read creates a complete membership) and announces READ_MARKED, which reaches every open window as a persist; a message is unread for a member when it is newer than their `lastReadAt` and someone else sent it, and read by everyone once every other member's `lastReadAt` has passed it, so unread counts and read receipts are derived from one fact and no write fans out per message. An anonymous viewer marks nothing. DirectMessageOpener: OPEN_DM { id, name } opens the direct message with a person, a conversation whose id is derived from its two people (dm-<lower id>-<higher id>, the same from either side), by upserting both memberships (each named for the other person, isDirect) and announcing DM_OPENED { channel, name, peer } once both are written. MemberAdder: ADD_MEMBER { channel, channelName, id, name } upserts that person's membership (MEMBER_ADDED). TokenMessagePersistor posts for a person with no account who holds a token: POST_BY_TOKEN { token, content, channel, threadRootId, once } asks the composed std-opaque-token resolver for the token's holder (TOKEN_POST_RESOLVE out, TOKEN_POST_HOLDER or TOKEN_POST_NO_HOLDER back), and writes the message with that holder's id and name as its sender and announces TOKEN_POST_SAVED, so a caller can never name the sender; with once the row's id is the thread and the holder, so a holder posts at most one message under a thread (a vote), and a second is refused as repeat (TOKEN_POST_REFUSED). ReactionToggle: REACT { id, emoji, reactions } toggles the viewer's emoji in the message's current \"emoji:userId\" entries (taking it back when already there) and emits REACT_REQUESTED { id, emoji, reactions, reactionSummary } for DO_REACT, the summary rolling each emoji up with its count. ThreadRollup: REPLY_SAVED { threadRootId } (wire MESSAGE_SAVED) recounts the thread's replies and writes replyCount and repliers (each name once) on its first message (THREAD_UPDATED); a channel message recounts nothing.",
 ]
 type ConversationOutboxData = { content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string, batch : string }
 type ConversationOutboxWrite = { id : string!, pendingId : string!, content : string!, channel : string!, attachment : string, attachmentKind : string, mentions : [string], linkKind : string, linkId : string, linkLabel : string, linkHref : string }
@@ -688,7 +688,7 @@ orbital ConversationOrbital {
         (fetch ConversationMessage {
           limit: @config.maxReplies
           emit: { failure: THREAD_ROLLUP_FAILED, success: ThreadRepliesLoaded }
-          filter: (= @entity.threadRootId ?threadRootId)
+          filter: (= (object/get @entity threadRootId) ?threadRootId)
         })
       REPLY_SAVED -> idle when (not (validate/required (default ?threadRootId "")))
       ThreadRepliesLoaded -> idle when (> (array/len ?data) 0)
@@ -734,6 +734,48 @@ orbital ConversationOrbital {
         @label "Most replies a thread counts"
         @description "Most reply rows one recount reads."
         @tier "policy"
+    }
+  }
+
+  ;; The toggle reads the message's current "emoji:userId" entries and writes the next set with its roll-up, so the
+  ;; persistor's DO_REACT stores exactly what one viewer's tap changed.
+  trait ReactionToggle -> @rebindable ConversationMessage {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      REACT -> ready
+        (let ((mine (str/concat (default ?emoji "👍") ":" @user.id)) (current (default ?reactions [])))
+          (let ((next (if (array/includes @current @mine) (array/filter @current (fn entry (not (= @entry @mine)))) (array/append @current @mine))))
+            (emit REACT_REQUESTED {
+              id: ?id,
+              emoji: (default ?emoji "👍"),
+              reactions: @next,
+              reactionSummary: (str/join (array/map (array/unique (array/map @next (fn entry (default (array/first (str/split @entry ":")) "")))) (fn emoji (str/concat @emoji " " (array/len (array/filter @next (fn entry (= (default (array/first (str/split @entry ":")) "") @emoji))))))) "  ")
+            })))
+    }
+
+    emits {
+      REACT_REQUESTED -> external {
+        id : string!
+        emoji : string!
+        reactions : [string]
+        reactionSummary : string
+      }
+        @description "A message's toggled reaction set and its roll-up are ready to persist (wire to DO_REACT)."
+        @synonyms "reaction toggled, reaction changed"
+        @tier "domain"
+    }
+
+    listens {
+      REACT -> input {
+        id : string!
+        emoji : string
+        reactions : [string]
+      }
+        @description "The viewer picked an emoji for a message: its id, the emoji and the message's current reactions. Picking an emoji the viewer already left takes it back."
+        @synonyms "react, add reaction, emoji"
+        @tier "domain"
     }
   }
 
@@ -886,5 +928,5 @@ orbital ConversationOrbital {
     }
   }
 
-  page "/conversation-messages" as ConversationMessagesPage -> MessagePersistor, MessageOutbox, ReadMarker, DirectMessageOpener, MemberAdder, ThreadRollup, TokenMessagePersistor
+  page "/conversation-messages" as ConversationMessagesPage -> MessagePersistor, MessageOutbox, ReadMarker, DirectMessageOpener, MemberAdder, ThreadRollup, ReactionToggle, TokenMessagePersistor
 }

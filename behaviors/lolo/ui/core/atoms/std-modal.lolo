@@ -71,6 +71,7 @@ orbital ModalRecordOrbital {
             cancelEvent: CLOSE
             ;; no stashed seed row pre-fills nothing
             entity: (object/merge (default @entity.seedRow {}) (object/merge (default ?row {}) {}))
+            conditionalFields: @config.conditionalFields
             fieldOverrides: @config.fieldOverrides
             fields: @config.fields
             mode: @config.mode
@@ -120,6 +121,7 @@ orbital ModalRecordOrbital {
             cancelEvent: CLOSE
             entity: (default @entity.pendingRow {})
             error: { message: (default ?error "") }
+            conditionalFields: @config.conditionalFields
             fieldOverrides: @config.fieldOverrides
             fields: @config.fields
             mode: @config.mode
@@ -212,6 +214,11 @@ orbital ModalRecordOrbital {
         @label "Any per-field display copy overrides?"
         @description "Per-field label/placeholder/hint overrides, and readonly to show a value that cannot be changed, keyed by field name. Types, options and required-ness stay entity-schema-driven (declare once on the entity); override only display copy the entity's @description doesn't fit."
         @synonyms "field labels, custom labels, help text overrides, placeholder text"
+        @tier "presentation"
+      conditionalFields : Map string SExpr = {}
+        @label "Which fields show only under a condition?"
+        @description "A field name to the condition it shows under, read against the form's own values (`@entity.formValues.<field>`); a field with no entry always shows. A hidden field is not asked for, so give a hidden required field a declared default."
+        @synonyms "conditional fields, show when, depends on"
         @tier "presentation"
       savedMessage : string = ""
         @label "What should the confirmation say?"
