@@ -1,0 +1,699 @@
+{
+  "atom": "audio/atoms/std-voice-recorder.lolo",
+  "trait": "VoiceRecorderControl",
+  "note": "The recorder's control trait: what it asks of the microphone and hands the composed std-wav, and what it answers. The frame AEAAwABAAMA= is four 16-bit samples of +16384 and -16384, so its loudness is exactly 0.5 of full scale. The composed VoiceWav is listed in defaults so its frames are not part of the check.",
+  "cases": [
+    {
+      "id": "start opens the microphone and answers opening",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RECORDER_START",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "phase": "idle",
+            "rate": 0,
+            "channels": 0,
+            "samples": 0,
+            "levels": [],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/audio-in"
+              }
+            ],
+            "emits": [
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "opening",
+                  "elapsedMs": 0,
+                  "levels": [],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "the microphone opening starts the take's WAV",
+      "steps": [
+        {
+          "from": "opening",
+          "event": "MIC_OPEN",
+          "payload": {
+            "rate": 1000,
+            "channels": 1,
+            "key": "recorder"
+          },
+          "entity": {
+            "id": "r",
+            "phase": "opening",
+            "rate": 0,
+            "channels": 0,
+            "samples": 0,
+            "levels": [],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "state": "recording",
+            "emits": [
+              {
+                "event": "WAV_START",
+                "payload": {
+                  "rate": 1000,
+                  "channels": 1
+                }
+              },
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "recording",
+                  "elapsedMs": 0,
+                  "levels": [],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ],
+            "entity": {
+              "rate": 1000,
+              "channels": 1
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "a frame goes into the take and adds a loudness value once a step is covered",
+      "config": {
+        "levelMs": 4,
+        "levelStride": 1
+      },
+      "steps": [
+        {
+          "from": "recording",
+          "event": "MIC_FRAME",
+          "payload": {
+            "data": "AEAAwABAAMA=",
+            "key": "recorder"
+          },
+          "entity": {
+            "id": "r",
+            "phase": "recording",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 0,
+            "levels": [],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WAV_APPEND",
+                "payload": {
+                  "data": "AEAAwABAAMA="
+                }
+              },
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "recording",
+                  "elapsedMs": 4,
+                  "levels": [
+                    0.5
+                  ],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ],
+            "entity": {
+              "samples": 4,
+              "bucketSquares": 0,
+              "bucketReads": 0,
+              "bucketSamples": 0
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "edge: a frame shorter than a step is gathered without a value yet",
+      "config": {
+        "levelMs": 8,
+        "levelStride": 1
+      },
+      "steps": [
+        {
+          "from": "recording",
+          "event": "MIC_FRAME",
+          "payload": {
+            "data": "AEAAwABAAMA=",
+            "key": "recorder"
+          },
+          "entity": {
+            "id": "r",
+            "phase": "recording",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 0,
+            "levels": [],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WAV_APPEND",
+                "payload": {
+                  "data": "AEAAwABAAMA="
+                }
+              },
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "recording",
+                  "elapsedMs": 4,
+                  "levels": [],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ],
+            "entity": {
+              "samples": 4,
+              "bucketSquares": 1073741824,
+              "bucketReads": 4,
+              "bucketSamples": 4
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "pause closes the microphone and asks for the take so far",
+      "steps": [
+        {
+          "from": "recording",
+          "event": "RECORDER_PAUSE",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "phase": "recording",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "state": "pausing",
+            "emits": [
+              {
+                "event": "WAV_PEEK",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "WAV_FINISH",
+              "WAV_CANCEL"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "the take so far becomes the paused take, ready to be heard",
+      "steps": [
+        {
+          "from": "pausing",
+          "event": "WAV_PEEKED",
+          "payload": {
+            "data": "UklGRiwAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQgAAADoAxj8/38AgA==",
+            "durationMs": 4,
+            "bytes": 52
+          },
+          "entity": {
+            "id": "r",
+            "phase": "pausing",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "state": "paused",
+            "emits": [
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "paused",
+                  "elapsedMs": 4,
+                  "levels": [
+                    0.5
+                  ],
+                  "take": "data:audio/wav;base64,UklGRiwAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQgAAADoAxj8/38AgA==",
+                  "takeMs": 4
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "resume opens the microphone again and records on into the same take",
+      "steps": [
+        {
+          "from": "paused",
+          "event": "RECORDER_RESUME",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "phase": "paused",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "data:audio/wav;base64,UklG",
+            "takeMs": 4
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/audio-in"
+              }
+            ]
+          }
+        },
+        {
+          "event": "MIC_OPEN",
+          "payload": {
+            "rate": 1000,
+            "channels": 1,
+            "key": "recorder"
+          },
+          "expect": {
+            "state": "recording",
+            "emits": [
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "recording",
+                  "elapsedMs": 4,
+                  "levels": [
+                    0.5
+                  ],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WAV_START"
+            ]
+          },
+          "from": "opening",
+          "entity": {
+            "id": "r",
+            "phase": "opening",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "data:audio/wav;base64,UklG",
+            "takeMs": 4
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "control: a microphone reopening at another rate keeps the take paused and says why",
+      "steps": [
+        {
+          "from": "opening",
+          "event": "MIC_OPEN",
+          "payload": {
+            "rate": 48000,
+            "channels": 1,
+            "key": "recorder"
+          },
+          "entity": {
+            "id": "r",
+            "phase": "opening",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "data:audio/wav;base64,UklG",
+            "takeMs": 4
+          },
+          "expect": {
+            "state": "paused",
+            "emits": [
+              {
+                "event": "RECORDER_FAILED",
+                "payload": {
+                  "error": "The microphone now runs at 48000 Hz and 1 channels; the take was recorded at 1000 Hz and 1."
+                }
+              },
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "paused",
+                  "elapsedMs": 4,
+                  "levels": [
+                    0.5
+                  ],
+                  "take": "data:audio/wav;base64,UklG",
+                  "takeMs": 4
+                }
+              }
+            ],
+            "neverEmits": [
+              "WAV_START"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "send from a paused take answers the voice note with its loudness values",
+      "steps": [
+        {
+          "from": "paused",
+          "event": "RECORDER_SEND",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "phase": "paused",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "data:audio/wav;base64,UklG",
+            "takeMs": 4
+          },
+          "expect": {
+            "state": "finishing",
+            "emits": [
+              {
+                "event": "WAV_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "WAV_ENCODED",
+          "payload": {
+            "data": "UklGRiwAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQgAAADoAxj8/38AgA==",
+            "durationMs": 4,
+            "bytes": 52
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "VOICE_RECORDED",
+                "payload": {
+                  "file": {
+                    "name": "voice.wav",
+                    "size": 52,
+                    "type": "audio/wav",
+                    "content": "data:audio/wav;base64,UklGRiwAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQgAAADoAxj8/38AgA=="
+                  },
+                  "durationMs": 4,
+                  "levels": [
+                    0.5
+                  ]
+                }
+              },
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "idle",
+                  "elapsedMs": 0,
+                  "levels": [],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ],
+            "entity": {
+              "phase": "idle",
+              "levels": [],
+              "take": ""
+            }
+          },
+          "from": "finishing",
+          "entity": {
+            "id": "r",
+            "phase": "finishing",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "discard while recording drops the take",
+      "steps": [
+        {
+          "from": "recording",
+          "event": "RECORDER_DISCARD",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "phase": "recording",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WAV_CANCEL",
+                "payload": {}
+              },
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "idle",
+                  "elapsedMs": 0,
+                  "levels": [],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "VOICE_RECORDED",
+              "WAV_FINISH"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "a microphone that cannot open says why and stays idle",
+      "steps": [
+        {
+          "from": "opening",
+          "event": "MIC_FAILED",
+          "payload": {
+            "error": "Permission denied",
+            "kind": "denied",
+            "key": "recorder"
+          },
+          "entity": {
+            "id": "r",
+            "phase": "opening",
+            "rate": 0,
+            "channels": 0,
+            "samples": 0,
+            "levels": [],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "RECORDER_FAILED",
+                "payload": {
+                  "error": "The microphone could not be opened: Permission denied"
+                }
+              },
+              {
+                "event": "RECORDER_STATE",
+                "payload": {
+                  "phase": "idle",
+                  "elapsedMs": 0,
+                  "levels": [],
+                  "take": "",
+                  "takeMs": 0
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    },
+    {
+      "id": "a microphone that stops on its own pauses the take",
+      "steps": [
+        {
+          "from": "recording",
+          "event": "MIC_FAILED",
+          "payload": {
+            "error": "device removed",
+            "kind": "unavailable",
+            "key": "recorder"
+          },
+          "entity": {
+            "id": "r",
+            "phase": "recording",
+            "rate": 1000,
+            "channels": 1,
+            "samples": 4,
+            "levels": [
+              0.5
+            ],
+            "bucketSquares": 0,
+            "bucketReads": 0,
+            "bucketSamples": 0,
+            "take": "",
+            "takeMs": 0
+          },
+          "expect": {
+            "state": "pausing",
+            "emits": [
+              {
+                "event": "WAV_PEEK",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "RECORDER_FAILED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "VoiceWav"
+      ]
+    }
+  ]
+}

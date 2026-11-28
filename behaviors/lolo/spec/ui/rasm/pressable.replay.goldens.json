@@ -9360,6 +9360,206 @@
           }
         }
       ]
+    },
+    {
+      "id": "an event variant for its id switches the button's shape and repaints",
+      "config": {
+        "id": "b",
+        "label": "voice.play",
+        "intent": "secondary",
+        "action": "PLAY",
+        "z": 3,
+        "icon": "M8 5 L19 12 L8 19 Z",
+        "iconOnly": true,
+        "variantBy": "event",
+        "variants": {
+          "pause": {
+            "icon": "M7 5 L10 5 L10 19 L7 19 Z M14 5 L17 5 L17 19 L14 19 Z"
+          }
+        }
+      },
+      "entity": {
+        "id": "b"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PRESS_VARIANT",
+          "payload": {
+            "id": "b",
+            "variant": "pause"
+          },
+          "expect": {
+            "state": "idle",
+            "entity": {
+              "variant": "pause"
+            },
+            "emits": [
+              {
+                "event": "REPAINT",
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an event variant switches while the button is hovered",
+      "config": {
+        "id": "b",
+        "label": "voice.play",
+        "intent": "secondary",
+        "action": "PLAY",
+        "z": 3,
+        "icon": "M8 5 L19 12 L8 19 Z",
+        "iconOnly": true,
+        "variantBy": "event",
+        "variants": {
+          "pause": {
+            "icon": "M7 5 L10 5 L10 19 L7 19 Z M14 5 L17 5 L17 19 L14 19 Z"
+          }
+        }
+      },
+      "entity": {
+        "id": "b"
+      },
+      "steps": [
+        {
+          "from": "hovered",
+          "event": "RASM_PRESS_VARIANT",
+          "payload": {
+            "id": "b",
+            "variant": "pause"
+          },
+          "expect": {
+            "state": "hovered",
+            "entity": {
+              "variant": "pause"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a variant the button does not declare brings back the configured shape",
+      "config": {
+        "id": "b",
+        "label": "voice.play",
+        "intent": "secondary",
+        "action": "PLAY",
+        "z": 3,
+        "icon": "M8 5 L19 12 L8 19 Z",
+        "iconOnly": true,
+        "variantBy": "event",
+        "variants": {
+          "pause": {
+            "icon": "M7 5 L10 5 L10 19 L7 19 Z M14 5 L17 5 L17 19 L14 19 Z"
+          }
+        }
+      },
+      "entity": {
+        "id": "b",
+        "variant": "pause"
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PRESS_VARIANT",
+          "payload": {
+            "id": "b",
+            "variant": "nope"
+          },
+          "expect": {
+            "state": "idle",
+            "entity": {
+              "variant": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a button whose variants follow the breakpoint ignores an event variant",
+      "config": {
+        "id": "b",
+        "label": "voice.play",
+        "intent": "secondary",
+        "action": "PLAY",
+        "z": 3,
+        "icon": "M8 5 L19 12 L8 19 Z",
+        "iconOnly": true,
+        "variantBy": "breakpoint",
+        "variants": {
+          "pause": {
+            "icon": "M7 5 L10 5 L10 19 L7 19 Z M14 5 L17 5 L17 19 L14 19 Z"
+          }
+        }
+      },
+      "entity": {
+        "id": "b",
+        "variant": ""
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PRESS_VARIANT",
+          "payload": {
+            "id": "b",
+            "variant": "pause"
+          },
+          "expect": {
+            "neverEmits": [
+              "REPAINT"
+            ],
+            "entity": {
+              "variant": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an event variant for another id changes nothing",
+      "config": {
+        "id": "b",
+        "label": "voice.play",
+        "intent": "secondary",
+        "action": "PLAY",
+        "z": 3,
+        "icon": "M8 5 L19 12 L8 19 Z",
+        "iconOnly": true,
+        "variantBy": "event",
+        "variants": {
+          "pause": {
+            "icon": "M7 5 L10 5 L10 19 L7 19 Z M14 5 L17 5 L17 19 L14 19 Z"
+          }
+        }
+      },
+      "entity": {
+        "id": "b",
+        "variant": ""
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "RASM_PRESS_VARIANT",
+          "payload": {
+            "id": "other",
+            "variant": "pause"
+          },
+          "expect": {
+            "neverEmits": [
+              "REPAINT"
+            ],
+            "entity": {
+              "variant": ""
+            }
+          }
+        }
+      ]
     }
   ]
 }

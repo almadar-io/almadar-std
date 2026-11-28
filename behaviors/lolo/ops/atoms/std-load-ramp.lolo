@@ -1,10 +1,12 @@
 app std-load-ramp [
   version: "1.0.0",
-  description: "std-load-ramp — a stepped load test of one HTTP server by closed-loop virtual users (spec/ops/load-ramp.lolo). LOAD_START { key, steps, stepMs, thinkMs, journey, prefix, stream } runs one step per entry of steps, the number of virtual users that step holds: users are added, never removed, between steps, so step n runs steps[n] users at once (a ramp, as k6 stages or Gatling's incrementUsersPerSec ramp it). Each user is one keyed row of LoadVu, named vu<i>, with its own client id (<key>-vu<i>): with stream on it first mints a stream ticket (POST <prefix>/api/events/ticket?clientId=<id>) and opens the live stream (GET <prefix>/api/events?ticket=<t>, kept open for the user's life on its own key <vu>/s), then sends the journey's requests in order, forever, each after the one before has answered and thinkMs has passed (std-delay); {client} in a request's path or body is the user's client id. Every answer is one sample: its latency in ms (the dispatch clock from send to answer, measured at the client, so it includes the client's own queueing), its HTTP status (0 for a transport failure) and its label. A step lasts stepMs from the moment its last user was started; only samples answered while it runs count. At its end the step's result is LOAD_STEP_DONE { key, result }, result { step, vus, requests, ok, http4xx, http5xx, transport, rps, p50, p90, p95, p99, max } (ms, nearest-rank percentiles over that step's samples), and the ramp waits for LOAD_CONTINUE { key } so the caller can read the server between steps; after the last step LOAD_CONTINUE stops every user (each closes its stream and returns to its defaults once its call in flight answers) and answers LOAD_DONE { key, results }. LOAD_STOP { key } ends the run at once the same way. The HTTP client is std-http-keyed on host and port (plain HTTP/1.1, no keep-alive: every call its own connection). Subject-agnostic: it knows no app; the journey is the caller's."
+  description: "std-load-ramp — a stepped load test of one HTTP server by closed-loop virtual users (spec/ops/load-ramp.lolo). LOAD_START { key, steps, stepMs, thinkMs, journey, prefix, stream, identities? } runs one step per entry of steps, the number of virtual users that step holds: users are added, never removed, between steps, so step n runs steps[n] users at once (a ramp, as k6 stages or Gatling's incrementUsersPerSec ramp it). Each user is one keyed row of std-load-user's LoadVu (composed here, on its own entity, so the ramp's own step clock ticks on the ramp's row alone, EXEC-TICK-5), named vu<i>, with its own client id (<key>-vu<i>): with stream on it first mints a stream ticket (POST <prefix>/api/events/ticket?clientId=<id>) and opens the live stream (GET <prefix>/api/events?ticket=<t>, kept open for the user's life on its own key <vu>/s), then sends the journey's requests in order, forever, each after the one before has answered and thinkMs has passed (std-delay); {client} in a request's path or body is the user's client id. identities lists the headers users send: user i sends entry i modulo the count on every request and its stream; a credential is not one of them (std-http-client refuses it), it is the credential knob, one host credential every user carries. Every answer is one sample: its latency in ms (the dispatch clock from send to answer, measured at the client, so it includes the client's own queueing), its HTTP status (0 for a transport failure) and its label. A step lasts stepMs from the moment its last user was started; only samples answered while it runs count. At its end the step's result is LOAD_STEP_DONE { key, result }, result { step, vus, requests, ok, http4xx, http5xx, transport, rps, p50, p90, p95, p99, max } (ms, nearest-rank percentiles over that step's samples), and the ramp waits for LOAD_CONTINUE { key } so the caller can read the server between steps; after the last step LOAD_CONTINUE stops every user (each closes its stream and returns to its defaults once its call in flight answers) and answers LOAD_DONE { key, results }. LOAD_STOP { key } ends the run at once the same way. The HTTP client is std-http-keyed on host and port (plain HTTP/1.1, no keep-alive: every call its own connection). Subject-agnostic: it knows no app; the journey is the caller's."
 ]
 uses Spec from "almadar-std/load-ramp"
 uses User from "std/behaviors/std-load-user"
+type HttpHeader = { name : string!, value : string! }
 type LoadRequest = { label : string!, method : string!, path : string!, body : string! }
+type LoadIdentity = { headers : [HttpHeader]! }
 type LoadStepResult = { step : number!, vus : number!, requests : number!, ok : number!, http4xx : number!, http5xx : number!, transport : number!, rps : number!, p50 : number!, p90 : number!, p95 : number!, p99 : number!, max : number! }
 
 orbital LoadRampOrbital {
@@ -18,6 +20,7 @@ orbital LoadRampOrbital {
     journey : [LoadRequest] @description "The requests each user sends in order, forever." = []
     prefix : string @description "The path every request and the stream are under." = ""
     stream : boolean @description "Whether each user opens a live stream first." = false
+    identities : [LoadIdentity] @description "The headers each user sends: user i takes entry i modulo the count; none sends none." = []
     vusUp : number @description "Users started so far." = 0
     stepStartedAt : instant? @description "When the running step began measuring." = null
     samples : [number] @description "The running step's latencies, ms." = []
@@ -36,6 +39,18 @@ orbital LoadRampOrbital {
     port : number = 80
       @label "Port"
       @description "The server's port."
+      @tier "infra"
+    credential : secret = ""
+      @label "Credential"
+      @description "The host credential every user's requests and stream carry, filled in by the host at the boundary so no program data holds it; read only when credentialHeader names a header."
+      @tier "infra"
+    credentialHeader : string = ""
+      @label "Credential header"
+      @description "The header the credential rides, for example authorization; empty sends none."
+      @tier "infra"
+    credentialPrefix : string = ""
+      @label "Credential prefix"
+      @description "The text before the credential value, for example Bearer and a space."
       @tier "infra"
   }
 
@@ -56,6 +71,9 @@ orbital LoadRampOrbital {
       port: @config.port
       tls: false
       serverName: @config.host
+      credential: @config.credential
+      credentialHeader: @config.credentialHeader
+      credentialPrefix: @config.credentialPrefix
     }
   }
 
@@ -79,6 +97,7 @@ orbital LoadRampOrbital {
         (set @entity.journey @payload.journey)
         (set @entity.prefix @payload.prefix)
         (set @entity.stream @payload.stream)
+        (set @entity.identities (default @payload.identities []))
         (set @entity.vusUp 0)
         (set @entity.results [])
         (emit VU_SPAWN { at: @entity.vusUp })
@@ -87,7 +106,7 @@ orbital LoadRampOrbital {
     state spawning {
       INIT -> spawning
       VU_SPAWN -> spawning when (< @entity.vusUp (default (array/nth @entity.steps @entity.stepIndex) 0))
-        (emit VU_START { vu: (str/concat "vu" @entity.vusUp), clientId: (str/concat @entity.runKey "-vu" @entity.vusUp), journey: @entity.journey, prefix: @entity.prefix, stream: @entity.stream, thinkMs: @entity.thinkMs })
+        (emit VU_START { vu: (str/concat "vu" @entity.vusUp), clientId: (str/concat @entity.runKey "-vu" @entity.vusUp), headers: (if (= (array/len @entity.identities) 0) [] (default (object/get (default (array/nth @entity.identities (default (% @entity.vusUp (array/len @entity.identities)) 0)) { headers: [] }) "headers") [])), journey: @entity.journey, prefix: @entity.prefix, stream: @entity.stream, thinkMs: @entity.thinkMs })
         (set @entity.vusUp (+ @entity.vusUp 1))
         (emit VU_SPAWN { at: (+ @entity.vusUp 1) })
       VU_SPAWN -> running when (>= @entity.vusUp (default (array/nth @entity.steps @entity.stepIndex) 0))
@@ -149,6 +168,7 @@ orbital LoadRampOrbital {
         (set @entity.journey [])
         (set @entity.prefix "")
         (set @entity.stream false)
+        (set @entity.identities [])
         (set @entity.stepStartedAt null)
         (set @entity.results [])
         (set @entity.ok 0)
@@ -187,6 +207,7 @@ orbital LoadRampOrbital {
       VU_START {
         vu : string!
         clientId : string!
+        headers : [HttpHeader]!
         journey : [LoadRequest]!
         prefix : string!
         stream : boolean!
@@ -218,6 +239,7 @@ orbital LoadRampOrbital {
         journey : [LoadRequest]!
         prefix : string!
         stream : boolean!
+        identities : [LoadIdentity]?
       }
         @description "Start a stepped load run: steps lists the users each step holds, each step measured for stepMs."
         @synonyms "load test, stress test, ramp users"

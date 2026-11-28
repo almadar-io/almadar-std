@@ -1,0 +1,27 @@
+app load-user-spec [
+  version: "1.0.0",
+  description: "Design contract for closed-loop virtual users of one HTTP server, one keyed row each: a user optionally holds a live stream (ticket then GET) for its life, sends a journey of requests in order with a think time between an answer and its next request, reports every answer as a sample of latency (ms, measured at the client) and status, and on stop closes its stream once its call in flight answers and returns to its defaults so its row is dropped."
+]
+
+orbital LoadUserSpec {
+  expects entity LoadUser [runtime] {
+    id : string!
+    clientId : string
+    pos : number
+    stopping : boolean
+  }
+  expects trait LoadVu {
+    state idle {
+      VU_START -> ticketing
+    }
+    state sending {
+      VU_NEXT -> waiting
+    }
+    state waiting {
+      VU_REPLIED -> thinking
+    }
+    state thinking {
+      VU_WAKE -> sending
+    }
+  }
+}

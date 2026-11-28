@@ -67,6 +67,11 @@ orbital RasmPressableOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_BREAKPOINT -> idle when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_PRESS_VARIANT -> idle when (and (= ?id @config.id) (= @config.variantBy "event"))
+        (set @entity.variant (if (object/has @config.variants ?variant) ?variant ""))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PRESS_VARIANT -> idle when (not (and (= ?id @config.id) (= @config.variantBy "event")))
       RASM_PLACE -> idle when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate))))
       RASM_PLACE -> idle when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate)))))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
@@ -143,6 +148,11 @@ orbital RasmPressableOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_BREAKPOINT -> hovered when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_PRESS_VARIANT -> hovered when (and (= ?id @config.id) (= @config.variantBy "event"))
+        (set @entity.variant (if (object/has @config.variants ?variant) ?variant ""))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PRESS_VARIANT -> hovered when (not (and (= ?id @config.id) (= @config.variantBy "event")))
       RASM_PLACE -> hovered when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate))))
       RASM_PLACE -> hovered when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate)))))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
@@ -219,6 +229,11 @@ orbital RasmPressableOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_BREAKPOINT -> pressed when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_PRESS_VARIANT -> pressed when (and (= ?id @config.id) (= @config.variantBy "event"))
+        (set @entity.variant (if (object/has @config.variants ?variant) ?variant ""))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PRESS_VARIANT -> pressed when (not (and (= ?id @config.id) (= @config.variantBy "event")))
       RASM_PLACE -> pressed when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate))))
       RASM_PLACE -> pressed when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate)))))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
@@ -290,6 +305,11 @@ orbital RasmPressableOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_BREAKPOINT -> focused when (not (and (= @config.variantBy "breakpoint") (!= (default (array/find ?chain (fn n (object/has @config.variants @n))) "") @entity.variant)))
+      RASM_PRESS_VARIANT -> focused when (and (= ?id @config.id) (= @config.variantBy "event"))
+        (set @entity.variant (if (object/has @config.variants ?variant) ?variant ""))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PRESS_VARIANT -> focused when (not (and (= ?id @config.id) (= @config.variantBy "event")))
       RASM_PLACE -> focused when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate))))
       RASM_PLACE -> focused when (and (array/some ?placed (fn p (= @p.id @config.id))) (not (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (and @entity.hasRect (!= @mine null) (= @mine.rect.x @entity.rect.x) (= @mine.rect.y @entity.rect.y) (= @mine.rect.w @entity.rect.w) (= @mine.rect.h @entity.rect.h) (= (default @mine.rotate 0) @entity.rotate)))))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
@@ -436,6 +456,8 @@ orbital RasmPressableOrbital {
         @description "Keyboard activation of the focused control."
       RASM_PRESS_KEY { id : string!  key : MessageKey! }
         @description "Show this catalog key in place of the configured label when the id is this control's, and repaint: a Play button its owner turns into Stop while playing. It changes the text and the accessible name only; the press still emits the same action. A disabled control keeps its configured label."
+      RASM_PRESS_VARIANT { id : string!  variant : string! }
+        @description "With variantBy \"event\": take this key of `variants` as the button's shape when the id is this control's (one it does not declare brings back the configured shape), and repaint."
     }
 
     config {
@@ -499,9 +521,9 @@ orbital RasmPressableOrbital {
         @label "Chrome"
         @description "Paint the button's plate (fill, border, shadow, material, backdrop). False paints no plate in any state: only the label, icon and decor remain, while the hit region, the press behaviour, the accessible name and the focused look's border ring are unchanged."
         @tier "presentation"
-      variantBy : "" | "breakpoint" = ""
+      variantBy : "" | "breakpoint" | "event" = ""
         @label "Variant by"
-        @description "\"breakpoint\" picks iconOnly, icon and chrome from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant, then to the configured ones; empty never switches."
+        @description "\"breakpoint\" picks iconOnly, icon and chrome from `variants` by the surface's breakpoint name, falling back to the next smaller declared variant, then to the configured ones; \"event\" takes the variant RASM_PRESS_VARIANT names (a Play button its owner turns into Pause); empty never switches."
         @tier "presentation"
       variants : Map string RasmPressShape = {}
         @label "Variants"

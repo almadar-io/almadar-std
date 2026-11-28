@@ -1,0 +1,179 @@
+app std-audio-player [
+  version: "1.0.0",
+  description: "std-audio-player — plays one recording at a time, the way a chat plays voice notes, over std-audio-timeline on the host's audio clock. PLAYER_TOGGLE { id, source, durationMs } plays that recording from where it was last left (its start once it played to the end) or pauses it when it is the one playing; toggling another recording pauses the one playing and keeps its place. PLAYER_SEEK { id, source, durationMs, at } moves a recording to `at` (0 to 1 of its length) and keeps it playing if it was. PLAYER_RATE cycles the playback rate through the rates knob (1, 1.5, 2 by default) and applies it to the recording playing. PLAYER_STOP pauses whatever plays. Every change answers PLAYER_STATE { id, playing, atMs, durationMs, rate, positions }: the current recording, whether it plays, its position, its length, the rate, and the position each recording was left at (by id); a recording that reaches its end stops and goes back to its start. A host refusal answers PLAYER_FAILED { error } and stops. The player knows a recording only by the id, source and length it is handed, and plays nothing it was not handed.",
+]
+uses Timeline from "std/behaviors/std-audio-timeline"
+type PlayerClip = { key : string!, source : string!, at : number!, offset : number!, duration : number!, rate : number!, gain : number!, fadeIn : number!, fadeOut : number!, gainEnd : number }
+type PlayerState = { id : string!, playing : boolean!, atMs : number!, durationMs : number!, rate : number!, positions : Map string number! }
+
+orbital AudioPlayerOrbital {
+  entity AudioPlayer [runtime] {
+    id : string!
+    current : string @description "The id of the recording the player holds; empty when none." = ""
+    source : string @description "Where the current recording is read from." = ""
+    durationMs : number @description "The current recording's length." = 0
+    startMs : number @description "Where in the current recording this play began." = 0
+    atMs : number @description "The current recording's position." = 0
+    rate : number @description "The playback rate." = 1
+    playing : boolean @description "Whether the current recording plays." = false
+    positions : Map string number @description "Where each recording was left, by id." = {}
+  }
+
+  entity AudioPlayerTimeline [runtime] {
+    id : string!
+    clips : [PlayerClip] = []
+    pending : [PlayerClip] = []
+    origin : number = 0
+    position : number = 0
+    wall : number = 0
+    playing : boolean = false
+  }
+
+  trait AudioPlayback = Timeline.traits.AudioTimelinePlayback -> AudioPlayerTimeline {
+    config {
+      leadSeconds: 0.05
+    }
+    listens {
+      TIMELINE_PLAY { clips : [PlayerClip]! }
+      TIMELINE_STOP {}
+      AudioPlayerControl.TIMELINE_PLAY -> TIMELINE_PLAY
+      AudioPlayerControl.TIMELINE_STOP -> TIMELINE_STOP
+      TIMELINE_APPEND { clips : [PlayerClip]! }
+      TIMELINE_REPLACE { after : number! clips : [PlayerClip]! }
+      TIMELINE_CLOCK_STARTED { audio : number! wall : number! }
+      TIMELINE_CLOCK { audio : number! wall : number! }
+      TIMELINE_FAILED { error : string! kind : string! }
+    }
+  }
+
+  trait AudioPlayerControl -> @rebindable AudioPlayer [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      PLAYER_TOGGLE -> ready when (and (= ?id @entity.current) @entity.playing)
+        (set @entity.playing false)
+        (set @entity.positions (object/set @entity.positions @entity.current @entity.atMs))
+        (emit TIMELINE_STOP {})
+        (emit PLAYER_STATE { id: @entity.current, playing: false, atMs: @entity.atMs, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })
+      PLAYER_TOGGLE -> ready when (not (and (= ?id @entity.current) @entity.playing))
+        (let ((left (if (= ?id @entity.current) @entity.atMs (default (object/get @entity.positions ?id 0) 0))))
+          (let ((from (if (or (< @left 0) (>= @left ?durationMs)) 0 @left)))
+            (do
+              (when @entity.playing (set @entity.positions (object/set @entity.positions @entity.current @entity.atMs)))
+              (set @entity.current ?id)
+              (set @entity.source ?source)
+              (set @entity.durationMs ?durationMs)
+              (emit PLAYER_START { fromMs: @from }))))
+
+      PLAYER_SEEK -> ready when (and (= ?id @entity.current) @entity.playing)
+        (emit PLAYER_START { fromMs: (* (math/clamp ?at 0 1) @entity.durationMs) })
+      PLAYER_SEEK -> ready when (not (and (= ?id @entity.current) @entity.playing))
+        (let ((to (* (math/clamp ?at 0 1) ?durationMs)))
+          (do
+            (set @entity.positions (object/set @entity.positions ?id @to))
+            (when (= ?id @entity.current) (set @entity.atMs @to))
+            (emit PLAYER_STATE { id: @entity.current, playing: false, atMs: @entity.atMs, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })))
+
+      PLAYER_RATE -> ready
+        (do
+          (set @entity.rate (default (array/find @config.rates (fn r (> @r @entity.rate))) (default (array/first @config.rates) 1)))
+          (if @entity.playing
+            (emit PLAYER_START { fromMs: @entity.atMs })
+            (emit PLAYER_STATE { id: @entity.current, playing: false, atMs: @entity.atMs, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })))
+
+      PLAYER_STOP -> ready when @entity.playing
+        (set @entity.playing false)
+        (set @entity.positions (object/set @entity.positions @entity.current @entity.atMs))
+        (emit TIMELINE_STOP {})
+        (emit PLAYER_STATE { id: @entity.current, playing: false, atMs: @entity.atMs, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })
+      PLAYER_STOP -> ready when (not @entity.playing)
+
+      PLAYER_START -> ready
+        (set @entity.startMs ?fromMs)
+        (set @entity.atMs ?fromMs)
+        (set @entity.playing true)
+        (set @entity.positions (object/set @entity.positions @entity.current ?fromMs))
+        (emit TIMELINE_STOP {})
+        (emit TIMELINE_PLAY { clips: [{ key: "player", source: @entity.source, at: 0, offset: (/ ?fromMs 1000), duration: (/ (math/max 0 (- @entity.durationMs ?fromMs)) 1000), rate: @entity.rate, gain: 1, fadeIn: 0, fadeOut: 0 }] })
+        (emit PLAYER_STATE { id: @entity.current, playing: true, atMs: ?fromMs, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })
+
+      PLAYER_POSITION -> ready when (and @entity.playing (>= (+ @entity.startMs (* (math/max 0 ?position) 1000 @entity.rate)) @entity.durationMs))
+        (set @entity.playing false)
+        (set @entity.atMs 0)
+        (set @entity.positions (object/set @entity.positions @entity.current 0))
+        (emit TIMELINE_STOP {})
+        (emit PLAYER_STATE { id: @entity.current, playing: false, atMs: 0, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })
+      PLAYER_POSITION -> ready when (and @entity.playing (< (+ @entity.startMs (* (math/max 0 ?position) 1000 @entity.rate)) @entity.durationMs))
+        (set @entity.atMs (+ @entity.startMs (* (math/max 0 ?position) 1000 @entity.rate)))
+        (emit PLAYER_STATE { id: @entity.current, playing: true, atMs: @entity.atMs, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })
+      PLAYER_POSITION -> ready when (not @entity.playing)
+
+      PLAYER_TIMELINE_ERROR -> ready
+        (set @entity.playing false)
+        (emit PLAYER_FAILED { error: ?error })
+        (emit PLAYER_STATE { id: @entity.current, playing: false, atMs: @entity.atMs, durationMs: @entity.durationMs, rate: @entity.rate, positions: @entity.positions })
+    }
+
+    emits {
+      PLAYER_STATE -> external {
+        id : string!
+        playing : boolean!
+        atMs : number!
+        durationMs : number!
+        rate : number!
+        positions : Map string number!
+      }
+        @description "What the player holds now: the current recording, whether it plays, its position and length, the rate, and where each recording was left."
+        @synonyms "playback state, now playing, progress"
+      PLAYER_FAILED -> external {
+        error : string!
+      }
+        @description "The host could not play the recording; the player stopped."
+      TIMELINE_PLAY -> external {
+        clips : [PlayerClip]!
+      }
+        @description "Play the current recording from its start point (to the composed timeline)."
+        @tier "infra"
+      TIMELINE_STOP -> external { }
+        @description "Stop what the timeline plays (to the composed timeline)."
+        @tier "infra"
+      PLAYER_START -> internal {
+        fromMs : number!
+      }
+        @description "Internal: play the current recording from this point."
+        @tier "internal"
+    }
+
+    listens {
+      AudioPlayback.TIMELINE_POSITION -> PLAYER_POSITION with { position: ?position }
+      AudioPlayback.TIMELINE_ERROR -> PLAYER_TIMELINE_ERROR with { error: ?error }
+      PLAYER_TOGGLE { id : string!, source : string!, durationMs : number! }
+        @description "Play this recording from where it was left, or pause it when it is the one playing."
+        @synonyms "play, pause, play pause"
+      PLAYER_SEEK { id : string!, source : string!, durationMs : number!, at : number! }
+        @description "Move this recording to `at` (0 to 1 of its length)."
+        @synonyms "seek, scrub, jump to"
+      PLAYER_RATE { }
+        @description "Step the playback rate to the next of the rates knob."
+        @synonyms "speed, faster, playback speed"
+      PLAYER_STOP { }
+        @description "Pause whatever plays and keep its place."
+      PLAYER_POSITION { position : number! }
+        @description "Internal: the timeline's playhead."
+        @tier "internal"
+      PLAYER_TIMELINE_ERROR { error : string! }
+        @description "Internal: the timeline could not play."
+        @tier "internal"
+    }
+
+    config {
+      rates : [number] = [1, 1.5, 2]
+        @label "Playback rates"
+        @description "The rates PLAYER_RATE steps through, from slowest to fastest: each step takes the next rate above the current one, and the first again after the last."
+    }
+  }
+
+  page boot as AudioPlayerPage -> AudioPlayerControl, AudioPlayback
+}

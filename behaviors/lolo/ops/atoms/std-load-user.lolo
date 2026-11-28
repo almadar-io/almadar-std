@@ -1,6 +1,6 @@
 app std-load-user [
   version: "1.0.0",
-  description: "std-load-user — closed-loop virtual users of one HTTP server, one keyed row each (spec/ops/load-user.lolo), the user half of std-load-ramp. VU_START { vu, clientId, journey, prefix, stream, thinkMs } to LoadUsers starts the row of vu: with stream on it first mints a stream ticket (POST <prefix>/api/events/ticket?clientId=<clientId>) and opens the live stream (GET <prefix>/api/events?ticket=<t>) on its own key <vu>/s for the user's life; then it sends the journey's requests in order, forever, each once the one before has answered and thinkMs has passed (std-delay; at once when thinkMs is 0). {client} in a request's path or body is the user's client id. Every answer is LOAD_SAMPLE { label, ms, status }: the latency in ms on the dispatch clock from send to answer (measured at the client, so it includes the client's own queueing) and the HTTP status, 0 for a transport failure; a ticket that does not parse counts as a failure and stops the user. VU_STOP { vu } stops it once its call in flight answers: it closes its stream and its row returns to its defaults, so the kernel drops it. The HTTP client is std-http-keyed on host and port (plain HTTP/1.1, no keep-alive: every call its own connection). Subject-agnostic: the journey is the caller's."
+  description: "std-load-user — closed-loop virtual users of one HTTP server, one keyed row each (spec/ops/load-user.lolo), the user half of std-load-ramp. VU_START { vu, clientId, headers, journey, prefix, stream, thinkMs } to LoadUsers starts the row of vu (headers go on every request it sends and on its stream; a credential is not a header: std-http-client refuses one, so it is the credential knob, one host credential for every user): with stream on it first mints a stream ticket (POST <prefix>/api/events/ticket?clientId=<clientId>) and opens the live stream (GET <prefix>/api/events?ticket=<t>) on its own key <vu>/s for the user's life; then it sends the journey's requests in order, forever (when its stream ends, as a server restart ends it, the user mints a new ticket and opens it again before its next request, as a page reconnects), each once the one before has answered and thinkMs has passed (std-delay; at once when thinkMs is 0). {client} in a request's path or body is the user's client id. Every answer is LOAD_SAMPLE { label, ms, status }: the latency in ms on the dispatch clock from send to answer (measured at the client, so it includes the client's own queueing) and the HTTP status, 0 for a transport failure; a ticket that does not parse counts as a failure and stops the user. VU_STOP { vu } stops it once its call in flight answers: it closes its stream and its row returns to its defaults, so the kernel drops it. The HTTP client is std-http-keyed on host and port (plain HTTP/1.1, no keep-alive: every call its own connection). Subject-agnostic: the journey is the caller's."
 ]
 uses Spec from "almadar-std/load-user"
 uses Keyed from "std/behaviors/std-http-keyed"
@@ -21,6 +21,8 @@ orbital LoadUserOrbital {
     label : string @description "The label of the request in flight." = ""
     sentAt : instant? @description "When the request in flight was sent." = null
     stopping : boolean @description "Told to stop once its call in flight answers." = false
+    streamLost : boolean @description "The user's live stream ended; it opens a new one before its next request, as a page reconnects." = false
+    headers : [HttpHeader] @description "Headers the user sends on every request and its stream; never a credential, which is the credential knob." = []
   }
 
   config {
@@ -32,6 +34,18 @@ orbital LoadUserOrbital {
       @label "Port"
       @description "The server's port."
       @tier "infra"
+    credential : secret = ""
+      @label "Credential"
+      @description "The host credential every user's requests and stream carry, filled in by the host at the boundary so no program data holds it; read only when credentialHeader names a header."
+      @tier "infra"
+    credentialHeader : string = ""
+      @label "Credential header"
+      @description "The header the credential rides, for example authorization; empty sends none."
+      @tier "infra"
+    credentialPrefix : string = ""
+      @label "Credential prefix"
+      @description "The text before the credential value, for example Bearer and a space."
+      @tier "infra"
   }
 
   trait LoadUsers -> LoadUser [optimistic] {
@@ -40,7 +54,7 @@ orbital LoadUserOrbital {
     state ready {
       INIT -> ready
       VU_START -> ready
-        (emit USER_START { vu: @payload.vu, clientId: @payload.clientId, journey: @payload.journey, prefix: @payload.prefix, stream: @payload.stream, thinkMs: @payload.thinkMs })
+        (emit USER_START { vu: @payload.vu, clientId: @payload.clientId, headers: @payload.headers, journey: @payload.journey, prefix: @payload.prefix, stream: @payload.stream, thinkMs: @payload.thinkMs })
       VU_STOP -> ready
         (emit USER_STOP { vu: @payload.vu })
     }
@@ -49,6 +63,7 @@ orbital LoadUserOrbital {
       USER_START {
         vu : string!
         clientId : string!
+        headers : [HttpHeader]!
         journey : [LoadRequest]!
         prefix : string!
         stream : boolean!
@@ -67,6 +82,7 @@ orbital LoadUserOrbital {
       VU_START -> input {
         vu : string!
         clientId : string!
+        headers : [HttpHeader]!
         journey : [LoadRequest]!
         prefix : string!
         stream : boolean!
@@ -94,6 +110,9 @@ orbital LoadUserOrbital {
       port: @config.port
       tls: false
       serverName: @config.host
+      credential: @config.credential
+      credentialHeader: @config.credentialHeader
+      credentialPrefix: @config.credentialPrefix
     }
     listens {
       LoadKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
@@ -114,6 +133,7 @@ orbital LoadUserOrbital {
       INIT -> idle
       VU_START -> ticketing when @payload.stream
         (set @entity.clientId @payload.clientId)
+        (set @entity.headers @payload.headers)
         (set @entity.journey @payload.journey)
         (set @entity.prefix @payload.prefix)
         (set @entity.thinkMs @payload.thinkMs)
@@ -121,24 +141,32 @@ orbital LoadUserOrbital {
         (set @entity.pos 0)
         (set @entity.label "ticket")
         (set @entity.sentAt @now)
-        (emit LOAD_HTTP_SEND { key: @payload.vu, method: "POST", target: (str/concat @payload.prefix "/api/events/ticket?clientId=" @payload.clientId), headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string "{}"), stream: "none" })
+        (emit LOAD_HTTP_SEND { key: @payload.vu, method: "POST", target: (str/concat @payload.prefix "/api/events/ticket?clientId=" @payload.clientId), headers: (array/concat [{ name: "content-type", value: "application/json" }] @payload.headers), body: (bytes/from-string "{}"), stream: "none" })
       VU_START -> sending when (not @payload.stream)
         (set @entity.clientId @payload.clientId)
+        (set @entity.headers @payload.headers)
         (set @entity.journey @payload.journey)
         (set @entity.prefix @payload.prefix)
         (set @entity.thinkMs @payload.thinkMs)
         (set @entity.stream false)
         (set @entity.pos 0)
         (emit VU_NEXT { vu: @payload.vu })
-      VU_REPLIED -> idle
-      VU_FAILED -> idle
+      VU_REPLIED -> idle when (str/endsWith @payload.key "/s")
+        (emit VU_STREAM_LOST { vu: (str/replace @payload.key "/s" "") })
+      VU_REPLIED -> idle when (not (str/endsWith @payload.key "/s"))
+      VU_FAILED -> idle when (str/endsWith @payload.key "/s")
+        (emit VU_STREAM_LOST { vu: (str/replace @payload.key "/s" "") })
+      VU_FAILED -> idle when (not (str/endsWith @payload.key "/s"))
+      VU_STREAM_LOST -> idle
     }
 
     state ticketing {
       INIT -> ticketing
+      VU_STREAM_LOST -> ticketing
+        (set @entity.streamLost @entity.stream)
       VU_REPLIED -> sending when (!= (default (object/get (default (json/parse @payload.body LoadTicket) { ticket: "" }) "ticket") "") "")
         (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: @payload.status })
-        (emit LOAD_HTTP_SEND { key: (str/concat @payload.key "/s"), method: "GET", target: (str/concat @entity.prefix "/api/events?ticket=" (default (object/get (default (json/parse @payload.body LoadTicket) { ticket: "" }) "ticket") "")), headers: [], body: (bytes/from-string ""), stream: "sse" })
+        (emit LOAD_HTTP_SEND { key: (str/concat @payload.key "/s"), method: "GET", target: (str/concat @entity.prefix "/api/events?ticket=" (default (object/get (default (json/parse @payload.body LoadTicket) { ticket: "" }) "ticket") "")), headers: @entity.headers, body: (bytes/from-string ""), stream: "sse" })
         (emit VU_NEXT { vu: @payload.key })
       VU_REPLIED -> idle when (= (default (object/get (default (json/parse @payload.body LoadTicket) { ticket: "" }) "ticket") "") "")
         (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: (if (and (>= @payload.status 200) (< @payload.status 400)) 500 @payload.status) })
@@ -152,6 +180,8 @@ orbital LoadUserOrbital {
         (set @entity.label "")
         (set @entity.sentAt null)
         (set @entity.stopping false)
+        (set @entity.streamLost false)
+        (set @entity.headers [])
       VU_FAILED -> idle
         (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: 0 })
         (emit LOAD_HTTP_CANCEL { key: (str/concat @payload.key "/s") })
@@ -164,12 +194,16 @@ orbital LoadUserOrbital {
         (set @entity.label "")
         (set @entity.sentAt null)
         (set @entity.stopping false)
+        (set @entity.streamLost false)
+        (set @entity.headers [])
       VU_STOP -> ticketing
         (set @entity.stopping true)
     }
 
     state sending {
       INIT -> sending
+      VU_STREAM_LOST -> sending
+        (set @entity.streamLost @entity.stream)
       VU_NEXT -> idle when @entity.stopping
         (emit LOAD_HTTP_CANCEL { key: (str/concat @payload.vu "/s") })
         (set @entity.clientId "")
@@ -181,18 +215,27 @@ orbital LoadUserOrbital {
         (set @entity.label "")
         (set @entity.sentAt null)
         (set @entity.stopping false)
-      VU_NEXT -> waiting when (not @entity.stopping)
+        (set @entity.streamLost false)
+        (set @entity.headers [])
+      VU_NEXT -> ticketing when (and (not @entity.stopping) @entity.streamLost)
+        (set @entity.streamLost false)
+        (set @entity.label "ticket")
+        (set @entity.sentAt @now)
+        (emit LOAD_HTTP_SEND { key: @payload.vu, method: "POST", target: (str/concat @entity.prefix "/api/events/ticket?clientId=" @entity.clientId), headers: (array/concat [{ name: "content-type", value: "application/json" }] @entity.headers), body: (bytes/from-string "{}"), stream: "none" })
+      VU_NEXT -> waiting when (and (not @entity.stopping) (not @entity.streamLost))
         (let ((req (default (array/nth @entity.journey @entity.pos) { label: "", method: "GET", path: "/", body: "" })))
           (do
             (set @entity.label (default (object/get @req "label") ""))
             (set @entity.sentAt @now)
-            (emit LOAD_HTTP_SEND { key: @payload.vu, method: (default (object/get @req "method") "GET"), target: (str/concat @entity.prefix (str/replaceAll (default (object/get @req "path") "/") "{client}" @entity.clientId)), headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (str/replaceAll (default (object/get @req "body") "") "{client}" @entity.clientId)), stream: "none" })))
+            (emit LOAD_HTTP_SEND { key: @payload.vu, method: (default (object/get @req "method") "GET"), target: (str/concat @entity.prefix (str/replaceAll (default (object/get @req "path") "/") "{client}" @entity.clientId)), headers: (array/concat [{ name: "content-type", value: "application/json" }] @entity.headers), body: (bytes/from-string (str/replaceAll (default (object/get @req "body") "") "{client}" @entity.clientId)), stream: "none" })))
       VU_STOP -> sending
         (set @entity.stopping true)
     }
 
     state waiting {
       INIT -> waiting
+      VU_STREAM_LOST -> waiting
+        (set @entity.streamLost @entity.stream)
       VU_REPLIED -> thinking when (> @entity.thinkMs 0)
         (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: @payload.status })
         (set @entity.pos (default (% (+ @entity.pos 1) (array/len @entity.journey)) 0))
@@ -219,6 +262,8 @@ orbital LoadUserOrbital {
 
     state thinking {
       INIT -> thinking
+      VU_STREAM_LOST -> thinking
+        (set @entity.streamLost @entity.stream)
       VU_WAKE -> sending
         (emit VU_NEXT { vu: @payload.key })
       VU_STOP -> thinking
@@ -253,6 +298,11 @@ orbital LoadUserOrbital {
       }
         @description "Internal: send this user's next request."
         @tier "internal"
+      VU_STREAM_LOST {
+        vu : string!
+      }
+        @description "Internal: a user's live stream ended (its own key answered or failed), for that user's row."
+        @tier "internal"
       VU_THINK {
         key : string!
         delayMs : number!
@@ -265,6 +315,7 @@ orbital LoadUserOrbital {
       VU_START {
         vu : string!
         clientId : string!
+        headers : [HttpHeader]!
         journey : [LoadRequest]!
         prefix : string!
         stream : boolean!
@@ -291,12 +342,17 @@ orbital LoadUserOrbital {
         key : string!
       }
         @description "Internal: this user's think time passed."
+      VU_STREAM_LOST {
+        vu : string!
+      }
+        @description "Internal: this user's live stream ended; it reconnects before its next request."
       LoadUsers.USER_START -> VU_START per @payload.vu
       LoadUsers.USER_STOP -> VU_STOP per @payload.vu
       LoadVu.VU_NEXT -> VU_NEXT per @payload.vu
       LoadHttp.HTTP_REPLIED -> VU_REPLIED per @payload.key with { key: ?key, status: ?status, body: (default (bytes/to-string ?body) "") }
       LoadHttp.HTTP_FAILED -> VU_FAILED per @payload.key with { key: ?key, error: ?error, kind: ?kind }
       LoadThink.ELAPSED -> VU_WAKE per @payload.key with { key: ?key }
+      LoadVu.VU_STREAM_LOST -> VU_STREAM_LOST per @payload.vu
     }
   }
 

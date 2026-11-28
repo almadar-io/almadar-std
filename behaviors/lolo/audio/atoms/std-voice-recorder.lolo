@@ -1,0 +1,293 @@
+app std-voice-recorder [
+  version: "1.0.0",
+  description: "std-voice-recorder — records a voice note the way a chat app does, over os/audio-in and std-wav. RECORDER_START opens the microphone (the sampleRate and channels knobs) and records; RECORDER_PAUSE closes it and keeps the take, answering it as a WAV data url (std-wav's peek) with its length so it can be heard before going on; RECORDER_RESUME opens the microphone again and records on into the same take; RECORDER_SEND ends the take and answers VOICE_RECORDED { file, durationMs, levels }; RECORDER_DISCARD drops it. While recording, every levelMs of sound adds one loudness value (the root mean square of every levelStride-th sample, 0 to 1 of full scale) to levels, for a live waveform and the note's stored envelope. Every change answers RECORDER_STATE { phase, elapsedMs, levels, take, takeMs }: phase is idle, opening, recording, pausing, paused or finishing; take and takeMs are the paused take and its length (empty and 0 otherwise). A microphone that stops on its own pauses the take; one that cannot open answers RECORDER_FAILED { error } and returns to where it was (idle, or paused with the take kept). The recorder plays nothing: a program hands its take to a player.",
+]
+uses Wav from "std/behaviors/std-wav"
+type RecordedFile = { name : string!, size : number!, type : string!, content : string! }
+
+orbital VoiceRecorderOrbital {
+  entity VoiceRecording [runtime] {
+    id : string!
+    phase : "idle" | "opening" | "recording" | "pausing" | "paused" | "finishing" @description "Where the recorder is." = "idle"
+    rate : number @description "The sample rate the take is recorded at (the first opening's)." = 0
+    channels : number @description "The take's channel count." = 0
+    samples : number @description "Samples per channel recorded into the take." = 0
+    levels : [number] @description "One loudness value (0 to 1) per levelMs of the take." = []
+    bucketSquares : number @description "The sum of squared samples read into the level being gathered." = 0
+    bucketReads : number @description "Samples read into the level being gathered." = 0
+    bucketSamples : number @description "Samples per channel the level being gathered covers." = 0
+    take : string @description "The paused take as a WAV data url." = ""
+    takeMs : number @description "The paused take's length." = 0
+  }
+
+  entity VoiceTake [runtime] {
+    id : string!
+    rate : number = 0
+    channels : number = 0
+    frames : [bytes] = []
+    started : boolean = false
+  }
+
+  trait VoiceWav = Wav.traits.WavEncoder -> VoiceTake {
+    listens {
+      VoiceRecorderControl.WAV_START -> WAV_START
+      VoiceRecorderControl.WAV_APPEND -> WAV_APPEND
+      VoiceRecorderControl.WAV_FINISH -> WAV_FINISH
+      VoiceRecorderControl.WAV_PEEK -> WAV_PEEK
+      VoiceRecorderControl.WAV_CANCEL -> WAV_CANCEL
+    }
+  }
+
+  trait VoiceRecorderControl -> @rebindable VoiceRecording [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      RECORDER_START -> opening
+        (set @entity.phase "opening")
+        (set @entity.rate 0)
+        (set @entity.channels 0)
+        (set @entity.samples 0)
+        (set @entity.levels [])
+        (set @entity.bucketSquares 0)
+        (set @entity.bucketReads 0)
+        (set @entity.bucketSamples 0)
+        (set @entity.take "")
+        (set @entity.takeMs 0)
+        (os/audio-in { sampleRate: @config.sampleRate, channels: @config.channels } { key: "recorder", emit: { success: MIC_OPEN, failure: MIC_FAILED, onMessage: MIC_FRAME } })
+        (emit RECORDER_STATE { phase: "opening", elapsedMs: 0, levels: [], take: "", takeMs: 0 })
+      RECORDER_CLEAR -> idle
+        (set @entity.phase "idle")
+        (set @entity.samples 0)
+        (set @entity.levels [])
+        (set @entity.bucketSquares 0)
+        (set @entity.bucketReads 0)
+        (set @entity.bucketSamples 0)
+        (set @entity.take "")
+        (set @entity.takeMs 0)
+        (emit RECORDER_STATE { phase: "idle", elapsedMs: 0, levels: [], take: "", takeMs: 0 })
+    }
+
+    state opening {
+      INIT -> idle
+        (cancel-call "recorder")
+      MIC_OPEN -> recording when (= @entity.rate 0)
+        (set @entity.rate ?rate)
+        (set @entity.channels ?channels)
+        (set @entity.phase "recording")
+        (set @entity.take "")
+        (set @entity.takeMs 0)
+        (emit WAV_START { rate: ?rate, channels: ?channels })
+        (emit RECORDER_STATE { phase: "recording", elapsedMs: 0, levels: @entity.levels, take: "", takeMs: 0 })
+      MIC_OPEN -> recording when (and (!= @entity.rate 0) (= ?rate @entity.rate) (= ?channels @entity.channels))
+        (set @entity.phase "recording")
+        (set @entity.take "")
+        (set @entity.takeMs 0)
+        (emit RECORDER_STATE { phase: "recording", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: "", takeMs: 0 })
+      MIC_OPEN -> paused when (and (!= @entity.rate 0) (or (!= ?rate @entity.rate) (!= ?channels @entity.channels)))
+        (cancel-call "recorder")
+        (set @entity.phase "paused")
+        (emit RECORDER_FAILED { error: (str/concat "The microphone now runs at " ?rate " Hz and " ?channels " channels; the take was recorded at " @entity.rate " Hz and " @entity.channels ".") })
+        (emit RECORDER_STATE { phase: "paused", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: @entity.take, takeMs: @entity.takeMs })
+      MIC_FAILED -> idle when (= @entity.rate 0)
+        (set @entity.phase "idle")
+        (emit RECORDER_FAILED { error: (str/concat "The microphone could not be opened: " (default ?error "")) })
+        (emit RECORDER_STATE { phase: "idle", elapsedMs: 0, levels: [], take: "", takeMs: 0 })
+      MIC_FAILED -> paused when (!= @entity.rate 0)
+        (set @entity.phase "paused")
+        (emit RECORDER_FAILED { error: (str/concat "The microphone could not be opened: " (default ?error "")) })
+        (emit RECORDER_STATE { phase: "paused", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: @entity.take, takeMs: @entity.takeMs })
+      RECORDER_DISCARD -> idle
+        (cancel-call "recorder")
+        (emit RECORDER_CLEAR {})
+    }
+
+    state recording {
+      INIT -> idle
+        (cancel-call "recorder")
+        (emit WAV_CANCEL {})
+      MIC_FRAME -> recording
+        (let ((count (math/floor (/ (bytes/length ?data) (* 2 (math/max 1 @entity.channels))))))
+          (let ((reads (array/range 0 (* @count @entity.channels) (math/max 1 @config.levelStride))))
+            (let ((squares (+ @entity.bucketSquares (array/reduce @reads 0 (fn acc at (+ @acc (let ((s (default (bytes/read-int ?data (* @at 2) 2 "le") 0))) (* @s @s)))))))
+                  (read (+ @entity.bucketReads (array/len @reads)))
+                  (covered (+ @entity.bucketSamples @count))
+                  (due (math/max 1 (math/round (/ (* @entity.rate @config.levelMs) 1000)))))
+              (do
+                (emit WAV_APPEND { data: ?data })
+                (set @entity.samples (+ @entity.samples @count))
+                (if (>= @covered @due)
+                  (do
+                    (set @entity.levels (array/append @entity.levels (math/clamp (/ (default (math/sqrt (/ @squares (math/max 1 @read))) 0) 32768) 0 1)))
+                    (set @entity.bucketSquares 0)
+                    (set @entity.bucketReads 0)
+                    (set @entity.bucketSamples 0))
+                  (do
+                    (set @entity.bucketSquares @squares)
+                    (set @entity.bucketReads @read)
+                    (set @entity.bucketSamples @covered)))
+                (emit RECORDER_STATE { phase: "recording", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: "", takeMs: 0 })))))
+      RECORDER_PAUSE -> pausing
+        (cancel-call "recorder")
+        (set @entity.phase "pausing")
+        (emit WAV_PEEK {})
+      MIC_FAILED -> pausing
+        (set @entity.phase "pausing")
+        (emit WAV_PEEK {})
+      RECORDER_SEND -> finishing
+        (cancel-call "recorder")
+        (set @entity.phase "finishing")
+        (emit WAV_FINISH {})
+        (emit RECORDER_STATE { phase: "finishing", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: "", takeMs: 0 })
+      RECORDER_DISCARD -> idle
+        (cancel-call "recorder")
+        (emit WAV_CANCEL {})
+        (emit RECORDER_CLEAR {})
+    }
+
+    state pausing {
+      INIT -> idle
+        (emit WAV_CANCEL {})
+      MIC_FRAME -> pausing
+      WAV_PEEKED -> paused
+        (set @entity.phase "paused")
+        (set @entity.take (str/concat "data:audio/wav;base64," (bytes/to-base64 ?data)))
+        (set @entity.takeMs ?durationMs)
+        (emit RECORDER_STATE { phase: "paused", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: @entity.take, takeMs: ?durationMs })
+      RECORDER_SEND -> finishing
+        (set @entity.phase "finishing")
+        (emit WAV_FINISH {})
+      RECORDER_DISCARD -> idle
+        (emit WAV_CANCEL {})
+        (emit RECORDER_CLEAR {})
+    }
+
+    state paused {
+      INIT -> idle
+        (emit WAV_CANCEL {})
+      RECORDER_RESUME -> opening
+        (set @entity.phase "opening")
+        (os/audio-in { sampleRate: @config.sampleRate, channels: @config.channels } { key: "recorder", emit: { success: MIC_OPEN, failure: MIC_FAILED, onMessage: MIC_FRAME } })
+        (emit RECORDER_STATE { phase: "opening", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: @entity.take, takeMs: @entity.takeMs })
+      RECORDER_SEND -> finishing
+        (set @entity.phase "finishing")
+        (emit WAV_FINISH {})
+        (emit RECORDER_STATE { phase: "finishing", elapsedMs: (math/round (default (/ (* @entity.samples 1000) @entity.rate) 0)), levels: @entity.levels, take: "", takeMs: 0 })
+      RECORDER_DISCARD -> idle
+        (emit WAV_CANCEL {})
+        (emit RECORDER_CLEAR {})
+    }
+
+    state finishing {
+      INIT -> idle
+      MIC_FRAME -> finishing
+      WAV_ENCODED -> idle
+        (emit VOICE_RECORDED { file: { name: @config.fileName, size: ?bytes, type: "audio/wav", content: (str/concat "data:audio/wav;base64," (bytes/to-base64 ?data)) }, durationMs: ?durationMs, levels: @entity.levels })
+        (emit RECORDER_CLEAR {})
+      WAV_FAILED -> idle
+        (emit RECORDER_FAILED { error: ?message })
+        (emit RECORDER_CLEAR {})
+    }
+
+    emits {
+      RECORDER_STATE -> external {
+        phase : "idle" | "opening" | "recording" | "pausing" | "paused" | "finishing"!
+        elapsedMs : number!
+        levels : [number]!
+        take : string!
+        takeMs : number!
+      }
+        @description "Where the recorder is: its phase, the take's length so far, its loudness values, and the paused take with its length (empty and 0 unless paused)."
+        @synonyms "recording state, recorder progress"
+      VOICE_RECORDED -> external {
+        file : RecordedFile!
+        durationMs : number!
+        levels : [number]!
+      }
+        @description "The finished voice note: a WAV file as a data url, its length and its loudness values."
+        @synonyms "voice note ready, recording done"
+      RECORDER_FAILED -> external {
+        error : string!
+      }
+        @description "The microphone could not be opened or changed its format, or the take could not be written."
+      WAV_START -> external { rate : number!, channels : number! }
+        @description "Begin the take's WAV (to the composed std-wav)."
+        @tier "infra"
+      WAV_APPEND -> external { data : bytes! }
+        @description "The next microphone frames (to the composed std-wav)."
+        @tier "infra"
+      WAV_PEEK -> external { }
+        @description "Write the take so far (to the composed std-wav)."
+        @tier "infra"
+      WAV_FINISH -> external { }
+        @description "End the take (to the composed std-wav)."
+        @tier "infra"
+      WAV_CANCEL -> external { }
+        @description "Drop the take (to the composed std-wav)."
+        @tier "infra"
+      RECORDER_CLEAR -> internal { }
+        @description "Internal: forget the take and answer idle."
+        @tier "internal"
+    }
+
+    listens {
+      VoiceWav.WAV_PEEKED -> WAV_PEEKED
+      VoiceWav.WAV_ENCODED -> WAV_ENCODED
+      VoiceWav.WAV_FAILED -> WAV_FAILED
+      RECORDER_START { }
+        @description "Open the microphone and start a new take."
+        @synonyms "record, start recording"
+      RECORDER_PAUSE { }
+        @description "Close the microphone and keep the take, ready to be heard."
+        @synonyms "pause recording"
+      RECORDER_RESUME { }
+        @description "Open the microphone again and record on into the same take."
+        @synonyms "resume recording, continue"
+      RECORDER_SEND { }
+        @description "End the take and hand it over."
+        @synonyms "send voice note, finish recording"
+      RECORDER_DISCARD { }
+        @description "Drop the take."
+        @synonyms "delete recording, cancel recording"
+      MIC_OPEN { rate : number!, channels : number!, key : string }
+        @description "Internal: the microphone opened at this format."
+        @tier "internal"
+      MIC_FAILED { error : string, kind : string, key : string }
+        @description "Internal: the microphone could not be opened, or it stopped."
+        @tier "internal"
+      MIC_FRAME { data : bytes!, key : string }
+        @description "Internal: frames the microphone heard, 16-bit signed little-endian."
+        @tier "internal"
+      WAV_PEEKED { data : bytes!, durationMs : number!, bytes : number! }
+        @description "Internal: the take so far as a WAV file."
+        @tier "internal"
+      WAV_ENCODED { data : bytes!, durationMs : number!, bytes : number! }
+        @description "Internal: the finished take as a WAV file."
+        @tier "internal"
+      WAV_FAILED { message : string! }
+        @description "Internal: the take could not be written."
+        @tier "internal"
+    }
+
+    config {
+      sampleRate : number = 16000
+        @label "Sample rate"
+        @description "The sample rate asked of the microphone."
+      channels : number = 1
+        @label "Channels"
+        @description "The channel count asked of the microphone."
+      levelMs : number = 100
+        @label "Level step (ms)"
+        @description "How much sound each loudness value covers."
+      levelStride : number = 8
+        @label "Level stride"
+        @description "Every how many samples one is read for a loudness value."
+        @tier "infra"
+      fileName : string = "voice.wav"
+        @label "File name"
+        @description "The name the finished voice note's file carries."
+    }
+  }
+
+  page boot as VoiceRecorderPage -> VoiceRecorderControl, VoiceWav
+}

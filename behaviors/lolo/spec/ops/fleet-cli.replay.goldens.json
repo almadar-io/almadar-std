@@ -2969,6 +2969,87 @@
           }
         }
       ]
+    },
+    {
+      "id": "a runtime deploy reads the apps' own secrets once the runtime is up, before any app deploys",
+      "config": {
+        "apps": [
+          { "name": "shop", "program": "p/shop.lolo", "site": "shop-site", "staticDir": "", "env": { "X": "1" }, "firestoreDatabase": "", "origins": [], "secrets": { "MEDIA_SECRET": "media.key" } },
+          { "name": "blog", "program": "p/blog.lolo", "site": "", "staticDir": "", "env": {}, "firestoreDatabase": "", "origins": [] }
+        ],
+        "targets": [
+          { "name": "box", "env": {}, "indexes": false, "runtime": { "steps": ["echo built"], "context": "/w/ctx", "stack": "/w/stack" } },
+          { "name": "local", "env": {}, "indexes": false }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_UP",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": ["shop"],
+            "apps": [
+              { "name": "shop", "program": "p/shop.lolo", "site": "shop-site", "staticDir": "", "env": { "X": "1" }, "firestoreDatabase": "", "origins": [], "secrets": { "MEDIA_SECRET": "media.key" } },
+              { "name": "blog", "program": "p/blog.lolo", "site": "", "staticDir": "", "env": {}, "firestoreDatabase": "", "origins": [] }
+            ]
+          },
+          "payload": { "image": "almadar-central-orb:t1" },
+          "expect": {
+            "neverEmits": ["FLEET_DEPLOY"],
+            "entity": {
+              "appSecretsLeft": [{ "app": "shop", "name": "MEDIA_SECRET", "file": "media.key" }]
+            }
+          }
+        }
+      ],
+      "note": "With no host the os/read-file fails inside the step; what is pinned is that no app deploys before its own secrets are read."
+    },
+    {
+      "id": "control: a runtime deploy whose apps hold no secrets deploys them once the runtime is up",
+      "config": {
+        "apps": [
+          { "name": "blog", "program": "p/blog.lolo", "site": "", "staticDir": "", "env": {}, "firestoreDatabase": "", "origins": [] }
+        ],
+        "targets": [
+          { "name": "box", "env": {}, "indexes": false, "runtime": { "steps": ["echo built"], "context": "/w/ctx", "stack": "/w/stack" } },
+          { "name": "local", "env": {}, "indexes": false }
+        ],
+        "defaultTarget": "local"
+      },
+      "steps": [
+        {
+          "event": "FLEET_RUNTIME_UP",
+          "from": "ready",
+          "entity": {
+            "id": "c",
+            "busy": true,
+            "target": "box",
+            "only": [],
+            "apps": [
+              { "name": "blog", "program": "p/blog.lolo", "site": "", "staticDir": "", "env": {}, "firestoreDatabase": "", "origins": [] }
+            ]
+          },
+          "payload": { "image": "almadar-central-orb:t1" },
+          "expect": {
+            "emits": [
+              {
+                "event": "FLEET_DEPLOY",
+                "payload": {
+                  "target": "box",
+                  "only": [],
+                  "apps": [
+                    { "name": "blog", "program": "p/blog.lolo", "site": "", "staticDir": "", "env": {}, "firestoreDatabase": "", "origins": [] }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

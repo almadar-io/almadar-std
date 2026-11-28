@@ -5632,7 +5632,61 @@
               {
                 "event": "STORAGE_FAILED",
                 "payload": {
+                  "code": "NoSuchKey",
                   "message": "The specified key does not exist."
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "StorageHttp",
+        "StorageRetry"
+      ]
+    },
+    {
+      "id": "a-storage-error-with-an-empty-message-fails-with-its-s3-code",
+      "config": {},
+      "steps": [
+        {
+          "event": "STORAGE_HTTP_ERROR",
+          "payload": {
+            "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>SignatureDoesNotMatch</Code><Message></Message><BucketName>b</BucketName><RequestId>tx1</RequestId></Error>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STORAGE_FAILED",
+                "payload": {
+                  "code": "SignatureDoesNotMatch",
+                  "message": "SignatureDoesNotMatch"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "StorageHttp",
+        "StorageRetry"
+      ]
+    },
+    {
+      "id": "edge-a-storage-error-with-neither-code-nor-message-is-unknown",
+      "config": {},
+      "steps": [
+        {
+          "event": "STORAGE_HTTP_ERROR",
+          "payload": {
+            "text": "<Error><Code></Code><Message></Message></Error>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STORAGE_FAILED",
+                "payload": {
+                  "message": "UnknownError"
                 }
               }
             ]

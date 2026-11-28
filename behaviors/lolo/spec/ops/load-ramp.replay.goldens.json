@@ -1,0 +1,1064 @@
+{
+  "atom": "ops/atoms/std-load-ramp.lolo",
+  "trait": "LoadRamp",
+  "cases": [
+    {
+      "id": "a run with no step fails at once",
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "idle",
+          "event": "LOAD_START",
+          "payload": {
+            "key": "r",
+            "steps": [],
+            "stepMs": 1000,
+            "thinkMs": 0,
+            "journey": [
+              {
+                "label": "p",
+                "method": "POST",
+                "path": "/x/{client}",
+                "body": "{\"c\":\"{client}\"}"
+              }
+            ],
+            "prefix": "",
+            "stream": false,
+            "identities": []
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LOAD_FAILED",
+                "payload": {
+                  "key": "r"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a run with no journey request fails at once",
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "idle",
+          "event": "LOAD_START",
+          "payload": {
+            "key": "r",
+            "steps": [
+              1
+            ],
+            "stepMs": 1000,
+            "thinkMs": 0,
+            "journey": [],
+            "prefix": "",
+            "stream": false,
+            "identities": []
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LOAD_FAILED",
+                "payload": {
+                  "key": "r"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a run with a step and a journey starts its first user",
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "idle",
+          "event": "LOAD_START",
+          "payload": {
+            "key": "r",
+            "steps": [
+              1
+            ],
+            "stepMs": 1000,
+            "thinkMs": 0,
+            "journey": [
+              {
+                "label": "p",
+                "method": "POST",
+                "path": "/x/{client}",
+                "body": "{\"c\":\"{client}\"}"
+              }
+            ],
+            "prefix": "",
+            "stream": false,
+            "identities": []
+          },
+          "expect": {
+            "state": "spawning",
+            "emits": [
+              {
+                "event": "VU_SPAWN"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "each user is started with its own client id and the identity of its turn",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 1
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "spawning",
+          "event": "VU_SPAWN",
+          "payload": {
+            "at": 1
+          },
+          "expect": {
+            "state": "spawning",
+            "emits": [
+              {
+                "event": "VU_START",
+                "payload": {
+                  "vu": "vu1",
+                  "clientId": "r-vu1",
+                  "headers": [
+                    {
+                      "name": "authorization",
+                      "value": "Bearer t1"
+                    }
+                  ],
+                  "prefix": "/apps/a",
+                  "stream": true,
+                  "thinkMs": 0
+                }
+              },
+              {
+                "event": "VU_SPAWN"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a user past the identities wraps to the first",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          3
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "spawning",
+          "event": "VU_SPAWN",
+          "payload": {
+            "at": 2
+          },
+          "expect": {
+            "state": "spawning",
+            "emits": [
+              {
+                "event": "VU_START",
+                "payload": {
+                  "vu": "vu2",
+                  "clientId": "r-vu2",
+                  "headers": [
+                    {
+                      "name": "authorization",
+                      "value": "Bearer t0"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: with no identities a user sends no headers",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [],
+        "vusUp": 0
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "spawning",
+          "event": "VU_SPAWN",
+          "payload": {
+            "at": 0
+          },
+          "expect": {
+            "state": "spawning",
+            "emits": [
+              {
+                "event": "VU_START",
+                "payload": {
+                  "vu": "vu0",
+                  "headers": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "once the step's users are all started the step measures",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "spawning",
+          "event": "VU_SPAWN",
+          "payload": {
+            "at": 2
+          },
+          "expect": {
+            "state": "running",
+            "emits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a step's end answers nearest-rank percentiles, the error classes and the rate",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2,
+        "samples": [
+          10,
+          20,
+          30,
+          40,
+          50,
+          60,
+          70,
+          80,
+          90,
+          100
+        ],
+        "ok": 8,
+        "http4xx": 1,
+        "http5xx": 1,
+        "transport": 0
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "running",
+          "event": "STEP_END",
+          "payload": {},
+          "expect": {
+            "state": "pausing",
+            "emits": [
+              {
+                "event": "LOAD_STEP_DONE",
+                "payload": {
+                  "key": "r",
+                  "result": {
+                    "step": 0,
+                    "vus": 2,
+                    "requests": 10,
+                    "ok": 8,
+                    "http4xx": 1,
+                    "http5xx": 1,
+                    "transport": 0,
+                    "rps": 10,
+                    "p50": 50,
+                    "p90": 90,
+                    "p95": 100,
+                    "p99": 100,
+                    "max": 100
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a step with no answers reports zeros",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2,
+        "samples": []
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "running",
+          "event": "STEP_END",
+          "payload": {},
+          "expect": {
+            "state": "pausing",
+            "emits": [
+              {
+                "event": "LOAD_STEP_DONE",
+                "payload": {
+                  "key": "r",
+                  "result": {
+                    "step": 0,
+                    "vus": 2,
+                    "requests": 0,
+                    "ok": 0,
+                    "http4xx": 0,
+                    "http5xx": 0,
+                    "transport": 0,
+                    "rps": 0,
+                    "p50": 0,
+                    "p90": 0,
+                    "p95": 0,
+                    "p99": 0,
+                    "max": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a sample counts toward the running step by its status",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "running",
+          "event": "SAMPLE",
+          "payload": {
+            "label": "p",
+            "ms": 12,
+            "status": 503
+          },
+          "expect": {
+            "state": "running",
+            "emits": []
+          }
+        },
+        {
+          "trait": "LoadRamp",
+          "from": "running",
+          "event": "STEP_END",
+          "payload": {},
+          "expect": {
+            "state": "pausing",
+            "emits": [
+              {
+                "event": "LOAD_STEP_DONE",
+                "payload": {
+                  "key": "r",
+                  "result": {
+                    "step": 0,
+                    "vus": 2,
+                    "requests": 1,
+                    "ok": 0,
+                    "http4xx": 0,
+                    "http5xx": 1,
+                    "transport": 0,
+                    "rps": 1,
+                    "p50": 12,
+                    "p90": 12,
+                    "p95": 12,
+                    "p99": 12,
+                    "max": 12
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a sample while the ramp pauses is not counted",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "pausing",
+          "event": "SAMPLE",
+          "payload": {
+            "label": "p",
+            "ms": 12,
+            "status": 200
+          },
+          "expect": {
+            "state": "pausing",
+            "emits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "continuing after the last step stops every user",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "pausing",
+          "event": "LOAD_CONTINUE",
+          "payload": {
+            "key": "r"
+          },
+          "expect": {
+            "state": "halting",
+            "emits": [
+              {
+                "event": "VU_HALT"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: continuing before the last step starts the next step's users",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2,
+          4
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "pausing",
+          "event": "LOAD_CONTINUE",
+          "payload": {
+            "key": "r"
+          },
+          "expect": {
+            "state": "spawning",
+            "emits": [
+              {
+                "event": "VU_SPAWN"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "halting stops the last user first, then answers every result",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 1,
+        "results": [
+          {
+            "step": 0,
+            "vus": 1,
+            "requests": 3,
+            "ok": 3,
+            "http4xx": 0,
+            "http5xx": 0,
+            "transport": 0,
+            "rps": 3,
+            "p50": 5,
+            "p90": 5,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "halting",
+          "event": "VU_HALT",
+          "payload": {
+            "left": 1
+          },
+          "expect": {
+            "state": "halting",
+            "emits": [
+              {
+                "event": "VU_STOP",
+                "payload": {
+                  "vu": "vu0"
+                }
+              },
+              {
+                "event": "VU_HALT"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a stop while running halts at once",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 2
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "running",
+          "event": "LOAD_STOP",
+          "payload": {
+            "key": "r"
+          },
+          "expect": {
+            "state": "halting",
+            "emits": [
+              {
+                "event": "VU_HALT"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "with every user stopped the run answers its results and returns to idle",
+      "entity": {
+        "runKey": "r",
+        "steps": [
+          2
+        ],
+        "stepIndex": 0,
+        "stepMs": 1000,
+        "thinkMs": 0,
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          }
+        ],
+        "prefix": "/apps/a",
+        "stream": true,
+        "identities": [
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ]
+          },
+          {
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t1"
+              }
+            ]
+          }
+        ],
+        "vusUp": 0,
+        "results": [
+          {
+            "step": 0,
+            "vus": 1,
+            "requests": 3,
+            "ok": 3,
+            "http4xx": 0,
+            "http5xx": 0,
+            "transport": 0,
+            "rps": 3,
+            "p50": 5,
+            "p90": 5,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "halting",
+          "event": "VU_HALT",
+          "payload": {
+            "left": 0
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LOAD_DONE",
+                "payload": {
+                  "key": "r",
+                  "results": [
+                    {
+                      "step": 0,
+                      "vus": 1,
+                      "requests": 3,
+                      "ok": 3,
+                      "http4xx": 0,
+                      "http5xx": 0,
+                      "transport": 0,
+                      "rps": 3,
+                      "p50": 5,
+                      "p90": 5,
+                      "p95": 5,
+                      "p99": 5,
+                      "max": 5
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a run that names no identities starts, its users sending no headers",
+      "steps": [
+        {
+          "trait": "LoadRamp",
+          "from": "idle",
+          "event": "LOAD_START",
+          "payload": {
+            "key": "r",
+            "steps": [
+              1
+            ],
+            "stepMs": 1000,
+            "thinkMs": 0,
+            "journey": [
+              {
+                "label": "p",
+                "method": "POST",
+                "path": "/x",
+                "body": ""
+              }
+            ],
+            "prefix": "",
+            "stream": false
+          },
+          "expect": {
+            "state": "spawning",
+            "emits": [
+              {
+                "event": "VU_SPAWN"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

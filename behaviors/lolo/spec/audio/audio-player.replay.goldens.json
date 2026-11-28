@@ -1,0 +1,275 @@
+{
+  "atom": "audio/atoms/std-audio-player.lolo",
+  "trait": "AudioPlayerControl",
+  "note": "The player's control trait alone: what it hands the composed timeline (TIMELINE_STOP, TIMELINE_PLAY) and what it answers (PLAYER_STATE). Timeline playhead reports arrive as PLAYER_POSITION, the composed listen's target.",
+  "cases": [
+    {
+      "id": "toggling a new recording plays it from its start",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_TOGGLE",
+          "payload": { "id": "a", "source": "/a.wav", "durationMs": 4000 },
+          "entity": { "id": "p", "current": "", "source": "", "durationMs": 0, "startMs": 0, "atMs": 0, "rate": 1, "playing": false, "positions": {} },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "TIMELINE_PLAY", "payload": { "clips": [{ "key": "player", "source": "/a.wav", "at": 0, "offset": 0, "duration": 4, "rate": 1, "gain": 1, "fadeIn": 0, "fadeOut": 0 }] } },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": true, "atMs": 0, "durationMs": 4000, "rate": 1, "positions": { "a": 0 } } }
+            ],
+            "entity": { "current": "a", "startMs": 0 }
+          }
+        }
+      ],
+      "defaults": ["AudioPlayback"]
+    },
+    {
+      "id": "toggling the recording that plays pauses it and keeps its place",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_TOGGLE",
+          "payload": { "id": "a", "source": "/a.wav", "durationMs": 4000 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 1500, "rate": 1, "playing": true, "positions": { "a": 0 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": false, "atMs": 1500, "durationMs": 4000, "rate": 1, "positions": { "a": 1500 } } }
+            ],
+            "neverEmits": ["TIMELINE_PLAY"],
+            "entity": { "playing": false }
+          }
+        }
+      ]
+    },
+    {
+      "id": "toggling a paused recording resumes where it was left",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_TOGGLE",
+          "payload": { "id": "a", "source": "/a.wav", "durationMs": 4000 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 1500, "rate": 1, "playing": false, "positions": { "a": 1500 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "TIMELINE_PLAY", "payload": { "clips": [{ "key": "player", "source": "/a.wav", "at": 0, "offset": 1.5, "duration": 2.5, "rate": 1, "gain": 1, "fadeIn": 0, "fadeOut": 0 }] } },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": true, "atMs": 1500, "durationMs": 4000, "rate": 1, "positions": { "a": 1500 } } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "toggling another recording pauses the one playing and keeps its place",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_TOGGLE",
+          "payload": { "id": "b", "source": "/b.wav", "durationMs": 2000 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 1000, "rate": 1, "playing": true, "positions": { "a": 0 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "TIMELINE_PLAY", "payload": { "clips": [{ "key": "player", "source": "/b.wav", "at": 0, "offset": 0, "duration": 2, "rate": 1, "gain": 1, "fadeIn": 0, "fadeOut": 0 }] } },
+              { "event": "PLAYER_STATE", "payload": { "id": "b", "playing": true, "atMs": 0, "durationMs": 2000, "rate": 1, "positions": { "a": 1000, "b": 0 } } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a recording that played to its end starts over",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_TOGGLE",
+          "payload": { "id": "b", "source": "/b.wav", "durationMs": 2000 },
+          "entity": { "id": "p", "current": "", "source": "", "durationMs": 0, "startMs": 0, "atMs": 0, "rate": 1, "playing": false, "positions": { "b": 2000 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "TIMELINE_PLAY", "payload": { "clips": [{ "key": "player", "source": "/b.wav", "at": 0, "offset": 0, "duration": 2, "rate": 1, "gain": 1, "fadeIn": 0, "fadeOut": 0 }] } },
+              { "event": "PLAYER_STATE", "payload": { "id": "b", "playing": true, "atMs": 0, "durationMs": 2000, "rate": 1, "positions": { "b": 0 } } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a playhead report moves the position at the playback rate",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_POSITION",
+          "payload": { "position": 0.5 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 1000, "atMs": 1000, "rate": 2, "playing": true, "positions": { "a": 1000 } },
+          "expect": {
+            "emits": [
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": true, "atMs": 2000, "durationMs": 4000, "rate": 2, "positions": { "a": 1000 } } }
+            ],
+            "entity": { "atMs": 2000 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a report inside the scheduling lead holds the start point",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_POSITION",
+          "payload": { "position": -0.04 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 1000, "atMs": 1000, "rate": 1, "playing": true, "positions": { "a": 1000 } },
+          "expect": {
+            "emits": [
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": true, "atMs": 1000, "durationMs": 4000, "rate": 1, "positions": { "a": 1000 } } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reaching the end stops and goes back to the start",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_POSITION",
+          "payload": { "position": 1.2 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 3000, "atMs": 3900, "rate": 1, "playing": true, "positions": { "a": 3000 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": false, "atMs": 0, "durationMs": 4000, "rate": 1, "positions": { "a": 0 } } }
+            ],
+            "entity": { "playing": false, "atMs": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a playhead report while paused changes nothing",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_POSITION",
+          "payload": { "position": 1 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 500, "rate": 1, "playing": false, "positions": { "a": 500 } },
+          "expect": { "neverEmits": ["PLAYER_STATE", "TIMELINE_STOP"], "entity": { "atMs": 500 } }
+        }
+      ]
+    },
+    {
+      "id": "seeking the recording that plays plays on from there",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_SEEK",
+          "payload": { "id": "a", "source": "/a.wav", "durationMs": 4000, "at": 0.5 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 700, "rate": 1, "playing": true, "positions": { "a": 0 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "TIMELINE_PLAY", "payload": { "clips": [{ "key": "player", "source": "/a.wav", "at": 0, "offset": 2, "duration": 2, "rate": 1, "gain": 1, "fadeIn": 0, "fadeOut": 0 }] } },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": true, "atMs": 2000, "durationMs": 4000, "rate": 1, "positions": { "a": 2000 } } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "seeking a recording that does not play only moves its place",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_SEEK",
+          "payload": { "id": "b", "source": "/b.wav", "durationMs": 2000, "at": 0.25 },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 700, "rate": 1, "playing": true, "positions": { "a": 0 } },
+          "expect": {
+            "emits": [
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": false, "atMs": 700, "durationMs": 4000, "rate": 1, "positions": { "a": 0, "b": 500 } } }
+            ],
+            "neverEmits": ["TIMELINE_PLAY", "TIMELINE_STOP"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the rate steps up and starts over after the last; the recording playing takes it at once",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_RATE",
+          "payload": {},
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 1000, "rate": 1, "playing": true, "positions": { "a": 0 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "TIMELINE_PLAY", "payload": { "clips": [{ "key": "player", "source": "/a.wav", "at": 0, "offset": 1, "duration": 3, "rate": 1.5, "gain": 1, "fadeIn": 0, "fadeOut": 0 }] } },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": true, "atMs": 1000, "durationMs": 4000, "rate": 1.5, "positions": { "a": 1000 } } }
+            ]
+          }
+        },
+        {
+          "from": "ready",
+          "event": "PLAYER_RATE",
+          "payload": {},
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 1000, "rate": 2, "playing": false, "positions": { "a": 1000 } },
+          "expect": {
+            "emits": [
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": false, "atMs": 1000, "durationMs": 4000, "rate": 1, "positions": { "a": 1000 } } }
+            ],
+            "neverEmits": ["TIMELINE_PLAY"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "stop pauses what plays and keeps its place",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_STOP",
+          "payload": {},
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 2500, "rate": 1, "playing": true, "positions": { "a": 0 } },
+          "expect": {
+            "emits": [
+              { "event": "TIMELINE_STOP", "payload": {} },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": false, "atMs": 2500, "durationMs": 4000, "rate": 1, "positions": { "a": 2500 } } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: stop with nothing playing does nothing",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_STOP",
+          "payload": {},
+          "entity": { "id": "p", "current": "", "source": "", "durationMs": 0, "startMs": 0, "atMs": 0, "rate": 1, "playing": false, "positions": {} },
+          "expect": { "neverEmits": ["PLAYER_STATE", "TIMELINE_STOP"] }
+        }
+      ]
+    },
+    {
+      "id": "a host refusal stops and says why",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "PLAYER_TIMELINE_ERROR",
+          "payload": { "error": "audio could not be decoded" },
+          "entity": { "id": "p", "current": "a", "source": "/a.wav", "durationMs": 4000, "startMs": 0, "atMs": 0, "rate": 1, "playing": true, "positions": { "a": 0 } },
+          "expect": {
+            "emits": [
+              { "event": "PLAYER_FAILED", "payload": { "error": "audio could not be decoded" } },
+              { "event": "PLAYER_STATE", "payload": { "id": "a", "playing": false, "atMs": 0, "durationMs": 4000, "rate": 1, "positions": { "a": 0 } } }
+            ],
+            "entity": { "playing": false }
+          }
+        }
+      ]
+    }
+  ]
+}

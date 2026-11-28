@@ -680,7 +680,12 @@ orbital StorageOrbital {
             (emit STORAGE_SIGNED_URL { url: @payload.url, expiresAt: (time/add @now (* @ex 1000) "ms") })))
         (emit STORAGE_CLEAR {})
       STORAGE_HTTP_ERROR -> idle
-        (emit STORAGE_FAILED { message: (if (= (str/trim @payload.text) "") "UnknownError" (if (not (xml/valid @payload.text)) (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") (let ((doc (xml/parse @payload.text S3ErrorDoc))) (if (= @doc null) "UnknownError" (default (object/get @doc Message "") (default (object/get @doc message "") "UnknownError")))))) })
+        (let ((doc (if (and (!= (str/trim @payload.text) "") (xml/valid @payload.text)) (xml/parse @payload.text S3ErrorDoc) null)))
+          (let ((code (if (= @doc null) "" (str/trim (default (object/get @doc Code "") ""))))
+                (said (if (= @doc null) "" (let ((upper (str/trim (default (object/get @doc Message "") "")))) (if (!= @upper "") @upper (str/trim (default (object/get @doc message "") "")))))))
+            (if (!= @code "")
+              (emit STORAGE_FAILED { code: @code, message: (if (!= @said "") @said @code) })
+              (emit STORAGE_FAILED { message: (if (= (str/trim @payload.text) "") "UnknownError" (if (not (xml/valid @payload.text)) (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") (if (!= @said "") @said "UnknownError"))) }))))
 
       STORAGE_HTTP_FAILED -> idle when (and (!= @entity.verb "") (array/includes ["timeout", "io", "tls"] @payload.kind))
         (set @entity.lastStatus 0)

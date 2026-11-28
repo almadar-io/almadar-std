@@ -1,0 +1,807 @@
+{
+  "atom": "ops/atoms/std-load-user.lolo",
+  "trait": "LoadVu",
+  "cases": [
+    {
+      "id": "a user with a stream mints its ticket first, with its headers",
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "idle",
+          "event": "VU_START",
+          "payload": {
+            "vu": "vu0",
+            "clientId": "c0",
+            "headers": [
+              {
+                "name": "authorization",
+                "value": "Bearer t0"
+              }
+            ],
+            "journey": [
+              {
+                "label": "p",
+                "method": "POST",
+                "path": "/x/{client}",
+                "body": "{\"c\":\"{client}\"}"
+              }
+            ],
+            "prefix": "/apps/a",
+            "stream": true,
+            "thinkMs": 0
+          },
+          "expect": {
+            "state": "ticketing",
+            "emits": [
+              {
+                "event": "LOAD_HTTP_SEND",
+                "payload": {
+                  "key": "vu0",
+                  "method": "POST",
+                  "target": "/apps/a/api/events/ticket?clientId=c0",
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "authorization",
+                      "value": "Bearer t0"
+                    }
+                  ],
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a user without a stream sends its first request",
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "idle",
+          "event": "VU_START",
+          "payload": {
+            "vu": "vu0",
+            "clientId": "c0",
+            "headers": [],
+            "journey": [
+              {
+                "label": "p",
+                "method": "POST",
+                "path": "/x/{client}",
+                "body": "{\"c\":\"{client}\"}"
+              }
+            ],
+            "prefix": "/apps/a",
+            "stream": false,
+            "thinkMs": 0
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "VU_NEXT",
+                "payload": {
+                  "vu": "vu0"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the ticket opens the live stream on the user's own stream key",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "label": "ticket"
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "ticketing",
+          "event": "VU_REPLIED",
+          "payload": {
+            "key": "vu0",
+            "status": 200,
+            "body": "{\"ticket\":\"t1\"}"
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "LOAD_SAMPLE",
+                "payload": {
+                  "label": "ticket",
+                  "status": 200
+                }
+              },
+              {
+                "event": "LOAD_HTTP_SEND",
+                "payload": {
+                  "key": "vu0/s",
+                  "method": "GET",
+                  "target": "/apps/a/api/events?ticket=t1",
+                  "headers": [
+                    {
+                      "name": "authorization",
+                      "value": "Bearer t0"
+                    }
+                  ],
+                  "stream": "sse"
+                }
+              },
+              {
+                "event": "VU_NEXT",
+                "payload": {
+                  "vu": "vu0"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a ticket answer that does not parse fails the user and closes its stream key",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "label": "ticket"
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "ticketing",
+          "event": "VU_REPLIED",
+          "payload": {
+            "key": "vu0",
+            "status": 200,
+            "body": "nope"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LOAD_SAMPLE",
+                "payload": {
+                  "label": "ticket",
+                  "status": 500
+                }
+              },
+              {
+                "event": "LOAD_HTTP_CANCEL",
+                "payload": {
+                  "key": "vu0/s"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a request carries the user's client id in its path, under the prefix, with its headers",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "pos": 0
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "sending",
+          "event": "VU_NEXT",
+          "payload": {
+            "vu": "vu0"
+          },
+          "expect": {
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "LOAD_HTTP_SEND",
+                "payload": {
+                  "key": "vu0",
+                  "method": "POST",
+                  "target": "/apps/a/x/c0",
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "authorization",
+                      "value": "Bearer t0"
+                    }
+                  ],
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an answer with a think time waits before the next request",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 500,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "label": "p"
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "waiting",
+          "event": "VU_REPLIED",
+          "payload": {
+            "key": "vu0",
+            "status": 200,
+            "body": ""
+          },
+          "expect": {
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LOAD_SAMPLE",
+                "payload": {
+                  "label": "p",
+                  "status": 200
+                }
+              },
+              {
+                "event": "VU_THINK",
+                "payload": {
+                  "key": "vu0",
+                  "delayMs": 500
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: with no think time the next request is sent at once",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "label": "p"
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "waiting",
+          "event": "VU_REPLIED",
+          "payload": {
+            "key": "vu0",
+            "status": 200,
+            "body": ""
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "LOAD_SAMPLE",
+                "payload": {
+                  "status": 200
+                }
+              },
+              {
+                "event": "VU_NEXT",
+                "payload": {
+                  "vu": "vu0"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a transport failure is a status 0 sample",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "label": "p"
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "waiting",
+          "event": "VU_FAILED",
+          "payload": {
+            "key": "vu0",
+            "error": "refused",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "LOAD_SAMPLE",
+                "payload": {
+                  "label": "p",
+                  "status": 0
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a stopped user ends at its next turn, closing its stream",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "stopping": true
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "sending",
+          "event": "VU_NEXT",
+          "payload": {
+            "vu": "vu0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LOAD_HTTP_CANCEL",
+                "payload": {
+                  "key": "vu0/s"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a stop waits for the call in flight",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "waiting",
+          "event": "VU_STOP",
+          "payload": {
+            "vu": "vu0"
+          },
+          "expect": {
+            "state": "waiting",
+            "emits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "the wake after a think time sends the next request",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": "{\"c\":\"{client}\"}"
+          },
+          {
+            "label": "q",
+            "method": "GET",
+            "path": "/y",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "thinking",
+          "event": "VU_WAKE",
+          "payload": {
+            "key": "vu0"
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "VU_NEXT",
+                "payload": {
+                  "vu": "vu0"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a stream key that answers or fails tells its user the stream ended",
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "idle",
+          "event": "VU_FAILED",
+          "payload": {
+            "key": "vu0/s",
+            "error": "closed",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "VU_STREAM_LOST",
+                "payload": {
+                  "vu": "vu0"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a user's own key failing in idle tells nothing",
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "idle",
+          "event": "VU_FAILED",
+          "payload": {
+            "key": "vu0",
+            "error": "closed",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a user whose stream ended mints a new ticket before its next request",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "streamLost": true
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "sending",
+          "event": "VU_NEXT",
+          "payload": {
+            "vu": "vu0"
+          },
+          "expect": {
+            "state": "ticketing",
+            "emits": [
+              {
+                "event": "LOAD_HTTP_SEND",
+                "payload": {
+                  "key": "vu0",
+                  "method": "POST",
+                  "target": "/apps/a/api/events/ticket?clientId=c0",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a user without a stream ignores a lost stream",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": false,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "thinking",
+          "event": "VU_STREAM_LOST",
+          "payload": {
+            "vu": "vu0"
+          },
+          "expect": {
+            "state": "thinking",
+            "emits": []
+          }
+        },
+        {
+          "trait": "LoadVu",
+          "from": "thinking",
+          "event": "VU_WAKE",
+          "payload": {
+            "key": "vu0"
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "VU_NEXT"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a stopping user with a lost stream stops, it does not reconnect",
+      "entity": {
+        "clientId": "c0",
+        "journey": [
+          {
+            "label": "p",
+            "method": "POST",
+            "path": "/x/{client}",
+            "body": ""
+          }
+        ],
+        "prefix": "/apps/a",
+        "thinkMs": 0,
+        "stream": true,
+        "headers": [
+          {
+            "name": "authorization",
+            "value": "Bearer t0"
+          }
+        ],
+        "streamLost": true,
+        "stopping": true
+      },
+      "steps": [
+        {
+          "trait": "LoadVu",
+          "from": "sending",
+          "event": "VU_NEXT",
+          "payload": {
+            "vu": "vu0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LOAD_HTTP_CANCEL",
+                "payload": {
+                  "key": "vu0/s"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -141,6 +141,61 @@
      }
     }
    ]
+  },
+  {
+   "id": "a peek answers the file so far and the recording goes on",
+   "steps": [
+    { "event": "WAV_START", "payload": { "rate": 1000, "channels": 1 } },
+    { "event": "WAV_APPEND", "payload": { "data": "6AMY/A==" } },
+    { "event": "WAV_APPEND", "payload": { "data": "/38AgA==" } },
+    {
+     "event": "WAV_PEEK",
+     "payload": {},
+     "expect": {
+      "emits": [{ "event": "WAV_PEEKED", "payload": { "data": "UklGRiwAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQgAAADoAxj8/38AgA==", "durationMs": 4, "bytes": 52 } }],
+      "neverEmits": ["WAV_ENCODED"],
+      "entity": { "started": true, "frames": ["6AMY/A==", "/38AgA=="] }
+     }
+    },
+    {
+     "event": "WAV_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [{ "event": "WAV_ENCODED", "payload": { "data": "UklGRiwAAABXQVZFZm10IBAAAAABAAEA6AMAANAHAAACABAAZGF0YQgAAADoAxj8/38AgA==", "durationMs": 4, "bytes": 52 } }],
+      "entity": { "started": false, "frames": [] }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a cancel drops the recording without a file",
+   "steps": [
+    { "event": "WAV_START", "payload": { "rate": 1000, "channels": 1 } },
+    { "event": "WAV_APPEND", "payload": { "data": "6AMY/A==" } },
+    {
+     "event": "WAV_CANCEL",
+     "payload": {},
+     "expect": { "neverEmits": ["WAV_ENCODED", "WAV_PEEKED", "WAV_FAILED"], "entity": { "started": false, "frames": [] } }
+    },
+    {
+     "event": "WAV_FINISH",
+     "payload": {},
+     "expect": { "emits": [{ "event": "WAV_FAILED", "payload": { "message": "wav: nothing was started" } }] }
+    }
+   ]
+  },
+  {
+   "id": "control: a peek with nothing started fails",
+   "steps": [
+    {
+     "event": "WAV_PEEK",
+     "payload": {},
+     "expect": {
+      "emits": [{ "event": "WAV_FAILED", "payload": { "message": "wav: nothing was started" } }],
+      "neverEmits": ["WAV_PEEKED"]
+     }
+    }
+   ]
   }
  ]
 }

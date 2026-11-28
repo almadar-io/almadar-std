@@ -125,12 +125,7 @@ orbital FleetCliOrbital {
                     (set @entity.apps (array/map @config.apps (fn a (object/merge @a { env: (object/merge (default @a.env {}) (default @t.env {})), firestoreDatabase: (if @t.indexes (default @a.firestoreDatabase "") "") }))))
                     (if (object/has @payload.flags "runtime")
                       (emit FLEET_RUNTIME_BUILD { requestId: (str/concat "runtime-" @target), steps: (array/map (default (object/get (default @t.runtime {}) "steps") []) (fn x { scope: "root", args: ["-c", @x], stdin: "", feed: false, tolerate: false, raw: false })), prefix: [], env: {}, rootDir: "", repoDir: "", dirFlag: "", rawInputs: [] })
-                      (let ((appSecrets (array/flatten (array/map (array/filter @config.apps (fn a (or (= (array/len @only) 0) (array/includes @only @a.name)))) (fn a (array/map (object/entries (default @a.secrets {})) (fn e (let ((one : FleetCliAppSecret { app: @a.name, name: (default (array/nth @e 0) ""), file: (default (array/nth @e 1) "") })) @one))))))))
-                        (if (= (array/len @appSecrets) 0)
-                          (emit FLEET_DEPLOY { target: @target, only: @only, apps: (array/map @config.apps (fn a (object/merge @a { env: (object/merge (default @a.env {}) (default @t.env {})), firestoreDatabase: (if @t.indexes (default @a.firestoreDatabase "") "") }))) })
-                          (do
-                            (set @entity.appSecretsLeft @appSecrets)
-                            (emit FLEET_APP_SECRET_NEXT { left: (array/len @appSecrets) })))))))))))
+                      (emit FLEET_APP_SECRETS_START {}))))))))
       FLEET_PREVIEW_READ -> ready when (!= @entity.preview null)
         (let ((pr (default @entity.preview { file: "", app: "", stage: "", orb: "", server: "" }))
               (served (array/some (default @payload.result.program.orbitals []) (fn o (array/some (default @o.pages []) (fn pg (= (default @pg.protocol "route") "http")))))))
@@ -178,6 +173,11 @@ orbital FleetCliOrbital {
             (set @entity.deploy null)
             (set @entity.secretsLeft [])
             (emit FLEET_ANSWERED { status: 500, body: (str/concat "failed runtime: secret " (default ?key "") " could not be read from " (default (object/get (default @s {}) "file") "") ": " (default ?error "")) })))
+      FLEET_APP_SECRETS_START -> ready
+        (let ((appSecrets (array/flatten (array/map (array/filter @entity.apps (fn a (or (= (array/len @entity.only) 0) (array/includes @entity.only @a.name)))) (fn a (array/map (object/entries (default @a.secrets {})) (fn e (let ((one : FleetCliAppSecret { app: @a.name, name: (default (array/nth @e 0) ""), file: (default (array/nth @e 1) "") })) @one))))))))
+          (do
+            (set @entity.appSecretsLeft @appSecrets)
+            (emit FLEET_APP_SECRET_NEXT { left: (array/len @appSecrets) })))
       FLEET_APP_SECRET_NEXT -> ready when (> (array/len @entity.appSecretsLeft) 0)
         (let ((next (default (array/first @entity.appSecretsLeft) { app: "", name: "", file: "" })))
           (os/read-file { anchor: { env: "HOME" }, path: (str/concat @config.secretDir @next.file) } { key: (str/concat @next.app "|" @next.name) emit: { success: FLEET_APP_SECRET_READ, failure: FLEET_APP_SECRET_UNREAD } }))
@@ -201,7 +201,7 @@ orbital FleetCliOrbital {
         (set @entity.stopping "")
         (emit FLEET_ANSWERED { status: 500, body: (str/concat "failed runtime build step " @payload.index ": " @payload.stderr) })
       FLEET_RUNTIME_UP -> ready
-        (emit FLEET_DEPLOY { target: @entity.target, only: @entity.only, apps: @entity.apps })
+        (emit FLEET_APP_SECRETS_START {})
       FLEET_RUNTIME_DOWN -> ready
         (set @entity.busy false)
         (emit FLEET_ANSWERED { status: 500, body: (str/concat "failed runtime: " @payload.error) })
@@ -219,6 +219,9 @@ orbital FleetCliOrbital {
       FLEET_RUNTIME_BUILD -> external { requestId : string!  steps : [FleetCliStep]!  prefix : [string]!  env : Map string string  rootDir : string!  repoDir : string!  dirFlag : string!  rawInputs : [bytes]! }
         @description "Build the target's runtime context: its runtime steps, each run as sh -c, in order (std-step-runner's STEPS_RUN); the first step prints the image tag."
         @tier "primary"
+      FLEET_APP_SECRETS_START -> internal { }
+        @description "List the secrets the deployed apps name, then read them one by one; a runtime deploy starts it once the runtime is up."
+        @tier "internal"
       FLEET_APP_SECRET_NEXT -> internal { left : number! }
         @description "Read the next secret an app names, or deploy the apps once none is left."
         @tier "internal"
