@@ -697,7 +697,7 @@ orbital ConversationOrbital {
         })
       ThreadRepliesLoaded -> idle when (= (array/len ?data) 0)
       THREAD_ROLLUP_FAILED -> idle
-        (notify error (if (validate/required ?error) (str/concat "Couldn't update the thread — " ?error) "Couldn't update the thread"))
+        (emit THREAD_ROLLUP_ERROR { error: (if (validate/required ?error) ?error "") })
     }
 
     emits {
@@ -711,6 +711,12 @@ orbital ConversationOrbital {
         data : [ConversationMessage]!
       }
         @tier "internal"
+      THREAD_ROLLUP_ERROR -> external {
+        error : string
+      }
+        @description "Recounting a thread failed; the roll-up runs where no one is watching, so a consumer shows the reason."
+        @synonyms "thread error, recount failed"
+        @tier "domain"
       THREAD_ROLLUP_FAILED -> external {
         error : string
         code : string

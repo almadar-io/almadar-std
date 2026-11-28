@@ -1,0 +1,82 @@
+app std-workflow-definition [
+  version: "1.0.0",
+  description: "std-workflow-definition — one workflow held as declared data and told to whoever asks. The knobs name the workflow (key, name), say in one sentence what it is for (summary) and how it is done (instructions), which roles it suits (audience; empty means everyone), the fields a run asks for (inputFields, each with a name, a label and whether it is required) and the ordered steps (each with a title, its instructions, the reach words it needs, whether a person approves its result, and a kind: agent or approval). In a definition a step's `tools` holds reach words (documents, mail, files, web) that the composer maps to its own tools; the composer's std-agent-workflow runs the steps, this atom only holds them. DEFINITION_ASK { requestId } is answered with WORKFLOW_DEFINED { requestId, key, name, summary, instructions, audience, inputFields, steps }, the whole definition as one flat payload, so a catalog, a picker or a runner can list the workflows it composes and start one with WORKFLOW_RUN. Headless: no page, no store, no state beyond answering."
+]
+;; @capabilities "declare a workflow as data (name, summary, who it suits, inputs, ordered steps), list the workflows an app offers, answer what a workflow is and what it needs, feed a workflow runner and a workflow picker"
+uses Spec from "almadar-std/workflow-definition"
+
+type WorkflowField = { name : string!, label : string!, required : boolean! }
+type WorkflowStep = { title : string!, instructions : string, tools : [string], approval : boolean, kind : "agent" | "approval" }
+
+orbital WorkflowDefinitionOrbital {
+  entity WorkflowDefinitionView [runtime] {
+    id : string!
+  }
+
+  trait WorkflowDefinition -> WorkflowDefinitionView {
+    config {
+      key : string = ""
+        @label "What is the workflow's stable id?"
+        @description "The workflow's stable id, for example document-check: how a picker and a runner name it across sessions."
+        @tier "domain"
+      name : string = ""
+        @label "What is this workflow called?"
+        @description "The name people read when they choose it."
+        @tier "domain"
+      summary : string = ""
+        @label "What is it for, in one sentence?"
+        @description "One sentence a person reads when choosing this workflow."
+        @tier "domain"
+      instructions : string = ""
+        @label "What is the process?"
+        @description "What the whole process is for, told to the agent before the steps."
+        @tier "domain"
+      audience : [string] = []
+        @label "Which roles does it suit?"
+        @description "Plain role words this workflow suits, for example reviewer or editor. Empty means everyone."
+        @synonyms "roles, who is it for"
+        @tier "domain"
+      inputFields : [WorkflowField] = []
+        @label "What does a run need to be told?"
+        @description "The fields a run is started with: each has a name, a label a person reads and whether it is required."
+        @tier "domain"
+      steps : [WorkflowStep] = []
+        @label "The steps, in order"
+        @description "Each step's title, its instructions, the reach words it needs in `tools` (the composer maps documents, mail, files and web to its own tools; an empty list is a step that only reasons and writes), whether a person approves its result, and its kind: agent, or approval for a person's sign-off that is never run by the agent."
+        @tier "domain"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      DEFINITION_ASK -> idle
+        (emit WORKFLOW_DEFINED { requestId: ?requestId, key: @config.key, name: @config.name, summary: @config.summary, instructions: @config.instructions, audience: @config.audience, inputFields: @config.inputFields, steps: @config.steps })
+    }
+
+    emits {
+      WORKFLOW_DEFINED -> external {
+        requestId : string!
+        key : string!
+        name : string!
+        summary : string!
+        instructions : string!
+        audience : [string]!
+        inputFields : [WorkflowField]!
+        steps : [WorkflowStep]!
+      }
+        @description "The workflow this atom holds, answering a DEFINITION_ASK: its key, name, one-sentence summary, instructions, the roles it suits, the fields a run asks for and the ordered steps."
+        @synonyms "workflow described, workflow listed, process definition"
+        @tier "domain"
+    }
+
+    listens {
+      DEFINITION_ASK -> input {
+        requestId : string! @description "A new id for this question, echoed in the answer"
+      }
+        @description "Ask the workflow what it is: it answers with WORKFLOW_DEFINED, its name, summary, audience, inputs and steps."
+        @synonyms "describe the workflow, list workflows, what can you do, show the process"
+    }
+  }
+
+  page boot as WorkflowDefinitionBoot -> WorkflowDefinition
+}

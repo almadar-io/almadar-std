@@ -4,24 +4,29 @@ app std-host-report [
   fs: { "/srv/orb/apps/**": [read, meta], "/srv/orb/logs/**": [read, meta] },
   inbound: ["fleet-report"],
   egress: [],
-  description: "std-host-report — what a central host reports about itself to its operator, sampled on an interval and answered at once over the inbound hook fleet-report (POST /api/hooks/fleet-report), which verifies the x-fleet-key header against the ORB_FLEET_KEY credential (an unset credential answers 401 and runs nothing, EXEC-INBOUND-1). Each sample takes the machine's memory, cpu, load and uptime through the composed std-system-stats, then os/disk-usage of every path the diskPaths knob lists, then asks the composer for the hosted apps (APPS_LIST { key }, which std-program-host's ProgramApps answers as APPS_LISTED { key, apps }), reads each open guest's held bytes with program/inputs { stats: true, guest } (EXEC-COST-2, rows + frames + guests + arenas), then globs <appsDir>/*/releases/*/* and <logDir>/*/*.jsonl and stats each file: a release file's size counts toward its app's diskBytes (every release of the app), an app deployed there but not loaded is listed too (loaded false, its highest release, no guest or memory), and a log file is one row { level, day, bytes } (the layout the orb's log file writer keeps: <logDir>/<level>/<YYYY-MM-DD>.jsonl). A read the host refuses is named in problems (what: why) and the rest of the sample is still taken; the previous sample's values stay until a new one replaces them. The hook's body is {} for the report or { log: { level, day } } for one log file: the report answers 200 with { sampledAt, machine, disks, apps, logs, problems } as JSON; a log file already read since its size last changed answers 200 { level, day, bytes, text } with the whole file, one not yet read answers 202 { pending: true } and is read now, so the caller asks again; a log the last sample does not list answers 404; an unverified request answers 401. Subject-agnostic: it knows nothing of which apps or what box."
+  description: "std-host-report — what a central host reports about itself to its operator, sampled on an interval and answered at once over the inbound hook fleet-report (POST /api/hooks/fleet-report), which verifies the x-fleet-key header against the ORB_FLEET_KEY credential (an unset credential answers 401 and runs nothing, EXEC-INBOUND-1). Each sample takes the machine's memory, cpu, load and uptime through the composed std-system-stats, then os/disk-usage of every path the diskPaths knob lists, then os/process-list for every process the host lets this program see, keeping each one it measures as { pid, name, command, rssBytes } in descending resident memory (inside a container that is the container's own processes, the orb among them; the machine figures stay host-wide), then reads this program's own kernel with program/inputs { stats: true } as host { heldBytes, instances, cachedEntities, traits } (a refusal named in problems), then asks the composer for the hosted apps (APPS_LIST { key }, which std-program-host's ProgramApps answers as APPS_LISTED { key, apps }), reads each open guest's held bytes with program/inputs { stats: true, guest } (EXEC-COST-2, rows + frames + guests + arenas) its live trait instances and cached entity rows (instances, cachedEntities) and the instances of each trait that holds one (traits: { trait, instances, sessions, entities, states: [{ state, instances }] }, most instances first), then globs <appsDir>/*/releases/*/* and <logDir>/*/*.jsonl and stats each file: a release file's size counts toward its app's diskBytes (every release of the app), an app deployed there but not loaded is listed too (loaded false, its highest release, no guest or memory), and a log file is one row { level, day, bytes } (the layout the orb's log file writer keeps: <logDir>/<level>/<YYYY-MM-DD>.jsonl). A read the host refuses is named in problems (what: why) and the rest of the sample is still taken; the previous sample's values stay until a new one replaces them. The hook's body is {} for the report or { log: { level, day } } for one log file: the report answers 200 with { sampledAt, machine, disks, processes, host, apps, logs, problems } as JSON; a log file already read since its size last changed answers 200 { level, day, bytes, text } with the whole file, one not yet read answers 202 { pending: true } and is read now, so the caller asks again; a log the last sample does not list answers 404; an unverified request answers 401. Subject-agnostic: it knows nothing of which apps or what box."
 ]
-;; @capabilities "report this host's memory, cpu, load, disk, hosted apps and their memory and disk, and its log files, to an operator holding the fleet key"
+;; @capabilities "report this host's memory, cpu, load, disk, the resident memory of its processes, hosted apps and their memory and disk, and its log files, to an operator holding the fleet key"
 uses Stats from "std/behaviors/std-system-stats"
 
 type HostMachine = { memoryTotal : number!, memoryUsed : number!, memoryPercent : number!, cpuPercent : number!, load1 : number!, load5 : number!, load15 : number!, uptimeSeconds : number! }
 type HostDisk = { path : string!, total : number!, used : number!, available : number!, usedPercent : number! }
+type HostProcessListed = { pid : number!, ppid : number!, name : string!, command : string!, args : [string]!, user : string!, own : boolean!, rssBytes : number?, cpuSeconds : number?, startedAt : number? }
+type HostProcess = { pid : number!, name : string!, command : string!, rssBytes : number! }
 type HostListedApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant! }
-type HostApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant?, heldBytes : number!, diskBytes : number!, loaded : boolean! }
+type HostTraitState = { state : string!, instances : number! }
+type HostTraitInstances = { trait : string!, instances : number!, sessions : number!, entities : number!, states : [HostTraitState] }
+type HostApp = { name : string!, guest : string!, release : string!, current : boolean!, loading : boolean!, lastUsedMs : instant?, heldBytes : number!, instances : number!, cachedEntities : number!, traits : [HostTraitInstances]!, diskBytes : number!, loaded : boolean! }
 type HostLogFile = { level : string!, day : string!, bytes : number! }
 type HostLogText = { level : string!, day : string!, bytes : number!, text : string! }
 type HostHeldBytes = { rows : number!, frames : number!, guests : number!, arenas : number! }
-type HostKernelStats = { heldBytes : HostHeldBytes! }
+type HostKernelStats = { heldBytes : HostHeldBytes!, activeInstances : number!, cachedEntities : number!, traits : [HostTraitInstances]! }
 type HostInputsRead = { stats : HostKernelStats! }
 type HostLogAsk = { level : string!, day : string! }
 type HostReportAsk = { log : HostLogAsk? }
 type HostFile = { root : "apps" | "logs"!, rel : string! }
-type HostReportNext = { disks : [HostDisk]!, apps : [HostApp]!, logs : [HostLogFile]!, problems : [string]!, files : [HostFile]! }
+type HostSelf = { heldBytes : number!, instances : number!, cachedEntities : number!, traits : [HostTraitInstances]! }
+type HostReportNext = { disks : [HostDisk]!, processes : [HostProcess]!, host : HostSelf!, apps : [HostApp]!, logs : [HostLogFile]!, problems : [string]!, files : [HostFile]! }
 
 orbital HostReportOrbital {
   entity HostReportRun [runtime] {
@@ -30,10 +35,12 @@ orbital HostReportOrbital {
     sampledAt : instant? = null
     machine : HostMachine = { memoryTotal: 0, memoryUsed: 0, memoryPercent: 0, cpuPercent: 0, load1: 0, load5: 0, load15: 0, uptimeSeconds: 0 }
     disks : [HostDisk] = []
+    processes : [HostProcess] = []
+    host : HostSelf = { heldBytes: 0, instances: 0, cachedEntities: 0, traits: [] }
     apps : [HostApp] = []
     logs : [HostLogFile] = []
     problems : [string] = []
-    next : HostReportNext = { disks: [], apps: [], logs: [], problems: [], files: [] }
+    next : HostReportNext = { disks: [], processes: [], host: { heldBytes: 0, instances: 0, cachedEntities: 0, traits: [] }, apps: [], logs: [], problems: [], files: [] }
     index : number = 0
     logTexts : [HostLogText] = []
   }
@@ -71,13 +78,25 @@ orbital HostReportOrbital {
       STATS_READ -> ready when (not @entity.sampling)
         (set @entity.sampling true)
         (set @entity.machine { memoryTotal: ?memoryTotal, memoryUsed: ?memoryUsed, memoryPercent: ?memoryPercent, cpuPercent: ?cpuPercent, load1: ?load1, load5: ?load5, load15: ?load15, uptimeSeconds: ?uptimeSeconds })
-        (set @entity.next { disks: [], apps: [], logs: [], problems: (array/map ?unavailable (fn s (str/concat @s ": unavailable"))), files: [] })
+        (set @entity.next { disks: [], processes: [], host: { heldBytes: 0, instances: 0, cachedEntities: 0, traits: [] }, apps: [], logs: [], problems: (array/map ?unavailable (fn s (str/concat @s ": unavailable"))), files: [] })
         (set @entity.index 0)
         (emit HOST_DISK_NEXT {})
 
       HOST_DISK_NEXT -> ready when (< @entity.index (array/len @config.diskPaths))
         (os/disk-usage (default (array/nth @config.diskPaths @entity.index) "/") { emit: { success: HOST_DISK_READ, failure: HOST_DISK_FAILED } })
       HOST_DISK_NEXT -> ready when (>= @entity.index (array/len @config.diskPaths))
+        (os/process-list { emit: { success: HOST_PROCESSES_LISTED, failure: HOST_PROCESSES_REFUSED } })
+      HOST_PROCESSES_LISTED -> ready
+        (set @entity.next (object/merge @entity.next { processes: (array/sort (array/map (array/filter ?processes (fn p (!= @p.rssBytes null))) (fn p { pid: @p.pid, name: @p.name, command: @p.command, rssBytes: (default @p.rssBytes 0) })) "rssBytes" "desc") }))
+        (program/inputs { stats: true } { emit: { success: HOST_SELF_READ, failure: HOST_SELF_FAILED } })
+      HOST_PROCESSES_REFUSED -> ready
+        (set @entity.next (object/merge @entity.next { problems: (array/append @entity.next.problems (str/concat "processes: " ?error)) }))
+        (program/inputs { stats: true } { emit: { success: HOST_SELF_READ, failure: HOST_SELF_FAILED } })
+      HOST_SELF_READ -> ready
+        (set @entity.next (object/merge @entity.next { host: { heldBytes: (+ ?result.stats.heldBytes.rows ?result.stats.heldBytes.frames ?result.stats.heldBytes.guests ?result.stats.heldBytes.arenas), instances: ?result.stats.activeInstances, cachedEntities: ?result.stats.cachedEntities, traits: (array/sort ?result.stats.traits "instances" "desc") } }))
+        (emit APPS_LIST { key: "host-report" })
+      HOST_SELF_FAILED -> ready
+        (set @entity.next (object/merge @entity.next { problems: (array/append @entity.next.problems (str/concat "host stats: " ?error)) }))
         (emit APPS_LIST { key: "host-report" })
       HOST_DISK_READ -> ready
         (set @entity.next (object/merge @entity.next { disks: (array/append @entity.next.disks { path: ?path, total: ?total, used: ?used, available: ?available, usedPercent: ?usedPercent }) }))
@@ -89,7 +108,7 @@ orbital HostReportOrbital {
         (emit HOST_DISK_NEXT {})
 
       APPS_LISTED -> ready when (and @entity.sampling (= ?key "host-report"))
-        (set @entity.next (object/merge @entity.next { apps: (array/map ?apps (fn a { name: @a.name, guest: @a.guest, release: @a.release, current: @a.current, loading: @a.loading, lastUsedMs: @a.lastUsedMs, heldBytes: 0, diskBytes: 0, loaded: true })) }))
+        (set @entity.next (object/merge @entity.next { apps: (array/map ?apps (fn a { name: @a.name, guest: @a.guest, release: @a.release, current: @a.current, loading: @a.loading, lastUsedMs: @a.lastUsedMs, heldBytes: 0, instances: 0, cachedEntities: 0, traits: [], diskBytes: 0, loaded: true })) }))
         (emit HOST_HELD_NEXT { index: 0 })
 
       HOST_HELD_NEXT -> ready when (and (< ?index (array/len @entity.next.apps)) (= (default (array/nth (array/map @entity.next.apps (fn a @a.guest)) ?index) "") ""))
@@ -101,7 +120,7 @@ orbital HostReportOrbital {
         (os/glob (str/concat @config.appsDir "*/releases/*/*") { emit: { success: HOST_RELEASES_GLOBBED, failure: HOST_RELEASES_UNGLOBBED } })
       HOST_HELD_READ -> ready
         (let ((held (+ ?result.stats.heldBytes.rows ?result.stats.heldBytes.frames ?result.stats.heldBytes.guests ?result.stats.heldBytes.arenas)) (at @entity.index))
-          (set @entity.next (object/merge @entity.next { apps: (array/map (array/zip @entity.next.apps (array/range 0 (array/len @entity.next.apps))) (fn p (if (= (array/nth @p 1) @at) (object/merge (array/nth @p 0) { heldBytes: @held }) (array/nth @p 0)))) })))
+          (set @entity.next (object/merge @entity.next { apps: (array/map (array/zip @entity.next.apps (array/range 0 (array/len @entity.next.apps))) (fn p (if (= (array/nth @p 1) @at) (object/merge (array/nth @p 0) { heldBytes: @held, instances: ?result.stats.activeInstances, cachedEntities: ?result.stats.cachedEntities, traits: (array/sort ?result.stats.traits "instances" "desc") }) (array/nth @p 0)))) })))
         (emit HOST_HELD_NEXT { index: (+ @entity.index 1) })
       HOST_HELD_FAILED -> ready
         (set @entity.next (object/merge @entity.next { problems: (array/append @entity.next.problems (str/concat "memory of " (default (array/nth (array/map @entity.next.apps (fn a @a.name)) @entity.index) "") ": " ?error)) }))
@@ -130,6 +149,8 @@ orbital HostReportOrbital {
         (os/stat (str/concat @config.logDir (default (array/nth (array/map @entity.next.files (fn f @f.rel)) @entity.index) "")) { emit: { success: HOST_STAT_READ, failure: HOST_STAT_FAILED } })
       HOST_STAT_NEXT -> ready when (>= @entity.index (array/len @entity.next.files))
         (set @entity.disks @entity.next.disks)
+        (set @entity.processes @entity.next.processes)
+        (set @entity.host @entity.next.host)
         (set @entity.apps @entity.next.apps)
         (set @entity.logs @entity.next.logs)
         (set @entity.problems @entity.next.problems)
@@ -148,7 +169,7 @@ orbital HostReportOrbital {
                     (if (and (= @a.name @app) (or @a.current (not @a.loaded)))
                       (object/merge @a { diskBytes: (+ @a.diskBytes ?size), release: (if (and (not @a.loaded) (> (default (str/to-number (str/replace @release "releases/" "")) 0) (default (str/to-number (str/replace @a.release "releases/" "")) 0))) @release @a.release) })
                       @a))) }))
-                  (let ((idle : HostApp { name: @app, guest: "", release: @release, current: true, loading: false, lastUsedMs: null, heldBytes: 0, diskBytes: ?size, loaded: false }))
+                  (let ((idle : HostApp { name: @app, guest: "", release: @release, current: true, loading: false, lastUsedMs: null, heldBytes: 0, instances: 0, cachedEntities: 0, traits: [], diskBytes: ?size, loaded: false }))
                     (set @entity.next (object/merge @entity.next { apps: (array/append @entity.next.apps @idle) }))))))))
         (set @entity.index (+ @entity.index 1))
         (emit HOST_STAT_NEXT {})
@@ -159,7 +180,7 @@ orbital HostReportOrbital {
       REPORT_ASKED -> ready when (not (default ?verified false))
         (emit REPORT_ANSWERED { status: 401, body: (json/stringify { error: "the x-fleet-key header does not match" }) })
       REPORT_ASKED -> ready when (and (default ?verified false) (= (default ?body.log null) null))
-        (emit REPORT_ANSWERED { status: 200, body: (json/stringify { sampledAt: @entity.sampledAt, machine: @entity.machine, disks: @entity.disks, apps: @entity.apps, logs: @entity.logs, problems: @entity.problems }) })
+        (emit REPORT_ANSWERED { status: 200, body: (json/stringify { sampledAt: @entity.sampledAt, machine: @entity.machine, disks: @entity.disks, processes: @entity.processes, host: @entity.host, apps: @entity.apps, logs: @entity.logs, problems: @entity.problems }) })
       REPORT_ASKED -> ready when (and (default ?verified false) (!= (default ?body.log null) null))
         (let ((ask (default ?body.log { level: "", day: "" })))
           (let ((listed (array/find @entity.logs (fn l (and (= @l.level @ask.level) (= @l.day @ask.day)))))
@@ -220,6 +241,18 @@ orbital HostReportOrbital {
         @tier "internal"
       HOST_HELD_FAILED { error : string! }
         @description "program/inputs' failure for one guest."
+        @tier "internal"
+      HOST_PROCESSES_LISTED { processes : [HostProcessListed]! }
+        @description "os/process-list's success."
+        @tier "internal"
+      HOST_PROCESSES_REFUSED { error : string!, kind : string }
+        @description "os/process-list's failure; the sample goes on without processes."
+        @tier "internal"
+      HOST_SELF_READ { result : HostInputsRead! }
+        @description "program/inputs { stats }'s answer for this program's own kernel."
+        @tier "internal"
+      HOST_SELF_FAILED { error : string!, kind : string }
+        @description "The host refused its own stats; the sample goes on without them."
         @tier "internal"
       HOST_RELEASES_GLOBBED { paths : [string]! }
         @description "The release files."

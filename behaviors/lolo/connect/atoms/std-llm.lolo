@@ -784,7 +784,7 @@ orbital LlmOrbital {
                             (array/map (object/get @m tool_calls []) (fn c { type: "tool_use", id: @c.id, name: @c.function.name, input: (default (json/parse (object/get @c.function arguments "{}") ToolArguments) {}) }))) }
                           { role: (object/get @m role ""), content: (object/get @m content "") })))) }
                   (if (validate/required @s.system) { system: @s.system } {}))
-                (if (= (array/len @s.tools) 0) {} { tools: (array/map @s.tools (fn t { name: @t.name, description: @t.description, input_schema: @t.parameters })) })))
+                (if (= (array/len @s.tools) 0) {} (object/merge { tools: (array/map @s.tools (fn t { name: @t.name, description: @t.description, input_schema: @t.parameters })) } (if (and (= @config.firstToolChoice "required") (= @s.usage.modelCalls 0)) { tool_choice: { type: "any" } } {})))))
               (json/stringify (object/merge
               (object/merge
               (object/merge
@@ -795,7 +795,7 @@ orbital LlmOrbital {
                   parallel_tool_calls: @config.parallelToolCalls,
                   temperature: (if (>= @config.toolTemperature 0) @config.toolTemperature (if (= @config.provider "kimi") 0.6 0.7))
                 }
-                (object/merge (if (= (array/len @s.tools) 0) {} { tools: (array/map @s.tools (fn t { type: "function", function: { name: @t.name, description: @t.description, parameters: @t.parameters } })) }) (if (> @config.toolMaxTokens 0) { max_tokens: @config.toolMaxTokens } {})))
+                (object/merge (if (= (array/len @s.tools) 0) {} { tools: (array/map @s.tools (fn t { type: "function", function: { name: @t.name, description: @t.description, parameters: @t.parameters } })) }) (object/merge (if (> @config.toolMaxTokens 0) { max_tokens: @config.toolMaxTokens } {}) (if (and (= @config.firstToolChoice "required") (> (array/len @s.tools) 0) (= @s.usage.modelCalls 0)) { tool_choice: "required" } {}))))
               (if (= @config.provider "openrouter") { reasoning: { enabled: (!= @config.reasoning "off") }, usage: { include: true } } (if (and (= @config.provider "deepseek") (!= @config.reasoning "default")) { thinking: { type: (if (= @config.reasoning "on") "enabled" "disabled") } } {})))
               (if (!= @config.reasoningEffort "") { reasoning_effort: @config.reasoningEffort } {}))
               (let ((po (object/merge (object/merge (if (!= @config.providerSort "") { sort: @config.providerSort } {}) (if (> (array/len @config.providerOrder) 0) { order: @config.providerOrder } {})) (if (> (array/len @config.providerQuantizations) 0) { quantizations: @config.providerQuantizations } {}))))
@@ -954,7 +954,7 @@ orbital LlmOrbital {
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
         (emit LLM_TOOLS_REQUESTED {
           session: @payload.session,
-          calls: (array/map (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls []) (fn c { id: @c.id, name: @c.function.name, arguments: (if (= (str/trim (default @c.function.arguments "")) "") {} (json/parse (default @c.function.arguments "") ToolArguments)) }))
+          calls: (array/map (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls []) (fn c { id: @c.id, name: @c.function.name, arguments: (if (= (str/trim (default @c.function.arguments "")) "") {} (default (json/parse (default @c.function.arguments "") ToolArguments) {})) }))
         })
 
       LLM_TOOLS_ANSWERED -> idle when (or (= (json/parse @payload.session ToolsSession) null)
@@ -1752,6 +1752,11 @@ orbital LlmOrbital {
         @label "Prompt cache control"
         @description "On the openrouter provider, mark the system message as a cache breakpoint ({ type: \"ephemeral\" } cache_control on its text part) the way the anthropic wire already does, for chat and call-tools requests. Off sends the system message as plain text."
         @synonyms "prompt caching, cache breakpoint"
+        @tier "domain"
+      firstToolChoice : "auto" | "required" = auto
+        @label "First tool call"
+        @description "auto leaves every model call of a call-tools turn free to answer in words. required makes the first model call of a turn that offers tools call one of them (tool_choice required; any on Anthropic), so a turn cannot answer before it has used a tool; later calls of the turn are free."
+        @synonyms "tool choice, force a tool call, must use a tool"
         @tier "domain"
       firstByteTimeoutMs : number = 0
         @label "First-byte timeout (ms)"

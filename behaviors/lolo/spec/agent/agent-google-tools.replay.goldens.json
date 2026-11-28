@@ -1,0 +1,199 @@
+{
+  "atom": "agent/atoms/std-agent-google-tools.lolo",
+  "trait": "AgentGoogleTools",
+  "note": "The Google tools of an agent loop over std-gmail and std-drive: the call id tags the connector request (agent: plus the call id), only an answer with that tag ends the call, a failed connector answer with that tag ends it with TOOL_FAILED, and an answer with another tag, or one that arrives when no request is in flight, is ignored. The connectors never send, so no tool sends.",
+  "cases": [
+    {
+      "id": "searching-mail-asks-the-inbox-with-the-query",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"GMAIL_SEARCH","payload":{"query":"from:ana claim","maxResults":5},"expect":{"fired":true,"state":"waiting","emits":[{"event":"LIST_INBOX","payload":{"tag":"agent:c1","query":"from:ana claim","maxResults":5}}],"neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-searching-mail-without-a-query-asks-for-the-default-ten",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"GMAIL_SEARCH","payload":{},"expect":{"fired":true,"state":"waiting","emits":[{"event":"LIST_INBOX","payload":{"tag":"agent:c1","query":"","maxResults":10}}]}}
+      ]
+    },
+    {
+      "id": "reading-one-mail-asks-for-its-message-id-alone",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"GMAIL_READ","payload":{"messageId":"<m1@example.com>"},"expect":{"fired":true,"state":"waiting","emits":[{"event":"LIST_INBOX","payload":{"tag":"agent:c1","query":"rfc822msgid:<m1@example.com>","maxResults":1}}]}}
+      ]
+    },
+    {
+      "id": "a-new-draft-carries-an-empty-thread-and-reply-id",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"GMAIL_DRAFT","payload":{"to":"ana@example.com","subject":"Claim 4471","body":"Received."},"expect":{"fired":true,"state":"waiting","emits":[{"event":"CREATE_DRAFT","payload":{"tag":"agent:c1","to":"ana@example.com","subject":"Claim 4471","body":"Received.","threadId":"","inReplyTo":""}}]}}
+      ]
+    },
+    {
+      "id": "control-a-reply-draft-carries-its-thread-and-reply-id",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"GMAIL_DRAFT","payload":{"to":"ana@example.com","subject":"Re: Claim 4471","body":"Received.","threadId":"t1","inReplyTo":"<m1@example.com>"},"expect":{"fired":true,"state":"waiting","emits":[{"event":"CREATE_DRAFT","payload":{"tag":"agent:c1","to":"ana@example.com","subject":"Re: Claim 4471","body":"Received.","threadId":"t1","inReplyTo":"<m1@example.com>"}}]}}
+      ]
+    },
+    {
+      "id": "finding-files-asks-drive-with-the-folder-and-query",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"DRIVE_FIND","payload":{"folderId":"f1","query":"name contains 'policy'","maxResults":5},"expect":{"fired":true,"state":"waiting","emits":[{"event":"DRIVE_LIST_FILES","payload":{"tag":"agent:c1","folderId":"f1","query":"name contains 'policy'","maxResults":5}}]}}
+      ]
+    },
+    {
+      "id": "control-finding-files-without-input-asks-for-the-default-25",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"DRIVE_FIND","payload":{},"expect":{"fired":true,"state":"waiting","emits":[{"event":"DRIVE_LIST_FILES","payload":{"tag":"agent:c1","folderId":"","query":"","maxResults":25}}]}}
+      ]
+    },
+    {
+      "id": "reading-a-file-asks-drive-for-it",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"DRIVE_READ","payload":{"fileId":"d1"},"expect":{"fired":true,"state":"waiting","emits":[{"event":"DRIVE_GET_FILE","payload":{"tag":"agent:c1","fileId":"d1"}}],"neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "searched-mail-ends-the-call-with-its-text",
+      "steps": [
+        {"event":"INBOX_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","messages":[{"id":"m1","threadId":"t1","from":"ana@example.com","to":"me@example.com","subject":"Claim 4471","date":"Fri, 20 Nov 2026 09:00:00 +0000","messageId":"<m1@example.com>","snippet":"Please","body":"Please find the claim."}]},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"message id: <m1@example.com>\nthread id: t1\nfrom: ana@example.com\nto: me@example.com\ndate: Fri, 20 Nov 2026 09:00:00 +0000\nsubject: Claim 4471\n\nPlease find the claim."}}]}}
+      ]
+    },
+    {
+      "id": "an-empty-search-says-so",
+      "steps": [
+        {"event":"INBOX_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","messages":[]},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"no mail matches"}}]}}
+      ]
+    },
+    {
+      "id": "a-read-mail-ends-the-call-with-its-text",
+      "steps": [
+        {"event":"INBOX_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1","byId":true},"payload":{"tag":"agent:c1","messages":[{"id":"m1","threadId":"t1","from":"ana@example.com","to":"me@example.com","subject":"Claim 4471","date":"Fri, 20 Nov 2026 09:00:00 +0000","messageId":"<m1@example.com>","snippet":"Please","body":"Please find the claim."}]},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"message id: <m1@example.com>\nthread id: t1\nfrom: ana@example.com\nto: me@example.com\ndate: Fri, 20 Nov 2026 09:00:00 +0000\nsubject: Claim 4471\n\nPlease find the claim."}}]}}
+      ]
+    },
+    {
+      "id": "control-a-read-of-an-unknown-message-id-says-so",
+      "steps": [
+        {"event":"INBOX_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1","byId":true},"payload":{"tag":"agent:c1","messages":[]},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"no mail has this message id"}}]}}
+      ]
+    },
+    {
+      "id": "a-created-draft-says-it-is-not-sent",
+      "steps": [
+        {"event":"DRAFT_CREATED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","draftId":"r1","messageId":"m2","threadId":"t1"},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"the draft is in the mailbox, not sent (draft id r1, thread id t1)"}}]}}
+      ]
+    },
+    {
+      "id": "listed-files-end-the-call-with-their-ids-and-links",
+      "steps": [
+        {"event":"DRIVE_FILES_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","files":[{"id":"d1","name":"Policy.txt","mimeType":"text/plain","size":12,"modifiedTime":"2026-11-20T09:00:00Z","webViewLink":"https://drive.google.com/file/d/d1"},{"id":"f1","name":"Claims","mimeType":"application/vnd.google-apps.folder","modifiedTime":"2026-11-19T09:00:00Z","webViewLink":"https://drive.google.com/drive/folders/f1"}]},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"file: Policy.txt (file id d1, changed 2026-11-20T09:00:00Z): https://drive.google.com/file/d/d1\nfolder: Claims (file id f1, changed 2026-11-19T09:00:00Z): https://drive.google.com/drive/folders/f1"}}]}}
+      ]
+    },
+    {
+      "id": "an-empty-listing-says-so",
+      "steps": [
+        {"event":"DRIVE_FILES_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","files":[]},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"no file or folder found"}}]}}
+      ]
+    },
+    {
+      "id": "a-fetched-text-file-answers-its-decoded-text",
+      "steps": [
+        {"event":"DRIVE_FILE_FETCHED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","id":"d1","name":"Policy.txt","mimeType":"text/plain","content":"aGVsbG8gd29ybGQ=","size":11},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"hello world"}}],"neverEmits":["TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-a-fetched-file-that-is-not-text-ends-with-tool-failed",
+      "steps": [
+        {"event":"DRIVE_FILE_FETCHED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","id":"d2","name":"Scan.png","mimeType":"image/png","content":"/w==","size":1},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_FAILED","payload":{"callId":"c1","error":"the file Scan.png is not text, so it cannot be read here"}}],"neverEmits":["TOOL_RESULT"]}}
+      ]
+    },
+    {
+      "id": "a-failed-gmail-answer-ends-the-call-with-tool-failed",
+      "steps": [
+        {"event":"GMAIL_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","message":"Invalid Credentials"},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_FAILED","payload":{"callId":"c1","error":"Gmail failed: Invalid Credentials"}}],"neverEmits":["TOOL_RESULT"]}}
+      ]
+    },
+    {
+      "id": "a-failed-draft-answer-ends-the-call-with-tool-failed",
+      "steps": [
+        {"event":"GMAIL_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","message":"A draft header value must be a single line"},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_FAILED","payload":{"callId":"c1","error":"Gmail failed: A draft header value must be a single line"}}]}}
+      ]
+    },
+    {
+      "id": "a-failed-drive-answer-ends-the-call-with-tool-failed",
+      "steps": [
+        {"event":"DRIVE_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","code":"404","message":"File not found"},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_FAILED","payload":{"callId":"c1","error":"Google Drive failed: File not found"}}],"neverEmits":["TOOL_RESULT"]}}
+      ]
+    },
+    {
+      "id": "control-a-drive-failure-with-another-tag-is-ignored",
+      "steps": [
+        {"event":"DRIVE_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:other","message":"File not found"},"expect":{"fired":false,"state":"waiting","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-a-gmail-failure-with-another-tag-is-ignored",
+      "steps": [
+        {"event":"GMAIL_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:other","message":"Invalid Credentials"},"expect":{"fired":false,"state":"waiting","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-a-mail-listing-with-another-tag-is-ignored",
+      "steps": [
+        {"event":"INBOX_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:other","messages":[{"id":"m1","threadId":"t1","from":"ana@example.com","to":"me@example.com","subject":"Claim 4471","date":"Fri, 20 Nov 2026 09:00:00 +0000","messageId":"<m1@example.com>","snippet":"Please","body":"Please find the claim."}]},"expect":{"fired":false,"state":"waiting","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-a-file-listing-with-another-tag-is-ignored",
+      "steps": [
+        {"event":"DRIVE_FILES_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:other","files":[]},"expect":{"fired":false,"state":"waiting","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-an-answer-with-no-request-in-flight-is-ignored",
+      "steps": [
+        {"event":"INBOX_LISTED","from":"ready","payload":{"tag":"agent:c1","messages":[]},"expect":{"fired":false,"state":"ready","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-a-failure-with-no-request-in-flight-is-ignored",
+      "steps": [
+        {"event":"GMAIL_FAILED","from":"ready","payload":{"tag":"agent:c1","message":"late"},"expect":{"fired":false,"state":"ready","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "control-an-answer-of-another-call-is-ignored-and-the-calls-own-answer-ends-it",
+      "steps": [
+        {"event":"INBOX_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:other","messages":[]},"expect":{"fired":false,"state":"waiting","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}},
+        {"event":"INBOX_LISTED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","messages":[]},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_RESULT","payload":{"callId":"c1","result":"no mail matches"}}]}}
+      ]
+    },
+    {
+      "id": "control-a-failure-of-another-call-is-ignored-and-the-calls-own-failure-ends-it",
+      "steps": [
+        {"event":"DRIVE_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:other","message":"late"},"expect":{"fired":false,"state":"waiting","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}},
+        {"event":"DRIVE_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"agent:c1","message":"nf"},"expect":{"fired":true,"state":"ready","emits":[{"event":"TOOL_FAILED","payload":{"callId":"c1","error":"Google Drive failed: nf"}}]}}
+      ]
+    },
+    {
+      "id": "an-answer-with-an-empty-tag-is-not-the-calls-answer",
+      "steps": [
+        {"event":"GMAIL_FAILED","from":"waiting","entity":{"id":"s","callId":"c1","tag":"agent:c1"},"payload":{"tag":"","message":"late"},"expect":{"fired":false,"state":"waiting","neverEmits":["TOOL_RESULT","TOOL_FAILED"]}}
+      ]
+    },
+    {
+      "id": "a-later-call-tags-its-request-with-its-own-call-id",
+      "steps": [
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c1","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"TOOL_PENDING","from":"ready","payload":{"callId":"c2","tool":"AgentGoogleTools.X"},"expect":{"fired":true,"state":"ready"}},
+        {"event":"DRIVE_READ","payload":{"fileId":"d1"},"expect":{"fired":true,"state":"waiting","emits":[{"event":"DRIVE_GET_FILE","payload":{"tag":"agent:c2","fileId":"d1"}}]}}
+      ]
+    }
+  ]
+}

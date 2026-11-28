@@ -1,0 +1,387 @@
+{
+  "atom": "agent/atoms/std-agent-tool-loop.lolo",
+  "trait": "AgentToolLoop",
+  "spec": null,
+  "note": "a model sometimes fills its whole output allowance with a reply that never ends (P-030, seen live 2026-11-27 on the first message of a conversation, in clusters): with resendOnCutoff the loop sends the same model call once more when the cut-off came before any tool ran, and fails the turn as before on a second cut-off, after a tool ran, or with the knob off",
+  "cases": [
+    {
+      "id": "a-first-model-call-cut-off-before-any-tool-ran-is-sent-once-more",
+      "config": {
+        "resendOnCutoff": true
+      },
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "entity": {
+            "id": "t",
+            "turnMessages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "turnInstructions": "sys",
+            "table": [
+              {
+                "name": "read_x",
+                "description": "d",
+                "parameters": {
+                  "type": "object"
+                },
+                "event": "X.READ",
+                "kind": "input"
+              }
+            ],
+            "cutResent": false,
+            "toolsRan": false
+          },
+          "payload": {
+            "code": "output-cut",
+            "message": "cut"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "cutResent": true
+            },
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "instructions": "sys",
+                  "key": "agent-tool-loop"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-second-cut-off-of-the-same-turn-fails-it",
+      "config": {
+        "resendOnCutoff": true
+      },
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "entity": {
+            "id": "t",
+            "turnMessages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "turnInstructions": "sys",
+            "table": [
+              {
+                "name": "read_x",
+                "description": "d",
+                "parameters": {
+                  "type": "object"
+                },
+                "event": "X.READ",
+                "kind": "input"
+              }
+            ],
+            "cutResent": true,
+            "toolsRan": false
+          },
+          "payload": {
+            "code": "output-cut",
+            "message": "cut"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASSISTANT_REPLY_FAILED",
+                "payload": {
+                  "error": "cut",
+                  "code": "output-cut"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-model-call-cut-off-after-tools-ran-is-sent-once-more-with-the-same-tool-results-and-runs-no-tool-twice",
+      "config": {
+        "resendOnCutoff": true
+      },
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "entity": {
+            "id": "t",
+            "turnMessages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "turnInstructions": "sys",
+            "table": [
+              {
+                "name": "read_x",
+                "description": "d",
+                "parameters": {
+                  "type": "object"
+                },
+                "event": "X.READ",
+                "kind": "input"
+              }
+            ],
+            "cutResent": false,
+            "toolsRan": true,
+            "session": "sess-1",
+            "results": []
+          },
+          "payload": {
+            "code": "output-cut",
+            "message": "cut"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "cutResent": true
+            },
+            "emits": [
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "sess-1",
+                  "results": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS",
+              "RUN_NEXT"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-with-the-knob-off-a-cut-off-fails-the-turn",
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "entity": {
+            "id": "t",
+            "turnMessages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "turnInstructions": "sys",
+            "table": [
+              {
+                "name": "read_x",
+                "description": "d",
+                "parameters": {
+                  "type": "object"
+                },
+                "event": "X.READ",
+                "kind": "input"
+              }
+            ],
+            "cutResent": false,
+            "toolsRan": false
+          },
+          "payload": {
+            "code": "output-cut",
+            "message": "cut"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASSISTANT_REPLY_FAILED",
+                "payload": {
+                  "error": "cut",
+                  "code": "output-cut"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-another-failure-is-never-resent",
+      "config": {
+        "resendOnCutoff": true
+      },
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "entity": {
+            "id": "t",
+            "turnMessages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "turnInstructions": "sys",
+            "table": [
+              {
+                "name": "read_x",
+                "description": "d",
+                "parameters": {
+                  "type": "object"
+                },
+                "event": "X.READ",
+                "kind": "input"
+              }
+            ],
+            "cutResent": false,
+            "toolsRan": false
+          },
+          "payload": {
+            "code": "SERVICE_ERROR",
+            "message": "down"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASSISTANT_REPLY_FAILED",
+                "payload": {
+                  "error": "down"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-requested-tool-marks-the-turn-as-having-run-tools",
+      "steps": [
+        {
+          "event": "ToolsRequested",
+          "from": "thinking",
+          "entity": {
+            "id": "t",
+            "toolsRan": false
+          },
+          "payload": {
+            "session": "s",
+            "calls": []
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "toolsRan": true
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-second-cut-off-after-tools-ran-fails-the-turn",
+      "config": {
+        "resendOnCutoff": true
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ],
+      "steps": [
+        {
+          "event": "ToolsFailed",
+          "from": "thinking",
+          "entity": {
+            "id": "t",
+            "cutResent": true,
+            "toolsRan": true,
+            "session": "sess-1",
+            "results": []
+          },
+          "payload": {
+            "code": "output-cut",
+            "message": "cut"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASSISTANT_REPLY_FAILED",
+                "payload": {
+                  "error": "cut",
+                  "code": "output-cut"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_TOOLS_ANSWERED",
+              "LLM_CALL_TOOLS"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+app std-workflow-document-reply [
+  version: "1.0.0",
+  description: "std-workflow-document-reply — the workflow that drafts an answer to a request or an email from the documents, with sources, as declared data: understand what is asked, find the answer in the documents, write a draft, a person approves it, then write the final reply. It composes std-workflow-definition with key document-reply, so a catalog or picker asks DEFINITION_ASK and gets WORKFLOW_DEFINED, and a std-agent-workflow runs the steps. The step that searches names the reach word documents; the composer maps it to its own tools."
+]
+;; @capabilities "draft an answer to a request or an email from the documents, cite the sources of the answer, a person approves the draft before the final reply, reply to a question from files"
+uses WorkflowDefinition from "std/behaviors/std-workflow-definition"
+
+type WorkflowField = { name : string!, label : string!, required : boolean! }
+type WorkflowStep = { title : string!, instructions : string, tools : [string], approval : boolean, kind : "agent" | "approval" }
+
+orbital WorkflowDocumentReplyOrbital {
+  entity WorkflowDefinitionView [runtime] {
+    id : string!
+  }
+
+  trait WorkflowDefinition = WorkflowDefinition.traits.WorkflowDefinition {
+    config {
+        key: "document-reply"
+        name: "Reply from documents"
+        summary: "Draft an answer to a request or an email from the documents, with sources, for a person to approve."
+        instructions: "Answer one request or email using only the documents. Every fact in the answer names its source. A person approves the draft before the final reply is written."
+        audience: []
+        inputFields: [{ name: "request", label: "The request or email to answer", required: true }]
+        steps: [
+          { title: "Understand the request", instructions: "Read the request or email. Write in two short lines: what is asked, and what the person needs to know to act. Do not answer yet.", tools: [], approval: false, kind: "agent" },
+          { title: "Find the answer in the documents", instructions: "Search the documents for what answers the request. Write each fact you found in one line. End your result with one line per document used: Source: <file>, page <n>. If the documents do not answer it, say so plainly.", tools: ["documents"], approval: false, kind: "agent" },
+          { title: "Write the draft", instructions: "Write a short, polite draft that answers the request from your facts only. Do not add a fact that is not in your notes. Keep every Source line at the end of the draft.", tools: [], approval: false, kind: "agent" },
+          { title: "Approve the draft", instructions: "", tools: [], approval: false, kind: "approval" },
+          { title: "Write the final reply", instructions: "Write the final reply from the approved draft. Keep the facts and the Source lines as they are.", tools: [], approval: false, kind: "agent" }
+        ]
+    }
+  }
+
+  page boot as WorkflowDefinitionBoot -> WorkflowDefinition
+}

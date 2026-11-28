@@ -131,6 +131,14 @@ orbital AgentAssistantOrbital {
     recallLimit : number = 3
       @label "Memories recalled per request"
       @tier "policy"
+    resendOnCutoff : boolean = false
+      @label "Resend a cut-off first call"
+      @description "On, a turn whose model call is cut off at the output cap before any tool ran is sent once more; a second cut-off fails the turn as before."
+      @tier "policy"
+    memoryKeeps : "exchange" | "request" = exchange
+      @label "What a memory keeps"
+      @description "exchange keeps what the person asked and what the assistant answered; request keeps only what the person asked, so a similar later request recalls the topic and not an old answer to repeat."
+      @tier "policy"
     links : [AgentLink] = [{ label: "Run history", href: "/assistant/runs" }]
       @label "Links above the conversation"
       @description "Related pages, e.g. the assistant's run history."
@@ -405,6 +413,9 @@ orbital AgentAssistantOrbital {
   }
 
   trait AssistantMemoryStore = Memory.traits.AgentMemoryStore -> AgentMemory {
+    config {
+      keeps: @config.memoryKeeps
+    }
     listens {
       AssistantLoop.ASSISTANT_REPLIED -> REMEMBER
       AssistantMemory.RECALLED -> ExchangeRecalled
@@ -434,6 +445,7 @@ orbital AgentAssistantOrbital {
       tools: @config.tools
       instructions: @config.instructions
       maxSteps: @config.maxSteps
+      resendOnCutoff: @config.resendOnCutoff
       caller: @config.actsAs
     }
     listens {

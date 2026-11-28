@@ -1,0 +1,32 @@
+app agent-web-tools-spec [
+  version: "1.0.0",
+  description: "Design contract for the read-only web tools an agent loop offers over a composed std-chrome tab. Each tool is a declared input the loop dispatches and answers through the loop's TOOL_PENDING callId, for a tool of the atom's own orbital only, and every page request of a call carries the key `agent:` followed by that call id, so an answer for another call is ignored. OPEN_PAGE { url } navigates, reads the page and answers its address, title, language and full text. WEB_SEARCH { query } navigates to the search page with the query, reads it and answers its address, text and links. An address that is not allowed, an empty query, a failed navigation or read and an answer over the limit answer TOOL_FAILED with the reason; nothing is truncated and nothing is typed, clicked or submitted."
+]
+
+orbital AgentWebToolsSpec {
+  expects entity AgentWebCall [runtime] {
+    id : string!
+    callId : string
+    reqKey : string
+  }
+  expects trait AgentWebTools {
+    state ready {
+      OPEN_PAGE -> opening
+      WEB_SEARCH -> opening
+    }
+    state opening {
+      PAGE_LOADED -> reading
+    }
+    state reading {
+      PAGE_TEXT_READ -> linking
+    }
+    emits {
+      TOOL_RESULT { callId : string!  result : string! }
+      TOOL_FAILED { callId : string!  error : string! }
+      PAGE_NAVIGATE { key : string!  url : string! }
+      PAGE_TEXT { key : string! }
+      PAGE_LINKS { key : string! }
+    }
+  }
+  expects page boot -> AgentWebTools
+}

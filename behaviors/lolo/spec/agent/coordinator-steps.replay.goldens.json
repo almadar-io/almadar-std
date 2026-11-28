@@ -582,6 +582,531 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-task-keeps-the-member-who-started-it-as-its-owner",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "TASK_START",
+          "from": "idle",
+          "payload": {
+            "taskId": "t6",
+            "task": "claims intake",
+            "steps": [
+              {
+                "instruction": "read the documents",
+                "hold": false,
+                "limited": false,
+                "tools": []
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "loading",
+            "entity": {
+              "ownerId": "u1"
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-task-started-by-another-member-keeps-that-members-id",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "TASK_START",
+          "from": "idle",
+          "payload": {
+            "taskId": "t6",
+            "task": "claims intake",
+            "steps": [
+              {
+                "instruction": "read the documents",
+                "hold": false,
+                "limited": false,
+                "tools": []
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "loading",
+            "entity": {
+              "ownerId": "u2"
+            }
+          },
+          "identity": {
+            "id": "u2",
+            "role": "member"
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-task-row-is-written-for-the-member-who-started-it",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "StepsLoaded",
+          "from": "loading",
+          "entity": {
+            "id": "r",
+            "taskId": "t8",
+            "task": "claims intake",
+            "ownerId": "u1"
+          },
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "create",
+                "arg1": "AgentTask",
+                "arg2": {
+                  "id": "@entity.taskId",
+                  "ownerId": "@entity.ownerId",
+                  "task": "@entity.task",
+                  "status": "planning",
+                  "answer": "",
+                  "error": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "step-rows-written-after-the-start-carry-the-starters-id-not-the-viewer-of-a-later-answer",
+      "defaults": [
+        "CoordContext",
+        "CoordLoop",
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatRequestDelay",
+        "CoordChatRequestDeadline",
+        "CoordChatHttp",
+        "CoordChatHttpFrame"
+      ],
+      "steps": [
+        {
+          "event": "PLAN_READ",
+          "from": "planning",
+          "identity": {
+            "id": "u2",
+            "role": "member"
+          },
+          "entity": {
+            "id": "r",
+            "taskId": "t9",
+            "ownerId": "u1",
+            "planParsed": true,
+            "instructions": [
+              "read",
+              "write"
+            ],
+            "stepRules": [
+              {
+                "hold": false,
+                "limited": true,
+                "tools": [
+                  "Claim"
+                ]
+              },
+              {
+                "hold": true,
+                "limited": false,
+                "tools": []
+              }
+            ],
+            "total": 2
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "planning",
+            "entity": {
+              "ownerId": "u1"
+            },
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "create",
+                "arg1": "AgentTaskStep",
+                "arg2": {
+                  "id": [
+                    "str/concat",
+                    "@entity.taskId",
+                    ":0"
+                  ],
+                  "ownerId": "@entity.ownerId",
+                  "taskId": "@entity.taskId",
+                  "index": 0,
+                  "instruction": [
+                    "array/nth",
+                    "@entity.instructions",
+                    0
+                  ],
+                  "status": "pending",
+                  "result": "",
+                  "error": "",
+                  "hold": [
+                    "let",
+                    [
+                      [
+                        "r",
+                        [
+                          "default",
+                          [
+                            "array/nth",
+                            "@entity.stepRules",
+                            0
+                          ],
+                          {
+                            "hold": false,
+                            "limited": false,
+                            "tools": []
+                          }
+                        ],
+                        "{\"version\":1,\"name\":\"CoordStepRule\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"hold\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"limited\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"tools\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]}]}}"
+                      ]
+                    ],
+                    "@r.hold"
+                  ],
+                  "limited": [
+                    "let",
+                    [
+                      [
+                        "r",
+                        [
+                          "default",
+                          [
+                            "array/nth",
+                            "@entity.stepRules",
+                            0
+                          ],
+                          {
+                            "hold": false,
+                            "limited": false,
+                            "tools": []
+                          }
+                        ],
+                        "{\"version\":1,\"name\":\"CoordStepRule\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"hold\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"limited\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"tools\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]}]}}"
+                      ]
+                    ],
+                    "@r.limited"
+                  ],
+                  "tools": [
+                    "let",
+                    [
+                      [
+                        "r",
+                        [
+                          "default",
+                          [
+                            "array/nth",
+                            "@entity.stepRules",
+                            0
+                          ],
+                          {
+                            "hold": false,
+                            "limited": false,
+                            "tools": []
+                          }
+                        ],
+                        "{\"version\":1,\"name\":\"CoordStepRule\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"hold\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"limited\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"tools\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]}]}}"
+                      ]
+                    ],
+                    "@r.tools"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepSaved",
+          "from": "planning",
+          "identity": {
+            "id": "u2",
+            "role": "member"
+          },
+          "entity": {
+            "id": "r",
+            "taskId": "t9",
+            "ownerId": "u1",
+            "instructions": [
+              "read",
+              "write"
+            ],
+            "stepRules": [
+              {
+                "hold": false,
+                "limited": true,
+                "tools": [
+                  "Claim"
+                ]
+              },
+              {
+                "hold": true,
+                "limited": false,
+                "tools": []
+              }
+            ],
+            "total": 2,
+            "saveCursor": 0
+          },
+          "payload": {
+            "id": "t9:0"
+          },
+          "expect": {
+            "fired": true,
+            "state": "planning",
+            "entity": {
+              "ownerId": "u1",
+              "saveCursor": 1
+            },
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "create",
+                "arg1": "AgentTaskStep",
+                "arg2": {
+                  "id": [
+                    "str/concat",
+                    "@entity.taskId",
+                    ":",
+                    "@entity.saveCursor"
+                  ],
+                  "ownerId": "@entity.ownerId",
+                  "taskId": "@entity.taskId",
+                  "index": "@entity.saveCursor",
+                  "instruction": [
+                    "default",
+                    [
+                      "array/nth",
+                      "@entity.instructions",
+                      "@entity.saveCursor"
+                    ],
+                    ""
+                  ],
+                  "status": "pending",
+                  "result": "",
+                  "error": "",
+                  "hold": [
+                    "let",
+                    [
+                      [
+                        "r",
+                        [
+                          "default",
+                          [
+                            "array/nth",
+                            "@entity.stepRules",
+                            "@entity.saveCursor"
+                          ],
+                          {
+                            "hold": false,
+                            "limited": false,
+                            "tools": []
+                          }
+                        ],
+                        "{\"version\":1,\"name\":\"CoordStepRule\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"hold\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"limited\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"tools\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]}]}}"
+                      ]
+                    ],
+                    "@r.hold"
+                  ],
+                  "limited": [
+                    "let",
+                    [
+                      [
+                        "r",
+                        [
+                          "default",
+                          [
+                            "array/nth",
+                            "@entity.stepRules",
+                            "@entity.saveCursor"
+                          ],
+                          {
+                            "hold": false,
+                            "limited": false,
+                            "tools": []
+                          }
+                        ],
+                        "{\"version\":1,\"name\":\"CoordStepRule\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"hold\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"limited\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"tools\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]}]}}"
+                      ]
+                    ],
+                    "@r.limited"
+                  ],
+                  "tools": [
+                    "let",
+                    [
+                      [
+                        "r",
+                        [
+                          "default",
+                          [
+                            "array/nth",
+                            "@entity.stepRules",
+                            "@entity.saveCursor"
+                          ],
+                          {
+                            "hold": false,
+                            "limited": false,
+                            "tools": []
+                          }
+                        ],
+                        "{\"version\":1,\"name\":\"CoordStepRule\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"hold\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"limited\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":true,\"constraints\":[]},{\"name\":\"tools\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]}]}}"
+                      ]
+                    ],
+                    "@r.tools"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cancelled-task-stops-the-step-in-progress-and-frees-the-coordinator",
+      "steps": [
+        {
+          "event": "TASK_CANCEL",
+          "from": "working",
+          "entity": {
+            "id": "c",
+            "taskId": "t-1",
+            "index": 1,
+            "total": 3
+          },
+          "payload": {
+            "taskId": "t-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STEP_CANCEL",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-cancel-for-another-task-leaves-the-working-task-alone",
+      "steps": [
+        {
+          "event": "TASK_CANCEL",
+          "from": "working",
+          "entity": {
+            "id": "c",
+            "taskId": "t-1",
+            "index": 1,
+            "total": 3
+          },
+          "payload": {
+            "taskId": "t-2"
+          },
+          "expect": {
+            "fired": false,
+            "state": "working",
+            "neverEmits": [
+              "STEP_CANCEL"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-task-cancelled-while-its-result-is-stored-frees-the-coordinator-without-a-loop-cancel",
+      "steps": [
+        {
+          "event": "TASK_CANCEL",
+          "from": "storing",
+          "entity": {
+            "id": "c",
+            "taskId": "t-1",
+            "index": 1,
+            "total": 3
+          },
+          "payload": {
+            "taskId": "t-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "STEP_CANCEL"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-step-reply-that-arrives-after-the-cancel-is-ignored",
+      "steps": [
+        {
+          "event": "StepReplied",
+          "from": "idle",
+          "entity": {
+            "id": "c",
+            "taskId": "t-1",
+            "index": 1,
+            "total": 3
+          },
+          "payload": {
+            "reply": "late"
+          },
+          "expect": {
+            "fired": false,
+            "state": "idle"
+          }
+        }
+      ]
     }
   ]
 }

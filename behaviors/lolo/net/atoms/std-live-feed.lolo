@@ -1,6 +1,6 @@
 app std-live-feed [
   version: "1.0.0",
-  description: "std-live-feed — the live event fan-out of an HTTP server program, between std-http-router and std-sse: what orb serve's GET /api/events carries, so a change made in one tab reaches the others. STREAM_AUTHORIZED { requestId, clientId } subscribes the opened stream to the host's live broadcast with a keyed program/live { clientId } (key live-<requestId>, EXEC-QUEUE-13; when the stream carries a non-empty guest handle the call is program/live { clientId, guest } and follows that guest's live stream, EXEC-CONC-7): each item the connection would receive (a peer's row only when the viewer may read it, never the client's own) arrives as LIVE_ITEM and is written to the stream as SSE_SEND { requestId, data } whose data is the JSON text of { type: bus, event, payload?, source, timestamp }, the /api/events frame, in arrival order; an item the host marks type dispatch (a dispatch it ran on its own, such as a deferred completion for the tab that deferred it, EXEC-QUEUE-10) is written as { type: dispatch, orbitalName, request, response, timestamp }, which the client folds and never runs again. SSE_CLOSED from std-sse (the client went away or the server closed it) cancels the stream's key with cancel-call, so nothing more is written; a stream it never subscribed is left alone. LIVE_FAILED (the host refused the subscription) closes the stream with SSE_CLOSE. Bound to spec/net/live-feed.lolo."
+  description: "std-live-feed — the live event fan-out of an HTTP server program, between std-http-router and std-sse: what orb serve's GET /api/events carries, so a change made in one tab reaches the others. STREAM_AUTHORIZED { requestId, clientId } subscribes the opened stream to the host's live broadcast with a keyed program/live { clientId } (key live-<requestId>, EXEC-QUEUE-13; a non-empty since, the id of the last frame the client applied, goes in as program/live { clientId, since }, so the host resumes after it and what was made while the client had no stream is still sent; when the stream carries a non-empty guest handle the call is program/live { clientId, guest } and follows that guest's live stream, EXEC-CONC-7): each item the connection would receive (a peer's row only when the viewer may read it, never the client's own) arrives as LIVE_ITEM and is written to the stream as SSE_SEND { requestId, id, data } whose id is the frame id the host numbered it with (<boot>-<n>, per client) and whose data is the JSON text of { type: bus, event, payload?, source, timestamp }, the /api/events frame, in arrival order; an item the host marks type dispatch (a dispatch it ran on its own, such as a deferred completion for the tab that deferred it, EXEC-QUEUE-10) is written as { type: dispatch, orbitalName, request, response, timestamp }, which the client folds and never runs again. SSE_CLOSED from std-sse (the client went away or the server closed it) cancels the stream's key with cancel-call, so nothing more is written; a stream it never subscribed is left alone. LIVE_FAILED (the host refused the subscription) closes the stream with SSE_CLOSE. Bound to spec/net/live-feed.lolo."
 ]
 uses Spec from "almadar-std/live-feed"
 type LiveJson = string | number | boolean | [LiveJson?] | Map string LiveJson?
@@ -18,15 +18,15 @@ orbital LiveFeedOrbital {
 
       STREAM_AUTHORIZED -> serving when (= @config.feedKind "bus")
         (set @entity.open (array/append @entity.open @payload.requestId))
-        (program/live (object/merge { clientId: @payload.clientId } (if (= (default @payload.guest "") "") {} { guest: @payload.guest })) { key: (str/concat "live-" @payload.requestId), emit: { onMessage: LIVE_ITEM, failure: LIVE_FAILED } })
+        (program/live (object/merge (object/merge { clientId: @payload.clientId } (if (= (default @payload.guest "") "") {} { guest: @payload.guest })) (if (= (default @payload.since "") "") {} { since: @payload.since })) { key: (str/concat "live-" @payload.requestId), emit: { onMessage: LIVE_ITEM, failure: LIVE_FAILED } })
       STREAM_AUTHORIZED -> serving when (= @config.feedKind "trace")
         (set @entity.open (array/append @entity.open @payload.requestId))
         (program/live (object/merge (object/merge { kind: "trace", traits: @config.observedTraits } (if (= @config.instance "") {} { instance: @config.instance })) (if (= @config.seedEntityId "") {} { seedEntityId: @config.seedEntityId })) { key: (str/concat "live-" @payload.requestId), emit: { onMessage: LIVE_ITEM, failure: LIVE_FAILED } })
 
       LIVE_ITEM -> serving when (and (= @config.feedKind "bus") (= @payload.type "dispatch") (array/includes @entity.open (str/to-int (str/replace @payload.key "live-" ""))))
-        (emit SSE_SEND { requestId: (default (str/to-int (str/replace @payload.key "live-" "")) 0), data: (json/stringify { type: "dispatch", orbitalName: @payload.orbitalName, request: @payload.request, response: @payload.response, timestamp: @now }) })
+        (emit SSE_SEND { requestId: (default (str/to-int (str/replace @payload.key "live-" "")) 0), id: (default @payload.id ""), data: (json/stringify { type: "dispatch", orbitalName: @payload.orbitalName, request: @payload.request, response: @payload.response, timestamp: @now }) })
       LIVE_ITEM -> serving when (and (= @config.feedKind "bus") (!= @payload.type "dispatch") (array/includes @entity.open (str/to-int (str/replace @payload.key "live-" ""))))
-        (emit SSE_SEND { requestId: (default (str/to-int (str/replace @payload.key "live-" "")) 0), data: (json/stringify (if (= @payload.payload null) { type: "bus", event: @payload.event, source: @payload.source, timestamp: @now } { type: "bus", event: @payload.event, payload: @payload.payload, source: @payload.source, timestamp: @now })) })
+        (emit SSE_SEND { requestId: (default (str/to-int (str/replace @payload.key "live-" "")) 0), id: (default @payload.id ""), data: (json/stringify (if (= @payload.payload null) { type: "bus", event: @payload.event, source: @payload.source, timestamp: @now } { type: "bus", event: @payload.event, payload: @payload.payload, source: @payload.source, timestamp: @now })) })
       LIVE_ITEM -> serving when (and (= @config.feedKind "trace") (!= @payload.type "trace-disconnected") (array/includes @entity.open (str/to-int (str/replace @payload.key "live-" ""))))
         (emit SSE_SEND { requestId: (default (str/to-int (str/replace @payload.key "live-" "")) 0), data: (json/stringify (object/omit @payload ["key"])) })
       LIVE_ITEM -> serving when (and (= @config.feedKind "trace") (= @payload.type "trace-disconnected") (array/includes @entity.open (str/to-int (str/replace @payload.key "live-" ""))))
@@ -47,6 +47,7 @@ orbital LiveFeedOrbital {
     emits {
       SSE_SEND -> external {
         requestId : number!
+        id : string
         data : string!
       }
         @description "One live item, written to its stream by std-sse."
@@ -63,6 +64,7 @@ orbital LiveFeedOrbital {
         requestId : number!
         clientId : string!
         guest : string
+        since : string
       }
       LIVE_ITEM {
         event : string
@@ -76,6 +78,7 @@ orbital LiveFeedOrbital {
         orbitalName : string
         request : LiveJson
         response : LiveJson
+        id : string
         reason : string
         key : string!
       }

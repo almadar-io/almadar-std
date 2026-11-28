@@ -1,0 +1,34 @@
+app std-workflow-document-check [
+  version: "1.0.0",
+  description: "std-workflow-document-check — the workflow that checks a document or a request against the policy documents, as declared data: read the request, check it against the policy documents and cite the source, a person approves the finding, then write the outcome note. It composes std-workflow-definition with key document-check, so a catalog or picker asks DEFINITION_ASK and gets WORKFLOW_DEFINED, and a std-agent-workflow runs the steps. The document-reading step names the reach word documents; the composer maps it to its own tools."
+]
+;; @capabilities "check a document or request against policy documents, cite the source of every finding, get a person's approval of the finding, write the outcome note"
+uses WorkflowDefinition from "std/behaviors/std-workflow-definition"
+
+type WorkflowField = { name : string!, label : string!, required : boolean! }
+type WorkflowStep = { title : string!, instructions : string, tools : [string], approval : boolean, kind : "agent" | "approval" }
+
+orbital WorkflowDocumentCheckOrbital {
+  entity WorkflowDefinitionView [runtime] {
+    id : string!
+  }
+
+  trait WorkflowDefinition = WorkflowDefinition.traits.WorkflowDefinition {
+    config {
+        key: "document-check"
+        name: "Check a document"
+        summary: "Check a document or a request against the policy documents and get a cited finding a person approves."
+        instructions: "Check one document or request against the policy documents. Say what matches, what does not and what is missing. Every finding names its source. A person approves the finding before the outcome note is written."
+        audience: []
+        inputFields: [{ name: "request", label: "The document or request to check", required: true }]
+        steps: [
+          { title: "Read the request", instructions: "Read the document or request. Write what it says in three short lines: what is asked, who asks, and which rules it touches. Do not judge it yet.", tools: [], approval: false, kind: "agent" },
+          { title: "Check it against the policy documents", instructions: "Find the policy documents that apply. For each rule it touches, say if the request meets it, breaks it or is unclear, in one line. Quote the rule in a few words. End your result with one line per document used: Source: <file>, page <n>.", tools: ["documents"], approval: false, kind: "agent" },
+          { title: "Approve the finding", instructions: "", tools: [], approval: false, kind: "approval" },
+          { title: "Write the outcome note", instructions: "Write a short outcome note from the approved finding: the outcome in the first line, then each reason in one line. Keep every Source line from the finding.", tools: [], approval: false, kind: "agent" }
+        ]
+    }
+  }
+
+  page boot as WorkflowDefinitionBoot -> WorkflowDefinition
+}

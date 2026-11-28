@@ -1,6 +1,6 @@
 app std-model-fit [
   version: "1.0.0",
-  description: "std-model-fit — decides which model this machine runs, from a declared table and what the host measures; it holds no model knowledge. The options knob is an ordered list ({ id, provider, model, placement: local | remote, memoryGb, diskGb }). MODEL_FIT { requestId, allowRemote } reads the machine's total memory once through std-system-stats (STATS_START, the first STATS_READ, STATS_STOP) and the space free at the modelsPath knob (os/disk-usage), and answers MODEL_FIT_DECIDED { requestId, fits, option, memoryTotalGb, diskFreeGb, refused } with the first option in declared order that fits: a local option fits when memoryGb plus the reserveGb knob is at most the total memory and diskGb is at most the free space; a remote option fits only when allowRemote is true. Every option passed over is in refused with its reason (memory or disk and the gigabytes missing, or remote-not-allowed). When nothing fits, fits is false, option is absent and every option is in refused: nothing is chosen for the person. MODEL_PROBE { requestId, option } times one fixed prompt (the probePrompt and probeMaxTokens knobs) on the chosen option: it emits LLM_GENERATE for the composer's std-llm client and hears that client's result as ProbeAnswered and its failure as ProbeFailed (the composer wires both; this atom carries no model endpoint), then answers MODEL_PROBED { requestId, tokensPerSecond, ok }, ok being tokensPerSecond >= the minTokensPerSecond knob. A stat the host cannot read is MODEL_FIT_FAILED stats_unavailable, a failed probe probe_failed, a request while another is running busy. Gigabytes are 1024^3 bytes. Headless.",
+  description: "std-model-fit — decides which model this machine runs, from a declared table and what the host measures; it holds no model knowledge. The options knob is an ordered list ({ id, provider, model, placement: local | remote, memoryGb, diskGb }). MODEL_FIT { requestId, allowRemote } reads the machine's total memory once through std-system-stats (STATS_START, the first STATS_READ, STATS_STOP) and the space free at the modelsPath knob (os/disk-usage), and answers MODEL_FIT_DECIDED { requestId, fits, option, memoryTotalGb, diskFreeGb, refused } with the first option in declared order that fits: a local option fits when memoryGb plus the reserveGb knob is at most the total memory and diskGb is at most the free space; a remote option fits only when allowRemote is true. Every option passed over is in refused with its reason (memory or disk and the gigabytes missing, or remote-not-allowed). When nothing fits, fits is false, option is absent and every option is in refused: nothing is chosen for the person. MODEL_PROBE { requestId, option } times one fixed prompt (the probePrompt and probeMaxTokens knobs) on the chosen option: it emits LLM_GENERATE for the composer's std-llm client and hears that client's result as ProbeAnswered and its failure as ProbeFailed (the composer wires both; this atom carries no model endpoint), then answers MODEL_PROBED { requestId, tokensPerSecond, ok }, ok being tokensPerSecond >= the minTokensPerSecond knob. A stat the host cannot read is MODEL_FIT_FAILED stats_unavailable, a failed probe probe_failed, a request while another is running busy. Gigabytes are 1024^3 bytes. Headless. A mount of the page (INIT) while a fit is being decided or a model timed keeps the request in flight; it used to drop it without an answer.",
   sys: [memory, cpu, disk]
 ]
 ;; @capabilities "pick the model a machine can run from a declared table, say what each refused option lacks, time the chosen model"
@@ -76,8 +76,7 @@ orbital ModelFitOrbital {
     }
 
     state measuring {
-      INIT -> idle
-        (emit STATS_STOP {})
+      INIT -> measuring
       MODEL_FIT -> measuring
         (emit MODEL_FIT_FAILED { requestId: ?requestId, code: "busy", error: "A model fit is already being decided." })
       MODEL_PROBE -> measuring
@@ -109,7 +108,7 @@ orbital ModelFitOrbital {
     }
 
     state probing {
-      INIT -> idle
+      INIT -> probing
       MODEL_FIT -> probing
         (emit MODEL_FIT_FAILED { requestId: ?requestId, code: "busy", error: "A model is being timed." })
       MODEL_PROBE -> probing

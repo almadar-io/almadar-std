@@ -1,6 +1,6 @@
 app std-drive [
   version: "1.2.0",
-  description: "std-drive — Google Drive through the REST API (www.googleapis.com/drive/v3): list, fetch, upload, create folders and share. Reads and shares use the service account when its key is configured, else the user's refresh token; uploads and folders prefer the user's refresh token, then the service account. Both access tokens are minted by the host credential store (a jwt-bearer grant for the service account, a refresh_token grant for the user) and carried by two keyed HTTP clients, never by an event. Every call runs on its own row under its own key, so concurrent calls never share state. A failure answers DRIVE_FAILED with the provider's message.",
+  description: "std-drive — Google Drive through the REST API (www.googleapis.com/drive/v3): list, fetch, upload, create folders and share. Reads and shares use the service account when its key is configured, else the user's refresh token; uploads and folders prefer the user's refresh token, then the service account. Both access tokens are minted by the host credential store (a jwt-bearer grant for the service account, a refresh_token grant for the user) and carried by two keyed HTTP clients, never by an event. Every call runs on its own row under its own key, so concurrent calls never share state. A request may carry a tag, the caller's own mark, which every answer to it carries back (empty when the caller gave none), so a caller tells its answers from another's. A failure answers DRIVE_FAILED with the provider's message.",
   egress: ["https://www.googleapis.com", "https://oauth2.googleapis.com"],
   net: { "www.googleapis.com:443": [tcp] }
 ]
@@ -38,6 +38,7 @@ orbital DriveOrbital {
     metaName : string = ""
     metaMime : string = ""
     metaReady : boolean @description "True once a metadata reply was read and the media read waits for std-retry to finish the metadata run." = false
+    tag : string @description "The caller's own mark for the call in flight, returned with its answer so a caller tells its answers from another's; empty when the caller gave none." = ""
   }
 
   trait DriveSaKeyed = Keyed.traits.HttpKeyed {
@@ -111,43 +112,44 @@ orbital DriveOrbital {
 
       DRIVE_LIST_FILES -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (emit DRIVE_READY { key: (str/concat "list:" (default @payload.folderId "") "|" (default @payload.query "") "|" (default @payload.maxResults 0) "#" @entity.seq), op: "list", method: "GET", target: (str/concat "/drive/v3/files?q=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/concat "trashed = false" (if (!= (default @payload.folderId "") "") (str/concat " and '" (str/replaceAll (default @payload.folderId "") "'" "\\'") "' in parents") "") (if (!= (default @payload.query "") "") (str/concat " and " (default @payload.query "")) ""))) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "&pageSize=" (if (= (default @payload.maxResults 0) 0) 100 @payload.maxResults) "&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29"), contentType: "", body: (bytes/from-string ""), retry: true, auth: "sa", name: "", fileId: "" })
+        (emit DRIVE_READY { key: (str/concat "list:" (default @payload.folderId "") "|" (default @payload.query "") "|" (default @payload.maxResults 0) "#" @entity.seq), op: "list", tag: (default @payload.tag ""), method: "GET", target: (str/concat "/drive/v3/files?q=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/concat "trashed = false" (if (!= (default @payload.folderId "") "") (str/concat " and '" (str/replaceAll (default @payload.folderId "") "'" "\\'") "' in parents") "") (if (!= (default @payload.query "") "") (str/concat " and " (default @payload.query "")) ""))) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "&pageSize=" (if (= (default @payload.maxResults 0) 0) 100 @payload.maxResults) "&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29"), contentType: "", body: (bytes/from-string ""), retry: true, auth: "sa", name: "", fileId: "" })
       DRIVE_GET_FILE -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (emit DRIVE_READY { key: (str/concat "get:" @payload.fileId "#" @entity.seq), op: "meta", method: "GET", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "?fields=id%2C%20name%2C%20mimeType%2C%20size"), contentType: "", body: (bytes/from-string ""), retry: true, auth: "sa", name: "", fileId: @payload.fileId })
+        (emit DRIVE_READY { key: (str/concat "get:" @payload.fileId "#" @entity.seq), op: "meta", tag: (default @payload.tag ""), method: "GET", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "?fields=id%2C%20name%2C%20mimeType%2C%20size"), contentType: "", body: (bytes/from-string ""), retry: true, auth: "sa", name: "", fileId: @payload.fileId })
       DRIVE_SHARE_FILE -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (emit DRIVE_READY { key: (str/concat "share:" @payload.fileId ":" @payload.email "#" @entity.seq), op: "share", method: "POST", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "/permissions?fields=id"), contentType: "application/json", body: (bytes/from-string (json/stringify { type: "user", role: (if (!= (default @payload.role "") "") (default @payload.role "") "reader"), emailAddress: @payload.email })), retry: false, auth: "sa", name: "", fileId: "" })
+        (emit DRIVE_READY { key: (str/concat "share:" @payload.fileId ":" @payload.email "#" @entity.seq), op: "share", tag: (default @payload.tag ""), method: "POST", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "/permissions?fields=id"), contentType: "application/json", body: (bytes/from-string (json/stringify { type: "user", role: (if (!= (default @payload.role "") "") (default @payload.role "") "reader"), emailAddress: @payload.email })), retry: false, auth: "sa", name: "", fileId: "" })
       DRIVE_CREATE_FOLDER -> idle
         (set @entity.seq (+ @entity.seq 1))
         (let ((parent (if (!= (default @payload.parentId "") "") (default @payload.parentId "") @config.defaultFolderId)))
-          (emit DRIVE_READY { key: (str/concat "folder:" @parent "/" @payload.name "#" @entity.seq), op: "folder", method: "POST", target: "/drive/v3/files?fields=id%2C%20name", contentType: "application/json", body: (bytes/from-string (json/stringify (if (!= @parent "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [@parent] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }))), retry: false, auth: "user", name: @payload.name, fileId: "" }))
+          (emit DRIVE_READY { key: (str/concat "folder:" @parent "/" @payload.name "#" @entity.seq), op: "folder", tag: (default @payload.tag ""), method: "POST", target: "/drive/v3/files?fields=id%2C%20name", contentType: "application/json", body: (bytes/from-string (json/stringify (if (!= @parent "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [@parent] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }))), retry: false, auth: "user", name: @payload.name, fileId: "" }))
       DRIVE_UPLOAD_FILE -> idle
         (set @entity.seq (+ @entity.seq 1))
         (let ((folder (if (!= (default @payload.folderId "") "") (default @payload.folderId "") @config.defaultFolderId)) (tail (if (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",")) (str/slice @payload.content 5) "")))
           (let ((head (default (array/first (str/split @tail ",")) "")))
             (let ((kind (if (= @tail "") "text" (let ((parts (str/split @head ";"))) (if (and (= (array/len @parts) 2) (= (array/nth @parts 1) "base64")) "base64" (if (= (array/len @parts) 1) "uri" "text"))))))
-              (emit DRIVE_UPLOAD_SOURCE { kind: @kind, mime: (if (!= (default @payload.mimeType "") "") (default @payload.mimeType "") (if (and (!= @kind "text") (!= (default (array/first (str/split @head ";")) "") "")) (default (array/first (str/split @head ";")) "") "application/octet-stream")), text: (if (= @kind "text") @payload.content (str/join (array/drop (str/split @tail ",") 1) ",")), name: @payload.name, folder: @folder, seq: @entity.seq }))))
+              (emit DRIVE_UPLOAD_SOURCE { tag: (default @payload.tag ""), kind: @kind, mime: (if (!= (default @payload.mimeType "") "") (default @payload.mimeType "") (if (and (!= @kind "text") (!= (default (array/first (str/split @head ";")) "") "")) (default (array/first (str/split @head ";")) "") "application/octet-stream")), text: (if (= @kind "text") @payload.content (str/join (array/drop (str/split @tail ",") 1) ",")), name: @payload.name, folder: @folder, seq: @entity.seq }))))
       DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "text")
-        (emit DRIVE_UPLOAD_PART { mime: @payload.mime, data: (bytes/from-string @payload.text), name: @payload.name, folder: @payload.folder, seq: @payload.seq })
+        (emit DRIVE_UPLOAD_PART { tag: @payload.tag, mime: @payload.mime, data: (bytes/from-string @payload.text), name: @payload.name, folder: @payload.folder, seq: @payload.seq })
       DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "uri")
         (let ((t (str/decode-uri-component @payload.text)))
           (if (== @t null)
-            (emit DRIVE_FAILED { message: "URI malformed" })
-            (emit DRIVE_UPLOAD_PART { mime: @payload.mime, data: (bytes/from-string @t), name: @payload.name, folder: @payload.folder, seq: @payload.seq })))
+            (emit DRIVE_FAILED { tag: @payload.tag, message: "URI malformed" })
+            (emit DRIVE_UPLOAD_PART { tag: @payload.tag, mime: @payload.mime, data: (bytes/from-string @t), name: @payload.name, folder: @payload.folder, seq: @payload.seq })))
       DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "base64")
         (let ((d (bytes/from-base64 @payload.text)))
           (if (== @d null)
-            (emit DRIVE_FAILED { message: "The base64 content could not be decoded" })
-            (emit DRIVE_UPLOAD_PART { mime: @payload.mime, data: @d, name: @payload.name, folder: @payload.folder, seq: @payload.seq })))
+            (emit DRIVE_FAILED { tag: @payload.tag, message: "The base64 content could not be decoded" })
+            (emit DRIVE_UPLOAD_PART { tag: @payload.tag, mime: @payload.mime, data: @d, name: @payload.name, folder: @payload.folder, seq: @payload.seq })))
       DRIVE_UPLOAD_PART -> idle when (not (validate/pattern @payload.mime "^[^\\x00-\\x1f\\x7f]*$"))
-        (emit DRIVE_FAILED { message: "The content type is not valid" })
+        (emit DRIVE_FAILED { tag: @payload.tag, message: "The content type is not valid" })
       DRIVE_UPLOAD_PART -> idle when (validate/pattern @payload.mime "^[^\\x00-\\x1f\\x7f]*$")
-        (emit DRIVE_READY { key: (str/concat "upload:" @payload.folder "/" @payload.name "#" @payload.seq), op: "upload", method: "POST", target: "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart", contentType: (str/concat "multipart/related; boundary=" @config.boundary), body: (bytes/concat [(bytes/from-string (str/concat "--" @config.boundary "\r\nContent-Type: application/json\r\n\r\n" (json/stringify (if (!= @payload.folder "") { name: @payload.name, parents: [@payload.folder] } { name: @payload.name })) "\r\n--" @config.boundary "\r\nContent-Type: " @payload.mime "\r\n\r\n")) @payload.data (bytes/from-string (str/concat "\r\n--" @config.boundary "--\r\n"))]), retry: false, auth: "user", name: @payload.name, fileId: "" })
+        (emit DRIVE_READY { key: (str/concat "upload:" @payload.folder "/" @payload.name "#" @payload.seq), op: "upload", tag: (default @payload.tag ""), method: "POST", target: "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart", contentType: (str/concat "multipart/related; boundary=" @config.boundary), body: (bytes/concat [(bytes/from-string (str/concat "--" @config.boundary "\r\nContent-Type: application/json\r\n\r\n" (json/stringify (if (!= @payload.folder "") { name: @payload.name, parents: [@payload.folder] } { name: @payload.name })) "\r\n--" @config.boundary "\r\nContent-Type: " @payload.mime "\r\n\r\n")) @payload.data (bytes/from-string (str/concat "\r\n--" @config.boundary "--\r\n"))]), retry: false, auth: "user", name: @payload.name, fileId: "" })
     }
 
     emits {
       DRIVE_FAILED -> external {
+        tag : string!
         code : string
         message : string!
       }
@@ -157,6 +159,7 @@ orbital DriveOrbital {
       DRIVE_READY {
         key : string!
         op : string!
+        tag : string!
         method : string!
         target : string!
         contentType : string!
@@ -169,6 +172,7 @@ orbital DriveOrbital {
         @description "Internal: a built request, handed to the row of its key in DriveCall."
         @tier "secondary"
       DRIVE_UPLOAD_SOURCE -> internal {
+        tag : string!
         kind : string!
         mime : string!
         text : string!
@@ -179,6 +183,7 @@ orbital DriveOrbital {
         @description "Internal: the upload content read as text, a base64 data URL or a percent-encoded data URL."
         @tier "secondary"
       DRIVE_UPLOAD_PART -> internal {
+        tag : string!
         mime : string!
         data : bytes!
         name : string!
@@ -194,11 +199,13 @@ orbital DriveOrbital {
         folderId : string?
         query : string?
         maxResults : number?
+        tag : string?
       }
-        @description "List non-trashed Drive files, optionally inside a folder and filtered by a Drive query; maxResults defaults to 100."
+        @description "List non-trashed Drive files, optionally inside a folder and filtered by a Drive query; maxResults defaults to 100. tag is the caller's own mark, answered back on the reply."
         @synonyms "list files, drive files"
       DRIVE_GET_FILE -> input {
         fileId : string!
+        tag : string?
       }
         @description "Fetch a file's metadata and base64 content."
         @synonyms "download file, get file"
@@ -207,12 +214,14 @@ orbital DriveOrbital {
         content : string!
         mimeType : string?
         folderId : string?
+        tag : string?
       }
         @description "Upload a file; content is text or a base64 data URL, the folder defaults to the configured one."
         @synonyms "upload file, save file"
       DRIVE_CREATE_FOLDER -> input {
         name : string!
         parentId : string?
+        tag : string?
       }
         @description "Create a folder, optionally inside a parent."
         @synonyms "new folder, make folder"
@@ -220,10 +229,12 @@ orbital DriveOrbital {
         fileId : string!
         email : string!
         role : string?
+        tag : string?
       }
         @description "Share a file with a user by email; role defaults to reader."
         @synonyms "share file, grant access"
       DRIVE_UPLOAD_SOURCE {
+        tag : string!
         kind : string!
         mime : string!
         text : string!
@@ -232,6 +243,7 @@ orbital DriveOrbital {
         seq : number!
       }
       DRIVE_UPLOAD_PART {
+        tag : string!
         mime : string!
         data : bytes!
         name : string!
@@ -262,6 +274,7 @@ orbital DriveOrbital {
 
       CALL_READY -> idle when (= @payload.retry false)
         (set @entity.op @payload.op)
+        (set @entity.tag @payload.tag)
         (set @entity.method @payload.method)
         (set @entity.target @payload.target)
         (set @entity.contentType @payload.contentType)
@@ -277,6 +290,7 @@ orbital DriveOrbital {
         (emit DRIVE_DISPATCH {})
       CALL_READY -> idle when (= @payload.retry true)
         (set @entity.op @payload.op)
+        (set @entity.tag @payload.tag)
         (set @entity.method @payload.method)
         (set @entity.target @payload.target)
         (set @entity.contentType @payload.contentType)
@@ -299,10 +313,10 @@ orbital DriveOrbital {
         (emit DRIVE_USER_HTTP_SEND { key: @entity.id, method: @entity.method, target: @entity.target, headers: (if (= @entity.contentType "") [{ name: "accept", value: "*/*" }] [{ name: "accept", value: "*/*" }, { name: "content-type", value: @entity.contentType }]), body: @entity.body, stream: "none" })
 
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list"))
-        (let ((r (json/parse @payload.body DriveListReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FILES_LISTED { files: (array/map (object/get @r files []) (fn f { id: (default (object/get @f id "") ""), name: (default (object/get @f name "") ""), mimeType: (default (object/get @f mimeType "") ""), size: (str/to-number (default (object/get @f size "") "")), modifiedTime: (default (object/get @f modifiedTime "") ""), webViewLink: (default (object/get @f webViewLink "") "") })) })))
+        (let ((r (json/parse @payload.body DriveListReply))) (if (= @r null) (emit DRIVE_FAILED { tag: @entity.tag, message: "The Drive answer could not be read" }) (emit DRIVE_FILES_LISTED { tag: @entity.tag, files: (array/map (object/get @r files []) (fn f { id: (default (object/get @f id "") ""), name: (default (object/get @f name "") ""), mimeType: (default (object/get @f mimeType "") ""), size: (str/to-number (default (object/get @f size "") "")), modifiedTime: (default (object/get @f modifiedTime "") ""), webViewLink: (default (object/get @f webViewLink "") "") })) })))
         (emit DRIVE_CLEAR {})
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "meta") (= (json/parse @payload.body DriveMeta) null))
-        (emit DRIVE_FAILED { message: "The Drive answer could not be read" })
+        (emit DRIVE_FAILED { tag: @entity.tag, message: "The Drive answer could not be read" })
         (emit DRIVE_CLEAR {})
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "meta") (!= (json/parse @payload.body DriveMeta) null))
         (set @entity.metaId (let ((mid (object/get (json/parse @payload.body DriveMeta) id ""))) (if (!= @mid "") @mid @entity.fileId)))
@@ -320,26 +334,26 @@ orbital DriveOrbital {
         (set @entity.metaReady false)
         (emit DRIVE_RETRY_START { key: (as @entity.id CallKey) })
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "media"))
-        (emit DRIVE_FILE_FETCHED { id: @entity.metaId, name: @entity.metaName, mimeType: @entity.metaMime, content: @payload.content, size: (- (* (/ (str/len @payload.content) 4) 3) (if (str/endsWith @payload.content "==") 2 (if (str/endsWith @payload.content "=") 1 0))) })
+        (emit DRIVE_FILE_FETCHED { tag: @entity.tag, id: @entity.metaId, name: @entity.metaName, mimeType: @entity.metaMime, content: @payload.content, size: (- (* (/ (str/len @payload.content) 4) 3) (if (str/endsWith @payload.content "==") 2 (if (str/endsWith @payload.content "=") 1 0))) })
         (emit DRIVE_CLEAR {})
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "upload"))
-        (let ((r (json/parse @payload.body DriveUploadReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FILE_UPLOADED { id: (default (object/get @r id "") ""), name: (let ((rn (object/get @r name ""))) (if (!= @rn "") @rn @entity.name)), webViewLink: (default (object/get @r webViewLink "") "") })))
+        (let ((r (json/parse @payload.body DriveUploadReply))) (if (= @r null) (emit DRIVE_FAILED { tag: @entity.tag, message: "The Drive answer could not be read" }) (emit DRIVE_FILE_UPLOADED { tag: @entity.tag, id: (default (object/get @r id "") ""), name: (let ((rn (object/get @r name ""))) (if (!= @rn "") @rn @entity.name)), webViewLink: (default (object/get @r webViewLink "") "") })))
         (emit DRIVE_CLEAR {})
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "folder"))
-        (let ((r (json/parse @payload.body DriveFolderReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FOLDER_CREATED { id: (default (object/get @r id "") ""), name: (let ((rn (object/get @r name ""))) (if (!= @rn "") @rn @entity.name)) })))
+        (let ((r (json/parse @payload.body DriveFolderReply))) (if (= @r null) (emit DRIVE_FAILED { tag: @entity.tag, message: "The Drive answer could not be read" }) (emit DRIVE_FOLDER_CREATED { tag: @entity.tag, id: (default (object/get @r id "") ""), name: (let ((rn (object/get @r name ""))) (if (!= @rn "") @rn @entity.name)) })))
         (emit DRIVE_CLEAR {})
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "share"))
-        (let ((r (json/parse @payload.body DriveShareReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FILE_SHARED { shared: true, permissionId: (default (object/get @r id "") "") })))
+        (let ((r (json/parse @payload.body DriveShareReply))) (if (= @r null) (emit DRIVE_FAILED { tag: @entity.tag, message: "The Drive answer could not be read" }) (emit DRIVE_FILE_SHARED { tag: @entity.tag, shared: true, permissionId: (default (object/get @r id "") "") })))
         (emit DRIVE_CLEAR {})
       DRIVE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit DRIVE_REPLY_ERROR { status: @payload.status, message: (let ((eo (json/parse @payload.body DriveErrorReply)) (es (json/parse @payload.body DriveErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
       DRIVE_REPLY_ERROR -> idle when (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))))
         (emit DRIVE_RETRY_FAILED { key: (as @entity.id CallKey), error: @payload.message })
       DRIVE_REPLY_ERROR -> idle when (not (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))))
-        (emit DRIVE_FAILED { message: @payload.message })
+        (emit DRIVE_FAILED { tag: @entity.tag, message: @payload.message })
         (emit DRIVE_CLEAR {})
       DRIVE_GAVE_UP -> idle
-        (emit DRIVE_FAILED { message: (default @payload.error "") })
+        (emit DRIVE_FAILED { tag: @entity.tag, message: (default @payload.error "") })
         (emit DRIVE_CLEAR {})
 
       DRIVE_REQUEST_FAILED -> idle when (and (= @payload.kind "denied") (= @entity.mintTried false) (= @entity.auth "sa") (!= @config.subject ""))
@@ -385,21 +399,22 @@ orbital DriveOrbital {
 
       DRIVE_FAIL -> idle when (and @entity.retrying (= (default @payload.code "") ""))
         (emit DRIVE_RETRY_CANCEL { key: (as @entity.id CallKey) })
-        (emit DRIVE_FAILED { message: @payload.message })
+        (emit DRIVE_FAILED { tag: @entity.tag, message: @payload.message })
         (emit DRIVE_CLEAR {})
       DRIVE_FAIL -> idle when (and @entity.retrying (!= (default @payload.code "") ""))
         (emit DRIVE_RETRY_CANCEL { key: (as @entity.id CallKey) })
-        (emit DRIVE_FAILED { code: @payload.code, message: @payload.message })
+        (emit DRIVE_FAILED { tag: @entity.tag, code: @payload.code, message: @payload.message })
         (emit DRIVE_CLEAR {})
       DRIVE_FAIL -> idle when (and (not @entity.retrying) (= (default @payload.code "") ""))
-        (emit DRIVE_FAILED { message: @payload.message })
+        (emit DRIVE_FAILED { tag: @entity.tag, message: @payload.message })
         (emit DRIVE_CLEAR {})
       DRIVE_FAIL -> idle when (and (not @entity.retrying) (!= (default @payload.code "") ""))
-        (emit DRIVE_FAILED { code: @payload.code, message: @payload.message })
+        (emit DRIVE_FAILED { tag: @entity.tag, code: @payload.code, message: @payload.message })
         (emit DRIVE_CLEAR {})
 
       DRIVE_CLEAR -> idle
         (set @entity.op "")
+        (set @entity.tag "")
         (set @entity.method "")
         (set @entity.target "")
         (set @entity.contentType "")
@@ -419,12 +434,14 @@ orbital DriveOrbital {
 
     emits {
       DRIVE_FILES_LISTED -> external {
+        tag : string!
         files : [DriveFileRecord]!
       }
         @description "The non-trashed files matching the listing, mapped to flat records; size is the byte count as a number, empty text fields when Drive returned none."
         @synonyms "listed files, drive listing"
         @tier "primary"
       DRIVE_FILE_FETCHED -> external {
+        tag : string!
         id : string!
         name : string!
         mimeType : string!
@@ -435,6 +452,7 @@ orbital DriveOrbital {
         @synonyms "downloaded file, file content"
         @tier "primary"
       DRIVE_FILE_UPLOADED -> external {
+        tag : string!
         id : string!
         name : string!
         webViewLink : string!
@@ -443,6 +461,7 @@ orbital DriveOrbital {
         @synonyms "uploaded file, upload result"
         @tier "primary"
       DRIVE_FOLDER_CREATED -> external {
+        tag : string!
         id : string!
         name : string!
       }
@@ -450,6 +469,7 @@ orbital DriveOrbital {
         @synonyms "created folder"
         @tier "primary"
       DRIVE_FILE_SHARED -> external {
+        tag : string!
         shared : boolean!
         permissionId : string!
       }
@@ -457,6 +477,7 @@ orbital DriveOrbital {
         @synonyms "shared file, permission created"
         @tier "primary"
       DRIVE_FAILED -> external {
+        tag : string!
         code : string
         message : string!
       }
@@ -545,6 +566,7 @@ orbital DriveOrbital {
       CALL_READY {
         key : string!
         op : string!
+        tag : string!
         method : string!
         target : string!
         contentType : string!

@@ -1,21 +1,17 @@
 app std-wizard [
-  version: "3.0.1",
+  version: "4.0.0",
   locales: [en, ar, sl],
-  description: "std-wizard — generic N-step data-collection wizard (Vercel deploy / GitHub repo create / Stripe Connect onboarding style). Each step has its own form fields. Topology = loading / running / completed / cancelled / error. ADVANCE is guard-routed: not-last-step advances; last-step transitions to completed. Distinct from std-step-flow (approval-decision) — wizard collects data via form-section per step, step-flow collects yes/no decisions."
+  description: "std-wizard — the one step-by-step machine of the standard library. The `steps` knob lists the steps in order, one per screen: each has an id, a title, a description, an icon and a kind: info (text and a continue button), choice (pick one of the options; the answer is its value), multi (pick several; the answer is the chosen values joined by a comma), text (free text), slot (the composer's trait, the slotContent knob, shows inside the step frame; the primary button emits WIZARD_SLOT_CONTINUE and the composer answers with WIZARD_SLOT_ANSWER, enabling the button with WIZARD_SLOT_READY) or form (the step's `fields` are edited with a form-section over the wizard's entity). A step may be optional and skipped. Back, Continue or Finish and Skip move between steps; a required step with no answer shows requiredText and stays. The frame draws the heading, the progress strip, the step card and the buttons; every word a person reads is a knob. Topology = loading / stepping / finished. The wizard owns its state in its own runtime entity and knows nothing about members, records or persistence: it emits what happened and takes inputs. WIZARD_STEP { stepId, answers } is emitted whenever a step is shown, WIZARD_ANSWERED { stepId, value, answers } when an answer is given, WIZARD_DONE { answers } when the last step is answered, WIZARD_SLOT_CONTINUE { stepId } for a slot step's primary button, WIZARD_BACK { stepId } when the person goes back, WIZARD_RESTARTED { stepId } after a restart, WIZARD_CANCELLED { reason } when cancelled and WIZARD_EMPTY when there is no step to show. WIZARD_COMMIT { stepId, answers, done, didAnswer, answeredStep, answeredValue } is emitted with every change of position or answers, after the wizard has already moved (it is optimistic), so a composer can keep the position. Inputs: WIZARD_POSITION { stepId, answers, finished, problem } sets the position and the answers (a composer resumes the wizard with it; with awaitPosition on, the wizard shows loadingContent until the first one), WIZARD_REJECT { error } undoes the last change and shows the message, WIZARD_SLOT_ANSWER, WIZARD_SLOT_READY, WIZARD_OPTIONS { stepId, options } (replaces the options of a choice or multi step at run time) and WIZARD_RESTART (back to the first step, keeping the answers). Changed in 4.0.0: the old fetch of WizardView rows on mount and persist of them on finish are gone, replaced by WIZARD_DONE carrying the answers; steps use id and title instead of key and label; the Next and Submit knobs are continueLabel and finishLabel; completed and cancelled are one finished state. Distinct from std-step-flow (approval-decision): the wizard collects answers one step at a time. std-onboarding composes this trait for a per-member resumable first-run flow."
 ]
-type ObjectSpec = { id : string, label : string, value : string }
-type StepSpec = { label : string!, key : string!, icon : string, description : string, fields : [string], allowedRoles : [string] }
+;; @capabilities "guide a person through steps one screen at a time, ask a choice, several choices, free text or a form, let the composer fill a step, validate a required answer, show progress, go back, skip, resume at a given step, cancel, restart"
+uses Spec from "almadar-std/wizard"
+
+type WizardOption = { value : string!, label : string!, description : string }
+type WizardStep = { id : string!, title : string!, description : string, kind : "info" | "choice" | "multi" | "text" | "slot" | "form"!, options : [WizardOption], placeholder : string, optional : boolean, icon : string, fields : [string] }
+type WizardAnswers = Map string string
+type WizardOverride = { stepId : string!, options : [WizardOption]! }
+
 orbital WizardOrbital {
-    type WizardFlowStep = { id : string!, title : string!, description : string }
-
-    type WizardLoaded = Event { data : [ObjectSpec] } "Fired when wizard context finishes loading"
-
-    type WizardLoadFailed = Event { error : string, code : string } "Fired when fetch fails"
-
-    type WizardSaved = Event @entity "Fired when a wizard step has been persisted"
-
-    type WizardSaveFailed = Event { error : string, code : string } "Fired when persist fails"
-
   entity WizardView [runtime] {
     id : string!
     title : string! @description "The descriptive name for this wizard view." @synonyms "name, heading, label"
@@ -23,657 +19,460 @@ orbital WizardOrbital {
     category : "marketing" | "engineering" | "design" | "operations" | "" @description "Indicates the field's intended audience or area of focus." @synonyms "type, area, discipline, group" = ""
     priority : "low" | "medium" | "high" | "urgent" | "" @description "Indicates the relative importance or urgency of the wizard." @synonyms "level, importance, urgency" = ""
     notes : string @description "Free-form textual remarks or additional information." @synonyms "comments, remarks, observations, details" = ""
-    wizardSteps : [WizardFlowStep] @description "An ordered list of steps within the wizard process." @synonyms "steps, sequence, stages" = []
-    currentStepIndex : number @description "The numerical index of the currently displayed step." @synonyms "step number, step position, index" = 0
-    totalSteps : number @description "The total number of steps in the wizard." @synonyms "count, steps, length" = 0
-    currentStepLabel : string @description "The text displayed for the currently active step." @synonyms "step title, step name, current step" = ""
-    currentStepDescription : string @description "A brief explanation of the current step's purpose." @synonyms "step description, step details, step explanation" = ""
-    currentStepIcon : string @description "Icon representing the current step in the process." @synonyms "icon, image, visual" = circle
-    currentFields : [string] @description "The data currently being displayed in the form." @synonyms "form data, input values, field values" = []
-    isFirstStep : boolean @description "Indicates if this is the initial step in the wizard." @synonyms "first, initial, start" = true
-    isLastStep : boolean @description "Indicates whether this is the final step in the wizard." @synonyms "last, end, final" = false
-    primaryActionLabel : string @description "Text displayed for the primary action button." @synonyms "button text, action label, primary button" = Next
-    primaryActionIcon : string @description "Icon representing the primary action button." @synonyms "icon, button-icon, action-icon" = chevron-right
-    completionMessage : string @description "Text displayed upon successful completion of the wizard." @synonyms "success message, confirmation text, final message" = ""
-    cancelReason : string @description "The reason provided for cancelling the wizard process." @synonyms "cancellation reason, cancel explanation, dismissal reason" = ""
-    errorMessage : string @description "Error message displayed when a process fails." @synonyms "error, fault, problem" = ""
+    answers : WizardAnswers @description "The answers by step id; a multi answer is its chosen values joined by a comma." = {}
+    stepIndex : number @description "The index of the step on screen." = 0
+    stepId : string @description "The id of the step on screen." = ""
+    step : WizardStep @intrinsic = { id: "", title: "", description: "", kind: "info", options: [], placeholder: "", optional: false, icon: "", fields: [] }
+    draft : string @intrinsic = ""
+    picked : [string] @intrinsic = []
+    overrides : [WizardOverride] @intrinsic = []
+    problem : string @intrinsic = ""
+    slotReady : boolean @intrinsic = true
+    done : boolean @intrinsic = false
+    didAnswer : boolean @intrinsic = false
+    answeredStep : string @intrinsic = ""
+    answeredValue : string @intrinsic = ""
+    prevIndex : number @intrinsic = 0
+    prevAnswers : WizardAnswers @intrinsic = {}
+    cancelReason : string @description "The reason given for cancelling the wizard." = ""
   }
 
-  trait WizardForm -> @rebindable WizardView [optimistic] {
+  trait WizardEmptySlot -> @rebindable WizardView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main null)
+    }
+  }
+
+  trait WizardFlow -> @rebindable WizardView {
     initial: loading
 
     state loading {
+      INIT -> stepping when (and (not @config.awaitPosition) (> (array/len @config.steps) 0))
+        (set @entity.answers {})
+        (set @entity.done false)
+        (set @entity.stepIndex 0)
+        (set @entity.step (default (array/nth @config.steps 0) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.draft "")
+        (set @entity.picked [])
+        (set @entity.problem "")
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      INIT -> finished when (and (not @config.awaitPosition) (== (array/len @config.steps) 0))
+        (set @entity.done true)
+        (when @config.showCompleted (render-ui @config.slot @config.completedContent))
+        (when (not @config.showCompleted) (render-ui @config.slot null))
+        (emit WIZARD_EMPTY { })
       INIT -> loading
-        (fetch WizardView {
-          limit: @config.maxRows
-          emit: { failure: WizardLoadFailed, success: WizardLoaded }
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
-      WizardLoaded -> running
-        (set @entity.currentStepIndex 0)
-        (set @entity.totalSteps (array/len @config.steps))
-        (set @entity.wizardSteps (array/map @config.steps (fn step {
-          description: (object/get @step description "")
-          id: (object/get @step key)
-          title: (object/get @step label)
-        })))
-        (set @entity.currentStepLabel (let ((step (array/nth @config.steps 0))) (if (= @step null) "" (object/get @step label))))
-        (set @entity.currentStepDescription (let ((step (array/nth @config.steps 0))) (if (= @step null) "" (object/get @step description ""))))
-        (set @entity.currentStepIcon (let ((step (array/nth @config.steps 0))) (if (= @step null) circle (object/get @step icon circle))))
-        (set @entity.currentFields (let ((step (array/nth @config.steps 0))) (if (= @step null) [] (object/get @step fields []))))
-        (set @entity.isFirstStep true)
-        (set @entity.isLastStep (= (array/len @config.steps) 1))
-        (set @entity.primaryActionLabel (if (= (array/len @config.steps) 1) Submit Next))
-        (set @entity.primaryActionIcon (if (= (array/len @config.steps) 1) check-circle chevron-right))
-        (render-ui main {
-          children: [{
-            align: center
-            children: [{ name: list-checks, size: lg, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }, {
-            allowNavigation: false
-            currentStep: @entity.currentStepIndex
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
-            type: wizard-progress
-          }, {
-            children: [{
-              children: [{
-                align: center
-                children: [{
-                  name: @entity.currentStepIcon
-                  size: xl
-                  type: icon
-                }, {
-                  children: [{
-                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (if (>= @entity.currentStepIndex 0) (array/nth @config.stepLabels @entity.currentStepIndex) null))
-                    type: typography
-                    variant: h2
-                  }, {
-                    color: muted
-                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (if (>= @entity.currentStepIndex 0) (array/nth @config.stepDescriptions @entity.currentStepIndex) null))
-                    type: typography
-                    variant: body
-                  }]
-                  direction: vertical
-                  gap: xs
-                  type: stack
-                }]
-                direction: horizontal
-                gap: sm
-                type: stack
-              }, { type: divider }, {
-                cancelEvent: CANCEL
-                entity: @entity
-                fields: (array/map @entity.currentFields (fn f { name: @f }))
-                mode: edit
-                showCancel: false
-                showSubmit: false
-                submitEvent: ADVANCE
-                type: form-section
-              }]
-              direction: vertical
-              gap: md
-              type: stack
-            }]
-            look: @config.cardLook
-            type: card
-          }, {
-            align: center
-            children: [{
-              action: RETREAT
-              disabled: @entity.isFirstStep
-              icon: chevron-left
-              label: @config.backLabel
-              type: button
-              variant: ghost
-            }, {
-              action: CANCEL
-              icon: x
-              label: @config.cancelLabel
-              type: button
-              variant: ghost
-            }, {
-              action: ADVANCE
-              actionPayload: { data: @entity }
-              icon: @entity.primaryActionIcon
-              label: (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) @config.submitLabel @config.nextLabel)
-              type: button
-              variant: primary
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }]
-          direction: vertical
-          gap: lg
-          type: stack
-        })
-      WizardLoadFailed -> error
-        (set @entity.errorMessage ?error)
-        (render-ui main {
-          message: @entity.errorMessage
-          title: "Failed to load"
-          type: error-state
-        })
-      WizardSaved -> loading
-        (fetch WizardView {
-          limit: @config.maxRows
-          emit: { failure: WizardLoadFailed, success: WizardLoaded }
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
-      WizardSaveFailed -> error
-        (set @entity.errorMessage ?error)
-        (render-ui main {
-          message: @entity.errorMessage
-          title: "Save failed"
-          type: error-state
-        })
+        (render-ui @config.slot @config.loadingContent)
+      WIZARD_POSITION -> stepping when (and (> (array/len @config.steps) 0) (not ?finished))
+        (set @entity.answers (default ?answers {}))
+        (set @entity.stepIndex (let ((i (array/findIndex @config.steps (fn s (== @s.id (default ?stepId "")))))) (if (< @i 0) 0 @i)))
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.done false)
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem (default ?problem ""))
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_POSITION -> finished
+        (set @entity.answers (default ?answers {}))
+        (set @entity.done true)
+        (when @config.showCompleted (render-ui @config.slot @config.completedContent))
+        (when (not @config.showCompleted) (render-ui @config.slot null))
+        (when (== (array/len @config.steps) 0) (emit WIZARD_EMPTY { }))
+      WIZARD_SLOT_ANSWER -> loading
+      WIZARD_SLOT_READY -> loading
+      WIZARD_RESTART -> loading
+      WIZARD_REJECT -> loading
+      WIZARD_OPTIONS -> loading
+        (set @entity.overrides (array/append (array/filter @entity.overrides (fn o (!= @o.stepId ?stepId))) { stepId: ?stepId, options: ?options }))
     }
 
-    state running {
-      INIT -> loading
-        (fetch WizardView {
-          limit: @config.maxRows
-          emit: { failure: WizardLoadFailed, success: WizardLoaded }
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
-      ADVANCE -> running when (not @entity.isLastStep)
-        (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step label))))
-        (set @entity.currentStepDescription (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step description ""))))
-        (set @entity.currentStepIcon (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) circle (object/get @step icon circle))))
-        (set @entity.currentFields (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) [] (object/get @step fields []))))
-        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
-        (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
-        (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) Submit Next))
-        (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
-        (render-ui main {
-          children: [{
-            align: center
-            children: [{ name: list-checks, size: lg, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }, {
-            allowNavigation: false
-            currentStep: @entity.currentStepIndex
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
-            type: wizard-progress
-          }, {
-            children: [{
-              children: [{
-                align: center
-                children: [{
-                  name: @entity.currentStepIcon
-                  size: xl
-                  type: icon
-                }, {
-                  children: [{
-                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (if (>= @entity.currentStepIndex 0) (array/nth @config.stepLabels @entity.currentStepIndex) null))
-                    type: typography
-                    variant: h2
-                  }, {
-                    color: muted
-                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (if (>= @entity.currentStepIndex 0) (array/nth @config.stepDescriptions @entity.currentStepIndex) null))
-                    type: typography
-                    variant: body
-                  }]
-                  direction: vertical
-                  gap: xs
-                  type: stack
-                }]
-                direction: horizontal
-                gap: sm
-                type: stack
-              }, { type: divider }, {
-                cancelEvent: CANCEL
-                entity: @entity
-                fields: (array/map @entity.currentFields (fn f { name: @f }))
-                mode: edit
-                showCancel: false
-                showSubmit: false
-                submitEvent: ADVANCE
-                type: form-section
-              }]
-              direction: vertical
-              gap: md
-              type: stack
-            }]
-            look: @config.cardLook
-            type: card
-          }, {
-            align: center
-            children: [{
-              action: RETREAT
-              disabled: @entity.isFirstStep
-              icon: chevron-left
-              label: @config.backLabel
-              type: button
-              variant: ghost
-            }, {
-              action: CANCEL
-              icon: x
-              label: @config.cancelLabel
-              type: button
-              variant: ghost
-            }, {
-              action: ADVANCE
-              actionPayload: { data: @entity }
-              icon: @entity.primaryActionIcon
-              label: (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) @config.submitLabel @config.nextLabel)
-              type: button
-              variant: primary
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }]
-          direction: vertical
-          gap: lg
-          type: stack
-        })
-      ADVANCE -> completed when @entity.isLastStep
-        (set @entity.completionMessage "All steps completed. Your submission has been recorded.")
-        (persist update WizardView ?data {
-          emit: { failure: WizardSaveFailed, success: WizardSaved }
-        })
-        (render-ui main {
-          align: center
-          children: [{
-            name: check-circle
-            size: xl
-            type: icon
-          }, {
-            align: center
-            content: @config.completedTitle
-            type: typography
-            variant: h2
-          }, {
-            align: center
-            color: muted
-            content: (if (= @config.completedText "") @entity.completionMessage @config.completedText)
-            type: typography
-            variant: body
-          }, {
-            allowNavigation: false
-            currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
-            type: wizard-progress
-          }, {
-            action: RESTART
-            icon: rotate-ccw
-            label: @config.restartLabel
-            type: button
-            variant: secondary
-          }]
-          direction: vertical
-          gap: lg
-          type: stack
-        })
-      RETREAT -> running
-        (set @entity.currentStepIndex (- @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step label))))
-        (set @entity.currentStepDescription (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step description ""))))
-        (set @entity.currentStepIcon (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) circle (object/get @step icon circle))))
-        (set @entity.currentFields (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) [] (object/get @step fields []))))
-        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
-        (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
-        (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) Submit Next))
-        (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
-        (render-ui main {
-          children: [{
-            align: center
-            children: [{ name: list-checks, size: lg, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }, {
-            allowNavigation: false
-            currentStep: @entity.currentStepIndex
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
-            type: wizard-progress
-          }, {
-            children: [{
-              children: [{
-                align: center
-                children: [{
-                  name: @entity.currentStepIcon
-                  size: xl
-                  type: icon
-                }, {
-                  children: [{
-                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (if (>= @entity.currentStepIndex 0) (array/nth @config.stepLabels @entity.currentStepIndex) null))
-                    type: typography
-                    variant: h2
-                  }, {
-                    color: muted
-                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (if (>= @entity.currentStepIndex 0) (array/nth @config.stepDescriptions @entity.currentStepIndex) null))
-                    type: typography
-                    variant: body
-                  }]
-                  direction: vertical
-                  gap: xs
-                  type: stack
-                }]
-                direction: horizontal
-                gap: sm
-                type: stack
-              }, { type: divider }, {
-                cancelEvent: CANCEL
-                entity: @entity
-                fields: (array/map @entity.currentFields (fn f { name: @f }))
-                mode: edit
-                showCancel: false
-                showSubmit: false
-                submitEvent: ADVANCE
-                type: form-section
-              }]
-              direction: vertical
-              gap: md
-              type: stack
-            }]
-            look: @config.cardLook
-            type: card
-          }, {
-            align: center
-            children: [{
-              action: RETREAT
-              disabled: @entity.isFirstStep
-              icon: chevron-left
-              label: @config.backLabel
-              type: button
-              variant: ghost
-            }, {
-              action: CANCEL
-              icon: x
-              label: @config.cancelLabel
-              type: button
-              variant: ghost
-            }, {
-              action: ADVANCE
-              actionPayload: { data: @entity }
-              icon: @entity.primaryActionIcon
-              label: (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) @config.submitLabel @config.nextLabel)
-              type: button
-              variant: primary
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }]
-          direction: vertical
-          gap: lg
-          type: stack
-        })
-      CANCEL -> cancelled
-        (set @entity.cancelReason ?reason)
-        (render-ui main {
-          align: center
-          children: [{
-            name: x-circle
-            size: xl
-            type: icon
-          }, {
-            align: center
-            content: @config.cancelledTitle
-            type: typography
-            variant: h2
-          }, {
-            align: center
-            color: muted
-            content: @config.cancelledText
-            type: typography
-            variant: body
-          }, {
-            action: RESTART
-            icon: rotate-ccw
-            label: @config.restartLabel
-            type: button
-            variant: secondary
-          }]
-          direction: vertical
-          gap: lg
-          type: stack
-        })
+    state stepping {
+      INIT -> stepping
+      WIZARD_TOGGLE -> stepping when (== (object/get @entity.step kind) "multi")
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.picked (if (array/includes @entity.picked ?value) (array/removeItem @entity.picked ?value) (array/append @entity.picked ?value)))
+        (set @entity.answers (object/set @entity.answers @entity.stepId (str/join @entity.picked ",")))
+        (set @entity.problem "")
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: false, didAnswer: false, answeredStep: "", answeredValue: "" })
+      WIZARD_TOGGLE -> stepping
+      WIZARD_PICK -> stepping when (== (object/get @entity.step kind) "choice")
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.picked [?value])
+        (set @entity.answers (object/set @entity.answers @entity.stepId ?value))
+        (set @entity.problem "")
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: false, didAnswer: false, answeredStep: "", answeredValue: "" })
+      WIZARD_PICK -> stepping
+      WIZARD_TYPED -> stepping
+        (set @entity.draft (default ?value ""))
+        (when (!= @entity.problem "")
+          (do
+            (set @entity.problem "")
+            (render-ui @config.slot @config.stepContent)))
+      WIZARD_ADVANCE -> stepping when (and (or (!= (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")) "") (== (object/get @entity.step kind) "info") (== (object/get @entity.step kind) "form") (object/get @entity.step optional false)) (< (+ @entity.stepIndex 1) (array/len @config.steps)))
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.didAnswer (!= (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")) ""))
+        (set @entity.answeredStep @entity.stepId)
+        (set @entity.answeredValue (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")))
+        (when @entity.didAnswer (set @entity.answers (object/set @entity.answers @entity.stepId (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")))))
+        (set @entity.stepIndex (+ @entity.stepIndex 1))
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem "")
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: false, didAnswer: @entity.didAnswer, answeredStep: @entity.answeredStep, answeredValue: @entity.answeredValue })
+        (when @entity.didAnswer (emit WIZARD_ANSWERED { stepId: @entity.answeredStep, value: @entity.answeredValue, answers: @entity.answers }))
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_ADVANCE -> finished when (or (!= (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")) "") (== (object/get @entity.step kind) "info") (== (object/get @entity.step kind) "form") (object/get @entity.step optional false))
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.didAnswer (!= (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")) ""))
+        (set @entity.answeredStep @entity.stepId)
+        (set @entity.answeredValue (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")))
+        (when @entity.didAnswer (set @entity.answers (object/set @entity.answers @entity.stepId (if (and (== (object/get @entity.step kind) "text") (default ?useDraft false)) @entity.draft (default ?value "")))))
+        (set @entity.done true)
+        (when @config.showCompleted (render-ui @config.slot @config.completedContent))
+        (when (not @config.showCompleted) (render-ui @config.slot null))
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: true, didAnswer: @entity.didAnswer, answeredStep: @entity.answeredStep, answeredValue: @entity.answeredValue })
+        (when @entity.didAnswer (emit WIZARD_ANSWERED { stepId: @entity.answeredStep, value: @entity.answeredValue, answers: @entity.answers }))
+        (emit WIZARD_DONE { answers: @entity.answers })
+      WIZARD_ADVANCE -> stepping
+        (set @entity.problem @config.requiredText)
+        (render-ui @config.slot @config.stepContent)
+      WIZARD_SLOT_PRESS -> stepping when (== (object/get @entity.step kind) "slot")
+        (emit WIZARD_SLOT_CONTINUE { stepId: @entity.stepId })
+      WIZARD_SLOT_READY -> stepping when (== ?stepId @entity.stepId)
+        (set @entity.slotReady ?ready)
+        (render-ui @config.slot @config.stepContent)
+      WIZARD_SLOT_ANSWER -> stepping when (and (== ?stepId @entity.stepId) (== (object/get @entity.step kind) "slot") (< (+ @entity.stepIndex 1) (array/len @config.steps)))
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.didAnswer true)
+        (set @entity.answeredStep @entity.stepId)
+        (set @entity.answeredValue ?value)
+        (set @entity.answers (object/set @entity.answers @entity.stepId ?value))
+        (set @entity.stepIndex (+ @entity.stepIndex 1))
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem "")
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: false, didAnswer: true, answeredStep: @entity.answeredStep, answeredValue: @entity.answeredValue })
+        (emit WIZARD_ANSWERED { stepId: @entity.answeredStep, value: @entity.answeredValue, answers: @entity.answers })
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_SLOT_ANSWER -> finished when (and (== ?stepId @entity.stepId) (== (object/get @entity.step kind) "slot"))
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.didAnswer true)
+        (set @entity.answeredStep @entity.stepId)
+        (set @entity.answeredValue ?value)
+        (set @entity.answers (object/set @entity.answers @entity.stepId ?value))
+        (set @entity.done true)
+        (when @config.showCompleted (render-ui @config.slot @config.completedContent))
+        (when (not @config.showCompleted) (render-ui @config.slot null))
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: true, didAnswer: true, answeredStep: @entity.answeredStep, answeredValue: @entity.answeredValue })
+        (emit WIZARD_ANSWERED { stepId: @entity.answeredStep, value: @entity.answeredValue, answers: @entity.answers })
+        (emit WIZARD_DONE { answers: @entity.answers })
+      WIZARD_SLOT_ANSWER -> stepping
+      WIZARD_BACK_PRESS -> stepping when (> @entity.stepIndex 0)
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.didAnswer false)
+        (set @entity.stepIndex (- @entity.stepIndex 1))
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem "")
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: false, didAnswer: false, answeredStep: "", answeredValue: "" })
+        (emit WIZARD_BACK { stepId: @entity.stepId })
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_BACK_PRESS -> stepping
+      WIZARD_RESTART -> stepping when (> (array/len @config.steps) 0)
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.didAnswer false)
+        (set @entity.stepIndex 0)
+        (set @entity.step (default (array/nth @config.steps 0) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem "")
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: false, didAnswer: false, answeredStep: "", answeredValue: "" })
+        (emit WIZARD_RESTARTED { stepId: @entity.stepId })
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_RESTART -> stepping
+      WIZARD_CANCEL -> finished
+        (set @entity.cancelReason (default ?reason ""))
+        (render-ui @config.slot @config.cancelledContent)
+        (emit WIZARD_CANCELLED { reason: @entity.cancelReason })
+      WIZARD_OPTIONS -> stepping
+        (set @entity.overrides (array/append (array/filter @entity.overrides (fn o (!= @o.stepId ?stepId))) { stepId: ?stepId, options: ?options }))
+        (when (== ?stepId @entity.stepId)
+          (do
+            (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (and (!= @v "") (array/includes (array/map ?options (fn o @o.value)) @v)))))
+            (render-ui @config.slot @config.stepContent)))
+      WIZARD_POSITION -> stepping when (and (> (array/len @config.steps) 0) (not ?finished))
+        (set @entity.answers (default ?answers {}))
+        (set @entity.stepIndex (let ((i (array/findIndex @config.steps (fn s (== @s.id (default ?stepId "")))))) (if (< @i 0) 0 @i)))
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.done false)
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem (default ?problem ""))
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_POSITION -> finished
+        (set @entity.answers (default ?answers {}))
+        (set @entity.done true)
+        (when @config.showCompleted (render-ui @config.slot @config.completedContent))
+        (when (not @config.showCompleted) (render-ui @config.slot null))
+        (when (== (array/len @config.steps) 0) (emit WIZARD_EMPTY { }))
+      WIZARD_REJECT -> stepping
+        (set @entity.answers @entity.prevAnswers)
+        (set @entity.stepIndex @entity.prevIndex)
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.done false)
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem (default ?error @config.rejectedText))
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
     }
 
-    state completed {
-      INIT -> loading
-        (fetch WizardView {
-          limit: @config.maxRows
-          emit: { failure: WizardLoadFailed, success: WizardLoaded }
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
-      WizardSaved -> completed
-        (render-ui main {
-          align: center
-          children: [{
-            name: check-circle
-            size: xl
-            type: icon
-          }, {
-            align: center
-            content: @config.completedTitle
-            type: typography
-            variant: h2
-          }, {
-            align: center
-            color: muted
-            content: (if (= @config.completedText "") @entity.completionMessage @config.completedText)
-            type: typography
-            variant: body
-          }, {
-            allowNavigation: false
-            currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn (step index) { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
-            type: wizard-progress
-          }, {
-            action: RESTART
-            icon: rotate-ccw
-            label: @config.restartLabel
-            type: button
-            variant: secondary
-          }]
-          direction: vertical
-          gap: lg
-          type: stack
-        })
-      WizardSaveFailed -> completed
-        (notify error (if (validate/required ?error) (str/concat "Couldn't save the wizard — " ?error) "Couldn't save the wizard"))
-      RESTART -> loading
-        (set @entity.currentStepIndex 0)
-        (set @entity.completionMessage "")
-        (fetch WizardView {
-          limit: @config.maxRows
-          emit: { failure: WizardLoadFailed, success: WizardLoaded }
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
-    }
-
-    state cancelled {
-      INIT -> loading
-        (fetch WizardView {
-          limit: @config.maxRows
-          emit: { failure: WizardLoadFailed, success: WizardLoaded }
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
-      RESTART -> loading
-        (set @entity.currentStepIndex 0)
+    state finished {
+      INIT -> finished
+      WIZARD_RESTART -> stepping when (> (array/len @config.steps) 0)
+        (set @entity.prevIndex @entity.stepIndex)
+        (set @entity.prevAnswers @entity.answers)
+        (set @entity.didAnswer false)
+        (set @entity.done false)
         (set @entity.cancelReason "")
-        (fetch WizardView {
-          limit: @config.maxRows
-          emit: { failure: WizardLoadFailed, success: WizardLoaded }
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
-    }
-
-    state error {
-      INIT -> loading
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 3 }]
-        })
+        (set @entity.stepIndex 0)
+        (set @entity.step (default (array/nth @config.steps 0) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem "")
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_COMMIT { stepId: @entity.stepId, answers: @entity.answers, done: false, didAnswer: false, answeredStep: "", answeredValue: "" })
+        (emit WIZARD_RESTARTED { stepId: @entity.stepId })
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_RESTART -> finished
+      WIZARD_OPTIONS -> finished
+        (set @entity.overrides (array/append (array/filter @entity.overrides (fn o (!= @o.stepId ?stepId))) { stepId: ?stepId, options: ?options }))
+      WIZARD_SLOT_ANSWER -> finished
+      WIZARD_SLOT_READY -> finished
+      WIZARD_POSITION -> stepping when (and (> (array/len @config.steps) 0) (not ?finished))
+        (set @entity.answers (default ?answers {}))
+        (set @entity.stepIndex (let ((i (array/findIndex @config.steps (fn s (== @s.id (default ?stepId "")))))) (if (< @i 0) 0 @i)))
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.done false)
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem (default ?problem ""))
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
+      WIZARD_POSITION -> finished
+        (set @entity.answers (default ?answers {}))
+        (set @entity.done true)
+        (when @config.showCompleted (render-ui @config.slot @config.completedContent))
+        (when (not @config.showCompleted) (render-ui @config.slot null))
+        (when (== (array/len @config.steps) 0) (emit WIZARD_EMPTY { }))
+      WIZARD_REJECT -> stepping
+        (set @entity.answers @entity.prevAnswers)
+        (set @entity.stepIndex @entity.prevIndex)
+        (set @entity.step (default (array/nth @config.steps @entity.stepIndex) @config.emptyStep))
+        (set @entity.stepId (object/get @entity.step id))
+        (set @entity.done false)
+        (set @entity.draft (default (object/get @entity.answers @entity.stepId) ""))
+        (set @entity.picked (array/filter (str/split (default (object/get @entity.answers @entity.stepId) "") ",") (fn v (!= @v ""))))
+        (set @entity.problem (default ?error @config.rejectedText))
+        (set @entity.slotReady true)
+        (render-ui @config.slot @config.stepContent)
+        (emit WIZARD_STEP { stepId: @entity.stepId, answers: @entity.answers })
     }
 
     emits {
-      ADVANCE {
-        data : @entity!
-      }
-        @description "Signals progression to the next step in the wizard."
-        @synonyms "next, proceed, continue"
+      WIZARD_STEP -> external { stepId : string!, answers : Map string string! }
+        @description "A step is shown; answer a slot step with WIZARD_SLOT_ANSWER, or supply options with WIZARD_OPTIONS."
         @tier "domain"
-      RETREAT
-        @description "Aborts the wizard process, discarding any unsaved data."
-        @synonyms "cancel, abort, quit, exit, undo"
+      WIZARD_ANSWERED -> external { stepId : string!, value : string!, answers : Map string string! }
+        @description "An answer was given to a step."
         @tier "domain"
-      CANCEL {
-        reason : string
-      }
-        @description "Indicates the user has abandoned the data collection process."
-        @synonyms "close, dismiss, abort"
+      WIZARD_DONE -> external { answers : Map string string! }
+        @description "The last step was answered."
         @tier "domain"
-      RESTART
-        @description "Initiates a reset of the wizard's state and data."
-        @synonyms "reset, refresh, reinitialize"
-        @tier "presentation"
-      WizardLoaded {
-        data : [ObjectSpec]
-      }
-        @description "Signals the wizard has finished loading and is ready."
-        @synonyms "ready, initialized, available"
-        @tier "internal"
-      WizardLoadFailed {
-        error : string
-        code : string
-      }
-        @description "Indicates the wizard failed to load initial data."
-        @synonyms "load error, initialization failure"
-        @tier "internal"
-      WizardSaved
-        @description "Indicates successful data submission within the wizard."
-        @synonyms "saved, submitted, confirmed"
+      WIZARD_SLOT_CONTINUE -> external { stepId : string! }
+        @description "The person pressed the primary button of a slot step; the composer answers with WIZARD_SLOT_ANSWER."
         @tier "domain"
-      WizardSaveFailed {
-        error : string
-        code : string
-      }
-        @description "Indicates a failure to save wizard data."
-        @synonyms "error, failed, save error"
-        @tier "internal"
+      WIZARD_BACK -> external { stepId : string! }
+        @description "The person went back; this is the step now shown."
+        @tier "domain"
+      WIZARD_RESTARTED -> external { stepId : string! }
+        @description "The wizard went back to its first step; this is that step."
+        @tier "domain"
+      WIZARD_CANCELLED -> external { reason : string! }
+        @description "The person cancelled the wizard."
+        @tier "domain"
+      WIZARD_EMPTY -> external { }
+        @description "There is no step to show: the steps list is empty or the position was already finished."
+        @tier "domain"
+      WIZARD_COMMIT -> external { stepId : string!, answers : Map string string!, done : boolean!, didAnswer : boolean!, answeredStep : string!, answeredValue : string! }
+        @description "The position or the answers changed and the wizard already moved; a composer that keeps them answers a failure with WIZARD_REJECT."
+        @tier "domain"
     }
 
     listens {
-      ADVANCE {
-        data : @entity!
+      WIZARD_ADVANCE { value : string, useDraft : boolean }
+        @description "Continue, answer or skip the current step."
+      WIZARD_TOGGLE { value : string! }
+        @description "Pick or unpick an option of a multi step; the picks are reported with WIZARD_COMMIT without moving on."
+      WIZARD_PICK { value : string! }
+        @description "Select the option of a choice step; the pick is reported with WIZARD_COMMIT and Continue moves on."
+      WIZARD_TYPED { value : string }
+        @description "The text of a text step changed."
+      WIZARD_SLOT_PRESS { stepId : string }
+        @description "The primary button of a slot step."
+      WIZARD_BACK_PRESS
+        @description "Return to the previous step."
+      WIZARD_CANCEL { reason : string? }
+        @description "Cancel the wizard."
+      WIZARD_SLOT_ANSWER -> input {
+        stepId : string! @description "The slot step being answered"
+        value : string! @description "The answer"
       }
-        @description "Indicates a request to proceed to the next step."
-        @synonyms "next, proceed, continue"
-        @tier "domain"
-      RETREAT
-        @description "Aborts the current workflow and resets to the beginning."
-        @synonyms "reset, undo, back, go back"
-        @tier "domain"
-      CANCEL {
-        reason : string
+        @description "A composer reports the answer to the slot step it shows; the wizard moves on."
+        @synonyms "answer the step, fill the step"
+      WIZARD_SLOT_READY -> input {
+        stepId : string! @description "The slot step"
+        ready : boolean! @description "Whether its primary button may be pressed"
       }
-        @description "User initiated cancellation of the wizard process."
-        @synonyms "close, abort, dismiss, exit"
-        @tier "domain"
-      RESTART
-        @description "Initiates a reset of the wizard's state and data."
-        @synonyms "reset, refresh, reinitialize"
-        @tier "presentation"
-      WizardLoaded {
-        data : [ObjectSpec]
+        @description "A composer enables or disables the primary button of the slot step it shows."
+        @synonyms "enable continue, hold the step"
+      WIZARD_OPTIONS -> input {
+        stepId : string! @description "The choice or multi step"
+        options : [WizardOption]! @description "The options to offer, replacing the configured ones"
       }
-        @description "Indicates the wizard's initial data has been successfully loaded."
-        @synonyms "initialized, ready, available"
-        @tier "internal"
-      WizardLoadFailed {
-        error : string
-        code : string
+        @description "Supply or replace the options of a choice or multi step at run time."
+        @synonyms "set the choices, offer these options"
+      WIZARD_RESTART -> input { }
+        @description "Start over at the first step; the answers are kept."
+        @synonyms "start again, redo"
+      WIZARD_POSITION -> input {
+        stepId : string @description "The step to show; an id not in the steps shows the first"
+        answers : Map string string @description "The answers by step id"
+        finished : boolean @description "Whether the wizard is already finished"
+        problem : string? @description "A message to show on the step"
       }
-        @description "Indicates the wizard failed to load its initial data."
-        @synonyms "load error, initialization failure, failed load"
-        @tier "internal"
-      WizardSaved
-        @description "Data submission from the current step has completed."
-        @synonyms "submit, save, confirm, send"
-        @tier "domain"
-      WizardSaveFailed {
-        error : string
-        code : string
+        @description "Set the position and the answers, for example to resume a wizard."
+        @synonyms "resume, go to step"
+      WIZARD_REJECT -> input {
+        error : string? @description "What to tell the person"
       }
-        @description "Indicates a failure during data saving within the wizard."
-        @synonyms "error, failure, save failed, problem"
-        @tier "internal"
+        @description "A composer could not keep the last change: the wizard returns to where it was and shows the message."
+        @synonyms "undo the change, save failed"
     }
 
     config {
+      steps : [WizardStep] = [{
+        description: "Basic information"
+        fields: (title description)
+        icon: file-text
+        id: details
+        kind: "form"
+        title: Details
+      }, {
+        description: "Configure preferences"
+        fields: (category priority)
+        icon: settings
+        id: options
+        kind: "form"
+        title: Options
+      }, {
+        description: "Confirm and submit"
+        fields: (notes)
+        icon: check-circle
+        id: review
+        kind: "form"
+        title: Review
+      }]
+        @label "Steps"
+        @description "The steps in order: id, title, description, icon, kind (info, choice, multi, text, slot or form), options, placeholder, whether it is optional and, for a form step, the entity fields to edit."
+        @tier "domain"
+      slot : slot = main
+        @label "Slot"
+        @description "Where the wizard renders."
+        @tier "presentation"
+      awaitPosition : boolean = false
+        @label "Wait for a position"
+        @description "Show the loading body until WIZARD_POSITION arrives instead of starting at the first step."
+        @tier "policy"
+      allowCancel : boolean = true
+        @label "Allow cancel"
+        @description "Whether the frame shows the cancel button."
+        @tier "policy"
+      showCompleted : boolean = true
+        @label "Show completed screen"
+        @description "Whether the wizard shows completedContent once finished; off renders nothing."
+        @tier "policy"
+      progressDetail : boolean = true
+        @label "Progress detail"
+        @description "Whether the progress strip shows each step's description."
+        @tier "presentation"
       title : string = Wizard
         @label "Wizard title"
         @description "Heading shown across all wizard steps"
         @tier "presentation"
-      nextLabel : string = "Next"
-        @label "Next label"
+      headerIcon : string = list-checks
+        @label "Heading icon"
+        @description "Icon before the heading; empty shows none."
         @tier "presentation"
-      submitLabel : string = "Submit"
-        @label "Submit label"
-        @description "The primary button on the last step"
+      intro : string = ""
+        @label "Intro"
+        @description "A line under the heading on the first step; empty shows none."
+        @tier "presentation"
+      continueLabel : string = "Next"
+        @label "Continue label"
+        @tier "presentation"
+      finishLabel : string = "Submit"
+        @label "Finish label"
+        @description "The primary button on the last step."
         @tier "presentation"
       backLabel : string = (i18n/t "back")
         @label "Back label"
+        @tier "presentation"
+      skipLabel : string = "Skip"
+        @label "Skip label"
         @tier "presentation"
       cancelLabel : string = (i18n/t "cancelWizard")
         @label "Cancel label"
@@ -681,59 +480,193 @@ orbital WizardOrbital {
       restartLabel : string = (i18n/t "restartWizard")
         @label "Restart label"
         @tier "presentation"
+      optionalLabel : string = "Optional"
+        @label "Optional label"
+        @tier "presentation"
+      progressTemplate : string = "Step {n} of {total}"
+        @label "Progress text"
+        @description "{n} is the step number and {total} how many steps there are."
+        @tier "presentation"
+      requiredText : string = "Answer this step to continue."
+        @label "Required text"
+        @description "Shown when Continue is pressed on a required step with no answer."
+        @tier "presentation"
+      rejectedText : string = "Your answer could not be kept. Please try again."
+        @label "Rejected text"
+        @description "Shown when a composer rejects the last change without saying why."
+        @tier "presentation"
       completedTitle : string = "Complete"
         @label "Completed title"
         @tier "presentation"
+      completedText : string = "All steps completed."
+        @label "Completed text"
+        @tier "presentation"
       cancelledTitle : string = "Cancelled"
         @label "Cancelled title"
-        @tier "presentation"
-      completedText : string = ""
-        @label "Completed text"
-        @description "Shown when the wizard finishes; empty shows the default completion message"
         @tier "presentation"
       cancelledText : string = "The wizard was cancelled. No data was submitted."
         @label "Cancelled text"
         @tier "presentation"
       stepLabels : [string] = []
         @label "Step labels"
-        @description "In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)"
+        @description "In step order: the label shown for each step, in place of its `steps` title (render-only, so it may be translated)"
         @tier "presentation"
       stepDescriptions : [string] = []
         @label "Step descriptions"
         @description "In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)"
         @tier "presentation"
-      steps : [StepSpec] = [{
-        description: "Basic information"
-        fields: (title description)
-        icon: file-text
-        key: details
-        label: Details
-      }, {
-        description: "Configure preferences"
-        fields: (category priority)
-        icon: settings
-        key: options
-        label: Options
-      }, {
-        description: "Confirm and submit"
-        fields: (notes)
-        icon: check-circle
-        key: review
-        label: Review
-      }]
-        @label "Steps"
-        @description "Ordered steps with their label, icon, and form fields"
-        @tier "domain"
       cardLook : "elevated" | "flat-bordered" | "borderless-divider" | "ticket" | "invoice" | "chip" | "tile-image-first" = elevated
         @label "Card look"
         @description "Layer 2 visual treatment for cards rendered by this atom."
         @tier "presentation"
-      maxRows : number = 500
-        @label "Most rows per load"
-        @description "Most rows one load reads."
-        @tier "policy"
+      slotContent : trait = @trait.WizardEmptySlot
+        @label "Slot step content"
+        @description "The trait shown between a slot step's description and its buttons. It tells which step is showing from WIZARD_STEP, enables the primary button with WIZARD_SLOT_READY, and answers WIZARD_SLOT_CONTINUE with WIZARD_SLOT_ANSWER."
+        @tier "presentation"
+      emptyStep : WizardStep = { id: "", title: "", description: "", kind: "info", options: [], placeholder: "", optional: false, icon: "", fields: [] }
+        @label "Empty step"
+        @tier "internal"
+      loadingContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        children: [{ type: skeleton, variant: header }, { type: skeleton, variant: form, fields: 2 }]
+      }
+        @label "Loading body"
+        @tier "internal"
+      completedContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        align: center
+        children: [
+          { type: icon, name: check-circle, size: xl },
+          { type: typography, variant: h2, align: center, content: @config.completedTitle },
+          { type: typography, variant: body, align: center, color: muted, content: @config.completedText },
+          { type: wizard-progress, steps: (array/map @config.steps (fn (x i) { id: @x.id, title: (if (> (array/len @config.stepLabels) @i) (array/nth @config.stepLabels @i) @x.title), description: (if @config.progressDetail (if (> (array/len @config.stepDescriptions) @i) (array/nth @config.stepDescriptions @i) (default (object/get @x description) "")) "") })), currentStep: (array/len @config.steps), allowNavigation: false },
+          { type: button, label: @config.restartLabel, action: WIZARD_RESTART, icon: rotate-ccw, variant: secondary }
+        ]
+      }
+        @label "Completed body"
+        @tier "internal"
+      cancelledContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        align: center
+        children: [
+          { type: icon, name: x-circle, size: xl },
+          { type: typography, variant: h2, align: center, content: @config.cancelledTitle },
+          { type: typography, variant: body, align: center, color: muted, content: @config.cancelledText },
+          { type: button, label: @config.restartLabel, action: WIZARD_RESTART, icon: rotate-ccw, variant: secondary }
+        ]
+      }
+        @label "Cancelled body"
+        @tier "internal"
+      stepContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        className: "h-full min-h-0"
+        children: (let ((s @entity.step) (i @entity.stepIndex) (opts (let ((o (default (array/find @entity.overrides (fn x (== @x.stepId (object/get @entity.step id)))) { stepId: "", options: (object/get @entity.step options []) }))) (object/get @o options [])))) [{
+          type: stack
+          direction: vertical
+          gap: xs
+          children: [
+            { type: stack, direction: horizontal, gap: sm, align: center, children: [
+              { type: icon, name: (if (== @config.headerIcon "") "circle" @config.headerIcon), size: lg, className: (if (== @config.headerIcon "") hidden "") },
+              { type: typography, variant: h3, content: @config.title }
+            ] },
+            { type: typography, variant: body, color: muted, className: (if (and (== @i 0) (!= @config.intro "")) "" hidden), content: @config.intro }
+          ]
+        }, {
+          type: wizard-progress
+          steps: (array/map @config.steps (fn (x k) { id: @x.id, title: (if (> (array/len @config.stepLabels) @k) (array/nth @config.stepLabels @k) @x.title), description: (if @config.progressDetail (if (> (array/len @config.stepDescriptions) @k) (array/nth @config.stepDescriptions @k) (default (object/get @x description) "")) "") }))
+          currentStep: @i
+          allowNavigation: false
+          compact: false
+        }, {
+          type: typography
+          variant: caption
+          color: muted
+          content: (str/replace (str/replace @config.progressTemplate "{n}" (str/concat "" (+ @i 1))) "{total}" (str/concat "" (array/len @config.steps)))
+        }, {
+          type: stack
+          direction: vertical
+          className: "flex-1 min-h-0 overflow-y-auto"
+          children: [{
+          type: card
+          look: @config.cardLook
+          children: [{
+            type: stack
+            direction: vertical
+            gap: md
+            children: (array/concat [{
+              type: stack
+              direction: horizontal
+              gap: sm
+              align: center
+              children: [
+                (if (= (default (object/get @s icon) "") "") null { type: icon, name: (default (object/get @s icon) "circle"), size: xl }),
+                { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: h2, content: (if (> (array/len @config.stepLabels) @i) (array/nth @config.stepLabels @i) (object/get @s title)) },
+                  { type: typography, variant: body, color: muted, content: (if (> (array/len @config.stepDescriptions) @i) (array/nth @config.stepDescriptions @i) (default (object/get @s description) "")) },
+                  { type: typography, variant: caption, color: muted, className: (if (object/get @s optional false) "" hidden), content: @config.optionalLabel }
+                ] }
+              ]
+            }] (array/concat (if (== (object/get @s kind) "choice") (array/map @opts (fn o {
+              type: stack
+              direction: vertical
+              gap: xs
+              children: [
+                { type: button, label: @o.label, action: WIZARD_PICK, actionPayload: { value: @o.value }, icon: (if (array/includes @entity.picked @o.value) check circle), variant: (if (array/includes @entity.picked @o.value) primary secondary), "aria-label": @o.label, "aria-pressed": (if (array/includes @entity.picked @o.value) "true" "false") },
+                { type: typography, variant: caption, color: muted, className: (if (== (default (object/get @o description) "") "") hidden ""), content: (default (object/get @o description) "") }
+              ]
+            })) []) (array/concat (if (== (object/get @s kind) "multi") (array/map @opts (fn o {
+              type: stack
+              direction: vertical
+              gap: xs
+              children: [
+                { type: button, label: @o.label, action: WIZARD_TOGGLE, actionPayload: { value: @o.value }, icon: (if (array/includes @entity.picked @o.value) check circle), variant: (if (array/includes @entity.picked @o.value) primary secondary), "aria-label": @o.label, "aria-pressed": (if (array/includes @entity.picked @o.value) "true" "false") },
+                { type: typography, variant: caption, color: muted, className: (if (== (default (object/get @o description) "") "") hidden ""), content: (default (object/get @o description) "") }
+              ]
+            })) []) (array/concat (if (== (object/get @s kind) "text") [{ type: input, label: (object/get @s title), placeholder: (default (object/get @s placeholder) ""), value: @entity.draft, onChange: WIZARD_TYPED }] []) (array/concat (if (== (object/get @s kind) "slot") [@config.slotContent] []) (if (== (object/get @s kind) "form") [{ type: form-section, entity: @entity, fields: (array/map (object/get @s fields []) (fn f { name: @f })), mode: edit, showCancel: false, showSubmit: false }] []))))))
+          }]
+          }]
+        }, {
+          type: typography
+          variant: caption
+          color: error
+          className: (if (== @entity.problem "") hidden "")
+          content: @entity.problem
+        }, {
+          type: stack
+          direction: horizontal
+          gap: sm
+          align: center
+          justify: between
+          children: [
+            { type: button, label: @config.backLabel, action: WIZARD_BACK_PRESS, icon: chevron-left, variant: ghost, className: (if (== @i 0) hidden "") },
+            {
+              type: stack
+              className: "ml-auto"
+              direction: horizontal
+              gap: sm
+              align: center
+              children: [
+                { type: button, label: @config.cancelLabel, action: WIZARD_CANCEL, icon: x, variant: ghost, className: (if @config.allowCancel "" hidden) },
+                { type: button, label: @config.skipLabel, action: WIZARD_ADVANCE, variant: ghost, className: (if (object/get @s optional false) "" hidden) },
+                { type: button, label: (if (== (+ @i 1) (array/len @config.steps)) @config.finishLabel @config.continueLabel), action: WIZARD_SLOT_PRESS, actionPayload: { stepId: (object/get @s id) }, variant: primary, className: (if (== (object/get @s kind) "slot") "" hidden), disabled: (not @entity.slotReady) },
+                { type: button, label: (if (== (+ @i 1) (array/len @config.steps)) @config.finishLabel @config.continueLabel), action: WIZARD_ADVANCE, variant: primary, className: (if (== (object/get @s kind) "slot") hidden ""), actionPayload: (if (or (== (object/get @s kind) "choice") (== (object/get @s kind) "multi")) { value: (str/join @entity.picked ",") } (if (== (object/get @s kind) "text") { useDraft: true } {})) }
+              ]
+            }
+          ]
+        }])
+      }
+        @label "Step body"
+        @tier "internal"
     }
   }
 
-  page "/wizard" as WizardPage -> WizardForm
+  page "/wizard" as WizardPage -> WizardFlow
 }

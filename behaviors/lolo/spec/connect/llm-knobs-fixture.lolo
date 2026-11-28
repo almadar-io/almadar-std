@@ -172,5 +172,14 @@ orbital LlmKnobsFixtureOrbital {
     }
   }
 
-  page boot as LlmKnobsFixturePage -> KnobDriver, KnobLlm, KnobDelay, CacheLlm, PlainLlm, OnLlm, CapLlm, DeepseekOffLlm, DeepseekDefaultLlm
+  trait FirstToolLlm = Llm.traits.LlmClient {
+    config {
+      provider: openrouter
+      basePath: "/api/v1"
+      model: "vendor/model"
+      firstToolChoice: required
+    }
+  }
+
+  page boot as LlmKnobsFixturePage -> KnobDriver, KnobLlm, KnobDelay, CacheLlm, PlainLlm, OnLlm, CapLlm, FirstToolLlm, DeepseekOffLlm, DeepseekDefaultLlm
 }

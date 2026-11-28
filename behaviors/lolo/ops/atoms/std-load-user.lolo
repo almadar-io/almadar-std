@@ -1,0 +1,304 @@
+app std-load-user [
+  version: "1.0.0",
+  description: "std-load-user — closed-loop virtual users of one HTTP server, one keyed row each (spec/ops/load-user.lolo), the user half of std-load-ramp. VU_START { vu, clientId, journey, prefix, stream, thinkMs } to LoadUsers starts the row of vu: with stream on it first mints a stream ticket (POST <prefix>/api/events/ticket?clientId=<clientId>) and opens the live stream (GET <prefix>/api/events?ticket=<t>) on its own key <vu>/s for the user's life; then it sends the journey's requests in order, forever, each once the one before has answered and thinkMs has passed (std-delay; at once when thinkMs is 0). {client} in a request's path or body is the user's client id. Every answer is LOAD_SAMPLE { label, ms, status }: the latency in ms on the dispatch clock from send to answer (measured at the client, so it includes the client's own queueing) and the HTTP status, 0 for a transport failure; a ticket that does not parse counts as a failure and stops the user. VU_STOP { vu } stops it once its call in flight answers: it closes its stream and its row returns to its defaults, so the kernel drops it. The HTTP client is std-http-keyed on host and port (plain HTTP/1.1, no keep-alive: every call its own connection). Subject-agnostic: the journey is the caller's."
+]
+uses Spec from "almadar-std/load-user"
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Delay from "std/behaviors/std-delay"
+type HttpHeader = { name : string!, value : string! }
+type LoadRequest = { label : string!, method : string!, path : string!, body : string! }
+type LoadTicket = { ticket : string }
+
+orbital LoadUserOrbital {
+  entity LoadUser [runtime] {
+    id : string!
+    clientId : string @description "The user's client id." = ""
+    journey : [LoadRequest] @description "The requests the user sends in order, forever." = []
+    prefix : string @description "The path every request and the stream are under." = ""
+    thinkMs : number @description "The wait between an answer and the next request." = 0
+    stream : boolean @description "Whether the user holds a live stream." = false
+    pos : number @description "The user's next journey request." = 0
+    label : string @description "The label of the request in flight." = ""
+    sentAt : instant? @description "When the request in flight was sent." = null
+    stopping : boolean @description "Told to stop once its call in flight answers." = false
+  }
+
+  config {
+    host : string = "127.0.0.1"
+      @label "Host"
+      @description "The server under test."
+      @tier "infra"
+    port : number = 80
+      @label "Port"
+      @description "The server's port."
+      @tier "infra"
+  }
+
+  trait LoadUsers -> LoadUser [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      VU_START -> ready
+        (emit USER_START { vu: @payload.vu, clientId: @payload.clientId, journey: @payload.journey, prefix: @payload.prefix, stream: @payload.stream, thinkMs: @payload.thinkMs })
+      VU_STOP -> ready
+        (emit USER_STOP { vu: @payload.vu })
+    }
+
+    emits {
+      USER_START {
+        vu : string!
+        clientId : string!
+        journey : [LoadRequest]!
+        prefix : string!
+        stream : boolean!
+        thinkMs : number!
+      }
+        @description "Internal: one user starts, for the row of its name."
+        @tier "internal"
+      USER_STOP {
+        vu : string!
+      }
+        @description "Internal: one user stops, for the row of its name."
+        @tier "internal"
+    }
+
+    listens {
+      VU_START -> input {
+        vu : string!
+        clientId : string!
+        journey : [LoadRequest]!
+        prefix : string!
+        stream : boolean!
+        thinkMs : number!
+      }
+        @description "Start one virtual user named vu: its row sends the journey under prefix as clientId, forever, thinkMs apart, after opening a live stream when stream is on."
+      VU_STOP -> input {
+        vu : string!
+      }
+        @description "Stop the user named vu once its call in flight answers: its stream closes and its row returns to its defaults."
+    }
+  }
+
+  trait LoadKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      LoadVu.LOAD_HTTP_SEND -> HTTP_SEND
+      LoadVu.LOAD_HTTP_CANCEL -> HTTP_CANCEL
+      LoadKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait LoadHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: @config.host
+      port: @config.port
+      tls: false
+      serverName: @config.host
+    }
+    listens {
+      LoadKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      LoadKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  trait LoadThink = Delay.traits.Delay {
+    listens {
+      LoadVu.VU_THINK -> START
+    }
+  }
+
+  trait LoadVu -> LoadUser [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      VU_START -> ticketing when @payload.stream
+        (set @entity.clientId @payload.clientId)
+        (set @entity.journey @payload.journey)
+        (set @entity.prefix @payload.prefix)
+        (set @entity.thinkMs @payload.thinkMs)
+        (set @entity.stream true)
+        (set @entity.pos 0)
+        (set @entity.label "ticket")
+        (set @entity.sentAt @now)
+        (emit LOAD_HTTP_SEND { key: @payload.vu, method: "POST", target: (str/concat @payload.prefix "/api/events/ticket?clientId=" @payload.clientId), headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string "{}"), stream: "none" })
+      VU_START -> sending when (not @payload.stream)
+        (set @entity.clientId @payload.clientId)
+        (set @entity.journey @payload.journey)
+        (set @entity.prefix @payload.prefix)
+        (set @entity.thinkMs @payload.thinkMs)
+        (set @entity.stream false)
+        (set @entity.pos 0)
+        (emit VU_NEXT { vu: @payload.vu })
+      VU_REPLIED -> idle
+      VU_FAILED -> idle
+    }
+
+    state ticketing {
+      INIT -> ticketing
+      VU_REPLIED -> sending when (!= (default (object/get (default (json/parse @payload.body LoadTicket) { ticket: "" }) "ticket") "") "")
+        (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: @payload.status })
+        (emit LOAD_HTTP_SEND { key: (str/concat @payload.key "/s"), method: "GET", target: (str/concat @entity.prefix "/api/events?ticket=" (default (object/get (default (json/parse @payload.body LoadTicket) { ticket: "" }) "ticket") "")), headers: [], body: (bytes/from-string ""), stream: "sse" })
+        (emit VU_NEXT { vu: @payload.key })
+      VU_REPLIED -> idle when (= (default (object/get (default (json/parse @payload.body LoadTicket) { ticket: "" }) "ticket") "") "")
+        (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: (if (and (>= @payload.status 200) (< @payload.status 400)) 500 @payload.status) })
+        (emit LOAD_HTTP_CANCEL { key: (str/concat @payload.key "/s") })
+        (set @entity.clientId "")
+        (set @entity.journey [])
+        (set @entity.prefix "")
+        (set @entity.thinkMs 0)
+        (set @entity.stream false)
+        (set @entity.pos 0)
+        (set @entity.label "")
+        (set @entity.sentAt null)
+        (set @entity.stopping false)
+      VU_FAILED -> idle
+        (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: 0 })
+        (emit LOAD_HTTP_CANCEL { key: (str/concat @payload.key "/s") })
+        (set @entity.clientId "")
+        (set @entity.journey [])
+        (set @entity.prefix "")
+        (set @entity.thinkMs 0)
+        (set @entity.stream false)
+        (set @entity.pos 0)
+        (set @entity.label "")
+        (set @entity.sentAt null)
+        (set @entity.stopping false)
+      VU_STOP -> ticketing
+        (set @entity.stopping true)
+    }
+
+    state sending {
+      INIT -> sending
+      VU_NEXT -> idle when @entity.stopping
+        (emit LOAD_HTTP_CANCEL { key: (str/concat @payload.vu "/s") })
+        (set @entity.clientId "")
+        (set @entity.journey [])
+        (set @entity.prefix "")
+        (set @entity.thinkMs 0)
+        (set @entity.stream false)
+        (set @entity.pos 0)
+        (set @entity.label "")
+        (set @entity.sentAt null)
+        (set @entity.stopping false)
+      VU_NEXT -> waiting when (not @entity.stopping)
+        (let ((req (default (array/nth @entity.journey @entity.pos) { label: "", method: "GET", path: "/", body: "" })))
+          (do
+            (set @entity.label (default (object/get @req "label") ""))
+            (set @entity.sentAt @now)
+            (emit LOAD_HTTP_SEND { key: @payload.vu, method: (default (object/get @req "method") "GET"), target: (str/concat @entity.prefix (str/replaceAll (default (object/get @req "path") "/") "{client}" @entity.clientId)), headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (str/replaceAll (default (object/get @req "body") "") "{client}" @entity.clientId)), stream: "none" })))
+      VU_STOP -> sending
+        (set @entity.stopping true)
+    }
+
+    state waiting {
+      INIT -> waiting
+      VU_REPLIED -> thinking when (> @entity.thinkMs 0)
+        (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: @payload.status })
+        (set @entity.pos (default (% (+ @entity.pos 1) (array/len @entity.journey)) 0))
+        (set @entity.sentAt null)
+        (emit VU_THINK { key: @payload.key, delayMs: @entity.thinkMs })
+      VU_REPLIED -> sending when (<= @entity.thinkMs 0)
+        (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: @payload.status })
+        (set @entity.pos (default (% (+ @entity.pos 1) (array/len @entity.journey)) 0))
+        (set @entity.sentAt null)
+        (emit VU_NEXT { vu: @payload.key })
+      VU_FAILED -> thinking when (> @entity.thinkMs 0)
+        (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: 0 })
+        (set @entity.pos (default (% (+ @entity.pos 1) (array/len @entity.journey)) 0))
+        (set @entity.sentAt null)
+        (emit VU_THINK { key: @payload.key, delayMs: @entity.thinkMs })
+      VU_FAILED -> sending when (<= @entity.thinkMs 0)
+        (emit LOAD_SAMPLE { label: @entity.label, ms: (time/diff @now (default @entity.sentAt @now)), status: 0 })
+        (set @entity.pos (default (% (+ @entity.pos 1) (array/len @entity.journey)) 0))
+        (set @entity.sentAt null)
+        (emit VU_NEXT { vu: @payload.key })
+      VU_STOP -> waiting
+        (set @entity.stopping true)
+    }
+
+    state thinking {
+      INIT -> thinking
+      VU_WAKE -> sending
+        (emit VU_NEXT { vu: @payload.key })
+      VU_STOP -> thinking
+        (set @entity.stopping true)
+    }
+
+    emits {
+      LOAD_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: one call of this user, for the keyed HTTP client."
+        @tier "internal"
+      LOAD_HTTP_CANCEL {
+        key : string!
+      }
+        @description "Internal: close this user's live stream."
+        @tier "internal"
+      LOAD_SAMPLE -> external {
+        label : string!
+        ms : number!
+        status : number!
+      }
+        @description "Internal: one answered request, for the ramp."
+        @tier "internal"
+      VU_NEXT {
+        vu : string!
+      }
+        @description "Internal: send this user's next request."
+        @tier "internal"
+      VU_THINK {
+        key : string!
+        delayMs : number!
+      }
+        @description "Internal: wait thinkMs before this user's next request."
+        @tier "internal"
+    }
+
+    listens {
+      VU_START {
+        vu : string!
+        clientId : string!
+        journey : [LoadRequest]!
+        prefix : string!
+        stream : boolean!
+        thinkMs : number!
+      }
+        @description "Internal: this user starts."
+      VU_STOP {
+        vu : string!
+      }
+        @description "Internal: this user stops once its call in flight answers."
+      VU_REPLIED {
+        key : string!
+        status : number!
+        body : string!
+      }
+        @description "Internal: this user's call answered."
+      VU_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "Internal: this user's call never completed."
+      VU_WAKE {
+        key : string!
+      }
+        @description "Internal: this user's think time passed."
+      LoadUsers.USER_START -> VU_START per @payload.vu
+      LoadUsers.USER_STOP -> VU_STOP per @payload.vu
+      LoadVu.VU_NEXT -> VU_NEXT per @payload.vu
+      LoadHttp.HTTP_REPLIED -> VU_REPLIED per @payload.key with { key: ?key, status: ?status, body: (default (bytes/to-string ?body) "") }
+      LoadHttp.HTTP_FAILED -> VU_FAILED per @payload.key with { key: ?key, error: ?error, kind: ?kind }
+      LoadThink.ELAPSED -> VU_WAKE per @payload.key with { key: ?key }
+    }
+  }
+
+  page boot as LoadUserPage -> LoadUsers, LoadVu, LoadKeyed, LoadHttp, LoadThink
+}

@@ -1,0 +1,243 @@
+app std-load-ramp [
+  version: "1.0.0",
+  description: "std-load-ramp — a stepped load test of one HTTP server by closed-loop virtual users (spec/ops/load-ramp.lolo). LOAD_START { key, steps, stepMs, thinkMs, journey, prefix, stream } runs one step per entry of steps, the number of virtual users that step holds: users are added, never removed, between steps, so step n runs steps[n] users at once (a ramp, as k6 stages or Gatling's incrementUsersPerSec ramp it). Each user is one keyed row of LoadVu, named vu<i>, with its own client id (<key>-vu<i>): with stream on it first mints a stream ticket (POST <prefix>/api/events/ticket?clientId=<id>) and opens the live stream (GET <prefix>/api/events?ticket=<t>, kept open for the user's life on its own key <vu>/s), then sends the journey's requests in order, forever, each after the one before has answered and thinkMs has passed (std-delay); {client} in a request's path or body is the user's client id. Every answer is one sample: its latency in ms (the dispatch clock from send to answer, measured at the client, so it includes the client's own queueing), its HTTP status (0 for a transport failure) and its label. A step lasts stepMs from the moment its last user was started; only samples answered while it runs count. At its end the step's result is LOAD_STEP_DONE { key, result }, result { step, vus, requests, ok, http4xx, http5xx, transport, rps, p50, p90, p95, p99, max } (ms, nearest-rank percentiles over that step's samples), and the ramp waits for LOAD_CONTINUE { key } so the caller can read the server between steps; after the last step LOAD_CONTINUE stops every user (each closes its stream and returns to its defaults once its call in flight answers) and answers LOAD_DONE { key, results }. LOAD_STOP { key } ends the run at once the same way. The HTTP client is std-http-keyed on host and port (plain HTTP/1.1, no keep-alive: every call its own connection). Subject-agnostic: it knows no app; the journey is the caller's."
+]
+uses Spec from "almadar-std/load-ramp"
+uses User from "std/behaviors/std-load-user"
+type LoadRequest = { label : string!, method : string!, path : string!, body : string! }
+type LoadStepResult = { step : number!, vus : number!, requests : number!, ok : number!, http4xx : number!, http5xx : number!, transport : number!, rps : number!, p50 : number!, p90 : number!, p95 : number!, p99 : number!, max : number! }
+
+orbital LoadRampOrbital {
+  entity LoadRun [runtime] {
+    id : string!
+    runKey : string @description "The run in flight; blank when idle." = ""
+    steps : [number] @description "The users each step holds." = []
+    stepIndex : number @description "The step running or last ended, from 0." = 0
+    stepMs : number @description "How long each step measures, from its last user's start." = 0
+    thinkMs : number @description "The wait between a user's answer and its next request." = 0
+    journey : [LoadRequest] @description "The requests each user sends in order, forever." = []
+    prefix : string @description "The path every request and the stream are under." = ""
+    stream : boolean @description "Whether each user opens a live stream first." = false
+    vusUp : number @description "Users started so far." = 0
+    stepStartedAt : instant? @description "When the running step began measuring." = null
+    samples : [number] @description "The running step's latencies, ms." = []
+    ok : number = 0
+    http4xx : number = 0
+    http5xx : number = 0
+    transport : number = 0
+    results : [LoadStepResult] @description "Every ended step's result, in order." = []
+  }
+
+  config {
+    host : string = "127.0.0.1"
+      @label "Host"
+      @description "The server under test."
+      @tier "infra"
+    port : number = 80
+      @label "Port"
+      @description "The server's port."
+      @tier "infra"
+  }
+
+  trait LoadUsers = User.traits.LoadUsers {
+    listens {
+      LoadRamp.VU_START -> VU_START
+      LoadRamp.VU_STOP -> VU_STOP
+    }
+  }
+
+  trait LoadVu = User.traits.LoadVu {}
+
+  trait LoadKeyed = User.traits.LoadKeyed {}
+
+  trait LoadHttp = User.traits.LoadHttp {
+    config {
+      host: @config.host
+      port: @config.port
+      tls: false
+      serverName: @config.host
+    }
+  }
+
+  trait LoadThink = User.traits.LoadThink {}
+
+  trait LoadRamp -> LoadRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      LOAD_START -> idle when (or (= (array/len @payload.steps) 0) (= (array/len @payload.journey) 0))
+        (emit LOAD_FAILED { key: @payload.key, error: "a load run needs at least one step and one journey request" })
+      LOAD_CONTINUE -> idle
+      LOAD_STOP -> idle
+      LOAD_START -> spawning when (and (> (array/len @payload.steps) 0) (> (array/len @payload.journey) 0))
+        (set @entity.runKey @payload.key)
+        (set @entity.steps @payload.steps)
+        (set @entity.stepIndex 0)
+        (set @entity.stepMs @payload.stepMs)
+        (set @entity.thinkMs @payload.thinkMs)
+        (set @entity.journey @payload.journey)
+        (set @entity.prefix @payload.prefix)
+        (set @entity.stream @payload.stream)
+        (set @entity.vusUp 0)
+        (set @entity.results [])
+        (emit VU_SPAWN { at: @entity.vusUp })
+    }
+
+    state spawning {
+      INIT -> spawning
+      VU_SPAWN -> spawning when (< @entity.vusUp (default (array/nth @entity.steps @entity.stepIndex) 0))
+        (emit VU_START { vu: (str/concat "vu" @entity.vusUp), clientId: (str/concat @entity.runKey "-vu" @entity.vusUp), journey: @entity.journey, prefix: @entity.prefix, stream: @entity.stream, thinkMs: @entity.thinkMs })
+        (set @entity.vusUp (+ @entity.vusUp 1))
+        (emit VU_SPAWN { at: (+ @entity.vusUp 1) })
+      VU_SPAWN -> running when (>= @entity.vusUp (default (array/nth @entity.steps @entity.stepIndex) 0))
+        (set @entity.stepStartedAt @now)
+        (set @entity.samples [])
+        (set @entity.ok 0)
+        (set @entity.http4xx 0)
+        (set @entity.http5xx 0)
+        (set @entity.transport 0)
+      SAMPLE -> spawning
+      LOAD_STOP -> halting
+        (emit VU_HALT { left: @entity.vusUp })
+    }
+
+    state running {
+      INIT -> running
+      SAMPLE -> running
+        (set @entity.samples (array/append @entity.samples @payload.ms))
+        (set @entity.ok (+ @entity.ok (if (and (>= @payload.status 200) (< @payload.status 400)) 1 0)))
+        (set @entity.http4xx (+ @entity.http4xx (if (and (>= @payload.status 400) (< @payload.status 500)) 1 0)))
+        (set @entity.http5xx (+ @entity.http5xx (if (>= @payload.status 500) 1 0)))
+        (set @entity.transport (+ @entity.transport (if (= @payload.status 0) 1 0)))
+      STEP_END -> pausing
+        (let ((sorted (array/sort @entity.samples)) (n (array/len @entity.samples)))
+          (do
+            (set @entity.results (array/append @entity.results { step: @entity.stepIndex, vus: @entity.vusUp, requests: @n, ok: @entity.ok, http4xx: @entity.http4xx, http5xx: @entity.http5xx, transport: @entity.transport, rps: (default (/ (math/round (* (default (/ @n (/ @entity.stepMs 1000)) 0) 100)) 100) 0), p50: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.5 @n)) 1))) 0), p90: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.9 @n)) 1))) 0), p95: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.95 @n)) 1))) 0), p99: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.99 @n)) 1))) 0), max: (default (array/last @sorted) 0) }))
+            (emit LOAD_STEP_DONE { key: @entity.runKey, result: (default (array/last @entity.results) { step: 0, vus: 0, requests: 0, ok: 0, http4xx: 0, http5xx: 0, transport: 0, rps: 0, p50: 0, p90: 0, p95: 0, p99: 0, max: 0 }) })))
+        (set @entity.samples [])
+      LOAD_STOP -> halting
+        (emit VU_HALT { left: @entity.vusUp })
+    }
+
+    state pausing {
+      INIT -> pausing
+      SAMPLE -> pausing
+      LOAD_CONTINUE -> spawning when (< (+ @entity.stepIndex 1) (array/len @entity.steps))
+        (set @entity.stepIndex (+ @entity.stepIndex 1))
+        (emit VU_SPAWN { at: @entity.vusUp })
+      LOAD_CONTINUE -> halting when (>= (+ @entity.stepIndex 1) (array/len @entity.steps))
+        (emit VU_HALT { left: @entity.vusUp })
+      LOAD_STOP -> halting
+        (emit VU_HALT { left: @entity.vusUp })
+    }
+
+    state halting {
+      INIT -> halting
+      SAMPLE -> halting
+      VU_HALT -> halting when (> @entity.vusUp 0)
+        (set @entity.vusUp (- @entity.vusUp 1))
+        (emit VU_STOP { vu: (str/concat "vu" @entity.vusUp) })
+        (emit VU_HALT { left: (- @entity.vusUp 1) })
+      VU_HALT -> idle when (<= @entity.vusUp 0)
+        (emit LOAD_DONE { key: @entity.runKey, results: @entity.results })
+        (set @entity.runKey "")
+        (set @entity.steps [])
+        (set @entity.stepIndex 0)
+        (set @entity.stepMs 0)
+        (set @entity.thinkMs 0)
+        (set @entity.journey [])
+        (set @entity.prefix "")
+        (set @entity.stream false)
+        (set @entity.stepStartedAt null)
+        (set @entity.results [])
+        (set @entity.ok 0)
+        (set @entity.http4xx 0)
+        (set @entity.http5xx 0)
+        (set @entity.transport 0)
+    }
+
+    ticks {
+      stepClock every 250ms in running [background]
+        when (not (time/isBefore @now (time/add (default @entity.stepStartedAt @now) @entity.stepMs "ms")))
+        (emit STEP_END {})
+    }
+
+    emits {
+      LOAD_STEP_DONE -> external {
+        key : string!
+        result : LoadStepResult!
+      }
+        @description "One step ended: its result. The ramp waits for LOAD_CONTINUE."
+      LOAD_DONE -> external {
+        key : string!
+        results : [LoadStepResult]!
+      }
+        @description "The run ended: every step's result, in order."
+      LOAD_FAILED -> external {
+        key : string!
+        error : string!
+      }
+        @description "A run that could not start: no step or no journey request."
+      VU_SPAWN {
+        at : number!
+      }
+        @description "Internal: start the next user of the step; at counts the users started."
+        @tier "internal"
+      VU_START {
+        vu : string!
+        clientId : string!
+        journey : [LoadRequest]!
+        prefix : string!
+        stream : boolean!
+        thinkMs : number!
+      }
+        @description "Internal: one user starts, on its own row."
+        @tier "internal"
+      VU_HALT {
+        left : number!
+      }
+        @description "Internal: stop the next user; left counts the users still running."
+        @tier "internal"
+      VU_STOP {
+        vu : string!
+      }
+        @description "Internal: one user stops once its call in flight answers."
+        @tier "internal"
+      STEP_END { }
+        @description "Internal: the running step's time is up."
+        @tier "internal"
+    }
+
+    listens {
+      LOAD_START -> input {
+        key : string!
+        steps : [number]!
+        stepMs : number!
+        thinkMs : number!
+        journey : [LoadRequest]!
+        prefix : string!
+        stream : boolean!
+      }
+        @description "Start a stepped load run: steps lists the users each step holds, each step measured for stepMs."
+        @synonyms "load test, stress test, ramp users"
+      LOAD_CONTINUE -> input {
+        key : string!
+      }
+        @description "Run the next step, or end the run after the last one."
+      LOAD_STOP -> input {
+        key : string!
+      }
+        @description "End the run now: every user stops."
+      SAMPLE {
+        label : string!
+        ms : number!
+        status : number!
+      }
+        @description "Internal: one answered request of a user."
+      LoadVu.LOAD_SAMPLE -> SAMPLE
+    }
+  }
+
+  page boot as LoadRampPage -> LoadRamp, LoadUsers, LoadVu, LoadKeyed, LoadHttp, LoadThink
+}

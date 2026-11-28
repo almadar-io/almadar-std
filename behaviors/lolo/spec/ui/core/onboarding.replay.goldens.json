@@ -1,0 +1,1293 @@
+{
+ "atom": "../ui/core/atoms/std-onboarding.lolo",
+ "trait": "OnboardingStore",
+ "spec": "onboarding.lolo",
+ "note": "a first-run flow kept per member: the store reads the row, resumes the wizard, saves every change it reports and speaks the ONBOARDING_* events. The persist answers are played as OB_SAVED / OB_SAVE_FAILED steps.",
+ "cases": [
+  {
+   "id": "mounting-reads-the-members-record",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "INIT",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-record-not-done-resumes-the-wizard-at-its-saved-step",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "RECORD_READ",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "u1",
+        "ownerId": "u1",
+        "done": false,
+        "stepId": "role",
+        "answers": {
+         "welcome": "x"
+        }
+       }
+      ],
+      "totalCount": 1
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "stepId": "role",
+       "answers": {
+        "welcome": "x"
+       },
+       "announce": false,
+       "done": false
+      },
+      "emits": [
+       {
+        "event": "STORE_POSITION",
+        "payload": {
+         "stepId": "role",
+         "answers": {
+          "welcome": "x"
+         },
+         "finished": false,
+         "problem": ""
+        }
+       },
+       {
+        "event": "ONBOARDING_NEEDED",
+        "payload": {
+         "stepId": "details"
+        }
+       },
+       {
+        "event": "ONBOARDING_STEP",
+        "payload": {
+         "stepId": "details",
+         "answers": {
+          "welcome": "x"
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "ONBOARDING_SKIPPED"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OnboardingFlow"
+   ]
+  },
+  {
+   "id": "control-a-record-that-is-done-finishes-the-wizard-and-is-skipped",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "RECORD_READ",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "u1",
+        "ownerId": "u1",
+        "done": true,
+        "stepId": "connect",
+        "answers": {
+         "role": "b"
+        }
+       }
+      ],
+      "totalCount": 1
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "done": true,
+       "announce": false
+      },
+      "emits": [
+       {
+        "event": "STORE_POSITION",
+        "payload": {
+         "stepId": "",
+         "answers": {
+          "role": "b"
+         },
+         "finished": true
+        }
+       },
+       {
+        "event": "ONBOARDING_SKIPPED"
+       }
+      ],
+      "neverEmits": [
+       "ONBOARDING_NEEDED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-record-starts-at-the-first-step",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "RECORD_READ",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "data": [],
+      "totalCount": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "announce": false
+      },
+      "emits": [
+       {
+        "event": "STORE_POSITION",
+        "payload": {
+         "stepId": "",
+         "answers": {},
+         "finished": false
+        }
+       },
+       {
+        "event": "ONBOARDING_NEEDED"
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OnboardingFlow"
+   ]
+  },
+  {
+   "id": "an-unreadable-record-starts-the-flow-and-says-so",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "RECORD_UNREAD",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "error": "down"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "announce": false
+      },
+      "emits": [
+       {
+        "event": "STORE_POSITION",
+        "payload": {
+         "stepId": "",
+         "answers": {},
+         "finished": false,
+         "problem": "down"
+        }
+       },
+       {
+        "event": "ONBOARDING_NEEDED"
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OnboardingFlow"
+   ]
+  },
+  {
+   "id": "control-an-unreadable-record-without-a-message-uses-the-knob",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "RECORD_UNREAD",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "STORE_POSITION",
+        "payload": {
+         "problem": "the saved progress could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-first-step-shown-after-resume-says-the-flow-is-needed",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_STEP",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": true
+     },
+     "payload": {
+      "stepId": "role",
+      "answers": {
+       "welcome": "x"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "announce": false
+      },
+      "emits": [
+       {
+        "event": "ONBOARDING_NEEDED",
+        "payload": {
+         "stepId": "role"
+        }
+       },
+       {
+        "event": "ONBOARDING_STEP",
+        "payload": {
+         "stepId": "role",
+         "answers": {
+          "welcome": "x"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-later-step-shown-only-reports-the-step",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_STEP",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect",
+      "answers": {}
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "ONBOARDING_STEP",
+        "payload": {
+         "stepId": "connect"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ONBOARDING_NEEDED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-wizard-with-no-step-to-show-is-skipped",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_EMPTY",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": true
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "announce": false
+      },
+      "emits": [
+       {
+        "event": "ONBOARDING_SKIPPED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-empty-wizard-after-the-record-was-done-is-not-skipped-twice",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_EMPTY",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "neverEmits": [
+       "ONBOARDING_SKIPPED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-committed-change-is-saved-to-the-members-row",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_COMMIT",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect",
+      "answers": {
+       "role": "b"
+      },
+      "done": false,
+      "didAnswer": true,
+      "answeredStep": "role",
+      "answeredValue": "b"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "stepId": "connect",
+       "answers": {
+        "role": "b"
+       },
+       "done": false,
+       "didAnswer": false,
+       "answeredStep": "role",
+       "answeredValue": "b"
+      },
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "emits": [
+       {
+        "event": "OB_SAVED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-last-committed-answer-is-saved-as-done",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_COMMIT",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect",
+      "answers": {
+       "connect": "ok"
+      },
+      "done": true,
+      "didAnswer": true,
+      "answeredStep": "connect",
+      "answeredValue": "ok"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "done": true
+      },
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-going-back-is-saved-without-an-answer",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_COMMIT",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "role",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "welcome",
+      "answers": {
+       "welcome": "x"
+      },
+      "done": false,
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "stepId": "welcome",
+       "didAnswer": false
+      },
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-saved-answer-is-reported",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "OB_SAVED",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "role",
+      "answers": {
+       "welcome": "x"
+      },
+      "didAnswer": true,
+      "answeredStep": "welcome",
+      "answeredValue": "x",
+      "announce": false
+     },
+     "payload": {
+      "id": "u1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "ONBOARDING_ANSWERED",
+        "payload": {
+         "stepId": "welcome",
+         "value": "x",
+         "answers": {
+          "welcome": "x"
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "ONBOARDING_DONE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-saved-change-without-an-answer-reports-no-answer",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "OB_SAVED",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "id": "u1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "neverEmits": [
+       "ONBOARDING_ANSWERED",
+       "ONBOARDING_DONE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-last-saved-answer-emits-done-once",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "OB_SAVED",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": true,
+      "stepId": "welcome",
+      "answers": {
+       "connect": "ok"
+      },
+      "didAnswer": true,
+      "answeredStep": "connect",
+      "answeredValue": "ok",
+      "announce": false
+     },
+     "payload": {
+      "id": "u1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "ONBOARDING_ANSWERED",
+        "payload": {
+         "stepId": "connect",
+         "value": "ok"
+        }
+       },
+       {
+        "event": "ONBOARDING_DONE",
+        "payload": {
+         "answers": {
+          "connect": "ok"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-save-tells-the-wizard-and-the-composer",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "OB_SAVE_FAILED",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": true,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "error": "offline",
+      "code": "x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "done": false
+      },
+      "emits": [
+       {
+        "event": "STORE_REJECT",
+        "payload": {
+         "error": "offline"
+        }
+       },
+       {
+        "event": "ONBOARDING_SAVE_FAILED",
+        "payload": {
+         "error": "offline"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-failed-save-without-a-message-uses-the-knob",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "OB_SAVE_FAILED",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "STORE_REJECT",
+        "payload": {
+         "error": "Your answer could not be saved. Please try again."
+        }
+       },
+       {
+        "event": "ONBOARDING_SAVE_FAILED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-restart-of-the-wizard-says-the-flow-is-needed",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_RESTARTED",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "welcome"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "ONBOARDING_NEEDED",
+        "payload": {
+         "stepId": "welcome"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-primary-button-of-a-slot-step-is-passed-on",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_SLOT_CONTINUE",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "ONBOARDING_SLOT_CONTINUE",
+        "payload": {
+         "stepId": "connect"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-slot-answer-is-handed-to-the-wizard",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "ONBOARDING_SLOT_ANSWER",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect",
+      "value": "ok"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "STORE_SLOT_ANSWER",
+        "payload": {
+         "stepId": "connect",
+         "value": "ok"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-slot-answer-before-the-record-is-read-is-ignored",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "ONBOARDING_SLOT_ANSWER",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect",
+      "value": "ok"
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "neverEmits": [
+       "STORE_SLOT_ANSWER"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-composer-holds-the-slot-button-through-the-wizard",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "ONBOARDING_SLOT_READY",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect",
+      "ready": false
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "STORE_SLOT_READY",
+        "payload": {
+         "stepId": "connect",
+         "ready": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-ready-flag-before-the-record-is-read-is-ignored",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "ONBOARDING_SLOT_READY",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "connect",
+      "ready": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "neverEmits": [
+       "STORE_SLOT_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "options-are-handed-to-the-wizard",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "ONBOARDING_OPTIONS",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "role",
+      "options": [
+       {
+        "value": "n",
+        "label": "New"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "STORE_OPTIONS",
+        "payload": {
+         "stepId": "role",
+         "options": [
+          {
+           "value": "n",
+           "label": "New"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "options-can-arrive-before-the-record-is-read",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "ONBOARDING_OPTIONS",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "role",
+      "options": [
+       {
+        "value": "n",
+        "label": "New"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "STORE_OPTIONS"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-restart-is-handed-to-the-wizard",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "ONBOARDING_RESTART",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": true,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "emits": [
+       {
+        "event": "STORE_RESTART"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-restart-before-the-record-is-read-is-ignored",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "loading",
+     "event": "ONBOARDING_RESTART",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "welcome",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "neverEmits": [
+       "STORE_RESTART"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-draft-pick-is-saved-to-the-row-without-announcing-an-answer",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "WIZARD_COMMIT",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "topics",
+      "answers": {},
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": "",
+      "announce": false
+     },
+     "payload": {
+      "stepId": "topics",
+      "answers": {
+       "topics": "x,y"
+      },
+      "done": false,
+      "didAnswer": false,
+      "answeredStep": "",
+      "answeredValue": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "stepId": "topics",
+       "answers": {
+        "topics": "x,y"
+       },
+       "done": false,
+       "didAnswer": false
+      },
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "when-the-save-ends-the-answer-is-reported",
+   "config": {},
+   "steps": [
+    {
+     "trait": "OnboardingStore",
+     "from": "active",
+     "event": "OB_SAVED",
+     "entity": {
+      "id": "u1",
+      "ownerId": "u1",
+      "done": false,
+      "stepId": "topics",
+      "answers": {
+       "role": "b"
+      },
+      "didAnswer": true,
+      "answeredStep": "role",
+      "answeredValue": "b",
+      "announce": false
+     },
+     "payload": {
+      "id": "u1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "active",
+      "entity": {
+       "didAnswer": false
+      },
+      "emits": [
+       {
+        "event": "ONBOARDING_ANSWERED",
+        "payload": {
+         "stepId": "role",
+         "value": "b"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

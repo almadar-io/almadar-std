@@ -1,0 +1,39 @@
+app wizard-spec [
+  version: "1.0.0",
+  description: "Design contract for the one step-by-step machine. The knob `steps` lists the steps in order (id, title, description, icon, kind info | choice | multi | text | slot | form, options, placeholder, optional, fields). The wizard owns its state in its own entity and knows nothing about members or persistence. WIZARD_STEP is emitted whenever a step is shown, WIZARD_ANSWERED when an answer is given, WIZARD_DONE when the last step is answered, WIZARD_SLOT_CONTINUE for a slot step's primary button, WIZARD_BACK when the person goes back, WIZARD_RESTARTED after a restart, WIZARD_CANCELLED when cancelled, WIZARD_EMPTY when there is no step to show, and WIZARD_COMMIT with every change of position or answers. WIZARD_POSITION sets the position and answers, WIZARD_REJECT undoes the last change, WIZARD_SLOT_ANSWER, WIZARD_SLOT_READY, WIZARD_OPTIONS and WIZARD_RESTART are inputs."
+]
+
+type WizardOption = { value : string!, label : string!, description : string }
+type WizardStep = { id : string!, title : string!, description : string, kind : "info" | "choice" | "multi" | "text" | "slot" | "form"!, options : [WizardOption], placeholder : string, optional : boolean, icon : string, fields : [string] }
+
+orbital WizardSpec {
+  expects entity WizardView [runtime] {
+    id : string!
+    answers : Map string string
+    stepIndex : number
+    stepId : string
+  }
+  expects trait WizardFlow {
+    state loading {
+      WIZARD_POSITION -> stepping
+    }
+    state stepping {
+      WIZARD_ADVANCE -> stepping
+    }
+    state finished {
+      WIZARD_RESTART -> stepping
+    }
+    emits {
+      WIZARD_STEP { stepId : string!  answers : Map string string! }
+      WIZARD_ANSWERED { stepId : string!  value : string!  answers : Map string string! }
+      WIZARD_DONE { answers : Map string string! }
+      WIZARD_SLOT_CONTINUE { stepId : string! }
+      WIZARD_BACK { stepId : string! }
+      WIZARD_RESTARTED { stepId : string! }
+      WIZARD_CANCELLED { reason : string! }
+      WIZARD_EMPTY { }
+      WIZARD_COMMIT { stepId : string!  answers : Map string string!  done : boolean!  didAnswer : boolean!  answeredStep : string!  answeredValue : string! }
+    }
+  }
+  expects page "/wizard" -> WizardFlow
+}

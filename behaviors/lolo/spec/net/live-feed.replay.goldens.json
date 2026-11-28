@@ -245,23 +245,42 @@
         "type": "program/live",
         "arg0": [
          "object/merge",
-         {
-          "clientId": "@payload.clientId"
-         },
+         [
+          "object/merge",
+          {
+           "clientId": "@payload.clientId"
+          },
+          [
+           "if",
+           [
+            "=",
+            [
+             "default",
+             "@payload.guest",
+             ""
+            ],
+            ""
+           ],
+           {},
+           {
+            "guest": "@payload.guest"
+           }
+          ]
+         ],
          [
           "if",
           [
            "=",
            [
             "default",
-            "@payload.guest",
+            "@payload.since",
             ""
            ],
            ""
           ],
           {},
           {
-           "guest": "@payload.guest"
+           "since": "@payload.since"
           }
          ]
         ]
@@ -291,26 +310,156 @@
         "type": "program/live",
         "arg0": [
          "object/merge",
-         {
-          "clientId": "@payload.clientId"
-         },
+         [
+          "object/merge",
+          {
+           "clientId": "@payload.clientId"
+          },
+          [
+           "if",
+           [
+            "=",
+            [
+             "default",
+             "@payload.guest",
+             ""
+            ],
+            ""
+           ],
+           {},
+           {
+            "guest": "@payload.guest"
+           }
+          ]
+         ],
          [
           "if",
           [
            "=",
            [
             "default",
-            "@payload.guest",
+            "@payload.since",
             ""
            ],
            ""
           ],
           {},
           {
-           "guest": "@payload.guest"
+           "since": "@payload.since"
           }
          ]
         ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "g-cross-853-a-numbered-item-is-written-with-its-frame-id",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_ITEM",
+     "payload": {
+      "event": "SAVED",
+      "source": {
+       "trait": "Saver"
+      },
+      "id": "boot1-4",
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "id": "boot1-4",
+         "data": "{\"type\":\"bus\",\"event\":\"SAVED\",\"source\":{\"trait\":\"Saver\"},\"timestamp\":\"2023-11-14T22:13:20.000Z\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-item-with-no-number-is-written-with-an-empty-id",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_ITEM",
+     "payload": {
+      "event": "SAVED",
+      "source": {
+       "trait": "Saver"
+      },
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "id": "",
+         "data": "{\"type\":\"bus\",\"event\":\"SAVED\",\"source\":{\"trait\":\"Saver\"},\"timestamp\":\"2023-11-14T22:13:20.000Z\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "g-cross-853-a-host-run-dispatch-is-written-with-its-frame-id",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_ITEM",
+     "payload": {
+      "type": "dispatch",
+      "orbitalName": "Desk",
+      "request": {
+       "event": "DONE"
+      },
+      "response": {
+       "success": true
+      },
+      "id": "boot1-9",
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "id": "boot1-9",
+         "data": "{\"type\":\"dispatch\",\"orbitalName\":\"Desk\",\"request\":{\"event\":\"DONE\"},\"response\":{\"success\":true},\"timestamp\":\"2023-11-14T22:13:20.000Z\"}"
+        }
        }
       ]
      }

@@ -1,0 +1,189 @@
+app std-agent-google-tools [
+  version: "1.0.0",
+  description: "std-agent-google-tools — the Google tools an agent loop offers over a composed std-gmail and std-drive: search mail, read one mail, draft a mail or a reply, find files in Drive and read a Drive file as text. Each tool is a declared input std-agent-tool-loop dispatches; the atom hears the loop's TOOL_PENDING for the call id, asks the connector under the tag `agent:` plus that id, and ends the call with TOOL_RESULT or TOOL_FAILED when the answer with that tag arrives. The connectors never send mail, so no tool sends; a draft stays in the mailbox for the person to read and send. An answer with another tag, or one that arrives when no request is in flight, is ignored."
+]
+;; @capabilities "search and read Gmail, draft a mail or a reply, find Google Drive files, read a Drive file as text, as agent tools"
+uses Spec from "almadar-std/agent-google-tools"
+
+type GoogleToolMessage = { id : string!, threadId : string!, from : string!, to : string!, subject : string!, date : string!, messageId : string!, snippet : string!, body : string! }
+type GoogleToolFile = { id : string!, name : string!, mimeType : string!, size : number?, modifiedTime : string!, webViewLink : string! }
+
+orbital AgentGoogleToolsOrbital {
+  entity AgentGoogleCall [runtime] {
+    id : string!
+    callId : string @description "The tool call the loop waits on." = ""
+    tag : string @description "The tag of the connector request of the call in flight: `agent:` followed by the call id; an answer with another tag is ignored." = ""
+    byId : boolean @description "True while the mail request in flight asked for one message by its message id; it only words an empty answer." = false
+  }
+
+  trait AgentGoogleTools -> AgentGoogleCall [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TOOL_PENDING -> ready
+        (set @entity.callId @payload.callId)
+        (set @entity.tag (str/concat "agent:" @payload.callId))
+
+      GMAIL_SEARCH -> waiting
+        (set @entity.byId false)
+        (emit LIST_INBOX { tag: @entity.tag, query: (default @payload.query ""), maxResults: (default @payload.maxResults 10) })
+      GMAIL_READ -> waiting
+        (set @entity.byId true)
+        (emit LIST_INBOX { tag: @entity.tag, query: (str/concat "rfc822msgid:" @payload.messageId), maxResults: 1 })
+      GMAIL_DRAFT -> waiting
+        (emit CREATE_DRAFT { tag: @entity.tag, to: @payload.to, subject: @payload.subject, body: @payload.body, threadId: (default @payload.threadId ""), inReplyTo: (default @payload.inReplyTo "") })
+      DRIVE_FIND -> waiting
+        (emit DRIVE_LIST_FILES { tag: @entity.tag, folderId: (default @payload.folderId ""), query: (default @payload.query ""), maxResults: (default @payload.maxResults 25) })
+      DRIVE_READ -> waiting
+        (emit DRIVE_GET_FILE { tag: @entity.tag, fileId: @payload.fileId })
+    }
+
+    state waiting {
+      INIT -> ready
+      TOOL_PENDING -> waiting
+      INBOX_LISTED -> ready when (and (== @payload.tag @entity.tag) (not @entity.byId) (== (array/len @payload.messages) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: "no mail matches" })
+      INBOX_LISTED -> ready when (and (== @payload.tag @entity.tag) (not @entity.byId) (> (array/len @payload.messages) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.messages (fn m (str/concat "message id: " @m.messageId "\nthread id: " @m.threadId "\nfrom: " @m.from "\nto: " @m.to "\ndate: " @m.date "\nsubject: " @m.subject "\n\n" @m.body))) "\n\n---\n\n") })
+      INBOX_LISTED -> ready when (and (== @payload.tag @entity.tag) @entity.byId (== (array/len @payload.messages) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: "no mail has this message id" })
+      INBOX_LISTED -> ready when (and (== @payload.tag @entity.tag) @entity.byId (> (array/len @payload.messages) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.messages (fn m (str/concat "message id: " @m.messageId "\nthread id: " @m.threadId "\nfrom: " @m.from "\nto: " @m.to "\ndate: " @m.date "\nsubject: " @m.subject "\n\n" @m.body))) "\n\n---\n\n") })
+      DRAFT_CREATED -> ready when (== @payload.tag @entity.tag)
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat "the draft is in the mailbox, not sent (draft id " @payload.draftId ", thread id " @payload.threadId ")") })
+      GMAIL_FAILED -> ready when (== @payload.tag @entity.tag)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "Gmail failed: " @payload.message) })
+      DRIVE_FILES_LISTED -> ready when (and (== @payload.tag @entity.tag) (== (array/len @payload.files) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: "no file or folder found" })
+      DRIVE_FILES_LISTED -> ready when (and (== @payload.tag @entity.tag) (> (array/len @payload.files) 0))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.files (fn f (str/concat (if (== @f.mimeType "application/vnd.google-apps.folder") "folder: " "file: ") @f.name " (file id " @f.id ", changed " @f.modifiedTime "): " @f.webViewLink))) "\n") })
+      DRIVE_FILE_FETCHED -> ready when (and (== @payload.tag @entity.tag) (base64/valid @payload.content))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (default (base64/decode @payload.content) "") })
+      DRIVE_FILE_FETCHED -> ready when (and (== @payload.tag @entity.tag) (not (base64/valid @payload.content)))
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "the file " @payload.name " is not text, so it cannot be read here") })
+      DRIVE_FAILED -> ready when (== @payload.tag @entity.tag)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "Google Drive failed: " @payload.message) })
+    }
+
+    emits {
+      TOOL_RESULT -> external {
+        callId : string!
+        result : string!
+      }
+        @description "A tool's outcome, which std-agent-tool-loop hands back to the model."
+        @tier "internal"
+      TOOL_FAILED -> external {
+        callId : string!
+        error : string!
+      }
+        @description "A tool failed; std-agent-tool-loop hands the reason back to the model."
+        @tier "internal"
+      LIST_INBOX -> external {
+        tag : string!
+        query : string!
+        maxResults : number!
+      }
+        @description "Ask std-gmail for mail."
+        @tier "secondary"
+      CREATE_DRAFT -> external {
+        tag : string!
+        to : string!
+        subject : string!
+        body : string!
+        threadId : string!
+        inReplyTo : string!
+      }
+        @description "Ask std-gmail to create a draft."
+        @tier "secondary"
+      DRIVE_LIST_FILES -> external {
+        tag : string!
+        folderId : string!
+        query : string!
+        maxResults : number!
+      }
+        @description "Ask std-drive for files."
+        @tier "secondary"
+      DRIVE_GET_FILE -> external {
+        tag : string!
+        fileId : string!
+      }
+        @description "Ask std-drive for a file's content."
+        @tier "secondary"
+    }
+
+    listens {
+      GMAIL_SEARCH -> input {
+        query : string? @description "A Gmail search such as from:ana subject:claim newer_than:7d; leave out for the inbox mail of the last day"
+        maxResults : number? @description "How many messages to read; leave out for 10"
+      }
+        @description "Search the person's Gmail. Each message comes with its message id, thread id, sender, date, subject and text."
+        @synonyms "read inbox, check email, search mail, find an email"
+      GMAIL_READ -> input {
+        messageId : string! @description "The message id of the mail, as GMAIL_SEARCH gave it (the Message-ID header, for example <abc@mail.example.com>)"
+      }
+        @description "Read one mail of the person's Gmail by its message id: sender, date, subject and text."
+        @synonyms "open an email, read this mail"
+      GMAIL_DRAFT -> input {
+        to : string! @description "The recipient's email address"
+        subject : string! @description "The subject line"
+        body : string! @description "The text of the mail"
+        threadId : string? @description "The thread id of the mail this answers, from GMAIL_SEARCH; leave out for a new mail"
+        inReplyTo : string? @description "The message id of the mail this answers, from GMAIL_SEARCH; leave out for a new mail"
+      }
+        @description "Write a mail as a draft in the person's Gmail. It is not sent: the person reads it in Gmail and sends it."
+        @synonyms "draft email, write a reply, prepare a mail"
+      DRIVE_FIND -> input {
+        folderId : string? @description "The id of a folder to look in; leave out for all of Drive"
+        query : string? @description "A Drive search such as name contains 'policy' or fullText contains 'claim 4471'; leave out to list"
+        maxResults : number? @description "How many files to list; leave out for 25"
+      }
+        @description "Find files and folders in the person's Google Drive: list a folder, or search by name or content. Each comes with its file id and a link that opens it."
+        @synonyms "find a document, list my files, search drive, google drive"
+      DRIVE_READ -> input {
+        fileId : string! @description "The id of the file, from DRIVE_FIND"
+      }
+        @description "Read a text file of the person's Google Drive and answer its text. A file that is not text, such as an image or a PDF, fails."
+        @synonyms "open a file, read a document, get file text"
+      *.TOOL_PENDING -> TOOL_PENDING
+      TOOL_PENDING {
+        callId : string!
+        tool : string!
+      }
+      INBOX_LISTED {
+        tag : string!
+        messages : [GoogleToolMessage]!
+      }
+      DRAFT_CREATED {
+        tag : string!
+        draftId : string!
+        messageId : string!
+        threadId : string!
+      }
+      GMAIL_FAILED {
+        tag : string!
+        code : string
+        message : string!
+      }
+      DRIVE_FILES_LISTED {
+        tag : string!
+        files : [GoogleToolFile]!
+      }
+      DRIVE_FILE_FETCHED {
+        tag : string!
+        id : string!
+        name : string!
+        mimeType : string!
+        content : string!
+        size : number!
+      }
+      DRIVE_FAILED {
+        tag : string!
+        code : string
+        message : string!
+      }
+    }
+  }
+
+  page boot as AgentGoogleToolsStart -> AgentGoogleTools
+}

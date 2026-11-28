@@ -1,0 +1,156 @@
+{
+  "atom": "agent/atoms/std-workflow-definition.lolo",
+  "trait": "WorkflowDefinition",
+  "spec": "spec/agent/workflow-definition.lolo",
+  "note": "a workflow held as declared data and told when asked. The example is a three-step document check whose second step reads documents and whose third is a person's sign-off; the controls are a definition with every knob at its default and a second ask that must carry its own request id.",
+  "cases": [
+    {
+      "id": "an-ask-is-answered-with-the-whole-declared-definition-as-one-flat-payload",
+      "config": {
+        "key": "document-check",
+        "name": "Check a document",
+        "summary": "Check a document against the policy documents.",
+        "instructions": "Check one document against the policy documents.",
+        "audience": ["reviewer"],
+        "inputFields": [
+          { "name": "request", "label": "The document or request", "required": true }
+        ],
+        "steps": [
+          { "title": "Read the request", "instructions": "Read the request.", "tools": [], "approval": false, "kind": "agent" },
+          { "title": "Check it", "instructions": "Check it against the policy documents.", "tools": ["documents"], "approval": false, "kind": "agent" },
+          { "title": "Approve the finding", "instructions": "", "tools": [], "approval": false, "kind": "approval" }
+        ]
+      },
+      "steps": [
+        {
+          "event": "DEFINITION_ASK",
+          "from": "idle",
+          "payload": { "requestId": "ask-1" },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_DEFINED",
+                "payload": {
+                  "requestId": "ask-1",
+                  "key": "document-check",
+                  "name": "Check a document",
+                  "summary": "Check a document against the policy documents.",
+                  "instructions": "Check one document against the policy documents.",
+                  "audience": ["reviewer"],
+                  "inputFields": [
+                    { "name": "request", "label": "The document or request", "required": true }
+                  ],
+                  "steps": [
+                    { "title": "Read the request", "instructions": "Read the request.", "tools": [], "approval": false, "kind": "agent" },
+                    { "title": "Check it", "instructions": "Check it against the policy documents.", "tools": ["documents"], "approval": false, "kind": "agent" },
+                    { "title": "Approve the finding", "instructions": "", "tools": [], "approval": false, "kind": "approval" }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-definition-with-every-knob-at-its-default-answers-empty-and-audience-empty-means-everyone",
+      "config": {},
+      "steps": [
+        {
+          "event": "DEFINITION_ASK",
+          "from": "idle",
+          "payload": { "requestId": "ask-2" },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_DEFINED",
+                "payload": {
+                  "requestId": "ask-2",
+                  "key": "",
+                  "name": "",
+                  "summary": "",
+                  "instructions": "",
+                  "audience": [],
+                  "inputFields": [],
+                  "steps": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "each-ask-is-answered-with-its-own-request-id-and-the-answer-never-changes-the-definition",
+      "config": {
+        "key": "document-brief",
+        "name": "Brief from documents",
+        "summary": "Summarize documents into a brief.",
+        "instructions": "Summarize the documents.",
+        "audience": [],
+        "inputFields": [],
+        "steps": [
+          { "title": "Write the brief", "instructions": "Write the brief.", "tools": ["documents"], "approval": false, "kind": "agent" }
+        ]
+      },
+      "steps": [
+        {
+          "event": "DEFINITION_ASK",
+          "from": "idle",
+          "payload": { "requestId": "ask-3" },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_DEFINED",
+                "payload": {
+                  "requestId": "ask-3",
+                  "key": "document-brief",
+                  "name": "Brief from documents",
+                  "summary": "Summarize documents into a brief.",
+                  "instructions": "Summarize the documents.",
+                  "audience": [],
+                  "inputFields": [],
+                  "steps": [
+                    { "title": "Write the brief", "instructions": "Write the brief.", "tools": ["documents"], "approval": false, "kind": "agent" }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "DEFINITION_ASK",
+          "from": "idle",
+          "payload": { "requestId": "ask-4" },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_DEFINED",
+                "payload": {
+                  "requestId": "ask-4",
+                  "key": "document-brief",
+                  "name": "Brief from documents",
+                  "summary": "Summarize documents into a brief.",
+                  "instructions": "Summarize the documents.",
+                  "audience": [],
+                  "inputFields": [],
+                  "steps": [
+                    { "title": "Write the brief", "instructions": "Write the brief.", "tools": ["documents"], "approval": false, "kind": "agent" }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -2087,6 +2087,1251 @@
     "GmailHttp",
     "GmailRetry"
    ]
+  },
+  {
+   "id": "a-tagged-list-request-hands-its-tag-to-its-row",
+   "steps": [
+    {
+     "event": "LIST_INBOX",
+     "payload": {
+      "query": "q",
+      "maxResults": 1,
+      "tag": "agent:a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_READY",
+        "payload": {
+         "key": "inbox:q|1#1",
+         "op": "list",
+         "tag": "agent:a"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-untagged-list-request-hands-an-empty-tag-to-its-row",
+   "steps": [
+    {
+     "event": "LIST_INBOX",
+     "payload": {
+      "query": "q",
+      "maxResults": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_READY",
+        "payload": {
+         "key": "inbox:q|1#1",
+         "op": "list",
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-draft-request-hands-its-tag-to-its-row",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io",
+      "subject": "s",
+      "body": "b",
+      "tag": "agent:d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_READY",
+        "payload": {
+         "key": "draft:ann@x.io#1",
+         "op": "draft",
+         "tag": "agent:d"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-untagged-draft-request-hands-an-empty-tag-to-its-row",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io",
+      "subject": "s",
+      "body": "b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_READY",
+        "payload": {
+         "key": "draft:ann@x.io#1",
+         "op": "draft",
+         "tag": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-empty-inbox-answers-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": "agent:a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[],\"resultSizeEstimate\":0}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "tag": "agent:a",
+         "messages": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-untagged-empty-inbox-answers-with-an-empty-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[],\"resultSizeEstimate\":0}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "tag": "",
+         "messages": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-inbox-walk-answers-its-messages-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": "agent:w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[{\"id\":\"m1\",\"threadId\":\"t1\"}],\"resultSizeEstimate\":1}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:q|1#1",
+         "target": "/gmail/v1/users/me/messages/m1?format=full"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m1\",\"threadId\":\"t1\",\"snippet\":\"s\",\"payload\":{\"mimeType\":\"text/plain\",\"headers\":[],\"body\":{\"size\":2,\"data\":\"aGk\"}}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "tag": "agent:w",
+         "messages": [
+          {
+           "id": "m1",
+           "threadId": "t1",
+           "from": "",
+           "to": "",
+           "subject": "",
+           "date": "",
+           "messageId": "",
+           "snippet": "s",
+           "body": "hi"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-untagged-inbox-walk-answers-with-an-empty-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[{\"id\":\"m1\",\"threadId\":\"t1\"}],\"resultSizeEstimate\":1}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:q|1#1",
+         "target": "/gmail/v1/users/me/messages/m1?format=full"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m1\",\"threadId\":\"t1\",\"snippet\":\"s\",\"payload\":{\"mimeType\":\"text/plain\",\"headers\":[],\"body\":{\"size\":2,\"data\":\"aGk\"}}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "tag": "",
+         "messages": [
+          {
+           "id": "m1",
+           "threadId": "t1",
+           "from": "",
+           "to": "",
+           "subject": "",
+           "date": "",
+           "messageId": "",
+           "snippet": "s",
+           "body": "hi"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-draft-answers-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": false,
+      "tag": "agent:d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"d1\",\"message\":{\"id\":\"dm1\",\"threadId\":\"t1\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRAFT_CREATED",
+        "payload": {
+         "tag": "agent:d",
+         "draftId": "d1",
+         "messageId": "dm1",
+         "threadId": "t1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-untagged-draft-answers-with-an-empty-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": false,
+      "tag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"d1\",\"message\":{\"id\":\"dm1\",\"threadId\":\"t1\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRAFT_CREATED",
+        "payload": {
+         "tag": "",
+         "draftId": "d1",
+         "messageId": "dm1",
+         "threadId": "t1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-draft-failure-answers-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": false,
+      "tag": "agent:d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"error\":{\"code\":401,\"message\":\"bad\",\"errors\":[{\"message\":\"Invalid Credentials\"}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "agent:d",
+         "message": "Invalid Credentials"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRAFT_CREATED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-untagged-draft-failure-answers-with-an-empty-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": false,
+      "tag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"error\":{\"code\":401,\"message\":\"bad\",\"errors\":[{\"message\":\"Invalid Credentials\"}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "",
+         "message": "Invalid Credentials"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRAFT_CREATED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-inbox-failure-answers-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": "agent:a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 403,
+      "headers": {},
+      "body": "{\"error\":{\"code\":401,\"message\":\"bad\",\"errors\":[{\"message\":\"Invalid Credentials\"}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "agent:a",
+         "message": "Invalid Credentials"
+        }
+       }
+      ],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_RETRY_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "two-tagged-calls-in-flight-answer-each-with-its-own-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": "agent:one"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1"
+     }
+    },
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#2",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": "agent:two"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#2"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#2"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#2",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[],\"resultSizeEstimate\":0}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "tag": "agent:two",
+         "messages": []
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#2",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "tag": "agent:two"
+     }
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[],\"resultSizeEstimate\":0}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "tag": "agent:one",
+         "messages": []
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "tag": "agent:one"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-call-that-std-retry-gives-up-on-fails-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": true,
+      "tag": "agent:a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:q|1#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:q|1#1"
+     }
+    },
+    {
+     "event": "GMAIL_GAVE_UP",
+     "payload": {
+      "key": "inbox:q|1#1",
+      "attempts": 4,
+      "error": "HTTP 503"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "agent:a",
+         "message": "HTTP 503"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-call-whose-mint-fails-fails-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": false,
+      "tag": "agent:d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1"
+     }
+    },
+    {
+     "event": "GMAIL_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "agent:d"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-call-with-no-credential-fails-not-configured-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": false,
+      "tag": "agent:d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1"
+     }
+    },
+    {
+     "event": "GMAIL_CONNECT_FAILED",
+     "payload": {
+      "error": "no store",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "agent:d",
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-call-with-a-held-refresh-token-still-fails-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CALL_READY",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "retry": false,
+      "tag": "agent:d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1"
+     }
+    },
+    {
+     "event": "GMAIL_REFRESH_PROBED",
+     "payload": {
+      "connected": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "agent:d"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-tagged-draft-with-a-line-break-in-a-header-fails-with-the-callers-tag",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "a@x.io\nb",
+      "subject": "s",
+      "body": "b",
+      "tag": "agent:d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "tag": "agent:d",
+         "message": "A draft header value must be a single line"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
   }
  ]
 }

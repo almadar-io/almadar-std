@@ -1,0 +1,49 @@
+app load-ramp-spec [
+  version: "1.0.0",
+  description: "Design contract for a stepped load test of one HTTP server by closed-loop virtual users, the stages model of k6 and Gatling: each step holds more users than the one before, each user sends a journey of requests in order with a think time between an answer and its next request, optionally holding a live stream (ticket then GET) for its life, and every answer is a sample of latency (ms, measured at the client) and status. A step's result is its request count, ok, 4xx, 5xx and transport failures, requests per second and the nearest-rank p50, p90, p95, p99 and max; the run pauses after each step until the caller continues it, so the caller can read the server between steps, and ends with every user closing its stream and returning to its defaults. Replay goldens: load-ramp.replay.goldens.json."
+]
+
+orbital LoadRampSpec {
+  expects entity LoadRow [runtime] {
+    id : string!
+    runKey : string
+    stepIndex : number
+    vusUp : number
+  }
+  expects trait LoadRamp {
+    state idle {
+      LOAD_START -> spawning
+    }
+    state spawning {
+      VU_SPAWN -> running
+    }
+    state running {
+      STEP_END -> pausing
+    }
+    state pausing {
+      LOAD_CONTINUE -> spawning
+      LOAD_STOP -> halting
+    }
+    state halting {
+      VU_HALT -> idle
+    }
+    emits {
+      LOAD_STEP_DONE { key : string! }
+      LOAD_DONE { key : string! }
+    }
+  }
+  expects trait LoadVu {
+    state idle {
+      VU_START -> ticketing
+    }
+    state sending {
+      VU_NEXT -> waiting
+    }
+    state waiting {
+      VU_REPLIED -> thinking
+    }
+    state thinking {
+      VU_WAKE -> sending
+    }
+  }
+}

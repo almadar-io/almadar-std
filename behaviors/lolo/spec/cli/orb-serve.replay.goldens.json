@@ -51,6 +51,12 @@
                       "repeatable": false
                     },
                     {
+                      "name": "session-expiry",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
                       "name": "open",
                       "aliases": [],
                       "takesValue": false,
@@ -92,7 +98,7 @@
                 "payload": {
                   "status": 400,
                   "body": "",
-                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators] [--session-expiry MINUTES]"
                 }
               }
             ]
@@ -125,7 +131,7 @@
                 "payload": {
                   "status": 400,
                   "body": "",
-                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators] [--session-expiry MINUTES]"
                 }
               }
             ]
@@ -857,7 +863,7 @@
                 "payload": {
                   "status": 400,
                   "body": "",
-                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators] [--session-expiry MINUTES]"
                 }
               }
             ]
@@ -1589,6 +1595,204 @@
           }
         }
       ]
+    },
+    {
+      "id": "--session-expiry reaches the hand-off as orb-session-expiry-minutes",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {
+              "session-expiry": [
+                "30"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "cwd": "/w",
+                  "path": "/w/a.lolo",
+                  "portText": "3030",
+                  "portOk": true,
+                  "host": "127.0.0.1",
+                  "hasClient": false,
+                  "clientDir": "",
+                  "clientGiven": "",
+                  "clientInside": true,
+                  "mock": true,
+                  "open": false,
+                  "noEmulators": false,
+                  "flagged": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbServe",
+          "from": "working",
+          "event": "SERVE_DONE",
+          "payload": {
+            "status": 200,
+            "body": "{}",
+            "stderr": "",
+            "headers": {
+              "orb-run": "server",
+              "orb-app": "/w/a.orb"
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{}",
+                  "stderr": "",
+                  "headers": {
+                    "orb-run": "server",
+                    "orb-app": "/w/a.orb",
+                    "orb-session-expiry-minutes": "30"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w"
+      }
+    },
+    {
+      "id": "control: without --session-expiry the hand-off headers are the handoff's own",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "working",
+          "event": "SERVE_DONE",
+          "payload": {
+            "status": 200,
+            "body": "{}",
+            "stderr": "",
+            "headers": {
+              "orb-run": "server",
+              "orb-app": "/w/a.orb"
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{}",
+                  "stderr": "",
+                  "headers": {
+                    "orb-run": "server",
+                    "orb-app": "/w/a.orb"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w"
+      }
+    },
+    {
+      "id": "edge: --session-expiry 0 answers the usage",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {
+              "session-expiry": [
+                "0"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators] [--session-expiry MINUTES]"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w"
+      }
+    },
+    {
+      "id": "edge: a --session-expiry that is not a whole number answers the usage",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {
+              "session-expiry": [
+                "soon"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators] [--session-expiry MINUTES]"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w"
+      }
     }
   ]
 }

@@ -177,6 +177,8 @@ orbital AgentToolLoopOrbital {
     ephemeral : boolean @description "The current turn belongs to an ephemeral conversation." = false
     live : boolean @description "The current turn streams its steps to the asking tab." = false
     cancelled : boolean @description "The current turn was cancelled while the model was answering: its late outcome is dropped." = false
+    cutResent : boolean @description "The current turn's cut-off model call was already sent once more." = false
+    toolsRan : boolean @description "The model asked for a tool in the current turn." = false
     turnMessages : [AgentChatMessage] @description "The conversation being answered." = []
     turnInstructions : string @description "The instructions sent with the current turn." = ""
     turnTools : [AgentToolData] @description "The tools the current turn may use." = []
@@ -291,6 +293,11 @@ orbital AgentToolLoopOrbital {
         @label "Model round-trips per request"
         @description "How many model calls one request may take before it fails."
         @tier "policy"
+      resendOnCutoff : boolean = false
+        @label "Resend a cut-off first call"
+        @description "On, a model call that is cut off at the output cap is sent to the model once more per turn: the whole request when no tool ran yet, or the same tool results again when tools ran, so no tool runs twice. A second cut-off fails the turn as before."
+        @synonyms "retry on length, retry truncated reply"
+        @tier "policy"
       caller : "user" | "process" | "identity" = user
         @label "Whose tools are these?"
         @description "user: each tool is offered only to a signed-in user whose role it lists, and runs as that user. process: the tools are the running program's own, offered with no signed-in user and no role filter, for a command-line or headless run that its composer declares. identity: the assistant is its own row of the app's identity entity (std-agent-identity, wired to this loop); each tool is offered only when it lists that row's role, and every call and read runs as that identity, never as the person asking. A tool is then answered with what its dispatch emitted, not awaited through TOOL_RESULT."
@@ -341,6 +348,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.ephemeral false)
         (set @entity.cancelled false)
         (set @entity.turnSteps [])
+        (set @entity.cutResent false)
+        (set @entity.toolsRan false)
         (set @entity.live (object/get ? live (not @config.quiet)))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (str/concat (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
@@ -353,6 +362,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.ephemeral true)
         (set @entity.cancelled false)
         (set @entity.turnSteps [])
+        (set @entity.cutResent false)
+        (set @entity.toolsRan false)
         (set @entity.live (object/get ? live false))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (str/concat (if (= (default ?instructions "") "") @config.instructions ?instructions) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
@@ -365,6 +376,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.ephemeral false)
         (set @entity.cancelled false)
         (set @entity.turnSteps [])
+        (set @entity.cutResent false)
+        (set @entity.toolsRan false)
         (set @entity.live (object/get ? live (not @config.quiet)))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (str/concat (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
@@ -376,6 +389,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.ephemeral true)
         (set @entity.cancelled false)
         (set @entity.turnSteps [])
+        (set @entity.cutResent false)
+        (set @entity.toolsRan false)
         (set @entity.live (object/get ? live false))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (str/concat (if (= (default ?instructions "") "") @config.instructions ?instructions) (if (= (default ?page "") "") "" (str/concat "\n\nWhere the person is in the app right now:\n" (default ?page "")))))
@@ -487,6 +502,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.turnSteps (array/append @entity.turnSteps ?activity))
       ToolsRequested -> running when (not @entity.cancelled)
         (set @entity.session ?session)
+        (set @entity.toolsRan true)
         (set @entity.calls ?calls)
         (set @entity.cursor 0)
         (set @entity.results [])
@@ -501,7 +517,19 @@ orbital AgentToolLoopOrbital {
         (set @entity.cancelled false)
       ToolsFailed -> idle when @entity.cancelled
         (set @entity.cancelled false)
-      ToolsFailed -> idle when (not @entity.cancelled)
+      ToolsFailed -> thinking when (and (not @entity.cancelled) @config.resendOnCutoff (= (default ?code "") "output-cut") (not @entity.cutResent) (not @entity.toolsRan))
+        (set @entity.cutResent true)
+        (emit LLM_CALL_TOOLS {
+          messages: @entity.turnMessages
+          tools: (array/map @entity.table (fn b { name: @b.name, description: @b.description, parameters: @b.parameters }))
+          instructions: @entity.turnInstructions
+          maxSteps: @config.maxSteps
+          key: "agent-tool-loop"
+        })
+      ToolsFailed -> thinking when (and (not @entity.cancelled) @config.resendOnCutoff (= (default ?code "") "output-cut") (not @entity.cutResent) @entity.toolsRan)
+        (set @entity.cutResent true)
+        (emit LLM_TOOLS_ANSWERED { session: @entity.session, results: @entity.results })
+      ToolsFailed -> idle when (and (not @entity.cancelled) (not (and @config.resendOnCutoff (= (default ?code "") "output-cut") (not @entity.cutResent))))
         (set @entity.status failed)
         (set @entity.error ?message)
         (if (= @config.announces "delegate") (emit DELEGATE_REPLY_FAILED { error: ?message, code: (default ?code ""), steps: @entity.turnSteps, ephemeral: @entity.ephemeral }) (emit ASSISTANT_REPLY_FAILED { error: ?message, code: (default ?code ""), steps: @entity.turnSteps, ephemeral: @entity.ephemeral }))

@@ -1,0 +1,22 @@
+app workflow-definition-spec [
+  version: "1.0.0",
+  description: "Design contract for a workflow held as declared data: its key, name, one-sentence summary, instructions, the roles it suits (empty means everyone), the fields a run asks for and the ordered steps (title, instructions, reach words, approval, kind). In a definition a step's tools are reach words (documents, mail, files, web) that the composer maps to its own tools. DEFINITION_ASK { requestId } is answered with WORKFLOW_DEFINED { requestId, key, name, summary, instructions, audience, inputFields, steps }, a flat payload of exactly the declared values; nothing else is stored or rendered."
+]
+
+type WorkflowField = { name : string!, label : string!, required : boolean! }
+type WorkflowStep = { title : string!, instructions : string, tools : [string], approval : boolean, kind : "agent" | "approval" }
+
+orbital WorkflowDefinitionSpec {
+  expects config { key : string  name : string  summary : string  instructions : string  audience : [string]  inputFields : [WorkflowField]  steps : [WorkflowStep] }
+  expects entity WorkflowDefinitionView [runtime] {
+    id : string!
+  }
+  expects trait WorkflowDefinition {
+    state idle {
+      DEFINITION_ASK -> idle
+    }
+    emits {
+      WORKFLOW_DEFINED { requestId : string!  key : string!  name : string!  summary : string!  instructions : string!  audience : [string]!  inputFields : [WorkflowField]!  steps : [WorkflowStep]! }
+    }
+  }
+}

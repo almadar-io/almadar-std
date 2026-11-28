@@ -7,7 +7,7 @@ uses Spec from "almadar-std/retry"
 orbital RetryOrbital {
   entity RetryRun [runtime] {
     id : string!
-    key : CallKey @description "The call key every attempt runs under; set by START."
+    key : CallKey? @description "The call key every attempt runs under; set by START, cleared when the run ends so a keyed row goes quiet (EXEC-STEP-1b)." = null
     attempt : number @description "The attempt in flight or last made; 0 while idle." = 0
     dueAt : instant? @description "The instant at which the next attempt starts; null when none is scheduled." = null
   }
@@ -18,6 +18,7 @@ orbital RetryOrbital {
     state idle {
       INIT -> idle
         (set @entity.attempt 0)
+        (set @entity.key null)
         (set @entity.dueAt null)
       START -> running
         @ensures (and (= @entity.attempt 1) (= @entity.dueAt null))
@@ -30,11 +31,13 @@ orbital RetryOrbital {
     state running {
       INIT -> idle
         (set @entity.attempt 0)
+        (set @entity.key null)
         (set @entity.dueAt null)
       SUCCEEDED -> idle when (== ?key @entity.key)
         @ensures (= @entity.attempt 0)
         (emit COMPLETED { key: ?key, attempts: @entity.attempt })
         (set @entity.attempt 0)
+        (set @entity.key null)
       FAILED -> backoff when (and (== ?key @entity.key) (< @entity.attempt @config.maxAttempts))
         @ensures (= @entity.attempt @fromEntity.attempt)
         (set @entity.dueAt (time/add @now (math/min @config.maxDelayMs (* @config.baseDelayMs (default (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs))) "ms"))
@@ -42,15 +45,18 @@ orbital RetryOrbital {
       FAILED -> idle when (and (== ?key @entity.key) (>= @entity.attempt @config.maxAttempts))
         (emit GAVE_UP { key: ?key, attempts: @entity.attempt, error: ?error })
         (set @entity.attempt 0)
+        (set @entity.key null)
       CANCEL -> idle
         @ensures (= @entity.attempt 0)
         (cancel-call @entity.key)
         (set @entity.attempt 0)
+        (set @entity.key null)
     }
 
     state backoff {
       INIT -> idle
         (set @entity.attempt 0)
+        (set @entity.key null)
         (set @entity.dueAt null)
       TIMER_DUE -> running when (!= @entity.key null)
         @ensures (and (= @entity.attempt (+ @fromEntity.attempt 1)) (= @entity.dueAt null))
@@ -60,9 +66,11 @@ orbital RetryOrbital {
       ;; no key means no run in flight, so idle is the meaning
       TIMER_DUE -> idle when (= @entity.key null)
         (set @entity.attempt 0)
+        (set @entity.key null)
         (set @entity.dueAt null)
       CANCEL -> idle
         (set @entity.attempt 0)
+        (set @entity.key null)
         (set @entity.dueAt null)
     }
 

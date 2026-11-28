@@ -1,0 +1,113 @@
+{
+  "atom": "agent/atoms/std-agent-memory.lolo",
+  "trait": "AgentMemoryStore",
+  "note": "what a memory keeps (the keeps knob): the whole exchange by default, or only what the person asked, so a later similar request never recalls an old answer to repeat",
+  "spec": null,
+  "cases": [
+    {
+      "id": "a store that keeps the request only remembers what the person asked, not the reply",
+      "config": {
+        "keeps": "request"
+      },
+      "steps": [
+        {
+          "trait": "AgentMemoryStore",
+          "event": "REMEMBER",
+          "from": "ready",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "entity": {
+            "id": "m",
+            "pendingQuery": "what colour"
+          },
+          "payload": {
+            "reply": "blue"
+          },
+          "expect": {
+            "fired": true,
+            "state": "remembering",
+            "entity": {
+              "pendingContent": "Asked: what colour"
+            },
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "texts": [
+                    "Asked: what colour"
+                  ],
+                  "key": "store"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedRequestDelay",
+        "MemEmbedRequestDeadline",
+        "MemEmbedHttpFrame",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView",
+        "AgentMemoryRecall"
+      ]
+    },
+    {
+      "id": "control: a store left at its default keeps the whole exchange",
+      "steps": [
+        {
+          "trait": "AgentMemoryStore",
+          "event": "REMEMBER",
+          "from": "ready",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "entity": {
+            "id": "m",
+            "pendingQuery": "what colour"
+          },
+          "payload": {
+            "reply": "blue"
+          },
+          "expect": {
+            "fired": true,
+            "state": "remembering",
+            "entity": {
+              "pendingContent": "Asked: what colour | Answered: blue"
+            },
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "texts": [
+                    "Asked: what colour | Answered: blue"
+                  ],
+                  "key": "store"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedRequestDelay",
+        "MemEmbedRequestDeadline",
+        "MemEmbedHttpFrame",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView",
+        "AgentMemoryRecall"
+      ]
+    }
+  ]
+}

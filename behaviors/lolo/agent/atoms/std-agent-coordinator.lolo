@@ -134,9 +134,10 @@ orbital AgentCoordinatorOrbital {
   }
 
   entity AgentTask [persistent: agentTasks] {
-    @read none "A binding stub: the app that binds its own entity here states the @read policy; this atom is headless and reads and writes these rows as the program, because a background job has no signed-in viewer."
+    @read none "A binding stub: the app that binds its own entity here states the @read policy, and scopes it by ownerId (the member who started the task) when many members share one program; this atom is headless and reads and writes these rows as the program, because a background job has no signed-in viewer."
     @create none "A binding stub: the app that binds its own entity here states the @create policy; this headless atom writes these rows as the program."
     id : string! @description "The task id the caller chose (TASK_START taskId)." @synonyms "task id, job id"
+    ownerId : string! @description "Who started the task (the real @user of the TASK_START that stored it). The binding organism scopes @read to it." @synonyms "user, owner, account"
     task : string @description "What was asked." @synonyms "prompt, request" = ""
     status : "planning" | "working" | "done" | "failed" @description "Where the task is." = planning
     answer : string @description "The final answer, set when the task is done." = ""
@@ -144,10 +145,11 @@ orbital AgentCoordinatorOrbital {
   }
 
   entity AgentTaskStep [persistent: agentTaskSteps] {
-    @read none "A binding stub: the app that binds its own entity here states the @read policy; this atom is headless and reads and writes these rows as the program, because a background job has no signed-in viewer."
+    @read none "A binding stub: the app that binds its own entity here states the @read policy, and scopes it by ownerId (the member who started the task) when many members share one program; this atom is headless and reads and writes these rows as the program, because a background job has no signed-in viewer."
     @create none "A binding stub: the app that binds its own entity here states the @create policy; this headless atom writes these rows as the program."
     @index { fields: ["taskId"], orderBy: "index:asc" }
     id : string! @description "The task id, a colon and the step's index." @synonyms "step id"
+    ownerId : string! @description "Who started the task this step belongs to (the starter, carried from the run, not whoever answered last). The binding organism scopes @read to it." @synonyms "user, owner, account"
     taskId : string @description "The task this step belongs to." = ""
     index : number @description "The step's place in the plan, from 0." = 0
     instruction : string @description "What the step is told to do." = ""
@@ -162,6 +164,7 @@ orbital AgentCoordinatorOrbital {
   entity AgentCoordinatorRun [runtime] {
     id : string!
     taskId : string @description "The task being run." = ""
+    ownerId : string @description "Who started the task being run (the real @user of its TASK_START); written on every row it creates, so a later step keeps the starter." = ""
     task : string @description "What the task asks." = ""
     instructions : [string] @description "The plan's steps, in order." = []
     results : [string] @description "The results of the finished steps, in order." = []
@@ -271,6 +274,7 @@ orbital AgentCoordinatorOrbital {
       CoordLlm.LLM_TOOLS_STEP -> ToolsStep
       CoordLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
       CoordLlm.LLM_FAILED -> ToolsFailed
+      AgentCoordinator.STEP_CANCEL -> CANCEL
       CoordLlm.LLM_CANCELLED -> ToolsCancelled
       ToolsRequested {
         session : string!
@@ -331,6 +335,7 @@ orbital AgentCoordinatorOrbital {
 
     state idle {
       INIT -> idle
+      TASK_CANCEL -> idle
       TASK_RELEASE -> idle
         (persist update AgentTaskStep { id: (str/concat ?taskId ":" ?index), hold: false } {
           emit: { failure: StepReleaseFailed, success: StepReleased }
@@ -341,6 +346,7 @@ orbital AgentCoordinatorOrbital {
         (emit TASK_FAILED { taskId: "", index: -1, error: (str/concat "the held step could not be released: " (default ?error "")) })
       TASK_START -> loading
         (set @entity.taskId ?taskId)
+        (set @entity.ownerId @user.id)
         (set @entity.task ?task)
         (set @entity.declared (default ?steps []))
         (set @entity.instructions [])
@@ -359,6 +365,7 @@ orbital AgentCoordinatorOrbital {
 
     state loading {
       INIT -> idle
+      TASK_CANCEL -> idle when (= ?taskId @entity.taskId)
       TASK_START -> loading
         (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
       StepsLoadFailed -> failing
@@ -370,7 +377,7 @@ orbital AgentCoordinatorOrbital {
         (set @entity.failError (str/concat "the task has " ?totalCount " steps, over the maxSteps cap of " @config.maxSteps))
         (emit TASK_FAIL {})
       StepsLoaded -> planning when (and (= ?totalCount (array/len ?data)) (= (array/len ?data) 0))
-        (persist create AgentTask { id: @entity.taskId, task: @entity.task, status: "planning", answer: "", error: "" } {
+        (persist create AgentTask { id: @entity.taskId, ownerId: @entity.ownerId, task: @entity.task, status: "planning", answer: "", error: "" } {
           emit: { failure: TaskCreateFailed, success: TaskCreated }
         })
       StepsLoaded -> starting when (and (= ?totalCount (array/len ?data)) (> (array/len ?data) 0))
@@ -388,6 +395,7 @@ orbital AgentCoordinatorOrbital {
 
     state planning {
       INIT -> idle
+      TASK_CANCEL -> idle when (= ?taskId @entity.taskId)
       TASK_START -> planning
         (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
       TaskCreateFailed -> planning when (= ?code "duplicate-id")
@@ -439,7 +447,7 @@ orbital AgentCoordinatorOrbital {
       PLAN_READ -> planning when (and @entity.planParsed (> (array/len @entity.instructions) 0) (<= (array/len @entity.instructions) @config.maxSteps) (= (array/count @entity.instructions (fn s (= (str/trim @s) ""))) 0))
         (set @entity.total (array/len @entity.instructions))
         (set @entity.saveCursor 0)
-        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":0"), taskId: @entity.taskId, index: 0, instruction: (array/nth @entity.instructions 0), status: "pending", result: "", error: "", hold: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.hold), limited: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.limited), tools: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.tools) } {
+        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":0"), ownerId: @entity.ownerId, taskId: @entity.taskId, index: 0, instruction: (array/nth @entity.instructions 0), status: "pending", result: "", error: "", hold: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.hold), limited: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.limited), tools: (let ((r : CoordStepRule (default (array/nth @entity.stepRules 0) { hold: false, limited: false, tools: [] }))) @r.tools) } {
           emit: { failure: StepSaveFailed, success: StepSaved }
         })
       StepSaveFailed -> failing
@@ -448,7 +456,7 @@ orbital AgentCoordinatorOrbital {
         (emit TASK_FAIL {})
       StepSaved -> planning when (< (+ @entity.saveCursor 1) @entity.total)
         (set @entity.saveCursor (+ @entity.saveCursor 1))
-        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.saveCursor), taskId: @entity.taskId, index: @entity.saveCursor, instruction: (default (array/nth @entity.instructions @entity.saveCursor) ""), status: "pending", result: "", error: "", hold: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.hold), limited: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.limited), tools: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.tools) } {
+        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.saveCursor), ownerId: @entity.ownerId, taskId: @entity.taskId, index: @entity.saveCursor, instruction: (default (array/nth @entity.instructions @entity.saveCursor) ""), status: "pending", result: "", error: "", hold: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.hold), limited: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.limited), tools: (let ((r : CoordStepRule (default (array/nth @entity.stepRules @entity.saveCursor) { hold: false, limited: false, tools: [] }))) @r.tools) } {
           emit: { failure: StepSaveFailed, success: StepSaved }
         })
       StepSaved -> starting when (>= (+ @entity.saveCursor 1) @entity.total)
@@ -461,6 +469,7 @@ orbital AgentCoordinatorOrbital {
 
     state starting {
       INIT -> idle
+      TASK_CANCEL -> idle when (= ?taskId @entity.taskId)
       TASK_START -> starting
         (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
       TaskMarkFailed -> failing
@@ -473,6 +482,8 @@ orbital AgentCoordinatorOrbital {
 
     state working {
       INIT -> idle
+      TASK_CANCEL -> idle when (= ?taskId @entity.taskId)
+        (emit STEP_CANCEL {})
       TASK_START -> working
         (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
       STEP_NEXT -> synthesizing when (>= @entity.index @entity.total)
@@ -509,6 +520,7 @@ orbital AgentCoordinatorOrbital {
 
     state storing {
       INIT -> idle
+      TASK_CANCEL -> idle when (= ?taskId @entity.taskId)
       TASK_START -> storing
         (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
       StepStoreFailed -> failing
@@ -524,6 +536,7 @@ orbital AgentCoordinatorOrbital {
 
     state synthesizing {
       INIT -> idle
+      TASK_CANCEL -> idle when (= ?taskId @entity.taskId)
       TASK_START -> synthesizing
         (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
       AnswerGenerated -> failing when (= (str/trim ?content) "")
@@ -631,6 +644,9 @@ orbital AgentCoordinatorOrbital {
       }
         @description "Bound a step's conversation through std-agent-context; its COMPACTED starts the step in std-agent-tool-loop."
         @tier "internal"
+      STEP_CANCEL -> external {}
+        @description "Cancel the step in progress in std-agent-tool-loop (its CANCEL)."
+        @tier "internal"
       STEP_NEXT
       PLAN_READ
       TASK_FAIL
@@ -648,6 +664,10 @@ orbital AgentCoordinatorOrbital {
         index : number!
       }
         @description "Clear the held mark of one step of a task, so the next TASK_START runs it."
+      TASK_CANCEL {
+        taskId : string!
+      }
+        @description "Stop work on a task: the step in progress is cancelled at its model and the coordinator is free for the next task. A cancel that names another task is ignored."
       StepReleased {
         id : string
       }

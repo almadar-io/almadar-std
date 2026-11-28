@@ -14,10 +14,11 @@ type WorkflowStored = { id : string, name : string, instructions : string, steps
 
 orbital AgentWorkflowOrbital {
   entity WorkflowRun [persistent: workflowRuns] {
-    @read none "A binding stub: the app that binds its own entity here states the @read policy; this atom is headless and writes these rows as the program."
+    @read none "A binding stub: the app that binds its own entity here states the @read policy, and scopes it by ownerId (the member who started the run) when many members share one program; this atom is headless and writes these rows as the program."
     @create none "A binding stub: the app that binds its own entity here states the @create policy; this headless atom writes these rows as the program."
     @index { fields: ["workflowId"], orderBy: "startedAt:desc" }
     id : string! @description "The run id the caller chose (WORKFLOW_RUN runId)."
+    ownerId : string! @description "Who started the run (the real @user of WORKFLOW_RUN). The binding organism scopes @read to it." @synonyms "user, owner, account"
     workflow : string @description "The workflow's name." = ""
     workflowId : string @description "The id of the stored workflow the run carried; empty for the configured one." = ""
     status : "running" | "awaitingApproval" | "done" | "denied" | "failed" | "cancelled" @description "Where the run is." = running
@@ -78,7 +79,7 @@ orbital AgentWorkflowOrbital {
         (set @entity.finalAnswer "")
         (set @entity.plan (array/map (array/filter (array/range 0 (array/len (default ?workflow.steps @config.steps)) 1) (fn i (let ((s : WorkflowStep (default (array/nth (default ?workflow.steps @config.steps) @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (!= (default @s.kind "agent") "approval")))) (fn i (let ((s : WorkflowStep (default (array/nth (default ?workflow.steps @config.steps) @i) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) { title: @s.title, instruction: (str/concat @s.title ": " (default @s.instructions "")), tools: (default @s.tools []), approval: (or (default @s.approval false) (if (< (+ @i 1) (array/len (default ?workflow.steps @config.steps))) (let ((n : WorkflowStep (default (array/nth (default ?workflow.steps @config.steps) (+ @i 1)) { title: "", instructions: "", tools: [], approval: false, kind: "agent" }))) (= (default @n.kind "agent") "approval")) false)) }))))
         (set @entity.task (str/concat (default ?workflow.name @config.name) "\n" (default ?workflow.instructions @config.instructions) "\n\n" (str/join (array/map (object/entries ?input) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "")))) "\n")))
-        (persist create WorkflowRun { id: ?runId, workflow: (default ?workflow.name @config.name), workflowId: (default ?workflow.id ""), status: "running", input: ?input, stepIndex: 0, stepTotal: (array/len @entity.plan), answer: "", error: "", startedAt: (time/now) } {
+        (persist create WorkflowRun { id: ?runId, ownerId: @user.id, workflow: (default ?workflow.name @config.name), workflowId: (default ?workflow.id ""), status: "running", input: ?input, stepIndex: 0, stepTotal: (array/len @entity.plan), answer: "", error: "", startedAt: (time/now) } {
           emit: { success: RunSaved, failure: RunSaveFailed }
         })
         (emit TASK_START {
@@ -92,6 +93,8 @@ orbital AgentWorkflowOrbital {
         (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "no run is waiting for approval" })
       WORKFLOW_CANCEL -> idle
         (emit WORKFLOW_FAILED { runId: ?runId, index: -1, error: "no run is in progress" })
+      RunCancelled -> idle
+        (emit WORKFLOW_CANCELLED { runId: ?id })
       RunSaved -> idle
       RunSaveFailed -> idle
         (log (str/concat "std-agent-workflow: the run row could not be saved: " (default ?error "")) "warn")
@@ -140,9 +143,12 @@ orbital AgentWorkflowOrbital {
         (set @entity.runId "")
       WORKFLOW_CANCEL -> idle when (= ?runId @entity.runId)
         (persist update WorkflowRun { id: @entity.runId, status: "cancelled", finishedAt: (time/now) } {
-          emit: { success: RunSaved, failure: RunSaveFailed }
+          emit: { success: RunCancelled, failure: RunSaveFailed }
         })
+        (emit TASK_CANCEL { taskId: @entity.runId })
         (set @entity.runId "")
+      RunCancelled -> running
+        (emit WORKFLOW_CANCELLED { runId: ?id })
       RunSaved -> running
       RunSaveFailed -> running
         (log (str/concat "std-agent-workflow: the run row could not be saved: " (default ?error "")) "warn")
@@ -170,6 +176,14 @@ orbital AgentWorkflowOrbital {
         })
         (emit WORKFLOW_FAILED { runId: @entity.runId, index: (- @entity.heldIndex 1), error: (str/concat "denied: " (default ?reason "")) })
         (set @entity.runId "")
+      WORKFLOW_CANCEL -> idle when (= ?runId @entity.runId)
+        (persist update WorkflowRun { id: @entity.runId, status: "cancelled", finishedAt: (time/now) } {
+          emit: { success: RunCancelled, failure: RunSaveFailed }
+        })
+        (emit TASK_CANCEL { taskId: @entity.runId })
+        (set @entity.runId "")
+      RunCancelled -> awaitingApproval
+        (emit WORKFLOW_CANCELLED { runId: ?id })
       RunSaved -> awaitingApproval
       RunSaveFailed -> awaitingApproval
         (log (str/concat "std-agent-workflow: the run row could not be saved: " (default ?error "")) "warn")
@@ -221,6 +235,16 @@ orbital AgentWorkflowOrbital {
       }
         @description "The run ended without finishing: a refused start (index -1), a failed step, or a denied approval (`denied:` and the reason)."
         @tier "domain"
+      TASK_CANCEL -> external {
+        taskId : string!
+      }
+        @description "Stop the coordinator's work on a run that was stopped."
+        @tier "internal"
+      WORKFLOW_CANCELLED -> external {
+        runId : string!
+      }
+        @description "A stopped run's row is saved as cancelled."
+        @tier "domain"
       WORKFLOW_ROW_FAILED -> external {
         error : string!
       }
@@ -228,6 +252,10 @@ orbital AgentWorkflowOrbital {
         @tier "secondary"
       RunSaved {
         id : string
+      }
+        @tier "internal"
+      RunCancelled {
+        id : string!
       }
         @tier "internal"
       RunSaveFailed {

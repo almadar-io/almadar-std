@@ -967,6 +967,415 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-run-row-carries-the-member-who-started-it-as-its-owner",
+      "config": {
+        "name": "Claims intake",
+        "instructions": "Handle one insurance claim.",
+        "inputFields": [
+          {
+            "name": "claimNumber",
+            "label": "Claim number",
+            "required": true
+          }
+        ],
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read the claim's documents.",
+            "tools": [
+              "Claims.ClaimManage.OPEN_CLAIM"
+            ],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check the claim against the checklist.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write the decision letter.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_RUN",
+          "from": "idle",
+          "payload": {
+            "runId": "run-o",
+            "input": {
+              "claimNumber": "C-2026-17"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "create",
+                "arg1": "WorkflowRun",
+                "arg2": {
+                  "id": "@payload.runId",
+                  "ownerId": "@user.id",
+                  "workflow": [
+                    "default",
+                    "@payload.workflow.name",
+                    "Claims intake"
+                  ],
+                  "workflowId": [
+                    "default",
+                    "@payload.workflow.id",
+                    ""
+                  ],
+                  "status": "running",
+                  "input": "@payload.input",
+                  "stepIndex": 0,
+                  "stepTotal": [
+                    "array/len",
+                    "@entity.plan"
+                  ],
+                  "answer": "",
+                  "error": "",
+                  "startedAt": [
+                    "time/now"
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-later-update-of-the-run-row-never-rewrites-its-owner",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "TaskDone",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "plan": [
+              {
+                "title": "Read",
+                "instruction": "Read: Read.",
+                "tools": [],
+                "approval": false
+              }
+            ]
+          },
+          "payload": {
+            "taskId": "run-1",
+            "answer": "The claim is complete.",
+            "steps": 1
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_DONE",
+                "payload": {
+                  "runId": "run-1",
+                  "answer": "The claim is complete."
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "persist",
+                "arg0": "update",
+                "arg1": "WorkflowRun",
+                "arg2": {
+                  "id": "@entity.runId",
+                  "status": "done",
+                  "answer": "@payload.answer",
+                  "finishedAt": [
+                    "time/now"
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u2",
+            "role": "member"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stopping-a-run-in-progress-marks-it-cancelled-and-stops-the-coordinators-task",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_CANCEL",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1"
+          },
+          "payload": {
+            "runId": "run-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_CANCEL",
+                "payload": {
+                  "taskId": "run-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-stopping-another-run-leaves-the-run-in-progress-alone",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_CANCEL",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-1"
+          },
+          "payload": {
+            "runId": "run-2"
+          },
+          "expect": {
+            "fired": false,
+            "state": "running",
+            "neverEmits": [
+              "TASK_CANCEL"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "stopping-a-run-that-waits-for-approval-ends-it-cancelled",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "WORKFLOW_CANCEL",
+          "from": "awaitingApproval",
+          "entity": {
+            "id": "w",
+            "runId": "run-1",
+            "heldIndex": 2
+          },
+          "payload": {
+            "runId": "run-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_CANCEL",
+                "payload": {
+                  "taskId": "run-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-saved-cancelled-row-is-announced-with-its-run",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "RunCancelled",
+          "from": "idle",
+          "entity": {
+            "id": "w",
+            "runId": ""
+          },
+          "payload": {
+            "id": "run-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WORKFLOW_CANCELLED",
+                "payload": {
+                  "runId": "run-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-cancelled-row-saved-after-the-next-run-started-is-still-announced-and-the-new-run-goes-on",
+      "config": {
+        "name": "Claims intake",
+        "steps": [
+          {
+            "title": "Read the documents",
+            "instructions": "Read.",
+            "tools": [],
+            "approval": false
+          },
+          {
+            "title": "Check the list",
+            "instructions": "Check.",
+            "tools": [],
+            "approval": true
+          },
+          {
+            "title": "Write the letter",
+            "instructions": "Write.",
+            "tools": [],
+            "approval": false
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "RunCancelled",
+          "from": "running",
+          "entity": {
+            "id": "w",
+            "runId": "run-2"
+          },
+          "payload": {
+            "id": "run-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "WORKFLOW_CANCELLED",
+                "payload": {
+                  "runId": "run-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

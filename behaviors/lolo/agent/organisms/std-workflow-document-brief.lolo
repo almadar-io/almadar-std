@@ -1,0 +1,33 @@
+app std-workflow-document-brief [
+  version: "1.0.0",
+  description: "std-workflow-document-brief — the workflow that summarizes one or more documents into a short brief with its sources, as declared data: read each document, write the brief with a source line per point, then check that every point has its source. It composes std-workflow-definition with key document-brief, so a catalog or picker asks DEFINITION_ASK and gets WORKFLOW_DEFINED, and a std-agent-workflow runs the steps. The reading steps name the reach word documents; the composer maps it to its own tools."
+]
+;; @capabilities "summarize one or more documents into a brief, list the sources of the brief, shorten long documents, key points of a document, executive summary from files"
+uses WorkflowDefinition from "std/behaviors/std-workflow-definition"
+
+type WorkflowField = { name : string!, label : string!, required : boolean! }
+type WorkflowStep = { title : string!, instructions : string, tools : [string], approval : boolean, kind : "agent" | "approval" }
+
+orbital WorkflowDocumentBriefOrbital {
+  entity WorkflowDefinitionView [runtime] {
+    id : string!
+  }
+
+  trait WorkflowDefinition = WorkflowDefinition.traits.WorkflowDefinition {
+    config {
+        key: "document-brief"
+        name: "Brief from documents"
+        summary: "Summarize one or more documents into a short brief that names its sources."
+        instructions: "Summarize the documents the request names into one short brief. Every point in the brief names the document and page it came from."
+        audience: []
+        inputFields: [{ name: "request", label: "Which documents, and what the brief is for", required: true }]
+        steps: [
+          { title: "Read the documents", instructions: "Find and read each document the request names. For each one write three to five short lines with the key facts. End each document with one line: Source: <file>, page <n>.", tools: ["documents"], approval: false, kind: "agent" },
+          { title: "Write the brief", instructions: "Write one brief from your notes. Start with one sentence that says the main point. Then give short bullet points, one fact each. End each bullet with its line: Source: <file>, page <n>. Do not add a fact that is not in your notes.", tools: [], approval: false, kind: "agent" },
+          { title: "Check the sources", instructions: "Read the brief. Make sure every bullet ends with a Source line. If one does not, search the documents for it and add the line; if you cannot find it, remove the bullet. Write the final brief.", tools: ["documents"], approval: false, kind: "agent" }
+        ]
+    }
+  }
+
+  page boot as WorkflowDefinitionBoot -> WorkflowDefinition
+}

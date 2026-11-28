@@ -1,283 +1,374 @@
 {
- "atom": "flow/atoms/std-retry.lolo",
- "trait": "Retry",
- "note": "from std-retry-program.test.ts; the backoff tick (TIMER_DUE after real time) is a host answer played as a step",
- "cases": [
-  {
-   "id": "start-numbers-first-attempt-1",
-   "steps": [
+  "atom": "flow/atoms/std-retry.lolo",
+  "trait": "Retry",
+  "note": "from std-retry-program.test.ts; the backoff tick (TIMER_DUE after real time) is a host answer played as a step",
+  "cases": [
     {
-     "event": "START",
-     "payload": {
-      "key": "k1"
-     },
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "ATTEMPT",
-        "payload": {
-         "key": "k1",
-         "attempt": 1
+      "id": "start-numbers-first-attempt-1",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          },
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "ATTEMPT",
+                "payload": {
+                  "key": "k1",
+                  "attempt": 1
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "failure-schedules-backoff-then-attempt-2",
-   "steps": [
-    {
-     "event": "START",
-     "payload": {
-      "key": "k1"
-     }
     },
     {
-     "event": "FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "boom"
-     },
-     "from": "running",
-     "expect": {
-      "state": "backoff",
-      "emits": [
-       {
-        "event": "RETRY_SCHEDULED",
-        "payload": {
-         "key": "k1",
-         "attempt": 1,
-         "error": "boom"
+      "id": "failure-schedules-backoff-then-attempt-2",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "boom"
+          },
+          "from": "running",
+          "expect": {
+            "state": "backoff",
+            "emits": [
+              {
+                "event": "RETRY_SCHEDULED",
+                "payload": {
+                  "key": "k1",
+                  "attempt": 1,
+                  "error": "boom"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "backoff",
+          "expect": {
+            "state": "running",
+            "emits": [
+              {
+                "event": "ATTEMPT",
+                "payload": {
+                  "key": "k1",
+                  "attempt": 2
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
     },
     {
-     "event": "TIMER_DUE",
-     "payload": {},
-     "from": "backoff",
-     "expect": {
-      "state": "running",
-      "emits": [
-       {
-        "event": "ATTEMPT",
-        "payload": {
-         "key": "k1",
-         "attempt": 2
+      "id": "control-failed-for-another-key-is-ignored",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "other",
+            "error": "x"
+          },
+          "from": "running",
+          "expect": {
+            "neverEmits": [
+              "RETRY_SCHEDULED",
+              "GAVE_UP"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-failed-for-another-key-is-ignored",
-   "steps": [
-    {
-     "event": "START",
-     "payload": {
-      "key": "k1"
-     }
     },
     {
-     "event": "FAILED",
-     "payload": {
-      "key": "other",
-      "error": "x"
-     },
-     "from": "running",
-     "expect": {
-      "neverEmits": [
-       "RETRY_SCHEDULED",
-       "GAVE_UP"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "succeeded-completes",
-   "steps": [
-    {
-     "event": "START",
-     "payload": {
-      "key": "k1"
-     }
-    },
-    {
-     "event": "SUCCEEDED",
-     "payload": {
-      "key": "k1"
-     },
-     "from": "running",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "COMPLETED",
-        "payload": {
-         "key": "k1",
-         "attempts": 1
+      "id": "succeeded-completes",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "SUCCEEDED",
+          "payload": {
+            "key": "k1"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "COMPLETED",
+                "payload": {
+                  "key": "k1",
+                  "attempts": 1
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "attempts-spent-gives-up-with-the-last-error",
-   "steps": [
-    {
-     "event": "START",
-     "payload": {
-      "key": "k1"
-     }
     },
     {
-     "event": "FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "a"
-     },
-     "from": "running"
-    },
-    {
-     "event": "TIMER_DUE",
-     "payload": {},
-     "from": "backoff"
-    },
-    {
-     "event": "FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "b"
-     },
-     "from": "running"
-    },
-    {
-     "event": "TIMER_DUE",
-     "payload": {},
-     "from": "backoff"
-    },
-    {
-     "event": "FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "c"
-     },
-     "from": "running",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GAVE_UP",
-        "payload": {
-         "key": "k1",
-         "attempts": 3,
-         "error": "c"
+      "id": "attempts-spent-gives-up-with-the-last-error",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "a"
+          },
+          "from": "running"
+        },
+        {
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "backoff"
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "b"
+          },
+          "from": "running"
+        },
+        {
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "backoff"
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "c"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GAVE_UP",
+                "payload": {
+                  "key": "k1",
+                  "attempts": 3,
+                  "error": "c"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-second-failure-still-schedules",
-   "steps": [
-    {
-     "event": "START",
-     "payload": {
-      "key": "k1"
-     }
     },
     {
-     "event": "FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "a"
-     },
-     "from": "running"
-    },
-    {
-     "event": "TIMER_DUE",
-     "payload": {},
-     "from": "backoff"
-    },
-    {
-     "event": "FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "b"
-     },
-     "from": "running",
-     "expect": {
-      "state": "backoff",
-      "neverEmits": [
-       "GAVE_UP"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "overflowing backoff caps at maxDelayMs",
-   "config": {
-    "maxAttempts": 2000,
-    "multiplier": 2,
-    "baseDelayMs": 500,
-    "maxDelayMs": 30000
-   },
-   "entity": {
-    "key": "k1",
-    "attempt": 1500
-   },
-   "steps": [
-    {
-     "from": "running",
-     "event": "FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "x"
-     },
-     "expect": {
-      "state": "backoff",
-      "emits": [
-       {
-        "event": "RETRY_SCHEDULED",
-        "payload": {
-         "key": "k1",
-         "attempt": 1500,
-         "delayMs": 30000,
-         "error": "x"
+      "id": "control-second-failure-still-schedules",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "a"
+          },
+          "from": "running"
+        },
+        {
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "backoff"
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "b"
+          },
+          "from": "running",
+          "expect": {
+            "state": "backoff",
+            "neverEmits": [
+              "GAVE_UP"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-timer-with-no-run-in-flight-goes-idle-without-an-attempt",
-   "note": "TIMER_DUE in backoff with no START key: no key means no run in flight, so idle is the meaning",
-   "steps": [
+    },
     {
-     "event": "TIMER_DUE",
-     "payload": {},
-     "from": "backoff",
-     "expect": {
-      "neverEmits": [
-       "ATTEMPT"
+      "id": "overflowing backoff caps at maxDelayMs",
+      "config": {
+        "maxAttempts": 2000,
+        "multiplier": 2,
+        "baseDelayMs": 500,
+        "maxDelayMs": 30000
+      },
+      "entity": {
+        "key": "k1",
+        "attempt": 1500
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "x"
+          },
+          "expect": {
+            "state": "backoff",
+            "emits": [
+              {
+                "event": "RETRY_SCHEDULED",
+                "payload": {
+                  "key": "k1",
+                  "attempt": 1500,
+                  "delayMs": 30000,
+                  "error": "x"
+                }
+              }
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "a-timer-with-no-run-in-flight-goes-idle-without-an-attempt",
+      "note": "TIMER_DUE in backoff with no START key: no key means no run in flight, so idle is the meaning",
+      "steps": [
+        {
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "backoff",
+          "expect": {
+            "neverEmits": [
+              "ATTEMPT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-run-that-succeeds-clears-its-key-so-a-keyed-row-goes-quiet",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "SUCCEEDED",
+          "payload": {
+            "key": "k1"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "entity": {
+              "key": null,
+              "attempt": 0
+            },
+            "emits": [
+              {
+                "event": "COMPLETED",
+                "payload": {
+                  "key": "k1",
+                  "attempts": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cancel-in-backoff-clears-the-key",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "boom"
+          },
+          "from": "running"
+        },
+        {
+          "event": "CANCEL",
+          "payload": {},
+          "from": "backoff",
+          "expect": {
+            "state": "idle",
+            "entity": {
+              "key": null,
+              "attempt": 0,
+              "dueAt": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-backoff-keeps-its-key-for-the-next-attempt",
+      "steps": [
+        {
+          "event": "START",
+          "payload": {
+            "key": "k1"
+          }
+        },
+        {
+          "event": "FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "boom"
+          },
+          "from": "running",
+          "expect": {
+            "state": "backoff",
+            "entity": {
+              "key": "k1"
+            }
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

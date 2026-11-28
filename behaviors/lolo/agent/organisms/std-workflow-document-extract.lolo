@@ -1,0 +1,34 @@
+app std-workflow-document-extract [
+  version: "1.0.0",
+  description: "std-workflow-document-extract — the workflow that pulls named fields (dates, amounts, parties) out of a document into a table a person reviews, as declared data: read the document, extract each named field with its source, a person reviews the table, then write the final table. It composes std-workflow-definition with key document-extract, so a catalog or picker asks DEFINITION_ASK and gets WORKFLOW_DEFINED, and a std-agent-workflow runs the steps. The reading step names the reach word documents; the composer maps it to its own tools."
+]
+;; @capabilities "pull fields such as dates, amounts and parties out of a document into a table, extract data from a document, review extracted values, fill a table from files"
+uses WorkflowDefinition from "std/behaviors/std-workflow-definition"
+
+type WorkflowField = { name : string!, label : string!, required : boolean! }
+type WorkflowStep = { title : string!, instructions : string, tools : [string], approval : boolean, kind : "agent" | "approval" }
+
+orbital WorkflowDocumentExtractOrbital {
+  entity WorkflowDefinitionView [runtime] {
+    id : string!
+  }
+
+  trait WorkflowDefinition = WorkflowDefinition.traits.WorkflowDefinition {
+    config {
+        key: "document-extract"
+        name: "Extract fields from a document"
+        summary: "Pull named fields such as dates, amounts and parties out of a document into a table a person reviews."
+        instructions: "Read one document and pull out the fields the request names. Each value names its source. A person reviews the table before the final table is written."
+        audience: []
+        inputFields: [{ name: "document", label: "The document to read", required: true }, { name: "fields", label: "The fields to pull out, for example dates, amounts, parties", required: true }]
+        steps: [
+          { title: "Read the document", instructions: "Find and read the document. Write in two short lines what kind of document it is and which parties it names.", tools: ["documents"], approval: false, kind: "agent" },
+          { title: "Extract the fields", instructions: "For each field the request names, write one table row: field, value, and Source: <file>, page <n>. Copy the value exactly as the document writes it. If a field is not in the document, write the value as not found. Do not guess a value.", tools: ["documents"], approval: false, kind: "agent" },
+          { title: "Review the table", instructions: "", tools: [], approval: false, kind: "approval" },
+          { title: "Write the final table", instructions: "Write the approved table as the final result: one row per field with its value and its Source line. Keep every value exactly as approved.", tools: [], approval: false, kind: "agent" }
+        ]
+    }
+  }
+
+  page boot as WorkflowDefinitionBoot -> WorkflowDefinition
+}

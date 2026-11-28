@@ -1,6 +1,6 @@
 app std-chrome [
   version: "1.0.0",
-  description: "std-chrome — drives one headless Chrome tab through a composed std-daemon (launch) and std-cdp (transport). CHROME_START creates the profile and download directories (anchored knobs), launches Chrome detached with --headless=new, --remote-debugging-port, --user-data-dir and the extraArgs knob (no --no-sandbox by default: the container organism sets it), connects, creates a target (Target.createTarget about:blank), attaches it with a flat session (Target.attachToTarget), enables Page, Runtime and Accessibility on the session, sets Browser.setDownloadBehavior allow into the download directory with events, and answers CHROME_READY { browser, targetId } (the page target's id, so another CDP client such as std-cdp-profile can attach to the same tab on its own connection). Every page request carries a caller key, runs one at a time (a second one answers PAGE_FAILED busy) and answers on that key. NAVIGATE: Page.navigate, then the session's Page.loadEventFired or the navigation timeout, then location and title; an errorText answers navigation-failed. With the waitFor knob networkIdle it first enables Page.setLifecycleEventsEnabled and answers only after the navigated frame's networkIdle lifecycle event (after load), the evaluation of document.fonts.ready and the settleMs wait, all inside the navigation timeout. ELEMENT_SHOT is DOM.getDocument, DOM.querySelector, DOM.scrollIntoViewIfNeeded, the elementSettleMs wait, DOM.getBoxModel, Page.getLayoutMetrics and a clipped Page.captureScreenshot (the margin knob elementMargin clamped inside the content), answering the image with its clip and the element box relative to the clip; no match answers element-missing, no box or size element-hidden. PRELOAD is Page.addScriptToEvaluateOnNewDocument. TEXT, LINKS, FOCUSED and MEASURE are Runtime.evaluate of measuring-only expressions held in knobs; LINKS and CLICK share one element list. CLICK clicks and, after clickSettleMs, reports navigated (location changed or main-frame Page.frameNavigated). KEY sends Input.dispatchKeyEvent keyDown and keyUp from the keys table. VIEWPORT is Emulation.setDeviceMetricsOverride with page zoom for textZoom. SCREENSHOT is Page.captureScreenshot (base64 to bytes); AX_TREE is Accessibility.getFullAXTree. DOWNLOAD clicks as CLICK does and waits for Browser.downloadWillBegin and downloadProgress completed; the path is the filePath of the completed event. PRINT_PDF with html navigates about:blank, sets the document content from Page.getFrameTree and prints with Page.printToPDF; with an absolute path it navigates to file:// plus the path, waits for load and prints; exactly one of html and path. INJECT reads the script file (a path relative to the scriptDir knob; an absolute path or one that climbs out with .. answers PAGE_FAILED bad-script) and evaluates it. CHROME_STOP closes the target, disconnects and stops the browser it started (a browser that was already listening is left running). The composer grants exec for the Chrome binary, net 127.0.0.1 on the port, fs create, read and write on the profile directory, fs create and read on the download directory and fs read on the scriptDir directory, and sets ChromeDaemon commands (default the ORB_CHROME environment variable), readyPort and the CdpHttp and CdpWs port when it changes port."
+  description: "std-chrome — drives one headless Chrome tab through a composed std-daemon (launch) and std-cdp (transport). CHROME_START creates the profile and download directories (anchored knobs), launches Chrome detached with --headless=new, --remote-debugging-port, --user-data-dir and the extraArgs knob (no --no-sandbox by default: the container organism sets it), connects, creates a target (Target.createTarget about:blank), attaches it with a flat session (Target.attachToTarget), enables Page, Runtime and Accessibility on the session, sets Browser.setDownloadBehavior allow into the download directory with events, and answers CHROME_READY { browser, targetId } (the page target's id, so another CDP client such as std-cdp-profile can attach to the same tab on its own connection). Every page request carries a caller key, runs one at a time (a second one answers PAGE_FAILED busy) and answers on that key. NAVIGATE: Page.navigate, then the session's Page.loadEventFired or the navigation timeout, then location and title; an errorText answers navigation-failed. With the waitFor knob networkIdle it first enables Page.setLifecycleEventsEnabled and answers only after the navigated frame's networkIdle lifecycle event (after load), the evaluation of document.fonts.ready and the settleMs wait, all inside the navigation timeout. ELEMENT_SHOT is DOM.getDocument, DOM.querySelector, DOM.scrollIntoViewIfNeeded, the elementSettleMs wait, DOM.getBoxModel, Page.getLayoutMetrics and a clipped Page.captureScreenshot (the margin knob elementMargin clamped inside the content), answering the image with its clip and the element box relative to the clip; no match answers element-missing, no box or size element-hidden. PRELOAD is Page.addScriptToEvaluateOnNewDocument. TEXT, LINKS, FOCUSED and MEASURE are Runtime.evaluate of measuring-only expressions held in knobs; LINKS and CLICK share one element list. CLICK clicks and, after clickSettleMs, reports navigated (location changed or main-frame Page.frameNavigated). KEY sends Input.dispatchKeyEvent keyDown and keyUp from the keys table. VIEWPORT is Emulation.setDeviceMetricsOverride with page zoom for textZoom. SCREENSHOT is Page.captureScreenshot (base64 to bytes); AX_TREE is Accessibility.getFullAXTree. DOWNLOAD clicks as CLICK does and waits for Browser.downloadWillBegin and downloadProgress completed; the path is the filePath of the completed event. PRINT_PDF with html navigates about:blank, sets the document content from Page.getFrameTree and prints with Page.printToPDF; with an absolute path it navigates to file:// plus the path, waits for load and prints; exactly one of html and path. INJECT reads the script file (a path relative to the scriptDir knob; an absolute path or one that climbs out with .. answers PAGE_FAILED bad-script) and evaluates it. CHROME_STOP closes the target, disconnects and stops the browser it started (a browser that was already listening is left running, unless the closeReused knob is on: then Browser.close ends it, so a browser an earlier run of the program left on the port does not stay behind). With the startOnNavigate knob, a PAGE_NAVIGATE or PAGE_PRINT_PDF while stopped starts the browser and is held until it is ready, then runs (a start that fails answers it PAGE_FAILED start-failed); every other page request while stopped still answers not-started, since it reads a page a stopped browser no longer has. With the ChromeIdle idleStopMs knob above 0, the browser stops once it has answered nothing for that long while ready (the composed std-delay under the key idle, re-armed by every answer), and answers CHROME_STOPPED. The composer grants exec for the Chrome binary, net 127.0.0.1 on the port, fs create, read and write on the profile directory, fs create and read on the download directory and fs read on the scriptDir directory, and sets ChromeDaemon commands (default the ORB_CHROME environment variable), readyPort and the CdpHttp and CdpWs port when it changes port."
 ]
 ;; @capabilities "drive a headless Chrome tab: navigate, read text and links, click, press keys, read focus, resize, screenshot, accessibility tree, download, print PDF, inject and measure"
 uses Spec from "almadar-std/chrome"
@@ -10,6 +10,7 @@ uses Delay from "std/behaviors/std-delay"
 
 type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
 type PageRect = { x : number!, y : number!, width : number!, height : number! }
+type ChromeHeld = { op : "navigate" | "pdf"!, key : string!, url : string, html : string, path : string }
 type PageFocus = { tag : string!, role : string!, name : string!, selector : string!, rect : PageRect! }
 type PageAxNode = { id : string!, parent : string?, role : string!, name : string!, ignored : boolean! }
 type ChromePath = { anchor : "cwd" | "exe-dir" | { env : string! }!, path : string! }
@@ -78,6 +79,8 @@ orbital ChromeOrbital {
     elRect : PageRect @description "The element border rectangle, relative to the viewport, from DOM.getBoxModel." = { x: 0, y: 0, width: 0, height: 0 }
     shotClip : PageRect @description "The clip of the PAGE_ELEMENT_SHOT in flight, in page coordinates." = { x: 0, y: 0, width: 0, height: 0 }
     shotBox : PageRect @description "The element rectangle relative to the clip origin." = { x: 0, y: 0, width: 0, height: 0 }
+    reused : boolean @description "The browser was already listening on the port when started." = false
+    held : ChromeHeld? @description "The page request that started the browser (startOnNavigate), run once it is ready."
   }
 
   trait ChromeDaemon = Daemon.traits.Daemon {
@@ -139,6 +142,53 @@ orbital ChromeOrbital {
     listens {
       Chrome.CHROME_TIMER_ARM -> START
       Chrome.CHROME_TIMER_CANCEL -> CANCEL
+      ChromeIdle.CHROME_IDLE_ARM -> START
+    }
+  }
+
+  trait ChromeIdle -> ChromeTab {
+    initial: watching
+
+    state watching {
+      INIT -> watching
+      CHROME_ANSWERED -> watching when (> @config.idleStopMs 0)
+        (emit CHROME_IDLE_ARM { key: "idle", delayMs: @config.idleStopMs })
+    }
+
+    emits {
+      CHROME_IDLE_ARM -> external { key : string!  delayMs : number! }
+        @description "Re-arm the idle deadline; Chrome stops when it passes while ready."
+        @tier "internal"
+    }
+
+    listens {
+      CHROME_ANSWERED { }
+        @description "The browser became ready or answered a page request."
+        @tier "internal"
+      Chrome.CHROME_READY -> CHROME_ANSWERED with { }
+      Chrome.PAGE_LOADED -> CHROME_ANSWERED with { }
+      Chrome.PAGE_TEXT_READ -> CHROME_ANSWERED with { }
+      Chrome.PAGE_LINKS_READ -> CHROME_ANSWERED with { }
+      Chrome.PAGE_CLICKED -> CHROME_ANSWERED with { }
+      Chrome.PAGE_KEY_SENT -> CHROME_ANSWERED with { }
+      Chrome.PAGE_FOCUS_READ -> CHROME_ANSWERED with { }
+      Chrome.PAGE_VIEWPORT_SET -> CHROME_ANSWERED with { }
+      Chrome.PAGE_SCREENSHOT_TAKEN -> CHROME_ANSWERED with { }
+      Chrome.PAGE_AX_TREE_READ -> CHROME_ANSWERED with { }
+      Chrome.PAGE_DOWNLOADED -> CHROME_ANSWERED with { }
+      Chrome.PAGE_PDF_PRINTED -> CHROME_ANSWERED with { }
+      Chrome.PAGE_ELEMENT_SHOT_TAKEN -> CHROME_ANSWERED with { }
+      Chrome.PAGE_PRELOADED -> CHROME_ANSWERED with { }
+      Chrome.PAGE_INJECTED -> CHROME_ANSWERED with { }
+      Chrome.PAGE_MEASURED -> CHROME_ANSWERED with { }
+      Chrome.PAGE_FAILED -> CHROME_ANSWERED with { }
+    }
+
+    config {
+      idleStopMs : number = 0
+        @label "Idle stop (ms)"
+        @description "Stop the browser once it has answered nothing for this long while ready; 0 keeps it running until CHROME_STOP."
+        @tier "policy"
     }
   }
 
@@ -154,8 +204,11 @@ orbital ChromeOrbital {
         (os/mkdir @config.preferencesDir true { emit: { success: CHROME_DIR_MADE, failure: CHROME_HOST_FAILED } })
       CHROME_STOP -> stopped
         (emit CHROME_STOPPED { })
-      PAGE_NAVIGATE -> stopped
+      PAGE_NAVIGATE -> stopped when (not @config.startOnNavigate)
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_NAVIGATE -> stopped when @config.startOnNavigate
+        (set @entity.held { op: "navigate", key: @payload.key, url: @payload.url })
+        (emit CHROME_START { })
       PAGE_TEXT -> stopped
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
       PAGE_LINKS -> stopped
@@ -174,8 +227,11 @@ orbital ChromeOrbital {
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
       PAGE_DOWNLOAD -> stopped
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
-      PAGE_PRINT_PDF -> stopped
+      PAGE_PRINT_PDF -> stopped when (not @config.startOnNavigate)
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_PRINT_PDF -> stopped when @config.startOnNavigate
+        (set @entity.held { op: "pdf", key: @payload.key, html: @payload.html, path: @payload.path })
+        (emit CHROME_START { })
       PAGE_INJECT -> stopped
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
       PAGE_MEASURE -> stopped
@@ -252,6 +308,7 @@ orbital ChromeOrbital {
         (set @entity.stage "launch")
         (emit DAEMON_START { argv: (array/concat (array/concat ["--headless=new" (str/concat "--remote-debugging-port=" @config.port) "--no-first-run" "--no-default-browser-check"] (if @config.gpu ["--enable-unsafe-webgpu" "--ignore-gpu-blocklist"] ["--disable-gpu"])) (array/concat [(str/concat "--window-size=" @config.windowWidth "," @config.windowHeight) (str/concat "--user-data-dir=" @entity.profilePath) "about:blank"] @config.extraArgs)) })
       CHROME_DAEMON_READY -> starting when (= @entity.stage "launch")
+        (set @entity.reused @payload.reused)
         (set @entity.stage "connect")
         (emit CDP_CONNECT { })
       CHROME_CONNECTED -> starting when (= @entity.stage "connect")
@@ -286,19 +343,30 @@ orbital ChromeOrbital {
       CHROME_REPLY -> ready when (= @payload.key "download")
         (set @entity.stage "")
         (emit CHROME_READY { browser: @entity.browser, targetId: (default @entity.targetId "") })
+        (when (and (!= @entity.held null) (= @entity.held.op "navigate")) (emit PAGE_NAVIGATE { key: (default @entity.held.key ""), url: (default @entity.held.url "") }))
+        (when (and (!= @entity.held null) (= @entity.held.op "pdf")) (emit PAGE_PRINT_PDF { key: (default @entity.held.key ""), html: @entity.held.html, path: @entity.held.path }))
+        (set @entity.held null)
       CHROME_ERROR -> starting when (= @payload.key @entity.stage)
         (emit CHROME_START_FAILED { code: @payload.code message: @payload.message })
       CHROME_START_FAILED -> stopped
         (emit CHROME_FAILED { code: @payload.code message: @payload.message })
+        (when (!= @entity.held null) (emit PAGE_FAILED { key: (default @entity.held.key "") error: @payload.message code: "start-failed" }))
+        (set @entity.held null)
         (emit CDP_DISCONNECT { })
         (emit DAEMON_STOP { })
       CHROME_DAEMON_FAILED -> stopped
         (emit CHROME_FAILED { code: @payload.code message: @payload.message })
+        (when (!= @entity.held null) (emit PAGE_FAILED { key: (default @entity.held.key "") error: @payload.message code: "start-failed" }))
+        (set @entity.held null)
       CHROME_CDP_FAILED -> stopped
         (emit CHROME_FAILED { code: @payload.kind message: @payload.error })
         (emit DAEMON_STOP { })
+        (when (!= @entity.held null) (emit PAGE_FAILED { key: (default @entity.held.key "") error: @payload.error code: "start-failed" }))
+        (set @entity.held null)
       CHROME_HOST_FAILED -> stopped
         (emit CHROME_FAILED { code: "host-failed" message: (default @payload.error "") })
+        (when (!= @entity.held null) (emit PAGE_FAILED { key: (default @entity.held.key "") error: (default @payload.error "") code: "start-failed" }))
+        (set @entity.held null)
     }
 
     state ready {
@@ -306,9 +374,14 @@ orbital ChromeOrbital {
 
       CHROME_START -> ready
         (emit CHROME_FAILED { code: "already-started" message: "the browser is already running" })
-      CHROME_STOP -> stopping
+      CHROME_STOP -> stopping when (not (and @config.closeReused @entity.reused))
         (set @entity.stage "close-target")
         (emit CDP_COMMAND { key: "close-target" method: "Target.closeTarget" paramsJson: (json/stringify { targetId: @entity.targetId }) })
+      CHROME_STOP -> stopping when (and @config.closeReused @entity.reused)
+        (set @entity.stage "close-browser")
+        (emit CDP_COMMAND { key: "close-browser" method: "Browser.close" paramsJson: (json/stringify { }) })
+      CHROME_TIMER_DUE -> ready when (= @payload.key "idle")
+        (emit CHROME_STOP { })
       CHROME_DISCONNECTED -> stopped
         (emit CHROME_FAILED { code: "disconnected" message: @payload.reason })
       PAGE_NAVIGATE -> busy when (= @config.waitFor "load")
@@ -669,14 +742,22 @@ orbital ChromeOrbital {
       CHROME_ERROR -> stopping when (= @payload.key "close-target")
         (set @entity.stage "disconnect")
         (emit CDP_DISCONNECT { })
+      CHROME_REPLY -> stopping when (= @payload.key "close-browser")
+        (set @entity.stage "disconnect")
+        (emit CDP_DISCONNECT { })
+      CHROME_ERROR -> stopping when (= @payload.key "close-browser")
+        (set @entity.stage "disconnect")
+        (emit CDP_DISCONNECT { })
       CHROME_DISCONNECTED -> stopping
         (set @entity.stage "daemon-stop")
         (emit DAEMON_STOP { })
       CHROME_DAEMON_STOPPED -> stopped
         (set @entity.sessionId "")
+        (set @entity.reused false)
         (emit CHROME_STOPPED { })
       CHROME_DAEMON_FAILED -> stopped
         (set @entity.sessionId "")
+        (set @entity.reused false)
         (emit CHROME_STOPPED { })
     }
 
@@ -798,6 +879,18 @@ orbital ChromeOrbital {
         @description "A page operation failed: busy, not-ready, not-started, bad-request, bad-script, unknown-key, not-found, element-missing, element-hidden, navigation-failed, navigation-timeout, download-timeout, download-canceled, script-error, not-json, bad-reply, read-failed, disconnected, stopped, or the protocol code text."
         @tier "primary"
       CHROME_STOPPED -> external { }
+      CHROME_START -> internal { }
+        @description "Start the browser for the held page request (startOnNavigate)."
+        @tier "internal"
+      CHROME_STOP -> internal { }
+        @description "Stop the browser after the idle period."
+        @tier "internal"
+      PAGE_NAVIGATE -> internal { key : string!  url : string! }
+        @description "Run the held navigation once the browser is ready."
+        @tier "internal"
+      PAGE_PRINT_PDF -> internal { key : string!  html : string?  path : string? }
+        @description "Run the held print once the browser is ready."
+        @tier "internal"
         @description "The tab is closed and the browser this atom started is stopped."
         @tier "primary"
       CHROME_START_FAILED -> internal {
@@ -881,6 +974,14 @@ orbital ChromeOrbital {
     }
 
     config {
+      startOnNavigate : boolean = false
+        @label "Start on navigate"
+        @description "A PAGE_NAVIGATE or PAGE_PRINT_PDF while stopped starts the browser and runs once it is ready, instead of answering not-started."
+        @tier "policy"
+      closeReused : boolean = false
+        @label "Close a browser left on the port"
+        @description "CHROME_STOP also ends a browser that was already listening on the port (one an earlier run of this program left behind) with Browser.close. Leave off when the port may be a person's own browser."
+        @tier "policy"
       port : number = 9222
         @label "Debugging port"
         @description "The remote debugging port Chrome is launched with. The composed daemon probe and the CDP connection read their own port: a composer that changes this knob also sets readyPort of ChromeDaemon and port of CdpHttp and CdpWs to the same number, and grants net 127.0.0.1 on it."
@@ -1160,5 +1261,5 @@ orbital ChromeOrbital {
     }
   }
 
-  page boot as ChromePage -> Chrome, ChromeDaemon, Cdp, CdpHttp, CdpWs, CdpDelay, ChromeDelay
+  page boot as ChromePage -> Chrome, ChromeDaemon, Cdp, CdpHttp, CdpWs, CdpDelay, ChromeDelay, ChromeIdle
 }

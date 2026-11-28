@@ -1,0 +1,240 @@
+app std-onboarding [
+  version: "2.0.0",
+  description: "std-onboarding — a first-run guided flow kept per signed-in member so a reload returns to the same step. It owns no step machine: OnboardingFlow is std-wizard's trait (the steps, the frame, the progress strip, the step kinds info, choice, multi, text and slot, the required-answer message, Back, Continue, Skip and Finish) set up for first run, and OnboardingStore is the one trait std-onboarding adds: it keeps the member's OnboardingRecord row (done, the step the person is on, the answers by step id). On mount the store reads the row and gives OnboardingFlow its position (WIZARD_POSITION): not done (or no row) resumes at the saved step and emits ONBOARDING_NEEDED, done renders nothing and emits ONBOARDING_SKIPPED, so the composer shows its normal page. Every change the wizard reports (WIZARD_COMMIT) is saved to the row; a failed save makes the wizard return to where it was with the message and emits ONBOARDING_SAVE_FAILED. The steps are the `steps` knob of OnboardingFlow (std-wizard's step list). Emitted by OnboardingStore: ONBOARDING_NEEDED { stepId }, ONBOARDING_STEP { stepId, answers } whenever a step is shown, ONBOARDING_ANSWERED { stepId, value, answers } after an answer is saved, ONBOARDING_DONE { answers } once the last step is saved as done, ONBOARDING_SLOT_CONTINUE { stepId } for a slot step's primary button, ONBOARDING_SKIPPED and ONBOARDING_SAVE_FAILED { error }. Heard by OnboardingStore and handed to the wizard: ONBOARDING_SLOT_ANSWER { stepId, value } answers a slot step, ONBOARDING_SLOT_READY { stepId, ready } enables its button, ONBOARDING_OPTIONS { stepId, options } replaces the options of a choice or multi step at run time and ONBOARDING_RESTART marks the record not done and returns to the first step, keeping the answers. Every word a person reads is a knob of OnboardingFlow. Changed in 2.0.0: the step machine, frame and progress strip are std-wizard's; the knobs finishLabel and continueLabel are std-wizard's; ONBOARDING_STEP and the other flow events are emitted by OnboardingStore, not by OnboardingFlow; a composer lists both traits on its page."
+]
+;; @capabilities "guide a new member through a first-run flow, ask a choice, several choices or free text, let the composer fill a step, remember the answers and the step per member, resume after a reload, restart"
+uses Spec from "almadar-std/onboarding"
+uses Wizard from "std/behaviors/std-wizard"
+
+type OnboardingOption = { value : string!, label : string!, description : string }
+type OnboardingAnswers = Map string string
+
+orbital OnboardingOrbital {
+  expects entity Member [identity]
+
+  entity OnboardingRecord [persistent: onboardingRecords] {
+    @read (= (object/get @entity ownerId) @user.id)
+    @create (= (object/get @entity ownerId) @user.id)
+    @update (= (object/get @entity ownerId) @user.id)
+    @delete none "A member's onboarding row is never removed; restarting marks it not done."
+    id : string! @description "The member's @user.id: one row per member."
+    ownerId : Member! @description "Whose record this row is."
+    done : boolean @description "Whether the member finished the last step." = false
+    stepId : string @description "The step the member is on, so a reload returns to it." = ""
+    answers : OnboardingAnswers @description "The answers by step id; a multi answer is its chosen values joined by a comma." = {}
+    finishedAt : instant? @description "When the last step was saved as done." = null
+    didAnswer : boolean @intrinsic = false
+    answeredStep : string @intrinsic = ""
+    answeredValue : string @intrinsic = ""
+    announce : boolean @intrinsic = false
+  }
+
+  trait OnboardingFlow = Wizard.traits.WizardFlow {
+    listens {
+      OnboardingStore.STORE_POSITION -> WIZARD_POSITION
+      OnboardingStore.STORE_REJECT -> WIZARD_REJECT
+      OnboardingStore.STORE_SLOT_ANSWER -> WIZARD_SLOT_ANSWER
+      OnboardingStore.STORE_SLOT_READY -> WIZARD_SLOT_READY
+      OnboardingStore.STORE_OPTIONS -> WIZARD_OPTIONS
+      OnboardingStore.STORE_RESTART -> WIZARD_RESTART
+      WIZARD_ADVANCE { value : string, useDraft : boolean }
+      WIZARD_TOGGLE { value : string! }
+      WIZARD_PICK { value : string! }
+      WIZARD_TYPED { value : string }
+      WIZARD_SLOT_PRESS { stepId : string }
+      WIZARD_BACK_PRESS
+      WIZARD_CANCEL { reason : string? }
+      WIZARD_SLOT_ANSWER {
+        stepId : string!
+        value : string!
+      }
+      WIZARD_SLOT_READY {
+        stepId : string!
+        ready : boolean!
+      }
+      WIZARD_OPTIONS {
+        stepId : string!
+        options : [OnboardingOption]!
+      }
+      WIZARD_RESTART
+      WIZARD_POSITION {
+        stepId : string!
+        answers : Map string string!
+        finished : boolean!
+        problem : string?
+      }
+      WIZARD_REJECT { error : string? }
+    }
+    config {
+      awaitPosition: true
+      allowCancel: false
+      showCompleted: false
+      progressDetail: false
+      headerIcon: ""
+      title: "Welcome"
+      continueLabel: "Continue"
+      finishLabel: "Finish"
+      backLabel: "Back"
+      rejectedText: "Your answer could not be saved. Please try again."
+    }
+  }
+
+  trait OnboardingStore -> OnboardingRecord {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch OnboardingRecord { filter: { id: @user.id }, limit: 1, emit: { success: RECORD_READ, failure: RECORD_UNREAD } })
+      RECORD_READ -> active when (not (object/get (default (array/first ?data) { id: "", done: false }) done false))
+        (set @entity.answers (default (object/get (default (array/first ?data) { id: "", answers: {} }) answers) {}))
+        (set @entity.stepId (object/get (default (array/first ?data) { id: "", stepId: "" }) stepId ""))
+        (set @entity.done false)
+        (set @entity.announce true)
+        (emit STORE_POSITION { stepId: @entity.stepId, answers: @entity.answers, finished: false, problem: "" })
+      RECORD_READ -> active
+        (set @entity.answers (default (object/get (default (array/first ?data) { id: "", answers: {} }) answers) {}))
+        (set @entity.done true)
+        (set @entity.announce false)
+        (emit STORE_POSITION { stepId: "", answers: @entity.answers, finished: true, problem: "" })
+        (emit ONBOARDING_SKIPPED { })
+      RECORD_UNREAD -> active
+        (set @entity.answers {})
+        (set @entity.stepId "")
+        (set @entity.done false)
+        (set @entity.announce true)
+        (emit STORE_POSITION { stepId: "", answers: {}, finished: false, problem: (default ?error @config.unreadText) })
+      ONBOARDING_SLOT_ANSWER -> loading
+      ONBOARDING_SLOT_READY -> loading
+      ONBOARDING_RESTART -> loading
+      ONBOARDING_OPTIONS -> loading
+        (emit STORE_OPTIONS { stepId: ?stepId, options: ?options })
+    }
+
+    state active {
+      INIT -> active
+      WIZARD_STEP -> active when @entity.announce
+        (set @entity.announce false)
+        (emit ONBOARDING_NEEDED { stepId: ?stepId })
+        (emit ONBOARDING_STEP { stepId: ?stepId, answers: ?answers })
+      WIZARD_STEP -> active
+        (emit ONBOARDING_STEP { stepId: ?stepId, answers: ?answers })
+      WIZARD_COMMIT -> active
+        (set @entity.answers ?answers)
+        (set @entity.stepId ?stepId)
+        (set @entity.done ?done)
+        (set @entity.didAnswer ?didAnswer)
+        (set @entity.answeredStep ?answeredStep)
+        (set @entity.answeredValue ?answeredValue)
+        (persist upsert OnboardingRecord { id: @user.id, ownerId: @user.id, done: @entity.done, stepId: @entity.stepId, answers: @entity.answers, finishedAt: (if @entity.done (time/now) null) } { emit: { success: OB_SAVED, failure: OB_SAVE_FAILED } })
+      OB_SAVED -> active
+        (when @entity.didAnswer (emit ONBOARDING_ANSWERED { stepId: @entity.answeredStep, value: @entity.answeredValue, answers: @entity.answers }))
+        (when @entity.done (emit ONBOARDING_DONE { answers: @entity.answers }))
+        (set @entity.didAnswer false)
+      OB_SAVE_FAILED -> active
+        (set @entity.didAnswer false)
+        (set @entity.done false)
+        (emit STORE_REJECT { error: (default ?error @config.saveFailedText) })
+        (emit ONBOARDING_SAVE_FAILED { error: (default ?error @config.saveFailedText) })
+      WIZARD_RESTARTED -> active
+        (emit ONBOARDING_NEEDED { stepId: ?stepId })
+      WIZARD_EMPTY -> active when @entity.announce
+        (set @entity.announce false)
+        (emit ONBOARDING_SKIPPED { })
+      WIZARD_EMPTY -> active
+      WIZARD_SLOT_CONTINUE -> active
+        (emit ONBOARDING_SLOT_CONTINUE { stepId: ?stepId })
+      ONBOARDING_SLOT_ANSWER -> active
+        (emit STORE_SLOT_ANSWER { stepId: ?stepId, value: ?value })
+      ONBOARDING_SLOT_READY -> active
+        (emit STORE_SLOT_READY { stepId: ?stepId, ready: ?ready })
+      ONBOARDING_OPTIONS -> active
+        (emit STORE_OPTIONS { stepId: ?stepId, options: ?options })
+      ONBOARDING_RESTART -> active
+        (emit STORE_RESTART { })
+    }
+
+    emits {
+      ONBOARDING_NEEDED -> external { stepId : string! }
+        @description "The flow starts or resumes at this step because the member has not finished it."
+        @tier "domain"
+      ONBOARDING_STEP -> external { stepId : string!, answers : Map string string! }
+        @description "A step is shown; answer a slot step with ONBOARDING_SLOT_ANSWER, or supply options with ONBOARDING_OPTIONS."
+        @tier "domain"
+      ONBOARDING_ANSWERED -> external { stepId : string!, value : string!, answers : Map string string! }
+        @description "An answer was saved to the member's record."
+        @tier "domain"
+      ONBOARDING_DONE -> external { answers : Map string string! }
+        @description "The last step was finished and the record is saved as done."
+        @tier "domain"
+      ONBOARDING_SLOT_CONTINUE -> external { stepId : string! }
+        @description "The person pressed the primary button of a slot step; the composer answers with ONBOARDING_SLOT_ANSWER."
+        @tier "domain"
+      ONBOARDING_SKIPPED -> external { }
+        @description "The member already finished the flow, or there are no steps: nothing is shown, so the composer shows its normal page."
+        @tier "domain"
+      ONBOARDING_SAVE_FAILED -> external { error : string! }
+        @description "An answer could not be saved; the member returns to where they were."
+        @tier "secondary"
+      STORE_POSITION -> internal { stepId : string!, answers : Map string string!, finished : boolean!, problem : string? }
+      STORE_REJECT -> internal { error : string? }
+      STORE_SLOT_ANSWER -> internal { stepId : string!, value : string! }
+      STORE_SLOT_READY -> internal { stepId : string!, ready : boolean! }
+      STORE_OPTIONS -> internal { stepId : string!, options : [OnboardingOption]! }
+      STORE_RESTART -> internal { }
+    }
+
+    listens {
+      OnboardingFlow.WIZARD_STEP -> WIZARD_STEP
+      OnboardingFlow.WIZARD_COMMIT -> WIZARD_COMMIT
+      OnboardingFlow.WIZARD_RESTARTED -> WIZARD_RESTARTED
+      OnboardingFlow.WIZARD_EMPTY -> WIZARD_EMPTY
+      OnboardingFlow.WIZARD_SLOT_CONTINUE -> WIZARD_SLOT_CONTINUE
+      WIZARD_STEP { stepId : string!, answers : Map string string! }
+      WIZARD_COMMIT { stepId : string!, answers : Map string string!, done : boolean!, didAnswer : boolean!, answeredStep : string!, answeredValue : string! }
+      WIZARD_RESTARTED { stepId : string! }
+      WIZARD_EMPTY { }
+      WIZARD_SLOT_CONTINUE { stepId : string! }
+      ONBOARDING_SLOT_ANSWER -> input {
+        stepId : string! @description "The slot step being answered"
+        value : string! @description "The answer"
+      }
+        @description "A composer reports the answer to the slot step it shows; the flow saves it and moves on."
+        @synonyms "answer the step, fill the step"
+      ONBOARDING_SLOT_READY -> input {
+        stepId : string! @description "The slot step"
+        ready : boolean! @description "Whether its primary button may be pressed"
+      }
+        @description "A composer enables or disables the primary button of the slot step it shows."
+        @synonyms "enable continue, hold the step"
+      ONBOARDING_OPTIONS -> input {
+        stepId : string! @description "The choice or multi step"
+        options : [OnboardingOption]! @description "The options to offer, replacing the configured ones"
+      }
+        @description "Supply or replace the options of a choice or multi step at run time."
+        @synonyms "set the choices, offer these options"
+      ONBOARDING_RESTART -> input { }
+        @description "Start over: the record is marked not done and the first step shows; the answers are kept."
+        @synonyms "start again, redo the onboarding"
+      RECORD_READ { data : [OnboardingRecord]!, totalCount : number }
+        @description "The member's record was read."
+      RECORD_UNREAD { error : string, code : string }
+        @description "The member's record could not be read."
+      OB_SAVED { id : string }
+        @description "A change was saved."
+      OB_SAVE_FAILED { error : string, code : string }
+        @description "A change could not be saved."
+    }
+
+    config {
+      saveFailedText : string = "Your answer could not be saved. Please try again."
+        @label "Save failed text"
+        @tier "presentation"
+      unreadText : string = "the saved progress could not be read"
+        @label "Unread text"
+        @description "Shown on the first step when the member's record could not be read."
+        @tier "presentation"
+    }
+  }
+
+  page "/onboarding" as OnboardingPage -> OnboardingFlow, OnboardingStore
+}

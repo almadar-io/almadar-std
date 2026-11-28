@@ -10,7 +10,7 @@ type AppRouteHook = { inbound : string!, body : string!, headers : Map string st
 type AppRouteAddress = string | AppRouteHook
 type AppRouteHookAnswer = { status : number!, body : string! }
 type AppRouteRequest = { key : string!, app : string!, address : AppRouteAddress!, payload : AppRouteJson, options : AppRouteOptions, clientId : string, mounting : boolean! }
-type AppRoutePending = { requestId : number!, key : string!, valid : boolean!, app : string!, orbital : string!, body : bytes!, responseHeaders : [AppRouteHeader]!, authorization : string!, awaitingAuth : boolean!, request : AppRouteRequest!, kind : string, ticket : string, clientId : string, hook : string, hookHeaders : Map string string }
+type AppRoutePending = { requestId : number!, key : string!, valid : boolean!, app : string!, orbital : string!, body : bytes!, responseHeaders : [AppRouteHeader]!, authorization : string!, awaitingAuth : boolean!, request : AppRouteRequest!, kind : string, ticket : string, clientId : string, since : string, hook : string, hookHeaders : Map string string }
 
 orbital AppRouteOrbital {
   entity AppRouteRun [runtime] {
@@ -41,7 +41,7 @@ orbital AppRouteOrbital {
                 (mint (and (= (str/upper @payload.method) "POST") (= (array/len @parts) 4) (!= (array/nth @parts 0) "") (= (array/nth @parts 1) "api") (= (array/nth @parts 2) "events") (= (array/nth @parts 3) "ticket")))
                 (stream (and (= (str/upper @payload.method) "GET") (= (array/len @parts) 3) (!= (array/nth @parts 0) "") (= (array/nth @parts 1) "api") (= (array/nth @parts 2) "events")))
                 (hook (and (= (str/upper @payload.method) "POST") (= (array/len @parts) 4) (!= (array/nth @parts 0) "") (= (array/nth @parts 1) "api") (= (array/nth @parts 2) "hooks") (!= (array/nth @parts 3) ""))))
-            (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, key: (json/stringify @payload.requestId), valid: @ok, app: (if (or @ok @mint @stream @hook) (array/nth @parts 0) ""), orbital: (if @ok (array/nth @parts 3) ""), body: (default @payload.body (bytes/from-string "")), responseHeaders: [], authorization: (default (object/get (default @payload.headers {}) "authorization") ""), awaitingAuth: false, request: { key: "", app: "", address: "", payload: {}, options: {}, mounting: false }, kind: (if @mint "mint" (if @stream "stream" (if @hook "hook" ""))), hook: (if @hook (array/nth @parts 3) ""), hookHeaders: (default @payload.headers {}), ticket: (str/replace (default (array/find @params (fn q (str/startsWith @q "ticket="))) "") "ticket=" ""), clientId: (str/replace (default (array/find @params (fn q (str/startsWith @q "clientId="))) "") "clientId=" "") }))))
+            (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, key: (json/stringify @payload.requestId), valid: @ok, app: (if (or @ok @mint @stream @hook) (array/nth @parts 0) ""), orbital: (if @ok (array/nth @parts 3) ""), body: (default @payload.body (bytes/from-string "")), responseHeaders: [], authorization: (default (object/get (default @payload.headers {}) "authorization") ""), awaitingAuth: false, request: { key: "", app: "", address: "", payload: {}, options: {}, mounting: false }, kind: (if @mint "mint" (if @stream "stream" (if @hook "hook" ""))), hook: (if @hook (array/nth @parts 3) ""), hookHeaders: (default @payload.headers {}), ticket: (str/replace (default (array/find @params (fn q (str/startsWith @q "ticket="))) "") "ticket=" ""), clientId: (str/replace (default (array/find @params (fn q (str/startsWith @q "clientId="))) "") "clientId=" ""), since: (str/replace (default (array/find @params (fn q (str/startsWith @q "since="))) "") "since=" "") }))))
 
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (not @p.valid) (= (default (object/get @p "kind") "") ""))))
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
@@ -135,7 +135,7 @@ orbital AppRouteOrbital {
           (when (!= @p null)
             (do
               (emit SSE_OPEN { requestId: @p.requestId, headers: @p.responseHeaders })
-              (emit APP_STREAM_AUTHORIZED { requestId: @p.requestId, clientId: (default @p.clientId ""), guest: @payload.guest }))))
+              (emit APP_STREAM_AUTHORIZED { requestId: @p.requestId, clientId: (default @p.clientId ""), guest: @payload.guest, since: (default @p.since "") }))))
         (set @entity.pending (array/filter @entity.pending (fn q (not (and (= (default (object/get @q "kind") "") "stream") (= (str/concat @q.key "-guest") @payload.key))))))
 
       APP_FAILED -> serving when (array/some @entity.pending (fn q (and (= (default (object/get @q "kind") "") "stream") (= (str/concat @q.key "-guest") @payload.key))))
@@ -236,8 +236,9 @@ orbital AppRouteOrbital {
         requestId : number!
         clientId : string!
         guest : string!
+        since : string
       }
-        @description "An app stream opened for the ticket's client; std-live-feed follows the app guest's live stream."
+        @description "An app stream opened for the ticket's client; std-live-feed follows the app guest's live stream, resumed after the frame the request's ?since= names when it carries one."
     }
 
     listens {

@@ -1,0 +1,5772 @@
+{
+  "atom": "../ui/core/atoms/std-wizard.lolo",
+  "trait": "WizardFlow",
+  "spec": "wizard.lolo",
+  "note": "the one step machine: kinds, required message, position input, rejection, one emit per fact. A composer keeps the position from WIZARD_COMMIT.",
+  "cases": [
+    {
+      "id": "starting-shows-the-first-step-and-says-so",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "INIT",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 0,
+              "stepId": "welcome"
+            },
+            "emits": [
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "welcome",
+                  "answers": {}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-waiting-for-a-position-shows-the-loading-body-and-no-step",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "awaitPosition": true
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "INIT",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "loading",
+            "neverEmits": [
+              "WIZARD_STEP"
+            ],
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-steps-finishes-and-says-it-is-empty",
+      "config": {
+        "steps": []
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "INIT",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "emits": [
+              {
+                "event": "WIZARD_EMPTY"
+              }
+            ],
+            "neverEmits": [
+              "WIZARD_STEP"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-position-resumes-at-its-step-with-its-answers",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "awaitPosition": true
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "WIZARD_POSITION",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "topics",
+            "answers": {
+              "role": "b",
+              "topics": "x,z"
+            },
+            "finished": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 2,
+              "stepId": "topics",
+              "answers": {
+                "role": "b",
+                "topics": "x,z"
+              },
+              "picked": [
+                "x",
+                "z"
+              ]
+            },
+            "emits": [
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "topics",
+                  "answers": {
+                    "role": "b",
+                    "topics": "x,z"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-position-on-an-unknown-step-starts-at-the-first",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "awaitPosition": true
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "WIZARD_POSITION",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "gone",
+            "answers": {},
+            "finished": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 0,
+              "stepId": "welcome"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-finished-position-shows-the-finished-state-and-no-step",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "awaitPosition": true
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "WIZARD_POSITION",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "",
+            "answers": {
+              "role": "a"
+            },
+            "finished": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "entity": {
+              "done": true,
+              "answers": {
+                "role": "a"
+              }
+            },
+            "neverEmits": [
+              "WIZARD_STEP",
+              "WIZARD_EMPTY"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-position-with-a-problem-shows-it",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "awaitPosition": true
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "WIZARD_POSITION",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "welcome",
+            "answers": {},
+            "finished": false,
+            "problem": "could not read"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "problem": "could not read"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-position-with-no-steps-is-empty",
+      "config": {
+        "steps": [],
+        "awaitPosition": true
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "WIZARD_POSITION",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "x",
+            "answers": {},
+            "finished": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "emits": [
+              {
+                "event": "WIZARD_EMPTY"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-position-moves-a-running-wizard",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_POSITION",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "note",
+            "answers": {
+              "role": "a"
+            },
+            "finished": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 3,
+              "stepId": "note"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "continue-on-an-info-step-moves-on-without-an-answer",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 1,
+              "stepId": "role",
+              "didAnswer": false,
+              "prevIndex": 0
+            },
+            "emits": [
+              {
+                "event": "WIZARD_COMMIT",
+                "payload": {
+                  "stepId": "role",
+                  "done": false,
+                  "didAnswer": false
+                }
+              },
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "role"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WIZARD_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-answer-on-a-choice-is-stored-by-step-id-and-reported",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "b"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 2,
+              "stepId": "topics",
+              "didAnswer": true,
+              "answeredStep": "role",
+              "answeredValue": "b",
+              "answers": {
+                "role": "b"
+              }
+            },
+            "emits": [
+              {
+                "event": "WIZARD_COMMIT",
+                "payload": {
+                  "stepId": "topics",
+                  "answers": {
+                    "role": "b"
+                  },
+                  "done": false,
+                  "didAnswer": true,
+                  "answeredStep": "role",
+                  "answeredValue": "b"
+                }
+              },
+              {
+                "event": "WIZARD_ANSWERED",
+                "payload": {
+                  "stepId": "role",
+                  "value": "b",
+                  "answers": {
+                    "role": "b"
+                  }
+                }
+              },
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "topics"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-multi-answer-is-the-chosen-values-joined-by-a-comma",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [
+              "x",
+              "y"
+            ],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "x,y"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 3,
+              "answers": {
+                "topics": "x,y"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "continue-without-an-answer-on-a-required-choice-says-so-and-moves-nowhere",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "neverEmits": [
+              "WIZARD_COMMIT",
+              "WIZARD_STEP"
+            ],
+            "entity": {
+              "problem": "Answer this step to continue.",
+              "stepIndex": 1
+            },
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-required-message-is-the-knob",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "requiredText": "Pick one first."
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "problem": "Pick one first."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "continue-on-a-required-text-step-says-so",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "name",
+            "title": "Name",
+            "kind": "text"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "name",
+            "step": {
+              "placeholder": "Type here",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "name",
+              "title": "A note",
+              "description": "Anything to add?",
+              "kind": "text"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "neverEmits": [
+              "WIZARD_COMMIT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-optional-text-step-can-be-skipped-and-stores-nothing",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 3,
+            "stepId": "note",
+            "step": {
+              "placeholder": "Type here",
+              "optional": true,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "note",
+              "title": "A note",
+              "description": "Anything to add?",
+              "kind": "text"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 4,
+              "answers": {},
+              "didAnswer": false
+            },
+            "neverEmits": [
+              "WIZARD_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-form-step-continues-without-an-answer",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 4,
+            "stepId": "details",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [
+                "notes"
+              ],
+              "options": [],
+              "id": "details",
+              "title": "Details",
+              "description": "Fill the form.",
+              "kind": "form"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 5,
+              "stepId": "connect"
+            },
+            "neverEmits": [
+              "WIZARD_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-last-answer-finishes-and-emits-done-once",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "a"
+          },
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "entity": {
+              "done": true,
+              "answers": {
+                "role": "a"
+              }
+            },
+            "emits": [
+              {
+                "event": "WIZARD_COMMIT",
+                "payload": {
+                  "done": true,
+                  "didAnswer": true
+                }
+              },
+              {
+                "event": "WIZARD_ANSWERED",
+                "payload": {
+                  "stepId": "role",
+                  "value": "a"
+                }
+              },
+              {
+                "event": "WIZARD_DONE",
+                "payload": {
+                  "answers": {
+                    "role": "a"
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "WIZARD_STEP"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-middle-answer-never-emits-done",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_ADVANCE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "a"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "neverEmits": [
+              "WIZARD_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-primary-button-of-a-slot-step-asks-the-composer-for-its-answer",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_PRESS",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 5,
+            "stepId": "connect",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "connect",
+              "title": "Connect",
+              "description": "Set it up.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "connect"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "emits": [
+              {
+                "event": "WIZARD_SLOT_CONTINUE",
+                "payload": {
+                  "stepId": "connect"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-slot-button-on-a-choice-step-does-nothing",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_PRESS",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "role"
+          },
+          "expect": {
+            "fired": false,
+            "state": "stepping",
+            "neverEmits": [
+              "WIZARD_SLOT_CONTINUE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-slot-answer-for-the-last-slot-step-finishes",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_ANSWER",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 5,
+            "stepId": "connect",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "connect",
+              "title": "Connect",
+              "description": "Set it up.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "connect",
+            "value": "ok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "entity": {
+              "done": true,
+              "answers": {
+                "connect": "ok"
+              }
+            },
+            "emits": [
+              {
+                "event": "WIZARD_ANSWERED",
+                "payload": {
+                  "stepId": "connect",
+                  "value": "ok"
+                }
+              },
+              {
+                "event": "WIZARD_DONE"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-slot-answer-for-a-middle-slot-step-moves-on",
+      "config": {
+        "steps": [
+          {
+            "id": "s",
+            "title": "S",
+            "kind": "slot"
+          },
+          {
+            "id": "t",
+            "title": "T",
+            "kind": "info"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_ANSWER",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "s",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "s",
+              "title": "S",
+              "description": "A short tour.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "s",
+            "value": "v"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 1,
+              "stepId": "t",
+              "answers": {
+                "s": "v"
+              }
+            },
+            "emits": [
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "t"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WIZARD_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-slot-answer-for-another-step-is-ignored",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_ANSWER",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 5,
+            "stepId": "connect",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "connect",
+              "title": "Connect",
+              "description": "Set it up.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "other",
+            "value": "ok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "neverEmits": [
+              "WIZARD_COMMIT",
+              "WIZARD_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-slot-answer-while-a-choice-step-shows-is-ignored",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_ANSWER",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "role",
+            "value": "a"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "neverEmits": [
+              "WIZARD_COMMIT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-composer-holds-the-slot-button-until-its-content-is-ready",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_READY",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 5,
+            "stepId": "connect",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "connect",
+              "title": "Connect",
+              "description": "Set it up.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "connect",
+            "ready": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "slotReady": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-ready-flag-for-another-step-is-ignored",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_SLOT_READY",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 5,
+            "stepId": "connect",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "connect",
+              "title": "Connect",
+              "description": "Set it up.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "other",
+            "ready": false
+          },
+          "expect": {
+            "fired": false,
+            "state": "stepping"
+          }
+        }
+      ]
+    },
+    {
+      "id": "back-moves-to-the-previous-step-and-reports-it",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_BACK_PRESS",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {
+              "role": "b"
+            },
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 1,
+              "stepId": "role"
+            },
+            "emits": [
+              {
+                "event": "WIZARD_COMMIT",
+                "payload": {
+                  "stepId": "role",
+                  "done": false,
+                  "didAnswer": false
+                }
+              },
+              {
+                "event": "WIZARD_BACK",
+                "payload": {
+                  "stepId": "role"
+                }
+              },
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "role"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-back-on-the-first-step-does-nothing",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_BACK_PRESS",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 0
+            },
+            "neverEmits": [
+              "WIZARD_BACK",
+              "WIZARD_COMMIT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "toggling-an-option-picks-it",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_TOGGLE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "x"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "picked": [
+                "x"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-toggling-a-picked-option-unpicks-it",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_TOGGLE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [
+              "x",
+              "y"
+            ],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "x"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "picked": [
+                "y"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "toggling-clears-the-required-message",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_TOGGLE",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "Answer this step to continue.",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "x"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "problem": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "typing-keeps-the-draft-without-committing",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_TYPED",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 3,
+            "stepId": "note",
+            "step": {
+              "placeholder": "Type here",
+              "optional": true,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "note",
+              "title": "A note",
+              "description": "Anything to add?",
+              "kind": "text"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "hello"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "draft": "hello"
+            },
+            "neverEmits": [
+              "WIZARD_COMMIT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "typing-clears-the-required-message",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_TYPED",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 3,
+            "stepId": "note",
+            "step": {
+              "placeholder": "Type here",
+              "optional": true,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "note",
+              "title": "A note",
+              "description": "Anything to add?",
+              "kind": "text"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "Answer this step to continue.",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "value": "h"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "problem": "",
+              "draft": "h"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "options-supplied-for-a-step-are-held",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_OPTIONS",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "role",
+            "options": [
+              {
+                "value": "n",
+                "label": "New"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "overrides": [
+                {
+                  "stepId": "role",
+                  "options": [
+                    {
+                      "value": "n",
+                      "label": "New"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "options-supplied-again-replace-the-earlier-ones",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_OPTIONS",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [
+              {
+                "stepId": "role",
+                "options": [
+                  {
+                    "value": "n",
+                    "label": "New"
+                  }
+                ]
+              }
+            ],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "role",
+            "options": [
+              {
+                "value": "m",
+                "label": "More"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "overrides": [
+                {
+                  "stepId": "role",
+                  "options": [
+                    {
+                      "value": "m",
+                      "label": "More"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "options-can-arrive-before-a-position",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "awaitPosition": true
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "WIZARD_OPTIONS",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "role",
+            "options": [
+              {
+                "value": "n",
+                "label": "New"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "loading",
+            "entity": {
+              "overrides": [
+                {
+                  "stepId": "role",
+                  "options": [
+                    {
+                      "value": "n",
+                      "label": "New"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-rejected-change-returns-to-where-it-was-and-says-why",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_REJECT",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {
+              "role": "b"
+            },
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": true,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 1,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "error": "offline"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 1,
+              "stepId": "role",
+              "answers": {},
+              "problem": "offline"
+            },
+            "emits": [
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "role"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-rejection-without-a-message-uses-the-knob",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "rejectedText": "Try again."
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_REJECT",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 1,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "problem": "Try again."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-rejected-last-answer-brings-the-wizard-back-from-finished",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "finished",
+          "event": "WIZARD_REJECT",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {
+              "connect": "ok"
+            },
+            "stepIndex": 5,
+            "stepId": "connect",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "connect",
+              "title": "Connect",
+              "description": "Set it up.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": true,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 5,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "error": "offline"
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "done": false,
+              "stepIndex": 5,
+              "answers": {},
+              "problem": "offline"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "restart-from-finished-goes-to-the-first-step-and-keeps-the-answers",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "finished",
+          "event": "WIZARD_RESTART",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {
+              "role": "a"
+            },
+            "stepIndex": 5,
+            "stepId": "connect",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "connect",
+              "title": "Connect",
+              "description": "Set it up.",
+              "kind": "slot"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": true,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 0,
+              "done": false,
+              "answers": {
+                "role": "a"
+              }
+            },
+            "emits": [
+              {
+                "event": "WIZARD_COMMIT",
+                "payload": {
+                  "stepId": "welcome",
+                  "done": false,
+                  "answers": {
+                    "role": "a"
+                  }
+                }
+              },
+              {
+                "event": "WIZARD_RESTARTED",
+                "payload": {
+                  "stepId": "welcome"
+                }
+              },
+              {
+                "event": "WIZARD_STEP",
+                "payload": {
+                  "stepId": "welcome"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "restart-mid-flow-returns-to-the-first-step",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_RESTART",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 2,
+            "stepId": "topics",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "x",
+                  "label": "X"
+                },
+                {
+                  "value": "y",
+                  "label": "Y"
+                },
+                {
+                  "value": "z",
+                  "label": "Z"
+                }
+              ],
+              "id": "topics",
+              "title": "Topics",
+              "description": "Pick several.",
+              "kind": "multi"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": {
+              "stepIndex": 0
+            },
+            "emits": [
+              {
+                "event": "WIZARD_RESTARTED"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-restart-with-no-steps-does-nothing",
+      "config": {
+        "steps": []
+      },
+      "steps": [
+        {
+          "from": "finished",
+          "event": "WIZARD_RESTART",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": true,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "neverEmits": [
+              "WIZARD_RESTARTED",
+              "WIZARD_COMMIT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cancel-finishes-with-the-reason",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_CANCEL",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 1,
+            "stepId": "role",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [
+                {
+                  "value": "a",
+                  "label": "Alpha",
+                  "description": "first"
+                },
+                {
+                  "value": "b",
+                  "label": "Beta"
+                }
+              ],
+              "id": "role",
+              "title": "Your role",
+              "description": "Pick one.",
+              "kind": "choice"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "reason": "changed my mind"
+          },
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "entity": {
+              "cancelReason": "changed my mind"
+            },
+            "emits": [
+              {
+                "event": "WIZARD_CANCELLED",
+                "payload": {
+                  "reason": "changed my mind"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WIZARD_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-finished-without-the-completed-screen-still-finishes",
+      "config": {
+        "steps": [
+          {
+            "id": "welcome",
+            "title": "Welcome",
+            "description": "A short tour.",
+            "kind": "info"
+          },
+          {
+            "id": "role",
+            "title": "Your role",
+            "description": "Pick one.",
+            "kind": "choice",
+            "options": [
+              {
+                "value": "a",
+                "label": "Alpha",
+                "description": "first"
+              },
+              {
+                "value": "b",
+                "label": "Beta"
+              }
+            ]
+          },
+          {
+            "id": "topics",
+            "title": "Topics",
+            "description": "Pick several.",
+            "kind": "multi",
+            "options": [
+              {
+                "value": "x",
+                "label": "X"
+              },
+              {
+                "value": "y",
+                "label": "Y"
+              },
+              {
+                "value": "z",
+                "label": "Z"
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "title": "A note",
+            "description": "Anything to add?",
+            "kind": "text",
+            "placeholder": "Type here",
+            "optional": true
+          },
+          {
+            "id": "details",
+            "title": "Details",
+            "description": "Fill the form.",
+            "kind": "form",
+            "fields": [
+              "notes"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect",
+            "description": "Set it up.",
+            "kind": "slot"
+          }
+        ],
+        "showCompleted": false
+      },
+      "steps": [
+        {
+          "from": "loading",
+          "event": "WIZARD_POSITION",
+          "entity": {
+            "id": "w",
+            "title": "t",
+            "answers": {},
+            "stepIndex": 0,
+            "stepId": "welcome",
+            "step": {
+              "placeholder": "",
+              "optional": false,
+              "icon": "",
+              "fields": [],
+              "options": [],
+              "id": "welcome",
+              "title": "Welcome",
+              "description": "A short tour.",
+              "kind": "info"
+            },
+            "draft": "",
+            "picked": [],
+            "overrides": [],
+            "problem": "",
+            "slotReady": true,
+            "done": false,
+            "didAnswer": false,
+            "answeredStep": "",
+            "answeredValue": "",
+            "prevIndex": 0,
+            "prevAnswers": {},
+            "cancelReason": ""
+          },
+          "payload": {
+            "stepId": "",
+            "answers": {},
+            "finished": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "finished",
+            "entity": {
+              "done": true
+            }
+          }
+        }
+      ]
+    }
+,
+    {
+      "id": "toggling-a-multi-option-commits-the-picks-without-moving-on",
+      "config": {
+        "steps": [
+          { "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi", "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" } ] },
+          { "id": "end", "title": "End", "description": "Done.", "kind": "info" }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_TOGGLE",
+          "entity": {
+            "id": "w", "title": "t", "answers": {}, "stepIndex": 0, "stepId": "topics",
+            "step": { "placeholder": "", "optional": false, "icon": "", "fields": [], "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" } ], "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi" },
+            "draft": "", "picked": ["x"], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": ""
+          },
+          "payload": { "value": "y" },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": { "stepIndex": 0, "stepId": "topics", "picked": ["x", "y"], "answers": { "topics": "x,y" } },
+            "emits": [ { "event": "WIZARD_COMMIT", "payload": { "stepId": "topics", "done": false, "didAnswer": false, "answers": { "topics": "x,y" } } } ],
+            "neverEmits": ["WIZARD_ANSWERED", "WIZARD_STEP", "WIZARD_DONE"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-unpicking-the-last-multi-option-commits-an-empty-answer",
+      "config": {
+        "steps": [
+          { "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi", "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" } ] },
+          { "id": "end", "title": "End", "description": "Done.", "kind": "info" }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_TOGGLE",
+          "entity": {
+            "id": "w", "title": "t", "answers": { "topics": "x" }, "stepIndex": 0, "stepId": "topics",
+            "step": { "placeholder": "", "optional": false, "icon": "", "fields": [], "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" } ], "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi" },
+            "draft": "", "picked": ["x"], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": ""
+          },
+          "payload": { "value": "x" },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": { "picked": [], "answers": { "topics": "" } },
+            "emits": [ { "event": "WIZARD_COMMIT", "payload": { "stepId": "topics", "done": false, "didAnswer": false, "answers": { "topics": "" } } } ],
+            "neverEmits": ["WIZARD_ANSWERED", "WIZARD_STEP"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "picking-a-choice-option-selects-it-without-moving-on",
+      "config": {
+        "steps": [
+          { "id": "role", "title": "Your role", "description": "Pick one.", "kind": "choice", "options": [ { "value": "a", "label": "Alpha" }, { "value": "b", "label": "Beta" } ] },
+          { "id": "end", "title": "End", "description": "Done.", "kind": "info" }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_PICK",
+          "entity": {
+            "id": "w", "title": "t", "answers": {}, "stepIndex": 0, "stepId": "role",
+            "step": { "placeholder": "", "optional": false, "icon": "", "fields": [], "options": [ { "value": "a", "label": "Alpha" }, { "value": "b", "label": "Beta" } ], "id": "role", "title": "Your role", "description": "Pick one.", "kind": "choice" },
+            "draft": "", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": ""
+          },
+          "payload": { "value": "a" },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": { "stepIndex": 0, "stepId": "role", "picked": ["a"], "answers": { "role": "a" } },
+            "emits": [ { "event": "WIZARD_COMMIT", "payload": { "stepId": "role", "done": false, "didAnswer": false, "answers": { "role": "a" } } } ],
+            "neverEmits": ["WIZARD_ANSWERED", "WIZARD_STEP", "WIZARD_DONE"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-picking-another-choice-option-replaces-the-pick",
+      "config": {
+        "steps": [
+          { "id": "role", "title": "Your role", "description": "Pick one.", "kind": "choice", "options": [ { "value": "a", "label": "Alpha" }, { "value": "b", "label": "Beta" } ] },
+          { "id": "end", "title": "End", "description": "Done.", "kind": "info" }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_PICK",
+          "entity": {
+            "id": "w", "title": "t", "answers": { "role": "a" }, "stepIndex": 0, "stepId": "role",
+            "step": { "placeholder": "", "optional": false, "icon": "", "fields": [], "options": [ { "value": "a", "label": "Alpha" }, { "value": "b", "label": "Beta" } ], "id": "role", "title": "Your role", "description": "Pick one.", "kind": "choice" },
+            "draft": "", "picked": ["a"], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": ""
+          },
+          "payload": { "value": "b" },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": { "picked": ["b"], "answers": { "role": "b" } },
+            "neverEmits": ["WIZARD_ANSWERED", "WIZARD_STEP"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-pick-on-a-multi-step-does-nothing",
+      "config": {
+        "steps": [
+          { "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi", "options": [ { "value": "x", "label": "X" } ] },
+          { "id": "end", "title": "End", "description": "Done.", "kind": "info" }
+        ]
+      },
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "WIZARD_PICK",
+          "entity": {
+            "id": "w", "title": "t", "answers": {}, "stepIndex": 0, "stepId": "topics",
+            "step": { "placeholder": "", "optional": false, "icon": "", "fields": [], "options": [ { "value": "x", "label": "X" } ], "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi" },
+            "draft": "", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": ""
+          },
+          "payload": { "value": "x" },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "entity": { "picked": [], "answers": {} },
+            "neverEmits": ["WIZARD_COMMIT"]
+          }
+        }
+      ]
+    }
+,
+    {
+      "id": "typed-text-then-continue-stores-and-commits-the-answer",
+      "config": { "steps": [ { "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text", "placeholder": "Type here", "optional": true }, { "id": "end", "title": "End", "description": "Done.", "kind": "info" } ] },
+      "steps": [ { "from": "stepping", "event": "WIZARD_ADVANCE", "entity": { "id": "w", "title": "t", "answers": {}, "stepIndex": 0, "stepId": "note", "step": { "placeholder": "Type here", "optional": true, "icon": "", "fields": [], "options": [], "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text" }, "draft": "hello", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": "" }, "payload": { "value": "", "useDraft": true }, "expect": { "fired": true, "state": "stepping", "entity": { "stepIndex": 1, "stepId": "end", "answers": { "note": "hello" }, "didAnswer": true, "answeredStep": "note", "answeredValue": "hello" }, "emits": [ { "event": "WIZARD_COMMIT", "payload": { "stepId": "end", "done": false, "didAnswer": true, "answeredStep": "note", "answeredValue": "hello", "answers": { "note": "hello" } } }, { "event": "WIZARD_ANSWERED", "payload": { "stepId": "note", "value": "hello" } } ] } } ]
+    }
+,
+    {
+      "id": "control-continue-on-an-optional-text-step-with-nothing-typed-stores-nothing",
+      "config": { "steps": [ { "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text", "placeholder": "Type here", "optional": true }, { "id": "end", "title": "End", "description": "Done.", "kind": "info" } ] },
+      "steps": [ { "from": "stepping", "event": "WIZARD_ADVANCE", "entity": { "id": "w", "title": "t", "answers": {}, "stepIndex": 0, "stepId": "note", "step": { "placeholder": "Type here", "optional": true, "icon": "", "fields": [], "options": [], "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text" }, "draft": "", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": "" }, "payload": { "value": "", "useDraft": true }, "expect": { "fired": true, "state": "stepping", "entity": { "stepIndex": 1, "stepId": "end", "answers": {}, "didAnswer": false }, "neverEmits": ["WIZARD_ANSWERED"] } } ]
+    }
+,
+    {
+      "id": "control-skip-on-an-optional-text-step-stores-nothing-even-with-a-draft",
+      "config": { "steps": [ { "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text", "placeholder": "Type here", "optional": true }, { "id": "end", "title": "End", "description": "Done.", "kind": "info" } ] },
+      "steps": [ { "from": "stepping", "event": "WIZARD_ADVANCE", "entity": { "id": "w", "title": "t", "answers": {}, "stepIndex": 0, "stepId": "note", "step": { "placeholder": "Type here", "optional": true, "icon": "", "fields": [], "options": [], "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text" }, "draft": "hello", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": "" }, "payload": {}, "expect": { "fired": true, "state": "stepping", "entity": { "stepIndex": 1, "stepId": "end", "answers": {}, "didAnswer": false }, "neverEmits": ["WIZARD_ANSWERED"] } } ]
+    }
+,
+    {
+      "id": "a-position-on-a-text-step-puts-its-stored-answer-in-the-draft",
+      "config": { "steps": [ { "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text", "placeholder": "Type here", "optional": true }, { "id": "end", "title": "End", "description": "Done.", "kind": "info" } ] },
+      "steps": [ { "from": "loading", "event": "WIZARD_POSITION", "entity": { "id": "w", "title": "t", "answers": {}, "stepIndex": 0, "stepId": "note", "step": { "placeholder": "Type here", "optional": true, "icon": "", "fields": [], "options": [], "id": "note", "title": "A note", "description": "Anything to add?", "kind": "text" }, "draft": "", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": "" }, "payload": { "stepId": "note", "answers": { "note": "hello" }, "finished": false }, "expect": { "fired": true, "state": "stepping", "entity": { "stepId": "note", "draft": "hello" } } } ]
+    }
+,
+    {
+      "id": "options-arriving-for-the-showing-step-keep-the-stored-picks",
+      "config": { "steps": [ { "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi", "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" }, { "value": "z", "label": "Z" } ] }, { "id": "end", "title": "End", "description": "Done.", "kind": "info" } ] },
+      "steps": [ { "from": "stepping", "event": "WIZARD_OPTIONS", "entity": { "id": "w", "title": "t", "answers": { "topics": "x,y" }, "stepIndex": 0, "stepId": "topics", "step": { "placeholder": "", "optional": false, "icon": "", "fields": [], "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" }, { "value": "z", "label": "Z" } ], "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi" }, "draft": "", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": "" }, "payload": { "stepId": "topics", "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" }, { "value": "z", "label": "Z" } ] }, "expect": { "fired": true, "state": "stepping", "entity": { "picked": ["x", "y"], "answers": { "topics": "x,y" } } } } ]
+    }
+,
+    {
+      "id": "control-options-arriving-drop-a-stored-pick-that-is-no-longer-offered",
+      "config": { "steps": [ { "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi", "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" }, { "value": "z", "label": "Z" } ] }, { "id": "end", "title": "End", "description": "Done.", "kind": "info" } ] },
+      "steps": [ { "from": "stepping", "event": "WIZARD_OPTIONS", "entity": { "id": "w", "title": "t", "answers": { "topics": "x,q" }, "stepIndex": 0, "stepId": "topics", "step": { "placeholder": "", "optional": false, "icon": "", "fields": [], "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" }, { "value": "z", "label": "Z" } ], "id": "topics", "title": "Topics", "description": "Pick several.", "kind": "multi" }, "draft": "", "picked": [], "overrides": [], "problem": "", "slotReady": true, "done": false, "didAnswer": false, "answeredStep": "", "answeredValue": "", "prevIndex": 0, "prevAnswers": {}, "cancelReason": "" }, "payload": { "stepId": "topics", "options": [ { "value": "x", "label": "X" }, { "value": "y", "label": "Y" } ] }, "expect": { "fired": true, "state": "stepping", "entity": { "picked": ["x"] } } } ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 app std-gmail [
   version: "1.0.0",
-  description: "std-gmail — the morning inbox connector over the Gmail REST API (gmail.googleapis.com/gmail/v1): read recent inbox messages and create reply drafts, never send. The access token is minted by the host credential store (a refresh_token grant for the user, scopes gmail.readonly and gmail.compose granted with the refresh token) and carried by one keyed HTTP client, never by an event. Every call runs on its own row under its own key, so concurrent calls never share state; an inbox listing reads its messages one at a time. A failure answers GMAIL_FAILED with the provider's message.",
+  description: "std-gmail — the morning inbox connector over the Gmail REST API (gmail.googleapis.com/gmail/v1): read recent inbox messages and create reply drafts, never send. The access token is minted by the host credential store (a refresh_token grant for the user, scopes gmail.readonly and gmail.compose granted with the refresh token) and carried by one keyed HTTP client, never by an event. Every call runs on its own row under its own key, so concurrent calls never share state; an inbox listing reads its messages one at a time. A request may carry a tag, the caller's own mark, which every answer to it carries back (empty when the caller gave none), so a caller tells its answers from another's. A failure answers GMAIL_FAILED with the provider's message.",
   egress: ["https://gmail.googleapis.com", "https://oauth2.googleapis.com"],
   net: { "gmail.googleapis.com:443": [tcp] }
 ]
@@ -37,6 +37,7 @@ orbital GmailOrbital {
     pending : [string] @description "The message ids of the listing still to read, the head being the one in flight." = []
     collected : [GmailMessage] @description "The messages of the listing read so far." = []
     stepReady : boolean @description "True once a reply was read and the next message read waits for std-retry to finish the run of the one before." = false
+    tag : string @description "The caller's own mark for the call in flight, returned with its answer so a caller tells its answers from another's; empty when the caller gave none." = ""
   }
 
   trait GmailKeyed = Keyed.traits.HttpKeyed {
@@ -87,17 +88,18 @@ orbital GmailOrbital {
       LIST_INBOX -> idle
         (set @entity.seq (+ @entity.seq 1))
         (let ((q (if (!= (default @payload.query "") "") (default @payload.query "") "in:inbox newer_than:1d")) (n (if (= (default @payload.maxResults 0) 0) 20 @payload.maxResults)))
-          (emit GMAIL_READY { key: (str/concat "inbox:" @q "|" @n "#" @entity.seq), op: "list", method: "GET", target: (str/concat "/gmail/v1/users/me/messages?q=" (str/encode-uri-component @q) "&maxResults=" @n), contentType: "", body: (bytes/from-string ""), retry: true }))
+          (emit GMAIL_READY { key: (str/concat "inbox:" @q "|" @n "#" @entity.seq), op: "list", tag: (default @payload.tag ""), method: "GET", target: (str/concat "/gmail/v1/users/me/messages?q=" (str/encode-uri-component @q) "&maxResults=" @n), contentType: "", body: (bytes/from-string ""), retry: true }))
       CREATE_DRAFT -> idle when (not (and (validate/pattern @payload.to "^[^\\r\\n]*$") (validate/pattern @payload.subject "^[^\\r\\n]*$") (validate/pattern (default @payload.inReplyTo "") "^[^\\r\\n]*$")))
-        (emit GMAIL_FAILED { message: "A draft header value must be a single line" })
+        (emit GMAIL_FAILED { tag: (default @payload.tag ""), message: "A draft header value must be a single line" })
       CREATE_DRAFT -> idle when (and (validate/pattern @payload.to "^[^\\r\\n]*$") (validate/pattern @payload.subject "^[^\\r\\n]*$") (validate/pattern (default @payload.inReplyTo "") "^[^\\r\\n]*$"))
         (set @entity.seq (+ @entity.seq 1))
         (let ((raw (str/replaceAll (str/replaceAll (base64/encode (str/concat "To: " @payload.to "\r\nSubject: =?UTF-8?B?" (base64/encode @payload.subject) "?=\r\n" (if (!= (default @payload.inReplyTo "") "") (str/concat "In-Reply-To: " @payload.inReplyTo "\r\nReferences: " @payload.inReplyTo "\r\n") "") "Content-Type: text/plain; charset=UTF-8\r\n\r\n" @payload.body)) "+" "-") "/" "_")))
-          (emit GMAIL_READY { key: (str/concat "draft:" @payload.to "#" @entity.seq), op: "draft", method: "POST", target: "/gmail/v1/users/me/drafts", contentType: "application/json", body: (bytes/from-string (json/stringify (if (!= (default @payload.threadId "") "") { message: { raw: @raw, threadId: @payload.threadId } } { message: { raw: @raw } }))), retry: false }))
+          (emit GMAIL_READY { key: (str/concat "draft:" @payload.to "#" @entity.seq), op: "draft", tag: (default @payload.tag ""), method: "POST", target: "/gmail/v1/users/me/drafts", contentType: "application/json", body: (bytes/from-string (json/stringify (if (!= (default @payload.threadId "") "") { message: { raw: @raw, threadId: @payload.threadId } } { message: { raw: @raw } }))), retry: false }))
     }
 
     emits {
       GMAIL_FAILED -> external {
+        tag : string!
         code : string
         message : string!
       }
@@ -107,6 +109,7 @@ orbital GmailOrbital {
       GMAIL_READY {
         key : string!
         op : string!
+        tag : string!
         method : string!
         target : string!
         contentType : string!
@@ -121,8 +124,9 @@ orbital GmailOrbital {
       LIST_INBOX -> input {
         query : string?
         maxResults : number?
+        tag : string?
       }
-        @description "Read the recent inbox messages: query is a Gmail search (default in:inbox newer_than:1d), maxResults defaults to 20; each message is read in full, one at a time."
+        @description "Read the recent inbox messages: query is a Gmail search (default in:inbox newer_than:1d), maxResults defaults to 20; each message is read in full, one at a time. tag is the caller's own mark, answered back on the reply."
         @synonyms "read inbox, recent mail, list emails"
       CREATE_DRAFT -> input {
         to : string!
@@ -130,8 +134,9 @@ orbital GmailOrbital {
         body : string!
         threadId : string?
         inReplyTo : string?
+        tag : string?
       }
-        @description "Create a plain-text draft, never send it; threadId places it in a thread and inReplyTo (the Message-ID of the mail answered) makes it a reply."
+        @description "Create a plain-text draft, never send it; threadId places it in a thread and inReplyTo (the Message-ID of the mail answered) makes it a reply. tag is the caller's own mark, answered back on the reply."
         @synonyms "draft reply, write draft, save draft"
     }
   }
@@ -144,6 +149,7 @@ orbital GmailOrbital {
 
       CALL_READY -> idle when (= @payload.retry false)
         (set @entity.op @payload.op)
+        (set @entity.tag @payload.tag)
         (set @entity.method @payload.method)
         (set @entity.target @payload.target)
         (set @entity.contentType @payload.contentType)
@@ -155,6 +161,7 @@ orbital GmailOrbital {
         (emit GMAIL_DISPATCH {})
       CALL_READY -> idle when (= @payload.retry true)
         (set @entity.op @payload.op)
+        (set @entity.tag @payload.tag)
         (set @entity.method @payload.method)
         (set @entity.target @payload.target)
         (set @entity.contentType @payload.contentType)
@@ -173,7 +180,7 @@ orbital GmailOrbital {
       GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list") (= (json/parse @payload.body GmailListReply) null))
         (emit GMAIL_FAIL { message: "The Gmail answer could not be read" })
       GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list") (!= (json/parse @payload.body GmailListReply) null) (= (array/len (object/get (json/parse @payload.body GmailListReply) messages [])) 0))
-        (emit INBOX_LISTED { messages: [] })
+        (emit INBOX_LISTED { tag: @entity.tag, messages: [] })
         (emit GMAIL_CLEAR {})
       GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list") (!= (json/parse @payload.body GmailListReply) null) (> (array/len (object/get (json/parse @payload.body GmailListReply) messages [])) 0))
         (set @entity.pending (array/map (object/get (json/parse @payload.body GmailListReply) messages []) (fn m (default (object/get @m id "") ""))))
@@ -202,13 +209,13 @@ orbital GmailOrbital {
         (set @entity.pending (array/drop @entity.pending 1))
         (set @entity.stepReady true)
       GMAIL_MESSAGE_READ -> idle when (and (base64/valid @payload.data) (<= (array/len @entity.pending) 1))
-        (emit INBOX_LISTED { messages: (array/append @entity.collected { id: @payload.id, threadId: @payload.threadId, from: @payload.from, to: @payload.to, subject: @payload.subject, date: @payload.date, messageId: @payload.messageId, snippet: @payload.snippet, body: (base64/decode @payload.data) }) })
+        (emit INBOX_LISTED { tag: @entity.tag, messages: (array/append @entity.collected { id: @payload.id, threadId: @payload.threadId, from: @payload.from, to: @payload.to, subject: @payload.subject, date: @payload.date, messageId: @payload.messageId, snippet: @payload.snippet, body: (base64/decode @payload.data) }) })
         (emit GMAIL_CLEAR {})
       GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "draft") (= (json/parse @payload.body GmailDraftReply) null))
         (emit GMAIL_FAIL { message: "The Gmail answer could not be read" })
       GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "draft") (!= (json/parse @payload.body GmailDraftReply) null))
         (let ((r (json/parse @payload.body GmailDraftReply)))
-          (emit DRAFT_CREATED { draftId: (default (object/get @r id "") ""), messageId: (default (object/get @r "message.id" "") ""), threadId: (default (object/get @r "message.threadId" "") "") }))
+          (emit DRAFT_CREATED { tag: @entity.tag, draftId: (default (object/get @r id "") ""), messageId: (default (object/get @r "message.id" "") ""), threadId: (default (object/get @r "message.threadId" "") "") }))
         (emit GMAIL_CLEAR {})
       GMAIL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GMAIL_REPLY_ERROR { status: @payload.status, message: (let ((eo (json/parse @payload.body GmailErrorReply)) (es (json/parse @payload.body GmailErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
@@ -251,21 +258,22 @@ orbital GmailOrbital {
 
       GMAIL_FAIL -> idle when (and @entity.retrying (= (default @payload.code "") ""))
         (emit GMAIL_RETRY_CANCEL { key: (as @entity.id CallKey) })
-        (emit GMAIL_FAILED { message: @payload.message })
+        (emit GMAIL_FAILED { tag: @entity.tag, message: @payload.message })
         (emit GMAIL_CLEAR {})
       GMAIL_FAIL -> idle when (and @entity.retrying (!= (default @payload.code "") ""))
         (emit GMAIL_RETRY_CANCEL { key: (as @entity.id CallKey) })
-        (emit GMAIL_FAILED { code: @payload.code, message: @payload.message })
+        (emit GMAIL_FAILED { tag: @entity.tag, code: @payload.code, message: @payload.message })
         (emit GMAIL_CLEAR {})
       GMAIL_FAIL -> idle when (and (not @entity.retrying) (= (default @payload.code "") ""))
-        (emit GMAIL_FAILED { message: @payload.message })
+        (emit GMAIL_FAILED { tag: @entity.tag, message: @payload.message })
         (emit GMAIL_CLEAR {})
       GMAIL_FAIL -> idle when (and (not @entity.retrying) (!= (default @payload.code "") ""))
-        (emit GMAIL_FAILED { code: @payload.code, message: @payload.message })
+        (emit GMAIL_FAILED { tag: @entity.tag, code: @payload.code, message: @payload.message })
         (emit GMAIL_CLEAR {})
 
       GMAIL_CLEAR -> idle
         (set @entity.op "")
+        (set @entity.tag "")
         (set @entity.method "")
         (set @entity.target "")
         (set @entity.contentType "")
@@ -280,12 +288,14 @@ orbital GmailOrbital {
 
     emits {
       INBOX_LISTED -> external {
+        tag : string!
         messages : [GmailMessage]!
       }
         @description "The recent inbox messages, each with its decoded text/plain body, headers From, To, Subject, Date and Message-ID, snippet and thread id; empty text fields when Gmail returned none."
         @synonyms "inbox messages, recent mail"
         @tier "primary"
       DRAFT_CREATED -> external {
+        tag : string!
         draftId : string!
         messageId : string!
         threadId : string!
@@ -294,6 +304,7 @@ orbital GmailOrbital {
         @synonyms "draft saved, reply drafted"
         @tier "primary"
       GMAIL_FAILED -> external {
+        tag : string!
         code : string
         message : string!
       }
@@ -385,6 +396,7 @@ orbital GmailOrbital {
       CALL_READY {
         key : string!
         op : string!
+        tag : string!
         method : string!
         target : string!
         contentType : string!

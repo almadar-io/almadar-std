@@ -328,6 +328,12 @@ orbital AgentMemoryOrbital {
   }
 
   trait AgentMemoryStore -> @rebindable AgentMemory {
+    config {
+      keeps : "exchange" | "request" = exchange
+        @label "What a memory keeps"
+        @description "exchange keeps what the person asked and what the assistant answered; request keeps only what the person asked, so a later similar request recalls the topic and not an old answer to repeat."
+        @tier "policy"
+    }
     initial: ready
 
     state ready {
@@ -341,9 +347,9 @@ orbital AgentMemoryOrbital {
         (set @entity.pendingQuery (object/get (default (array/last ?messages) {}) content ""))
       REMEMBER -> ready when (or (default ?ephemeral false) (= @user.role "anonymous"))
       REMEMBER -> remembering when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
-        (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
+        (set @entity.pendingContent (if (= @config.keeps "request") (str/concat "Asked: " @entity.pendingQuery) (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply)))
         (emit LLM_EMBED {
-          texts: (array/prepend [] (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply)),
+          texts: (array/prepend [] (if (= @config.keeps "request") (str/concat "Asked: " @entity.pendingQuery) (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))),
           key: "store"
         })
     }

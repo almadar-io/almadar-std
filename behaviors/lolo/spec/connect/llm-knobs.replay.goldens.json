@@ -2353,6 +2353,238 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-client-that-requires-a-first-tool-call-says-so-on-the-first-model-call-of-a-turn",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "FirstToolLlm",
+          "event": "LLM_CALL_TOOLS",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "instructions": "sys",
+            "tools": [
+              {
+                "name": "read_x",
+                "description": "d",
+                "parameters": {
+                  "type": "object"
+                }
+              }
+            ],
+            "key": "t1"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_CHAT_WIRE",
+                "payload": {
+                  "json": "{\"model\":\"vendor/model\",\"messages\":[{\"role\":\"system\",\"content\":\"sys\"},{\"role\":\"user\",\"content\":\"hi\"}],\"parallel_tool_calls\":false,\"temperature\":0.7,\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}}],\"tool_choice\":\"required\",\"reasoning\":{\"enabled\":true},\"usage\":{\"include\":true}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-later-model-call-of-the-same-turn-is-left-to-the-model",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "FirstToolLlm",
+          "event": "LLM_TOOLS_SEND",
+          "payload": {
+            "session": "{\"key\":\"t1\",\"model\":\"vendor/model\",\"system\":\"sys\",\"userPrompt\":\"hi\",\"maxSteps\":8,\"tools\":[{\"name\":\"read_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}],\"messages\":[{\"role\":\"system\",\"content\":\"sys\"},{\"role\":\"user\",\"content\":\"hi\"}],\"steps\":[],\"usage\":{\"promptTokens\":10,\"completionTokens\":5,\"totalTokens\":15,\"modelCalls\":1}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_CHAT_WIRE",
+                "payload": {
+                  "json": "{\"model\":\"vendor/model\",\"messages\":[{\"role\":\"system\",\"content\":\"sys\"},{\"role\":\"user\",\"content\":\"hi\"}],\"parallel_tool_calls\":false,\"temperature\":0.7,\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}}],\"reasoning\":{\"enabled\":true},\"usage\":{\"include\":true}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-turn-with-no-tools-never-requires-one",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "FirstToolLlm",
+          "event": "LLM_CALL_TOOLS",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "instructions": "sys",
+            "tools": [],
+            "key": "t1"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_CHAT_WIRE",
+                "payload": {
+                  "json": "{\"model\":\"vendor/model\",\"messages\":[{\"role\":\"system\",\"content\":\"sys\"},{\"role\":\"user\",\"content\":\"hi\"}],\"parallel_tool_calls\":false,\"temperature\":0.7,\"reasoning\":{\"enabled\":true},\"usage\":{\"include\":true}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-tool-call-whose-arguments-are-the-word-null-is-requested-with-an-empty-argument-object",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "PlainLlm",
+          "event": "LLM_TOOLS_TURN",
+          "payload": {
+            "session": "{\"key\":\"k1\",\"model\":\"m\",\"userPrompt\":\"u\",\"maxSteps\":8,\"tools\":[{\"name\":\"list_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"u\"},{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"c1\",\"type\":\"function\",\"function\":{\"name\":\"list_x\",\"arguments\":\"null\"}}]}],\"steps\":[{\"type\":\"tool_call\",\"tool\":\"list_x\",\"kind\":\"input\",\"argsText\":\"null\",\"timestamp\":\"2023-11-14T00:00:00.000Z\"}],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1},\"finish\":\"tool_calls\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_TOOLS_REQUESTED",
+                "payload": {
+                  "calls": [
+                    {
+                      "id": "c1",
+                      "name": "list_x",
+                      "arguments": {}
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-tool-call-with-an-argument-object-is-requested-with-it",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "PlainLlm",
+          "event": "LLM_TOOLS_TURN",
+          "payload": {
+            "session": "{\"key\":\"k1\",\"model\":\"m\",\"userPrompt\":\"u\",\"maxSteps\":8,\"tools\":[{\"name\":\"list_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"u\"},{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"c1\",\"type\":\"function\",\"function\":{\"name\":\"list_x\",\"arguments\":\"{\\\"q\\\":\\\"a\\\"}\"}}]}],\"steps\":[{\"type\":\"tool_call\",\"tool\":\"list_x\",\"kind\":\"input\",\"argsText\":\"{\\\"q\\\":\\\"a\\\"}\",\"timestamp\":\"2023-11-14T00:00:00.000Z\"}],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1},\"finish\":\"tool_calls\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_TOOLS_REQUESTED",
+                "payload": {
+                  "calls": [
+                    {
+                      "id": "c1",
+                      "name": "list_x",
+                      "arguments": {
+                        "q": "a"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-tool-call-whose-arguments-do-not-parse-is-requested-with-an-empty-argument-object",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "PlainLlm",
+          "event": "LLM_TOOLS_TURN",
+          "payload": {
+            "session": "{\"key\":\"k1\",\"model\":\"m\",\"userPrompt\":\"u\",\"maxSteps\":8,\"tools\":[{\"name\":\"list_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"u\"},{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"c1\",\"type\":\"function\",\"function\":{\"name\":\"list_x\",\"arguments\":\"{\\\"q\\\":\"}}]}],\"steps\":[{\"type\":\"tool_call\",\"tool\":\"list_x\",\"kind\":\"input\",\"argsText\":\"{\\\"q\\\":\",\"timestamp\":\"2023-11-14T00:00:00.000Z\"}],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1},\"finish\":\"tool_calls\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_TOOLS_REQUESTED",
+                "payload": {
+                  "calls": [
+                    {
+                      "id": "c1",
+                      "name": "list_x",
+                      "arguments": {}
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-tool-call-with-empty-arguments-text-is-requested-with-an-empty-argument-object",
+      "defaults": [
+        "KnobDriver",
+        "KnobDelay"
+      ],
+      "steps": [
+        {
+          "trait": "PlainLlm",
+          "event": "LLM_TOOLS_TURN",
+          "payload": {
+            "session": "{\"key\":\"k1\",\"model\":\"m\",\"userPrompt\":\"u\",\"maxSteps\":8,\"tools\":[{\"name\":\"list_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"u\"},{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"c1\",\"type\":\"function\",\"function\":{\"name\":\"list_x\",\"arguments\":\"\"}}]}],\"steps\":[{\"type\":\"tool_call\",\"tool\":\"list_x\",\"kind\":\"input\",\"argsText\":\"\",\"timestamp\":\"2023-11-14T00:00:00.000Z\"}],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1},\"finish\":\"tool_calls\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_TOOLS_REQUESTED",
+                "payload": {
+                  "calls": [
+                    {
+                      "id": "c1",
+                      "name": "list_x",
+                      "arguments": {}
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

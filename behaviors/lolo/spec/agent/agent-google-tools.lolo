@@ -1,0 +1,27 @@
+app agent-google-tools-spec [
+  version: "1.0.0",
+  description: "Design contract for the Google tools an agent loop offers over a composed std-gmail and std-drive. Each tool is a declared input the loop dispatches and answers through the loop's TOOL_PENDING callId: GMAIL_SEARCH { query, maxResults } answers the matching mail with message id, thread id, sender, recipient, date, subject and text, GMAIL_READ { messageId } answers one mail by its message id, GMAIL_DRAFT { to, subject, body, threadId, inReplyTo } leaves a draft in the mailbox and says it is not sent, DRIVE_FIND { folderId, query, maxResults } lists files and folders with their file id and link, DRIVE_READ { fileId } answers a text file's text. The connectors never send mail, so no tool sends. Each request to a connector carries the tag `agent:` plus the call id and the connector answers with that tag: only an answer with the call's tag ends the call, and an answer with another tag, or one that arrives when no request is in flight, is ignored. A failed connector answer, or a Drive file that is not text, ends the call with TOOL_FAILED and the reason; nothing is truncated."
+]
+
+orbital AgentGoogleToolsSpec {
+  expects entity AgentGoogleCall [runtime] {
+    id : string!
+    callId : string
+    tag : string
+    byId : boolean
+  }
+  expects trait AgentGoogleTools {
+    state ready {
+      GMAIL_SEARCH -> waiting
+      GMAIL_READ -> waiting
+      GMAIL_DRAFT -> waiting
+      DRIVE_FIND -> waiting
+      DRIVE_READ -> waiting
+    }
+    emits {
+      TOOL_RESULT { callId : string!  result : string! }
+      TOOL_FAILED { callId : string!  error : string! }
+    }
+  }
+  expects page boot -> AgentGoogleTools
+}

@@ -1,0 +1,621 @@
+{
+ "atom": "agent/atoms/std-agent-web-tools.lolo",
+ "trait": "AgentWebTools",
+ "note": "the read-only web tools of an agent loop, lifted from inspectorate-agent-tools (P-030): the loop's call id keys every page request, and the tab's answers are the tool's result. Host answers are played as the next step's event.",
+ "cases": [
+  {
+   "id": "the-loops-call-for-an-own-tool-is-heard",
+   "steps": [
+    {
+     "event": "TOOL_PENDING",
+     "from": "ready",
+     "payload": {
+      "callId": "c1",
+      "tool": "AgentWebToolsOrbital.AgentWebTools.OPEN_PAGE"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "opening-a-page-sends-its-address-keyed-by-the-call-id",
+   "steps": [
+    {
+     "event": "OPEN_PAGE",
+     "from": "ready",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1"
+     },
+     "payload": {
+      "url": "https://example.com/terms"
+     },
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "agent:c1",
+         "url": "https://example.com/terms"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT",
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-address-that-is-not-allowed-fails-the-call-before-any-page-is-asked",
+   "steps": [
+    {
+     "event": "OPEN_PAGE",
+     "from": "ready",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1"
+     },
+     "payload": {
+      "url": "file:///etc/passwd"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the address must start with one of: http://, https://"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_NAVIGATE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-loaded-page-is-asked-for-its-text",
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "from": "opening",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c1",
+      "url": "https://example.com/terms",
+      "title": "Terms"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_TEXT",
+        "payload": {
+         "key": "agent:c1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-load-answer-keyed-for-another-call-is-ignored",
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "from": "opening",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c0",
+      "url": "https://example.com/old",
+      "title": "Old"
+     },
+     "expect": {
+      "fired": false,
+      "state": "opening",
+      "neverEmits": [
+       "PAGE_TEXT",
+       "TOOL_RESULT",
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-read-page-is-answered-with-the-address-it-ended-at",
+   "steps": [
+    {
+     "event": "PAGE_TEXT_READ",
+     "from": "reading",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c1",
+      "url": "https://example.com/terms/v2",
+      "title": "Terms",
+      "lang": "en",
+      "text": "Notice is thirty days."
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "url: https://example.com/terms/v2\ntitle: Terms\nlang: en\n\nNotice is thirty days."
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-text-answer-keyed-for-another-call-is-ignored",
+   "steps": [
+    {
+     "event": "PAGE_TEXT_READ",
+     "from": "reading",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c0",
+      "url": "https://example.com/old",
+      "title": "Old",
+      "lang": "en",
+      "text": "Stale."
+     },
+     "expect": {
+      "fired": false,
+      "state": "reading",
+      "neverEmits": [
+       "TOOL_RESULT",
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-page-over-the-limit-fails-the-call-naming-the-limit",
+   "config": {
+    "maxToolResultChars": 10
+   },
+   "steps": [
+    {
+     "event": "PAGE_TEXT_READ",
+     "from": "reading",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c1",
+      "url": "https://example.com/long",
+      "title": "Long",
+      "lang": "en",
+      "text": "twelve chars"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the page \"Long\" (https://example.com/long) has 12 characters, over the limit of 10"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-page-read-ends-the-call-with-tool-failed",
+   "steps": [
+    {
+     "event": "PAGE_FAILED",
+     "from": "opening",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c1",
+      "code": "navigation-failed",
+      "error": "net::ERR_NAME_NOT_RESOLVED"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "navigation-failed: net::ERR_NAME_NOT_RESOLVED"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-text-read-ends-the-call-with-tool-failed",
+   "steps": [
+    {
+     "event": "PAGE_FAILED",
+     "from": "reading",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c1",
+      "code": "script-error",
+      "error": "the page closed"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "script-error: the page closed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-failure-keyed-for-another-call-is-ignored",
+   "steps": [
+    {
+     "event": "PAGE_FAILED",
+     "from": "opening",
+     "entity": {
+      "id": "w",
+      "callId": "c1",
+      "reqKey": "agent:c1",
+      "op": "open"
+     },
+     "payload": {
+      "key": "agent:c0",
+      "code": "busy",
+      "error": "another request runs"
+     },
+     "expect": {
+      "fired": false,
+      "state": "opening",
+      "neverEmits": [
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-search-opens-the-search-page-with-the-encoded-query",
+   "steps": [
+    {
+     "event": "WEB_SEARCH",
+     "from": "ready",
+     "entity": {
+      "id": "w",
+      "callId": "c2",
+      "reqKey": "agent:c2"
+     },
+     "payload": {
+      "query": "notice period & law"
+     },
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "agent:c2",
+         "url": "https://html.duckduckgo.com/html/?q=notice%20period%20%26%20law"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT",
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-empty-search-fails-the-call-before-any-page-is-asked",
+   "steps": [
+    {
+     "event": "WEB_SEARCH",
+     "from": "ready",
+     "entity": {
+      "id": "w",
+      "callId": "c2",
+      "reqKey": "agent:c2"
+     },
+     "payload": {
+      "query": "   "
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c2",
+         "error": "the query is empty"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_NAVIGATE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-read-results-page-asks-for-its-links",
+   "steps": [
+    {
+     "event": "PAGE_TEXT_READ",
+     "from": "reading",
+     "entity": {
+      "id": "w",
+      "callId": "c2",
+      "reqKey": "agent:c2",
+      "op": "search",
+      "query": "notice period"
+     },
+     "payload": {
+      "key": "agent:c2",
+      "url": "https://html.duckduckgo.com/html/?q=notice%20period",
+      "title": "notice period",
+      "lang": "en",
+      "text": "Results text."
+     },
+     "expect": {
+      "fired": true,
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "agent:c2"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT",
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-search-answer-names-the-results-page-and-lists-its-links",
+   "steps": [
+    {
+     "event": "PAGE_LINKS_READ",
+     "from": "linking",
+     "entity": {
+      "id": "w",
+      "callId": "c2",
+      "reqKey": "agent:c2",
+      "op": "search",
+      "query": "notice period",
+      "pageUrl": "https://html.duckduckgo.com/html/?q=notice%20period",
+      "pageTitle": "notice period",
+      "pageLang": "en",
+      "pageText": "Results text."
+     },
+     "payload": {
+      "key": "agent:c2",
+      "links": [
+       {
+        "index": 0,
+        "text": "Notice period",
+        "href": "https://example.org/notice",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c2",
+         "result": "search: notice period\nurl: https://html.duckduckgo.com/html/?q=notice%20period\ntitle: notice period\n\nResults text.\n\nlinks:\nNotice period → https://example.org/notice"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-links-answer-keyed-for-another-call-is-ignored",
+   "steps": [
+    {
+     "event": "PAGE_LINKS_READ",
+     "from": "linking",
+     "entity": {
+      "id": "w",
+      "callId": "c2",
+      "reqKey": "agent:c2",
+      "op": "search",
+      "query": "notice period",
+      "pageText": "Results text."
+     },
+     "payload": {
+      "key": "agent:c1",
+      "links": []
+     },
+     "expect": {
+      "fired": false,
+      "state": "linking",
+      "neverEmits": [
+       "TOOL_RESULT",
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-results-page-over-the-limit-fails-the-search",
+   "config": {
+    "maxToolResultChars": 5
+   },
+   "steps": [
+    {
+     "event": "PAGE_LINKS_READ",
+     "from": "linking",
+     "entity": {
+      "id": "w",
+      "callId": "c2",
+      "reqKey": "agent:c2",
+      "op": "search",
+      "query": "q",
+      "pageUrl": "https://html.duckduckgo.com/html/?q=q",
+      "pageText": "Results text."
+     },
+     "payload": {
+      "key": "agent:c2",
+      "links": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c2",
+         "error": "the results page (https://html.duckduckgo.com/html/?q=q) is longer than the limit of 5 characters"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-links-read-ends-the-search-with-tool-failed",
+   "steps": [
+    {
+     "event": "PAGE_FAILED",
+     "from": "linking",
+     "entity": {
+      "id": "w",
+      "callId": "c2",
+      "reqKey": "agent:c2",
+      "op": "search",
+      "query": "q"
+     },
+     "payload": {
+      "key": "agent:c2",
+      "code": "disconnected",
+      "error": "the browser went away"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c2",
+         "error": "disconnected: the browser went away"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

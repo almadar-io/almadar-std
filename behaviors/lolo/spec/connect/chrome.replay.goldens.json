@@ -9067,6 +9067,763 @@
      }
     }
    ]
+  },
+  {
+   "id": "start-on-navigate-holds-the-navigation-starts-the-browser-and-answers-it-when-the-start-fails",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "startOnNavigate": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "PAGE_NAVIGATE",
+     "payload": {
+      "key": "k1",
+      "url": "https://a.test/"
+     },
+     "from": "stopped",
+     "entity": {
+      "id": "t"
+     },
+     "expect": {
+      "state": "stopped",
+      "entity": {
+       "held": null
+      },
+      "emits": [
+       {
+        "event": "CHROME_START",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "start-failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the replay has no os host, so the start the held request triggers fails at os/mkdir and the held request is answered start-failed; a-held-navigation-runs-once-the-browser-is-ready covers the ready path"
+  },
+  {
+   "id": "control-without-start-on-navigate-a-navigation-while-stopped-answers-not-started",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "PAGE_NAVIGATE",
+     "payload": {
+      "key": "k1",
+      "url": "https://a.test/"
+     },
+     "from": "stopped",
+     "entity": {
+      "id": "t"
+     },
+     "expect": {
+      "state": "stopped",
+      "emits": [
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "not-started"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CHROME_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "start-on-navigate-holds-a-print-starts-the-browser-and-answers-it-when-the-start-fails",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "startOnNavigate": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "PAGE_PRINT_PDF",
+     "payload": {
+      "key": "k2",
+      "html": "<p>x</p>"
+     },
+     "from": "stopped",
+     "entity": {
+      "id": "t"
+     },
+     "expect": {
+      "state": "stopped",
+      "entity": {
+       "held": null
+      },
+      "emits": [
+       {
+        "event": "CHROME_START",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k2",
+         "code": "start-failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the replay has no os host, so the start the held request triggers fails at os/mkdir and the held request is answered start-failed; a-held-navigation-runs-once-the-browser-is-ready covers the ready path"
+  },
+  {
+   "id": "start-on-navigate-a-page-read-while-stopped-still-answers-not-started",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "startOnNavigate": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "PAGE_TEXT",
+     "payload": {
+      "key": "k1"
+     },
+     "from": "stopped",
+     "entity": {
+      "id": "t"
+     },
+     "expect": {
+      "state": "stopped",
+      "emits": [
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "not-started"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CHROME_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-held-navigation-runs-once-the-browser-is-ready",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "startOnNavigate": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_REPLY",
+     "payload": {
+      "key": "download",
+      "method": "Browser.setDownloadBehavior",
+      "frame": "{\"id\":9,\"result\":{}}"
+     },
+     "from": "starting",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "browser": "Chrome/156",
+      "stage": "download",
+      "held": {
+       "op": "navigate",
+       "key": "k1",
+       "url": "https://a.test/"
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "held": null
+      },
+      "emits": [
+       {
+        "event": "CHROME_READY"
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1",
+         "url": "https://a.test/"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-ready-with-nothing-held-runs-no-page-request",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "startOnNavigate": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_REPLY",
+     "payload": {
+      "key": "download",
+      "method": "Browser.setDownloadBehavior",
+      "frame": "{\"id\":9,\"result\":{}}"
+     },
+     "from": "starting",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "browser": "Chrome/156",
+      "stage": "download"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CHROME_READY"
+       }
+      ],
+      "neverEmits": [
+       "PAGE_NAVIGATE",
+       "PAGE_PRINT_PDF"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-start-that-fails-answers-the-held-request-start-failed",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "startOnNavigate": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_DAEMON_FAILED",
+     "payload": {
+      "code": "daemon_timeout",
+      "message": "no port"
+     },
+     "from": "starting",
+     "entity": {
+      "id": "t",
+      "stage": "launch",
+      "held": {
+       "op": "navigate",
+       "key": "k1",
+       "url": "https://a.test/"
+      }
+     },
+     "expect": {
+      "state": "stopped",
+      "entity": {
+       "held": null
+      },
+      "emits": [
+       {
+        "event": "CHROME_FAILED",
+        "payload": {
+         "code": "daemon_timeout"
+        }
+       },
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "start-failed",
+         "error": "no port"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-idle-deadline-while-ready-stops-the-browser",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_TIMER_DUE",
+     "payload": {
+      "key": "idle"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CHROME_STOP",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-idle-deadline-while-busy-stops-nothing",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_TIMER_DUE",
+     "payload": {
+      "key": "idle"
+     },
+     "from": "busy",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156",
+      "op": "text",
+      "stage": "text",
+      "callerKey": "k1"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "stop-with-close-reused-ends-a-reused-browser-with-browser-close",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "closeReused": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_STOP",
+     "payload": {},
+     "from": "ready",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156",
+      "reused": true
+     },
+     "expect": {
+      "state": "stopping",
+      "emits": [
+       {
+        "event": "CDP_COMMAND",
+        "payload": {
+         "key": "close-browser",
+         "method": "Browser.close"
+        }
+       },
+       {
+        "event": "CHROME_STOPPED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-stop-with-close-reused-on-a-browser-it-started-closes-the-target",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "closeReused": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_STOP",
+     "payload": {},
+     "from": "ready",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156",
+      "reused": false
+     },
+     "expect": {
+      "state": "stopping",
+      "emits": [
+       {
+        "event": "CDP_COMMAND",
+        "payload": {
+         "key": "close-target",
+         "method": "Target.closeTarget"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-stop-without-close-reused-leaves-a-reused-browser-running",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_STOP",
+     "payload": {},
+     "from": "ready",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156",
+      "reused": true
+     },
+     "expect": {
+      "state": "stopping",
+      "emits": [
+       {
+        "event": "CDP_COMMAND",
+        "payload": {
+         "key": "close-target",
+         "method": "Target.closeTarget"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-browser-close-reply-disconnects",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    },
+    "closeReused": true
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_REPLY",
+     "payload": {
+      "key": "close-browser",
+      "method": "Browser.close",
+      "frame": "{\"id\":3,\"result\":{}}"
+     },
+     "from": "stopping",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156",
+      "reused": true,
+      "stage": "close-browser"
+     },
+     "expect": {
+      "state": "stopping",
+      "emits": [
+       {
+        "event": "CDP_DISCONNECT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-daemon-ready-records-a-reused-browser",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_DAEMON_READY",
+     "payload": {
+      "pid": 0,
+      "reused": true
+     },
+     "from": "starting",
+     "entity": {
+      "id": "t",
+      "stage": "launch"
+     },
+     "expect": {
+      "state": "starting",
+      "entity": {
+       "reused": true
+      },
+      "emits": [
+       {
+        "event": "CDP_CONNECT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

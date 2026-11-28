@@ -1,0 +1,74 @@
+{
+  "atom": "net/atoms/std-http-keyed.lolo",
+  "trait": "KeyedHttp",
+  "note": "A keyed row is one call: once its reply is answered and its socket closed, the row's fields are back at their defaults, so the kernel drops it (EXEC-STEP-1b, G-CROSS-852). KeyedHttp keeps no socket on a row (keepAlive false).",
+  "cases": [
+    {
+      "id": "a-keyed-row-whose-reply-is-answered-and-closed-goes-back-to-its-defaults",
+      "defaults": [
+        "KeyedFrame"
+      ],
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          }
+        },
+        {
+          "event": "HC_CONNECTED",
+          "payload": {
+            "sock": 5,
+            "key": "connect"
+          }
+        },
+        {
+          "event": "HC_SENT",
+          "payload": {
+            "bytes": 10,
+            "key": "send"
+          }
+        },
+        {
+          "event": "HC_READ",
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIE9LDQpjb250ZW50LWxlbmd0aDogMg0KDQpoaQ==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "HC_CLOSED",
+          "payload": {
+            "key": "close"
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "key": "",
+              "status": 0,
+              "parts": [],
+              "sock": -1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

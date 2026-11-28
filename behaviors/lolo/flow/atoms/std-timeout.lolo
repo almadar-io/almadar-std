@@ -5,7 +5,7 @@ app std-timeout [
 orbital TimeoutOrbital {
   entity TimeoutRun [runtime] {
     id : string!
-    key : CallKey @description "The call key the ask runs under; set by START."
+    key : CallKey? @description "The call key the ask runs under; set by START, cleared when the run ends so a keyed row goes quiet (EXEC-STEP-1b)." = null
     deadline : instant? @description "The instant at which the ask is abandoned; null while idle." = null
   }
 
@@ -24,22 +24,28 @@ orbital TimeoutOrbital {
     state running {
       INIT -> idle
         (set @entity.deadline null)
+        (set @entity.key null)
       SUCCEEDED -> idle when (== ?key @entity.key)
         (set @entity.deadline null)
         (emit COMPLETED { key: ?key })
+        (set @entity.key null)
       FAILED -> idle when (== ?key @entity.key)
         (set @entity.deadline null)
         (emit ASK_FAILED { key: ?key, error: ?error })
+        (set @entity.key null)
       CANCEL -> idle
         (cancel-call @entity.key)
         (set @entity.deadline null)
+        (set @entity.key null)
       TIMER_DUE -> idle when (and @config.cancelOnDeadline (!= @entity.key null))
         (cancel-call @entity.key)
         (set @entity.deadline null)
         (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
+        (set @entity.key null)
       TIMER_DUE -> idle when (and (not @config.cancelOnDeadline) (!= @entity.key null))
         (set @entity.deadline null)
         (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
+        (set @entity.key null)
       ;; no key means no run in flight, so idle is the meaning
       TIMER_DUE -> idle when (= @entity.key null)
         (set @entity.deadline null)

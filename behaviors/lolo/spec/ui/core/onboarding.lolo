@@ -1,0 +1,33 @@
+app onboarding-spec [
+  version: "2.0.0",
+  description: "Design contract for a reusable first-run flow kept per signed-in member. OnboardingFlow is std-wizard's trait (the steps knob, the frame, the step kinds); OnboardingStore keeps the member's OnboardingRecord row (done, stepId, answers by step id) and saves every change the wizard reports, so a reload returns to the same step. On mount a record that is not done (or missing) resumes the wizard at the saved step and emits ONBOARDING_NEEDED; a done record renders nothing and emits ONBOARDING_SKIPPED. OnboardingStore emits ONBOARDING_STEP whenever a step is shown, ONBOARDING_ANSWERED after an answer is saved, ONBOARDING_DONE once the last step is saved as done and ONBOARDING_SLOT_CONTINUE for a slot step's primary button; ONBOARDING_SLOT_READY enables it, ONBOARDING_SLOT_ANSWER answers the step, ONBOARDING_OPTIONS replaces a step's options at run time, ONBOARDING_RESTART marks the record not done and keeps the answers."
+]
+
+orbital OnboardingSpec {
+  expects entity OnboardingRecord [persistent] {
+    id : string!
+    done : boolean
+    stepId : string
+    answers : Map string string
+    finishedAt : instant
+  }
+  expects trait OnboardingStore {
+    state loading {
+      RECORD_READ -> active
+    }
+    state active {
+      WIZARD_COMMIT -> active
+      OB_SAVED -> active
+      ONBOARDING_RESTART -> active
+    }
+    emits {
+      ONBOARDING_NEEDED { stepId : string! }
+      ONBOARDING_STEP { stepId : string!  answers : Map string string! }
+      ONBOARDING_ANSWERED { stepId : string!  value : string!  answers : Map string string! }
+      ONBOARDING_DONE { answers : Map string string! }
+      ONBOARDING_SLOT_CONTINUE { stepId : string! }
+      ONBOARDING_SKIPPED { }
+    }
+  }
+  expects page "/onboarding" -> OnboardingStore
+}

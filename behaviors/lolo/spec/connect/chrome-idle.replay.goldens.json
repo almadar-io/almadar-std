@@ -1,0 +1,57 @@
+{
+ "atom": "connect/atoms/std-chrome.lolo",
+ "trait": "ChromeIdle",
+ "spec": "spec/connect/chrome.lolo",
+ "note": "std-chrome ChromeIdle: every answer re-arms the idle deadline when idleStopMs is above 0.",
+ "cases": [
+  {
+   "id": "an-answer-re-arms-the-idle-deadline",
+   "config": {
+    "idleStopMs": 120000
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_ANSWERED",
+     "payload": {},
+     "from": "watching",
+     "entity": {
+      "id": "t"
+     },
+     "expect": {
+      "state": "watching",
+      "emits": [
+       {
+        "event": "CHROME_IDLE_ARM",
+        "payload": {
+         "key": "idle",
+         "delayMs": 120000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-idle-stop-off-arms-nothing",
+   "config": {
+    "idleStopMs": 0
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_ANSWERED",
+     "payload": {},
+     "from": "watching",
+     "entity": {
+      "id": "t"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  }
+ ]
+}

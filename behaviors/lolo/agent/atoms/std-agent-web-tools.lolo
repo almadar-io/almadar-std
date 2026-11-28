@@ -1,0 +1,193 @@
+app std-agent-web-tools [
+  version: "1.0.0",
+  description: "std-agent-web-tools — the web-browsing tools an agent loop offers over a composed std-chrome tab, read-only. Each tool is a declared input std-agent-tool-loop dispatches; the atom hears the loop's TOOL_PENDING for the call id and ends that call with TOOL_RESULT or TOOL_FAILED. Every page request of a call carries the key `agent:` followed by the call id, and an answer with another key is ignored. OPEN_PAGE { url } navigates the tab to an address whose start is one of the allowedSchemes knob, reads the page and answers its address, title, language and full text; the address is the one the page ended at, so a step can cite it. WEB_SEARCH { query } navigates to the searchUrl knob with the query as the queryParam parameter, reads the results page and answers the page address, its text and the page's links as `text → address` lines, so the model can open a result with OPEN_PAGE. An address that is not allowed, an empty query, a failed navigation or read, and an answer longer than maxToolResultChars end the call with TOOL_FAILED naming the reason; nothing is truncated. This version only reads: no tool types into a field, clicks, submits a form or downloads. A composing app wires the page events to a std-chrome instance and declares its exec, net and fs grants; this atom needs none of its own."
+]
+;; @capabilities "open a web page by address and read its text, search the web and read the results with their links, as agent tools"
+uses Spec from "almadar-std/agent-web-tools"
+
+type WebToolLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
+
+orbital AgentWebToolsOrbital {
+  entity AgentWebCall [runtime] {
+    id : string!
+    callId : string @description "The tool call the loop waits on." = ""
+    reqKey : string @description "The key of every page request of the call in flight: `agent:` followed by the call id; an answer with another key is ignored." = ""
+    op : string @description "Which tool the call in flight is: open or search." = ""
+    query : string @description "The phrase WEB_SEARCH is searching for." = ""
+    pageUrl : string @description "The address the page of the call in flight ended at." = ""
+    pageTitle : string @description "The title of that page." = ""
+    pageLang : string @description "The language of that page." = ""
+    pageText : string @description "The text of that page, held while WEB_SEARCH reads its links." = ""
+  }
+
+  trait AgentWebTools -> AgentWebCall [optimistic] {
+    config {
+      allowedSchemes : [string] = ["http://", "https://"]
+        @label "Allowed address starts"
+        @description "The starts, in lower case, an address given to OPEN_PAGE may have; any other address ends the call with TOOL_FAILED."
+        @tier "policy"
+      searchUrl : string = "https://html.duckduckgo.com/html/"
+        @label "Search page"
+        @description "The address of a search engine's results page, without the query."
+        @tier "domain"
+      queryParam : string = "q"
+        @label "Query parameter"
+        @description "The name of the address parameter that carries the search phrase."
+        @tier "domain"
+      maxToolResultChars : number = 60000
+        @label "Longest answer"
+        @description "The most characters a tool answers; a longer answer ends the call with TOOL_FAILED naming the limit, so the model never gets half a page."
+        @tier "policy"
+      urlLabel : string = "url"
+        @label "Word for the address"
+        @description "The word that introduces the page address in an answer."
+        @tier "domain"
+      titleLabel : string = "title"
+        @label "Word for the title"
+        @description "The word that introduces the page title in an answer."
+        @tier "domain"
+      languageLabel : string = "lang"
+        @label "Word for the language"
+        @description "The word that introduces the page language in an answer."
+        @tier "domain"
+      searchLabel : string = "search"
+        @label "Word for the search phrase"
+        @description "The word that introduces the search phrase in a search answer."
+        @tier "domain"
+      linksLabel : string = "links"
+        @label "Word for the links"
+        @description "The word that introduces the list of links in a search answer."
+        @tier "domain"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TOOL_PENDING -> ready
+        (set @entity.callId @payload.callId)
+        (set @entity.reqKey (str/concat "agent:" @payload.callId))
+
+      OPEN_PAGE -> ready when (not (array/some @config.allowedSchemes (fn s (str/startsWith (str/lower @payload.url) @s))))
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "the address must start with one of: " (str/join @config.allowedSchemes ", ")) })
+      OPEN_PAGE -> opening when (array/some @config.allowedSchemes (fn s (str/startsWith (str/lower @payload.url) @s)))
+        (set @entity.op "open")
+        (emit PAGE_NAVIGATE { key: @entity.reqKey, url: @payload.url })
+
+      WEB_SEARCH -> ready when (== (str/trim @payload.query) "")
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the query is empty" })
+      WEB_SEARCH -> opening when (!= (str/trim @payload.query) "")
+        (set @entity.op "search")
+        (set @entity.query @payload.query)
+        (emit PAGE_NAVIGATE { key: @entity.reqKey, url: (str/concat @config.searchUrl "?" @config.queryParam "=" (str/encode-uri-component @payload.query)) })
+    }
+
+    state opening {
+      INIT -> ready
+      TOOL_PENDING -> opening
+      PAGE_LOADED -> reading when (== @payload.key @entity.reqKey)
+        (emit PAGE_TEXT { key: @entity.reqKey })
+      PAGE_FAILED -> ready when (== @payload.key @entity.reqKey)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat @payload.code ": " @payload.error) })
+    }
+
+    state reading {
+      INIT -> ready
+      TOOL_PENDING -> reading
+      PAGE_TEXT_READ -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "open") (> (str/len @payload.text) @config.maxToolResultChars))
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "the page \"" @payload.title "\" (" @payload.url ") has " (str/len @payload.text) " characters, over the limit of " @config.maxToolResultChars) })
+      PAGE_TEXT_READ -> ready when (and (== @payload.key @entity.reqKey) (== @entity.op "open") (<= (str/len @payload.text) @config.maxToolResultChars))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat @config.urlLabel ": " @payload.url "\n" @config.titleLabel ": " @payload.title "\n" @config.languageLabel ": " @payload.lang "\n\n" @payload.text) })
+      PAGE_TEXT_READ -> linking when (and (== @payload.key @entity.reqKey) (== @entity.op "search"))
+        (set @entity.pageUrl @payload.url)
+        (set @entity.pageTitle @payload.title)
+        (set @entity.pageLang @payload.lang)
+        (set @entity.pageText @payload.text)
+        (emit PAGE_LINKS { key: @entity.reqKey })
+      PAGE_FAILED -> ready when (== @payload.key @entity.reqKey)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat @payload.code ": " @payload.error) })
+    }
+
+    state linking {
+      INIT -> ready
+      TOOL_PENDING -> linking
+      PAGE_LINKS_READ -> ready when (and (== @payload.key @entity.reqKey) (> (str/len (str/concat @entity.pageText (str/join (array/map @payload.links (fn l (str/concat @l.text " → " @l.href))) "\n"))) @config.maxToolResultChars))
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "the results page (" @entity.pageUrl ") is longer than the limit of " @config.maxToolResultChars " characters") })
+      PAGE_LINKS_READ -> ready when (and (== @payload.key @entity.reqKey) (<= (str/len (str/concat @entity.pageText (str/join (array/map @payload.links (fn l (str/concat @l.text " → " @l.href))) "\n"))) @config.maxToolResultChars))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/concat @config.searchLabel ": " @entity.query "\n" @config.urlLabel ": " @entity.pageUrl "\n" @config.titleLabel ": " @entity.pageTitle "\n\n" @entity.pageText "\n\n" @config.linksLabel ":\n" (str/join (array/map @payload.links (fn l (str/concat @l.text " → " @l.href))) "\n")) })
+      PAGE_FAILED -> ready when (== @payload.key @entity.reqKey)
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat @payload.code ": " @payload.error) })
+    }
+
+    emits {
+      TOOL_RESULT -> external {
+        callId : string!
+        result : string!
+      }
+        @description "A tool's outcome, which std-agent-tool-loop hands back to the model."
+        @tier "internal"
+      TOOL_FAILED -> external {
+        callId : string!
+        error : string!
+      }
+        @description "A tool failed or was refused; std-agent-tool-loop hands the reason back to the model."
+        @tier "internal"
+      PAGE_NAVIGATE -> external {
+        key : string!
+        url : string!
+      }
+        @description "Ask the browser tab to load an address."
+        @tier "secondary"
+      PAGE_TEXT -> external {
+        key : string!
+      }
+        @description "Ask the tab for the page's address, title, language and text."
+        @tier "secondary"
+      PAGE_LINKS -> external {
+        key : string!
+      }
+        @description "Ask the tab for the page's indexed links and buttons."
+        @tier "secondary"
+    }
+
+    listens {
+      OPEN_PAGE -> input {
+        url : string! @description "The page's full address, starting with https:// or http://; use an address the person gave you or a search result showed, never a guess"
+      }
+        @description "Open a web page and answer its address, title, language and full text. Read-only: nothing is typed, clicked or submitted. Cite the answered address for every claim taken from the page."
+        @synonyms "browse, visit, go to, open website, read page, fetch url"
+      WEB_SEARCH -> input {
+        query : string! @description "What to search the web for, in plain words"
+      }
+        @description "Search the web for a phrase and answer the results page: its address, its text and its links, each as `text → address`, so a result can be opened with OPEN_PAGE. Use it when you do not have the address of the page you need."
+        @synonyms "google, search the web, look up online, find on the internet"
+      *.TOOL_PENDING -> TOOL_PENDING
+      TOOL_PENDING {
+        callId : string!
+        tool : string!
+      }
+      PAGE_LOADED {
+        key : string!
+        url : string!
+        title : string!
+      }
+      PAGE_TEXT_READ {
+        key : string!
+        url : string!
+        title : string!
+        lang : string!
+        text : string!
+      }
+      PAGE_LINKS_READ {
+        key : string!
+        links : [WebToolLink]!
+      }
+      PAGE_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  page boot as AgentWebToolsStart -> AgentWebTools
+}

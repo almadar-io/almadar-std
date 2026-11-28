@@ -1,0 +1,331 @@
+app std-rasm-flow [
+  version: "0.1.0",
+  description: "std-rasm-flow — a node canvas on the Rasm surface, read the way a flow editor is read: nodes as cards on a grid, joined by curved wires that leave a node at its end side and enter the next at its start side, or, for an edge declared `down`, leave at the foot and enter at the head, with a handle drawn where each wire meets a node, on a ground the reader pans by dragging and zooms with the wheel or the three controls (zoom in, zoom out, fit). The composer declares the nodes (a message key label, an optional note under it, a kind that picks its accent, and the grid cell it stands in: `col` and `row`) and the edges (source and target node ids, and whether the wire runs down); nothing is laid out for it. On its first placement the canvas fits the whole flow in its rect; after the reader pans or zooms it keeps their view. Every node is a control with the role button, named by its label: a press released on it, or RASM_ACTIVATE for it, selects it and emits FLOW_NODE_PICKED { flow, id }. FLOW_MARK { flow, id, mark } sets one node's mark (idle, running, waiting, done, failed), FLOW_CLEAR { flow } clears every mark and FLOW_SELECT { flow, id } selects a node from outside. A mark is shown by the node's look and by a word under its label (the `markLabels` message keys), never by colour alone. A wire whose source node is running or done is drawn dashed and its dashes travel toward the target; under reduced motion (RASM_MOTION { reduced: true }) the dashes stand still. Labels are painted at the canvas zoom, built from the labelWeight, labelSize and labelFamily knobs, and only for nodes that lie wholly inside the canvas rect. Not mirrored under rtl. Looks (prefix `lookSet`, default flow): flow/ground/idle, flow/node/idle|running|waiting|done|failed|selected|hovered, flow/kind-<kind>/idle (the accent strip's fill), flow/handle/idle, flow/edge/idle and flow/edge/live, flow/note/idle, flow/mark/idle, flow/control/idle and flow/control/hovered.",
+  locales: [en, ar, sl]
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect!, rotate : number }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmShadow = { color : string!, blur : number!, offsetX : number, offsetY : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, maxWidth : number? }
+type RasmKey = { k : MessageKey! }
+type FlowNode = { id : string!, label : MessageKey!, note : MessageKey?, kind : string!, col : number!, row : number! }
+type FlowNoted = { id : string!, note : MessageKey! }
+type FlowEdge = { id : string!, source : string!, target : string!, down : boolean! }
+type FlowMark = "idle" | "running" | "waiting" | "done" | "failed"
+type FlowMarkLabels = { running : MessageKey!, waiting : MessageKey!, done : MessageKey!, failed : MessageKey! }
+
+orbital RasmFlowOrbital {
+  entity RasmFlowRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave the canvas, null until placed." = null
+    zoom : number @description "The scale the flow is drawn at." = 1
+    panX : number @description "Where the flow's origin stands from the rect's left edge, in px." = 0
+    panY : number @description "Where the flow's origin stands from the rect's top edge, in px." = 0
+    touched : boolean @description "The reader panned or zoomed, so a new placement keeps their view." = false
+    dragging : boolean @description "A press on the ground is held." = false
+    downX : number @description "Where the held press started." = 0
+    downY : number @description "Where the held press started." = 0
+    startX : number @description "panX when the held press started." = 0
+    startY : number @description "panY when the held press started." = 0
+    selected : string @description "The selected node's id; empty when none is." = ""
+    hovered : string @description "The paint id under the pointer; empty when none is." = ""
+    focused : string @description "The paint id holding keyboard focus; empty when none does." = ""
+    marks : Map string FlowMark @description "Each marked node's mark, by node id." = {}
+    reduced : boolean @description "The surface reported reduced motion." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmFlow -> RasmFlowRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (not @entity.touched))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_FIT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) @entity.touched)
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      FLOW_FIT -> ready when (!= @entity.rect null)
+        (set @entity.zoom (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (ww (+ (* (array/reduce @config.nodes 0 (fn acc nd (math/max @acc @nd.col))) (+ @config.nodeWidth @config.colGap)) @config.nodeWidth)) (wh (+ (* (array/reduce @config.nodes 0 (fn acc nd (math/max @acc @nd.row))) (+ @config.nodeHeight @config.rowGap)) @config.nodeHeight))) (math/max @config.minZoom (math/min @config.maxZoom (default (/ (- @r.w (* 2 @config.pad)) @ww) 1) (default (/ (- @r.h (* 2 @config.pad)) @wh) 1)))))
+        (set @entity.panX (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (ww (+ (* (array/reduce @config.nodes 0 (fn acc nd (math/max @acc @nd.col))) (+ @config.nodeWidth @config.colGap)) @config.nodeWidth))) (/ (- @r.w (* @ww @entity.zoom)) 2)))
+        (set @entity.panY (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (wh (+ (* (array/reduce @config.nodes 0 (fn acc nd (math/max @acc @nd.row))) (+ @config.nodeHeight @config.rowGap)) @config.nodeHeight))) (/ (- @r.h (* @wh @entity.zoom)) 2)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      FLOW_FIT -> ready when (= @entity.rect null)
+      RASM_POINTER -> ready when (and (= ?id (str/concat @config.id ":bg")) (= ?kind "down"))
+        (set @entity.dragging true)
+        (set @entity.downX ?x)
+        (set @entity.downY ?y)
+        (set @entity.startX @entity.panX)
+        (set @entity.startY @entity.panY)
+      RASM_POINTER -> ready when (and (= ?id (str/concat @config.id ":bg")) (= ?kind "move") @entity.dragging)
+        (set @entity.panX (+ @entity.startX (- ?x @entity.downX)))
+        (set @entity.panY (+ @entity.startY (- ?y @entity.downY)))
+        (set @entity.touched true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?id (str/concat @config.id ":bg")) (or (= ?kind "up") (= ?kind "leave")))
+        (set @entity.dragging false)
+      RASM_POINTER -> ready when (and (= ?kind "enter") (or (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id))) (array/includes [(str/concat @config.id ":c:in") (str/concat @config.id ":c:out") (str/concat @config.id ":c:fit")] ?id)))
+        (set @entity.hovered ?id)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "leave") (= ?id @entity.hovered) (!= ?id (str/concat @config.id ":bg")))
+        (set @entity.hovered "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "up") (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id))))
+        (emit FLOW_PRESSED { id: ?id })
+      RASM_POINTER -> ready when (and (= ?kind "up") (array/includes [(str/concat @config.id ":c:in") (str/concat @config.id ":c:out") (str/concat @config.id ":c:fit")] ?id))
+        (emit FLOW_PRESSED { id: ?id })
+      RASM_ACTIVATE -> ready when (or (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id))) (array/includes [(str/concat @config.id ":c:in") (str/concat @config.id ":c:out") (str/concat @config.id ":c:fit")] ?id))
+        (emit FLOW_PRESSED { id: ?id })
+      RASM_ACTIVATE -> ready when (not (or (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id))) (array/includes [(str/concat @config.id ":c:in") (str/concat @config.id ":c:out") (str/concat @config.id ":c:fit")] ?id)))
+      RASM_FOCUS -> ready when (or (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id))) (array/includes [(str/concat @config.id ":c:in") (str/concat @config.id ":c:out") (str/concat @config.id ":c:fit")] ?id))
+        (set @entity.focused ?id)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_FOCUS -> ready when (and (!= @entity.focused "") (not (or (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id))) (array/includes [(str/concat @config.id ":c:in") (str/concat @config.id ":c:out") (str/concat @config.id ":c:fit")] ?id))))
+        (set @entity.focused "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      RASM_FOCUS -> ready when (and (= @entity.focused "") (not (or (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id))) (array/includes [(str/concat @config.id ":c:in") (str/concat @config.id ":c:out") (str/concat @config.id ":c:fit")] ?id))))
+      FLOW_PRESSED -> ready when (array/some @config.nodes (fn nd (= (str/concat @config.id ":n:" @nd.id) ?id)))
+        (set @entity.selected (let ((nd (array/find @config.nodes (fn n (= (str/concat @config.id ":n:" @n.id) ?id))))) (if (= @nd null) "" @nd.id)))
+        (emit FLOW_NODE_PICKED { flow: @config.id, id: (let ((nd (array/find @config.nodes (fn n (= (str/concat @config.id ":n:" @n.id) ?id))))) (if (= @nd null) "" @nd.id)) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      FLOW_PRESSED -> ready when (= ?id (str/concat @config.id ":c:fit"))
+        (set @entity.touched false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_FIT { n: @entity.paints })
+      FLOW_PRESSED -> ready when (= ?id (str/concat @config.id ":c:in"))
+        (emit FLOW_ZOOM { factor: @config.zoomStep, x: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (/ @r.w 2)), y: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (/ @r.h 2)) })
+      FLOW_PRESSED -> ready when (= ?id (str/concat @config.id ":c:out"))
+        (emit FLOW_ZOOM { factor: (/ 1 @config.zoomStep), x: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (/ @r.w 2)), y: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (/ @r.h 2)) })
+      RASM_WHEEL -> ready when (and (= ?target (str/concat @config.id ":bg")) (!= ?dy 0))
+        (emit FLOW_ZOOM { factor: (if (< ?dy 0) @config.zoomStep (/ 1 @config.zoomStep)), x: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (- ?x @r.x)), y: (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 }))) (- ?y @r.y)) })
+      RASM_WHEEL -> ready when (not (and (= ?target (str/concat @config.id ":bg")) (!= ?dy 0)))
+      FLOW_ZOOM -> ready
+        (set @entity.panX (let ((z2 (math/max @config.minZoom (math/min @config.maxZoom (* @entity.zoom ?factor))))) (- ?x (* (- ?x @entity.panX) (default (/ @z2 @entity.zoom) 1)))))
+        (set @entity.panY (let ((z2 (math/max @config.minZoom (math/min @config.maxZoom (* @entity.zoom ?factor))))) (- ?y (* (- ?y @entity.panY) (default (/ @z2 @entity.zoom) 1)))))
+        (set @entity.zoom (math/max @config.minZoom (math/min @config.maxZoom (* @entity.zoom ?factor))))
+        (set @entity.touched true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      FLOW_MARK -> ready when (and (= ?flow @config.id) (array/some @config.nodes (fn nd (= @nd.id ?id))))
+        (set @entity.marks (object/set @entity.marks ?id ?mark))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      FLOW_MARK -> ready when (not (and (= ?flow @config.id) (array/some @config.nodes (fn nd (= @nd.id ?id)))))
+      FLOW_CLEAR -> ready when (= ?flow @config.id)
+        (set @entity.marks {})
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      FLOW_CLEAR -> ready when (!= ?flow @config.id)
+      FLOW_SELECT -> ready when (= ?flow @config.id)
+        (set @entity.selected ?id)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit FLOW_PAINT { n: @entity.paints })
+      FLOW_SELECT -> ready when (!= ?flow @config.id)
+      FLOW_PAINT -> ready when (!= @entity.rect null)
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })) (z @entity.zoom) (px @entity.panX) (py @entity.panY) (cw (+ @config.nodeWidth @config.colGap)) (rh (+ @config.nodeHeight @config.rowGap)) (nw @config.nodeWidth) (nh @config.nodeHeight) (ls @config.lookSet) (gd (default (object/get @entity.looks (str/concat @config.lookSet "/ground/idle") null) {})) (hd (default (object/get @entity.looks (str/concat @config.lookSet "/handle/idle") null) {})) (ei (default (object/get @entity.looks (str/concat @config.lookSet "/edge/idle") null) {})) (el (default (object/get @entity.looks (str/concat @config.lookSet "/edge/live") null) {})) (nt (default (object/get @entity.looks (str/concat @config.lookSet "/note/idle") null) {})) (mk (default (object/get @entity.looks (str/concat @config.lookSet "/mark/idle") null) {})) (ci (default (object/get @entity.looks (str/concat @config.lookSet "/control/idle") null) {})) (ch (default (object/get @entity.looks (str/concat @config.lookSet "/control/hovered") null) {})) (cs @config.controlSize))
+          (let ((shown (array/filter @config.nodes (fn nd (and (>= (+ @px (* @z (* @nd.col @cw))) 0) (>= (+ @py (* @z (* @nd.row @rh))) 0) (<= (+ @px (* @z (+ (* @nd.col @cw) @nw))) @r.w) (<= (+ @py (* @z (+ (* @nd.row @rh) @nh))) @r.h))))) (ctl [{ id: (str/concat @config.id ":c:in"), key: @config.zoomInLabel, i: 0 }, { id: (str/concat @config.id ":c:out"), key: @config.zoomOutLabel, i: 1 }, { id: (str/concat @config.id ":c:fit"), key: @config.fitLabel, i: 2 }]))
+            (emit RASM_PAINT {
+              id: @config.id,
+              z: @config.z,
+              texts: (array/concat
+                (array/map @shown (fn nd (let ((st (if (= @entity.selected @nd.id) "selected" (default (object/get @entity.marks @nd.id null) "idle")))) (let ((lk (default (object/get @entity.looks (str/concat @ls "/node/" @st) null) {}))) { id: (str/concat @config.id ":t:" @nd.id), key: (let ((kk (as { k: @nd.label } RasmKey))) @kk.k), x: (+ @r.x (+ @px (* @z (+ (* @nd.col @cw) 18)))), y: (+ @r.y (+ @py (* @z (+ (* @nd.row @rh) (* @nh 0.34))))), z: (+ @config.z 6), align: "left", baseline: "middle", color: @lk.textColor, font: (str/concat @config.labelWeight " " (math/round (* @config.labelSize @z)) "px " @config.labelFamily), maxWidth: (* @z (- @nw 30)) }))))
+                (array/map (array/filter @shown (fn nd (!= @nd.note null))) (fn nd { id: (str/concat @config.id ":o:" @nd.id), key: (let ((kn (as @nd FlowNoted))) @kn.note), x: (+ @r.x (+ @px (* @z (+ (* @nd.col @cw) 18)))), y: (+ @r.y (+ @py (* @z (+ (* @nd.row @rh) (* @nh 0.68))))), z: (+ @config.z 6), align: "left", baseline: "middle", color: @nt.textColor, font: (str/concat @config.noteWeight " " (math/round (* @config.noteSize @z)) "px " @config.labelFamily), maxWidth: (* @z (- @nw 30)) }))
+                (array/map (array/filter @shown (fn nd (!= (default (object/get @entity.marks @nd.id null) "idle") "idle"))) (fn nd (let ((m (default (object/get @entity.marks @nd.id null) "idle"))) { id: (str/concat @config.id ":m:" @nd.id), key: (let ((kk (as { k: (if (= @m "running") @config.markLabels.running (if (= @m "waiting") @config.markLabels.waiting (if (= @m "done") @config.markLabels.done @config.markLabels.failed))) } RasmKey))) @kk.k), x: (+ @r.x (+ @px (* @z (+ (* @nd.col @cw) (/ @nw 2))))), y: (+ @r.y (+ @py (* @z (+ (* @nd.row @rh) (+ @nh 14))))), z: (+ @config.z 6), align: "center", baseline: "middle", color: @mk.textColor, font: (str/concat @config.noteWeight " " (math/round (* @config.noteSize @z)) "px " @config.labelFamily), maxWidth: (* @z @nw) })))
+                (array/map @ctl (fn c { id: (str/concat @c.id ":label"), key: (let ((kk (as { k: @c.key } RasmKey))) @kk.k), x: (+ @r.x (+ 12 (+ (* @c.i (+ @cs 6)) (/ @cs 2)))), y: (+ @r.y (- @r.h (+ 12 (/ @cs 2)))), z: (+ @config.z 9), align: "center", baseline: "middle", color: @ci.textColor, font: @ci.font, maxWidth: @cs }))),
+              nodes: [{ type: draw-group, id: (str/concat @config.id "-clip"), position: { x: @r.x, y: @r.y, z: @config.z }, clip: (str/concat "M0 0H" @r.w "V" @r.h "H0Z"), items: (array/concat
+                [{ type: draw-shape, id: (str/concat @config.id ":bg"), shape: rect, anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, width: @r.w, height: @r.h, fill: @gd.fill, stroke: @gd.stroke, strokeWidth: @gd.strokeWidth, material: @gd.material, hit: true, drag: true, wheel: true }]
+                [{ type: draw-group, id: (str/concat @config.id "-world"), position: { x: @px, y: @py, z: (+ @config.z 1) }, scale: @z, items: (array/concat
+                  (array/map (array/filter @config.edges (fn ed (and (array/some @config.nodes (fn n (= @n.id @ed.source))) (array/some @config.nodes (fn n (= @n.id @ed.target)))))) (fn ed (let ((sx (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.source) (if @ed.down (+ (* @n.col @cw) (/ @nw 2)) (+ (* @n.col @cw) @nw)) @acc)))) (sy (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.source) (if @ed.down (+ (* @n.row @rh) @nh) (+ (* @n.row @rh) (/ @nh 2))) @acc)))) (tx (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.target) (if @ed.down (+ (* @n.col @cw) (/ @nw 2)) (* @n.col @cw)) @acc)))) (ty (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.target) (if @ed.down (* @n.row @rh) (+ (* @n.row @rh) (/ @nh 2))) @acc)))) (live (array/includes ["running", "done"] (default (object/get @entity.marks @ed.source null) "idle")))) (let ((bx (if @ed.down 0 (math/max 40 (/ (math/abs (- @tx @sx)) 2)))) (by (if @ed.down (math/max 24 (/ (math/abs (- @ty @sy)) 2)) 0)) (lk (if @live @el @ei))) { type: draw-shape, id: (str/concat @config.id ":e:" @ed.id), shape: path, anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 2) }, d: (str/concat "M" @sx " " @sy "C" (+ @sx @bx) " " (+ @sy @by) " " (- @tx @bx) " " (- @ty @by) " " @tx " " @ty), stroke: @lk.stroke, strokeWidth: (default @lk.strokeWidth 2), strokeDash: (if @live [7, 5] []), animation: (if (and @live (not @entity.reduced)) { durationMs: 700, loop: true, keyframes: [{ at: 0, strokeDashOffset: 12 }, { at: 1, strokeDashOffset: 0 }] } null), hit: false }))))
+                  (array/map @config.nodes (fn nd (let ((pid (str/concat @config.id ":n:" @nd.id)) (st (if (= @entity.selected @nd.id) "selected" (default (object/get @entity.marks @nd.id null) "idle")))) (let ((lk (default (object/get @entity.looks (str/concat @ls "/node/" (if (and (= @entity.hovered @pid) (= @st "idle")) "hovered" @st)) null) {}))) { type: draw-shape, id: @pid, shape: rect, anchor: "top-left", position: { x: (* @nd.col @cw), y: (* @nd.row @rh), z: (+ @config.z 3) }, width: @nw, height: @nh, fill: @lk.fill, stroke: (if (= @entity.focused @pid) @config.focusStroke @lk.stroke), strokeWidth: (if (= @entity.focused @pid) 3 (default @lk.strokeWidth 1)), corners: @lk.corners, shadow: @lk.shadow, spring: @lk.spring, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":t:" @nd.id), disabled: false, order: (+ @config.order (+ (* @nd.row 100) @nd.col)), focused: (= @entity.focused @pid) } }))))
+                  (array/map @config.nodes (fn nd (let ((kl (default (object/get @entity.looks (str/concat @ls "/kind-" @nd.kind "/idle") null) {}))) { type: draw-shape, id: (str/concat @config.id ":k:" @nd.id), shape: rect, anchor: "top-left", position: { x: (* @nd.col @cw), y: (* @nd.row @rh), z: (+ @config.z 4) }, width: 6, height: @nh, fill: @kl.fill, hit: false })))
+                  (array/map (array/filter @config.edges (fn ed (and (array/some @config.nodes (fn n (= @n.id @ed.source))) (array/some @config.nodes (fn n (= @n.id @ed.target)))))) (fn ed (let ((sx (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.source) (if @ed.down (+ (* @n.col @cw) (/ @nw 2)) (+ (* @n.col @cw) @nw)) @acc)))) (sy (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.source) (if @ed.down (+ (* @n.row @rh) @nh) (+ (* @n.row @rh) (/ @nh 2))) @acc)))) (tx (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.target) (if @ed.down (+ (* @n.col @cw) (/ @nw 2)) (* @n.col @cw)) @acc)))) (ty (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.target) (if @ed.down (* @n.row @rh) (+ (* @n.row @rh) (/ @nh 2))) @acc))))) { type: draw-shape, id: (str/concat @config.id ":ho:" @ed.id), shape: rect, anchor: "top-left", position: { x: (- @sx 5), y: (- @sy 5), z: (+ @config.z 5) }, width: 10, height: 10, fill: @hd.fill, stroke: @hd.stroke, strokeWidth: (default @hd.strokeWidth 1), corners: { radius: [5, 5, 5, 5], kind: "round" }, hit: false })))
+                  (array/map (array/filter @config.edges (fn ed (and (array/some @config.nodes (fn n (= @n.id @ed.source))) (array/some @config.nodes (fn n (= @n.id @ed.target)))))) (fn ed (let ((sx (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.source) (if @ed.down (+ (* @n.col @cw) (/ @nw 2)) (+ (* @n.col @cw) @nw)) @acc)))) (sy (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.source) (if @ed.down (+ (* @n.row @rh) @nh) (+ (* @n.row @rh) (/ @nh 2))) @acc)))) (tx (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.target) (if @ed.down (+ (* @n.col @cw) (/ @nw 2)) (* @n.col @cw)) @acc)))) (ty (array/reduce @config.nodes 0 (fn acc n (if (= @n.id @ed.target) (if @ed.down (* @n.row @rh) (+ (* @n.row @rh) (/ @nh 2))) @acc))))) { type: draw-shape, id: (str/concat @config.id ":hi:" @ed.id), shape: rect, anchor: "top-left", position: { x: (- @tx 5), y: (- @ty 5), z: (+ @config.z 5) }, width: 10, height: 10, fill: @hd.fill, stroke: @hd.stroke, strokeWidth: (default @hd.strokeWidth 1), corners: { radius: [5, 5, 5, 5], kind: "round" }, hit: false })))) }]
+                (array/map @ctl (fn c (let ((lk (if (= @entity.hovered @c.id) @ch @ci))) { type: draw-shape, id: @c.id, shape: rect, anchor: "top-left", position: { x: (+ 12 (* @c.i (+ @cs 6))), y: (- @r.h (+ 12 @cs)), z: (+ @config.z 8) }, width: @cs, height: @cs, fill: @lk.fill, stroke: (if (= @entity.focused @c.id) @config.focusStroke @lk.stroke), strokeWidth: (if (= @entity.focused @c.id) 3 (default @lk.strokeWidth 1)), corners: @lk.corners, hit: true, semantic: { role: "button", labelledBy: (str/concat @c.id ":label"), disabled: false, order: (+ @config.order (+ 10000 @c.i)), focused: (= @entity.focused @c.id) } })))) }]
+            })))
+      FLOW_PAINT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      FLOW_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the canvas from the stored rect, looks, view and marks."
+        @tier "internal"
+      FLOW_FIT -> internal {
+        n : number!
+      }
+        @description "Fit the whole flow in the rect, then repaint."
+        @tier "internal"
+      FLOW_PRESSED -> internal {
+        id : string!
+      }
+        @description "A node or a control was pressed or activated."
+        @tier "internal"
+      FLOW_ZOOM -> internal {
+        factor : number!
+        x : number!
+        y : number!
+      }
+        @description "Zoom by a factor about a point of the rect."
+        @tier "internal"
+      FLOW_NODE_PICKED -> external {
+        flow : string!
+        id : string!
+      }
+        @description "The reader selected a node: `flow` is the canvas id, `id` the node's."
+        @synonyms "node selected, node clicked"
+        @tier "primary"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The ground, wires, nodes, handles, controls and labels for the surface to collect."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_MOTION { reduced : boolean! }
+        @description "Under reduced motion the wires' dashes stand still."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the canvas rect; the first placement fits the flow."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A drag on the ground pans; a release on a node selects it; a release on a control zooms or fits."
+      RASM_WHEEL { target : string!  x : number!  y : number!  dx : number!  dy : number! }
+        @description "The wheel over the ground zooms about the pointer."
+      RASM_FOCUS { id : string! }
+        @description "Keyboard focus on a node or a control shows the focus stroke."
+      RASM_ACTIVATE { id : string! }
+        @description "The keyboard activates a node or a control."
+      FLOW_MARK -> input { flow : string!  id : string!  mark : FlowMark! }
+        @description "Set one node's mark."
+        @synonyms "node status, step running, step done"
+      FLOW_CLEAR -> input { flow : string! }
+        @description "Clear every node's mark."
+      FLOW_SELECT -> input { flow : string!  id : string! }
+        @description "Select a node from outside; an empty id selects none."
+    }
+
+    config {
+      id : string = "flow"
+        @label "Id"
+        @description "The canvas's RASM_PLACE key and paint id."
+        @tier "presentation"
+      lookSet : string = "flow"
+        @label "Look set"
+        @description "The prefix of this canvas's look keys."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface; wires, nodes and texts paint above."
+        @tier "presentation"
+      order : number = 0
+        @label "Focus order"
+        @description "The focus order the canvas starts at; the nodes follow by row then column, then the controls."
+        @tier "presentation"
+      nodes : [FlowNode] = []
+        @label "Nodes"
+        @description "The nodes: a label, an optional note, a kind that picks the accent look, and the grid cell (col, row) the node stands in."
+        @tier "domain"
+      edges : [FlowEdge] = []
+        @label "Edges"
+        @description "The wires: source and target node ids; `down` runs the wire from the source's foot to the target's head instead of side to side."
+        @tier "domain"
+      markLabels : FlowMarkLabels = { running: "flow.mark.running", waiting: "flow.mark.waiting", done: "flow.mark.done", failed: "flow.mark.failed" }
+        @label "Mark words"
+        @description "The word shown under a node for each mark."
+        @tier "presentation"
+      zoomInLabel : MessageKey = "flow.zoomIn"
+        @label "Zoom in"
+        @tier "presentation"
+      zoomOutLabel : MessageKey = "flow.zoomOut"
+        @label "Zoom out"
+        @tier "presentation"
+      fitLabel : MessageKey = "flow.fit"
+        @label "Fit"
+        @tier "presentation"
+      nodeWidth : number = 208
+        @label "Node width"
+        @tier "presentation"
+      nodeHeight : number = 72
+        @label "Node height"
+        @tier "presentation"
+      colGap : number = 72
+        @label "Column gap"
+        @tier "presentation"
+      rowGap : number = 56
+        @label "Row gap"
+        @tier "presentation"
+      pad : number = 32
+        @label "Padding"
+        @description "The space kept around the flow when it is fitted."
+        @tier "presentation"
+      minZoom : number = 0.4
+        @label "Smallest zoom"
+        @tier "presentation"
+      maxZoom : number = 1.6
+        @label "Largest zoom"
+        @tier "presentation"
+      zoomStep : number = 1.2
+        @label "Zoom step"
+        @description "The factor one wheel turn or one control press zooms by."
+        @tier "presentation"
+      controlSize : number = 36
+        @label "Control size"
+        @description "The side of a zoom control in px."
+        @tier "presentation"
+      labelWeight : string = "600"
+        @label "Label weight"
+        @tier "presentation"
+      labelSize : number = 15
+        @label "Label size"
+        @description "The label's size in px at zoom 1."
+        @tier "presentation"
+      noteWeight : string = "500"
+        @label "Note weight"
+        @tier "presentation"
+      noteSize : number = 12
+        @label "Note size"
+        @description "The note's and the mark word's size in px at zoom 1."
+        @tier "presentation"
+      labelFamily : string = "body"
+        @label "Label family"
+        @description "The font role the labels are set in."
+        @tier "presentation"
+      focusStroke : string = "ring"
+        @label "Focus stroke"
+        @description "The colour of the stroke a focused node or control wears."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmFlowStart -> RasmFlow
+}
